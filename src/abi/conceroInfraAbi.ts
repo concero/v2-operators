@@ -1,4 +1,6 @@
-const conceroInfraAbi = [
+import { Abi } from "viem";
+
+const conceroInfraAbi: Abi = [
     {
         type: "event",
         name: "UnconfirmedTXSent",

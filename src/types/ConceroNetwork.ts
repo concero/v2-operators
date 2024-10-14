@@ -1,7 +1,6 @@
 import { Chain } from "viem";
 
 export type ConceroNetworkNames =
-    | "localhost"
     | "mainnet"
     | "arbitrum"
     | "optimism"
@@ -26,3 +25,5 @@ export type ConceroNetwork = {
     confirmations: number;
     rpcUrls: string[];
 };
+
+export type NetworkType = "mainnet" | "testnet";

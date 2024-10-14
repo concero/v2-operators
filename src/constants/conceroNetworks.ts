@@ -1,4 +1,4 @@
-import { type ConceroNetwork, ConceroNetworkNames } from "../types/ConceroNetwork";
+import { type ConceroNetwork, ConceroNetworkNames, NetworkType } from "../types/ConceroNetwork";
 import {
     arbitrum,
     arbitrumSepolia,
@@ -12,11 +12,12 @@ import {
     sepolia,
 } from "viem/chains";
 import { urls } from "./rpcUrls";
+import { getEnvVar } from "../utils/getEnvVar";
 
 const DEFAULT_BLOCK_CONFIRMATIONS = 2;
-const operatorPK = process.env.OPERATOR_PRIVATE_KEY;
+const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
 
-export const networkTypes: Record<string, string> = {
+export const networkTypes: Record<NetworkType, NetworkType> = {
     mainnet: "mainnet",
     testnet: "testnet",
 };
@@ -39,7 +40,7 @@ export const networkEnvKeys: Record<ConceroNetworkNames, string> = {
     polygonAmoy: "POLYGON_AMOY",
 };
 
-export const testnetNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
+export const testnetNetworks: Partial<Record<ConceroNetworkNames, ConceroNetwork>> = {
     sepolia: {
         name: "sepolia",
         type: networkTypes.testnet,
@@ -101,7 +102,7 @@ export const testnetNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
         viemChain: polygonAmoy,
     },
 };
-export const mainnetNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
+export const mainnetNetworks: Partial<Record<ConceroNetworkNames, ConceroNetwork>> = {
     base: {
         name: "base",
         type: networkTypes.mainnet,
@@ -144,7 +145,7 @@ export const mainnetNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
     },
 };
 
-export const conceroNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
+export const conceroNetworks: Partial<Record<ConceroNetworkNames, ConceroNetwork>> = {
     ...testnetNetworks,
     ...mainnetNetworks,
 };

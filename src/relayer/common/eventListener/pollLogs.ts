@@ -20,9 +20,8 @@ export async function pollLogs<T>(
             toBlock: latestBlockNumber,
         });
 
-        // Call the provided log processing function and pass the ABI
         await onLogs(chainName, logs, abi);
         return latestBlockNumber;
     }
-    return lastBlockNumber; // No new blocks, return the old block number
+    return lastBlockNumber;
 }

@@ -3,7 +3,7 @@ import { Chain, createPublicClient, createWalletClient, fallback, http } from "v
 import type { PrivateKeyAccount } from "viem/accounts/types";
 import { WalletClient } from "viem/clients/createWalletClient";
 import { PublicClient } from "viem/clients/createPublicClient";
-import { urls } from "../constants/rpcUrls";
+import { urls } from "../constants";
 import { ConceroNetwork } from "../types/ConceroNetwork";
 
 export function getClients(

@@ -27,5 +27,5 @@ export async function setupEventListener<T>(
         }
     };
 
-    poll(); // Start the polling loop
+    poll();
 }

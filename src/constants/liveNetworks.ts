@@ -1,13 +1,7 @@
 import { ConceroNetwork } from "../types/ConceroNetwork";
 import chains from "./conceroNetworks";
 
-export const conceroChains: ConceroNetwork[] = [
-    chains.baseSepolia,
-    chains.arbitrumSepolia,
-    chains.avalancheFuji,
-    // chains.optimismSepolia,
-    // chains.polygonAmoy,
-];
+export const liveNetworks: ConceroNetwork[] = [chains.base, chains.arbitrum, chains.polygon, chains.avalanche];
 
 // export const liveChains: ConceroNetwork[] = [chains.polygon, chains.base, chains.arbitrum, chains.avalanche];
 //
