@@ -8,26 +8,7 @@ import { type Abi } from "viem";
 export async function setupEventListener<T>(
     chainName: ConceroNetworkNames,
     contractAddress: string,
-    abi: {
-        inputs: (
-            | { indexed: boolean; name: string; type: string }
-            | { indexed: boolean; name: string; type: string }
-            | {
-                  indexed: boolean;
-                  name: string;
-                  type: string;
-              }
-            | { indexed: boolean; name: string; type: string }
-            | { indexed: boolean; name: string; type: string }
-            | {
-                  indexed: boolean;
-                  name: string;
-                  type: string;
-              }
-        )[];
-        name: string;
-        type: string;
-    }[], // ABI passed for decoding logs
+    abi: Abi,
     onLogs: (chainName: ConceroNetworkNames, logs: T[], abi: Abi) => Promise<void>, // Callback for log processing
     pollingIntervalMs: number,
 ): Promise<void> {

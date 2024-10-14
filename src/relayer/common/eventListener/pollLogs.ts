@@ -14,8 +14,10 @@ export async function pollLogs<T>(
     if (latestBlockNumber > lastBlockNumber) {
         const logs = await publicClient.getLogs({
             address: contractAddress,
-            fromBlock: lastBlockNumber + 1n,
-            toBlock: latestBlockNumber,
+            fromBlock: 21072979n,
+            toBlock: 21072980n,
+            // fromBlock: lastBlockNumber + 1n,
+            // toBlock: latestBlockNumber,
         });
 
         // Call the provided log processing function and pass the ABI
