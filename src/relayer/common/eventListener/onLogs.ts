@@ -4,8 +4,6 @@ import { Abi, AbiEventSignatureNotFoundError, decodeEventLog } from "viem";
 import logger from "../../../utils/logger";
 
 export async function onLogs(chainName: ConceroNetworkNames, logs: any[], abi: Abi) {
-    console.log(`[${chainName}] Received ${logs.length} logs`);
-    console.log(logs);
     logs.forEach(log => {
         try {
             const decodedLog = decodeEventLog({
