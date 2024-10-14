@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+cache
+node_modules
+**/vendor
+
+# Ignore TS definition and map files
+**/**.d.ts
+**/**.d.ts.map
+
+*.md

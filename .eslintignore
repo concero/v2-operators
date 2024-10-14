@@ -1,0 +1,6 @@
+# folders
+cache
+node_modules/
+
+# files
+**/*.json
