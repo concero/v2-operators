@@ -1,26 +1,26 @@
 import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
-import { Abi } from "viem";
+import { Abi, Address } from "viem";
 
 export async function pollLogs<T>(
     chainName: ConceroNetworkNames,
-    contractAddress: string,
+    contractAddress: Address,
     publicClient: any,
     lastBlockNumber: bigint,
     abi: Abi, // ABI passed for log decoding
-    onLogs: (chainName: ConceroNetworkNames, logs: T[], abi: Abi) => Promise<void>, // Callback for log processing
+    onLogs: (chainName: ConceroNetworkNames, contractAddress: Address, logs: T[], abi: Abi) => void, // Callback for log processing
 ): Promise<bigint> {
     const latestBlockNumber = await publicClient.getBlockNumber();
 
     if (latestBlockNumber > lastBlockNumber) {
         const logs = await publicClient.getLogs({
             address: contractAddress,
-            // fromBlock: 21072979n,
-            // toBlock: 21072980n,
-            fromBlock: lastBlockNumber + 1n,
-            toBlock: latestBlockNumber,
+            fromBlock: 21072979n,
+            toBlock: 21072980n,
+            // fromBlock: lastBlockNumber + 1n,
+            // toBlock: latestBlockNumber,
         });
 
-        await onLogs(chainName, logs, abi);
+        onLogs(chainName, contractAddress, logs, abi);
         return latestBlockNumber;
     }
     return lastBlockNumber;

@@ -3,13 +3,13 @@ import { getFallbackClients } from "../../../utils/getViemClients";
 import { conceroNetworks } from "../../../constants";
 import logger from "../../../utils/logger";
 import { pollLogs } from "./pollLogs";
-import { type Abi } from "viem";
+import { type Abi, Address } from "viem";
 
 export async function setupEventListener<T>(
     chainName: ConceroNetworkNames,
-    contractAddress: string,
+    contractAddress: Address,
     abi: Abi,
-    onLogs: (chainName: ConceroNetworkNames, logs: T[], abi: Abi) => Promise<void>, // Callback for log processing
+    onLogs: (chainName: ConceroNetworkNames, contractAddress: Address, logs: T[], abi: Abi) => Promise<void>, // Callback for log processing
     pollingIntervalMs: number,
 ): Promise<void> {
     const { publicClient } = getFallbackClients(conceroNetworks[chainName]);
