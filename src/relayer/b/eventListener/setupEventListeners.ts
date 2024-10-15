@@ -1,5 +1,5 @@
 import { setupEventListener } from "../../common/eventListener/setupEventListener";
-import conceroCLFRouterAbi from "../constants/conceroCLFRouterAbi";
+import conceroCLFRouterAbi from "../../a/constants/conceroCLFRouterAbi";
 import { getEnvAddress } from "../../../utils/getEnvVar";
 import { conceroNetworks } from "../../../constants";
 import { onLogs } from "./onLogs";

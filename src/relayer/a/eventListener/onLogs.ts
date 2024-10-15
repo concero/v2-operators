@@ -3,6 +3,7 @@ import { Abi, Address } from "viem";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
 import { eventNames } from "../constants/eventNames";
 import { requestCLFMessageReport } from "../contractCaller/requestCLFMessageReport";
+import { relayCLFMessageReport } from "../contractCaller/relayCLFMessageReport";
 
 export function onLogs(chainName: ConceroNetworkNames, contractAddress: Address, logs: any[], abi: Abi) {
     const res = decodeLogs(chainName, contractAddress, logs, abi);
@@ -14,9 +15,9 @@ export function onLogs(chainName: ConceroNetworkNames, contractAddress: Address,
                     requestCLFMessageReport(log);
                     break;
 
-                // case eventNames.RequestFulfilled:
-                //     relayDONReport(log);
-                //     break;
+                case eventNames.RequestFulfilled:
+                    relayCLFMessageReport(log);
+                    break;
 
                 default:
                     break;
