@@ -9,7 +9,7 @@ export async function setupEventListener<T>(
     chainName: ConceroNetworkNames,
     contractAddress: Address,
     abi: Abi,
-    onLogs: (chainName: ConceroNetworkNames, contractAddress: Address, logs: T[], abi: Abi) => Promise<void>, // Callback for log processing
+    onLogs: (chainName: ConceroNetworkNames, contractAddress: Address, logs: T[], abi: Abi) => void, // Callback for log processing
     pollingIntervalMs: number,
 ): Promise<void> {
     const { publicClient } = getFallbackClients(conceroNetworks[chainName]);

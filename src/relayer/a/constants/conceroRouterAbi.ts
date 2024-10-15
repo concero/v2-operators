@@ -1,6 +1,6 @@
 import { Abi } from "viem";
 
-const conceroInfraAbi: Abi = [
+const conceroRouterAbi: Abi = [
     {
         type: "event",
         name: "UnconfirmedTXSent",
@@ -61,4 +61,4 @@ const conceroInfraAbi: Abi = [
     },
 ];
 
-export default conceroInfraAbi;
+export default conceroRouterAbi;

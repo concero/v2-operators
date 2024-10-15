@@ -2,13 +2,14 @@
 import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
 import { Abi, AbiEventSignatureNotFoundError, Address, decodeEventLog } from "viem";
 import logger from "../../../utils/logger";
+import { DecodedLog } from "../../../types/DecodedLog";
 
 export function decodeLogs(
     chainName: ConceroNetworkNames,
     contractAddress: Address,
     logs: any[],
     abi: Abi,
-): { chainName: ConceroNetworkNames; contractAddress: Address; decodedLogs: any[] } {
+): { chainName: ConceroNetworkNames; contractAddress: Address; decodedLogs: DecodedLog[] } {
     const decodedLogs: any[] = [];
 
     logs.forEach(log => {

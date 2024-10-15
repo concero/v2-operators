@@ -1,7 +1,8 @@
 export type EnvPrefixes = {
     nodeEnv: string;
     logLevel: string;
-    infraProxy: string;
+    conceroRouter: string;
+    conceroCLFRouter: string;
     operatorAddress: string;
     operatorPrivateKey: string;
 };
