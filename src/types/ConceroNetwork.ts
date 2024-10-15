@@ -1,19 +1,21 @@
 import { Chain } from "viem";
 
-export type ConceroNetworkNames =
+export type ConceroMainnetNetworkNames =
     | "mainnet"
     | "arbitrum"
     | "optimism"
     | "polygon"
     | "polygonZkEvm"
     | "avalanche"
-    | "base"
+    | "base";
+export type ConceroTestnetNetworkNames =
     | "sepolia"
     | "optimismSepolia"
     | "arbitrumSepolia"
     | "avalancheFuji"
     | "baseSepolia"
     | "polygonAmoy";
+export type ConceroNetworkNames = ConceroMainnetNetworkNames | ConceroTestnetNetworkNames;
 
 export type ConceroNetwork = {
     id: number;

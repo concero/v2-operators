@@ -13,9 +13,9 @@ function getEnvVar(key: keyof env): string {
     return value;
 }
 
-function getEnvAddress(prefix: keyof EnvPrefixes, networkName?: ConceroNetworkNames | string): [Address, string] {
+function getEnvAddress(prefix: keyof EnvPrefixes, networkName?: ConceroNetworkNames): [Address, string] {
     const searchKey = networkName ? `${envPrefixes[prefix]}_${networkEnvKeys[networkName]}` : envPrefixes[prefix];
-    const value = getEnvVar(searchKey) as Address;
+    const value = getEnvVar(searchKey as keyof env) as Address;
     const friendlyName = `${prefix}(${shorten(value)})`;
 
     return [value, friendlyName];

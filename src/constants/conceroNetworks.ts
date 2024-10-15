@@ -1,4 +1,10 @@
-import { type ConceroNetwork, ConceroNetworkNames, NetworkType } from "../types/ConceroNetwork";
+import {
+    ConceroMainnetNetworkNames,
+    type ConceroNetwork,
+    ConceroNetworkNames,
+    ConceroTestnetNetworkNames,
+    NetworkType,
+} from "../types/ConceroNetwork";
 import {
     arbitrum,
     arbitrumSepolia,
@@ -6,6 +12,8 @@ import {
     avalancheFuji,
     base,
     baseSepolia,
+    mainnet,
+    optimism,
     optimismSepolia,
     polygon,
     polygonAmoy,
@@ -40,7 +48,7 @@ export const networkEnvKeys: Record<ConceroNetworkNames, string> = {
     polygonAmoy: "POLYGON_AMOY",
 };
 
-export const testnetNetworks: Partial<Record<ConceroNetworkNames, ConceroNetwork>> = {
+export const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
     sepolia: {
         name: "sepolia",
         type: networkTypes.testnet,
@@ -102,7 +110,17 @@ export const testnetNetworks: Partial<Record<ConceroNetworkNames, ConceroNetwork
         viemChain: polygonAmoy,
     },
 };
-export const mainnetNetworks: Partial<Record<ConceroNetworkNames, ConceroNetwork>> = {
+export const mainnetNetworks: Record<ConceroMainnetNetworkNames, ConceroNetwork> = {
+    mainnet: {
+        name: "mainnet",
+        type: networkTypes.mainnet,
+        id: 1,
+        rpcUrls: urls.mainnet,
+        accounts: [operatorPK],
+        chainSelector: "1",
+        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+        viemChain: mainnet,
+    },
     base: {
         name: "base",
         type: networkTypes.mainnet,
@@ -143,9 +161,29 @@ export const mainnetNetworks: Partial<Record<ConceroNetworkNames, ConceroNetwork
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: avalanche,
     },
+    optimism: {
+        name: "optimism",
+        type: networkTypes.mainnet,
+        id: 10,
+        rpcUrls: urls.optimism,
+        accounts: [operatorPK],
+        chainSelector: "10",
+        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+        viemChain: optimism,
+    },
+    polygonZkEvm: {
+        name: "polygonZkEvm",
+        type: networkTypes.mainnet,
+        id: 137,
+        rpcUrls: urls.polygonZkEvm,
+        accounts: [operatorPK],
+        chainSelector: "137",
+        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+        viemChain: polygon,
+    },
 };
 
-export const conceroNetworks: Partial<Record<ConceroNetworkNames, ConceroNetwork>> = {
+export const conceroNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
     ...testnetNetworks,
     ...mainnetNetworks,
 };
