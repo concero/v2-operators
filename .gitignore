@@ -18,6 +18,10 @@ dist
 # env files
 .env.*
 .env
+!.env.deployments
+!.env.clf
+!.env.tokens
+!.env.clccip
 
 *.log
 
