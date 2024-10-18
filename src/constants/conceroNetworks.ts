@@ -21,6 +21,7 @@ import {
 } from "viem/chains";
 import { urls } from "./rpcUrls";
 import { getEnvVar } from "../utils/getEnvVar";
+import { localhostViemChain } from "../utils/localhostViemChain";
 
 const DEFAULT_BLOCK_CONFIRMATIONS = 2;
 const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
@@ -46,6 +47,18 @@ export const networkEnvKeys: Record<ConceroNetworkNames, string> = {
     avalancheFuji: "FUJI",
     baseSepolia: "BASE_SEPOLIA",
     polygonAmoy: "POLYGON_AMOY",
+};
+
+export const testingNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
+    localhost: {
+        name: "localhost",
+        type: networkTypes.testnet,
+        id: Number(process.env.LOCALHOST_FORK_CHAIN_ID),
+        accounts: [operatorPK],
+        chainSelector: "16015286601757825753",
+        confirmations: 1,
+        viemChain: localhostViemChain,
+    },
 };
 
 export const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
@@ -186,6 +199,7 @@ export const mainnetNetworks: Record<ConceroMainnetNetworkNames, ConceroNetwork>
 export const conceroNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
     ...testnetNetworks,
     ...mainnetNetworks,
+    ...testingNetworks,
 };
 
 export default conceroNetworks;
