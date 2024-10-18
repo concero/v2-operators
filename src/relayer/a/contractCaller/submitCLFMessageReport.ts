@@ -2,9 +2,19 @@ import { DecodedLog } from "../../../types/DecodedLog";
 import { conceroNetworks } from "../../../constants";
 import { getEnvAddress } from "../../../utils/getEnvVar";
 import logger from "../../../utils/logger";
+import { getFallbackClients } from "../../../utils/getViemClients";
 
-export async function relayCLFMessageReport(log: DecodedLog) {
+export async function submitCLFMessageReport(log: DecodedLog) {
+    //todo:
+    // get srcBlockNumber and ConceroMessageId from CLFMessageReport log
+    // fetch message from SRC
+    // (optional) verify that message data hash matches the hash in the CLFMessageReport
+    // send CLF report with message data to DST ConceroRouter
+
     const { chainName, contractAddress, decodedLog } = log;
+
+    const { publicClient } = getFallbackClients(conceroNetworks.base);
+    const tx = await publicClient.getTransaction({ hash: log });
     const { ccipMessageId } = decodedLog.args;
 
     try {

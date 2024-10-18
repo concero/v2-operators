@@ -12,6 +12,7 @@ export async function pollLogs<T>(
     const latestBlockNumber = await publicClient.getBlockNumber();
 
     if (latestBlockNumber > lastBlockNumber) {
+        //todo: only if logs not null, invoke onlogs
         const logs = await publicClient.getLogs({
             address: contractAddress,
             fromBlock: 21072979n,
@@ -20,7 +21,9 @@ export async function pollLogs<T>(
             // toBlock: latestBlockNumber,
         });
 
-        onLogs(chainName, contractAddress, logs, abi);
+        if (logs.length > 0) {
+            onLogs(chainName, contractAddress, logs, abi);
+        }
         return latestBlockNumber;
     }
     return lastBlockNumber;

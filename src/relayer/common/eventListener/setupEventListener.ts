@@ -17,6 +17,7 @@ export async function setupEventListener<T>(
 
     logger.info(`[${chainName}] Monitoring contract: ${contractAddress} from block ${lastBlockNumber}`);
 
+    //todo: look into this
     const poll = async () => {
         try {
             lastBlockNumber = await pollLogs(chainName, contractAddress, publicClient, lastBlockNumber, abi, onLogs);

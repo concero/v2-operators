@@ -3,25 +3,25 @@ import { Abi, Address } from "viem";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
 import { eventNames } from "../constants/eventNames";
 import { requestCLFMessageReport } from "../contractCaller/requestCLFMessageReport";
-import { relayCLFMessageReport } from "../contractCaller/relayCLFMessageReport";
+import { submitCLFMessageReport } from "../contractCaller/submitCLFMessageReport";
 
-export function onLogs(chainName: ConceroNetworkNames, contractAddress: Address, logs: any[], abi: Abi) {
+export async function onLogs(chainName: ConceroNetworkNames, contractAddress: Address, logs: any[], abi: Abi) {
     const res = decodeLogs(chainName, contractAddress, logs, abi);
 
-    if (res.decodedLogs) {
-        res.decodedLogs.forEach(log => {
-            switch (log.decodedLog.eventName) {
-                case eventNames.CCIPSent:
-                    requestCLFMessageReport(log);
-                    break;
+    for (const log of res.decodedLogs) {
+        console.log(`[${chainName}] Decoded log:`, log);
+        switch (log.decodedLog.eventName) {
+            case eventNames.CCIPSent:
+                //todo: pass whole tx object
+                await requestCLFMessageReport(log);
+                break;
 
-                case eventNames.RequestFulfilled:
-                    relayCLFMessageReport(log);
-                    break;
+            case eventNames.RequestFulfilled:
+                await submitCLFMessageReport(log);
+                break;
 
-                default:
-                    break;
-            }
-        });
+            default:
+                break;
+        }
     }
 }

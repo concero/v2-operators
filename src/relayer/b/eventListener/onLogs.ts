@@ -2,7 +2,7 @@ import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
 import { Abi, Address } from "viem";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
 import { eventNames } from "../constants/eventNames";
-import { relayCLFMessageReport } from "../../a/contractCaller/relayCLFMessageReport";
+import { submitCLFMessageReport } from "../../a/contractCaller/submitCLFMessageReport";
 
 export function onLogs(chainName: ConceroNetworkNames, contractAddress: Address, logs: any[], abi: Abi) {
     const res = decodeLogs(chainName, contractAddress, logs, abi);
@@ -11,7 +11,7 @@ export function onLogs(chainName: ConceroNetworkNames, contractAddress: Address,
         res.decodedLogs.forEach(log => {
             switch (log.decodedLog.eventName) {
                 case eventNames.RequestFulfilled:
-                    relayCLFMessageReport(log);
+                    submitCLFMessageReport(log);
                     break;
 
                 // case eventNames.RequestFulfilled:

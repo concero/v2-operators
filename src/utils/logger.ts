@@ -11,10 +11,7 @@ const logFormat = winston.format.combine(
         format: "YYYY-MM-DD HH:mm:ss",
     }),
     winston.format.printf(({ level, message, timestamp, ...meta }) => {
-        // Handle object messages properly
         const formattedMessage = typeof message === "object" ? JSON.stringify(message, null, 2) : message;
-
-        // Ensure the meta (which includes defaultMeta like `service`) is handled separately
         const formattedMeta = meta && Object.keys(meta).length ? JSON.stringify(meta, null, 2) : "";
 
         return `${formattedMeta} ${timestamp} [${level}]: ${formattedMessage}`;
