@@ -15,10 +15,10 @@ export async function pollLogs<T>(
         //todo: only if logs not null, invoke onlogs
         const logs = await publicClient.getLogs({
             address: contractAddress,
-            fromBlock: 21072979n,
-            toBlock: 21072980n,
-            // fromBlock: lastBlockNumber + 1n,
-            // toBlock: latestBlockNumber,
+            // fromBlock: 21072979n,
+            // toBlock: 21072980n,
+            fromBlock: lastBlockNumber + 1n,
+            toBlock: latestBlockNumber,
         });
 
         if (logs.length > 0) {

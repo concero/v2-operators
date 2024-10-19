@@ -47,6 +47,7 @@ export const networkEnvKeys: Record<ConceroNetworkNames, string> = {
     avalancheFuji: "FUJI",
     baseSepolia: "BASE_SEPOLIA",
     polygonAmoy: "POLYGON_AMOY",
+    localhost: "LOCALHOST",
 };
 
 export const testingNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
