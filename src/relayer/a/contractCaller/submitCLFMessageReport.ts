@@ -13,7 +13,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 
     const { chainName, contractAddress, decodedLog } = log;
 
-    const { publicClient } = getFallbackClients(conceroNetworks.base);
+    const { publicClient } = getFallbackClients(conceroNetworks[decodedLog.args.message.dstChainSelector]);
     const tx = await publicClient.getTransaction({ hash: log });
     const { ccipMessageId } = decodedLog.args;
 

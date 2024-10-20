@@ -22,6 +22,7 @@ export async function pollLogs<T>(
         });
 
         if (logs.length > 0) {
+            // logger.info(`[${chainName}] Received ${logs.length} logs for contract: ${contractAddress}`);
             onLogs(chainName, contractAddress, logs, abi);
         }
         return latestBlockNumber;

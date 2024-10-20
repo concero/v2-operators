@@ -1,8 +1,8 @@
 import { DecodedLog } from "../../../types/DecodedLog";
-import { conceroNetworks } from "../../../constants";
 import { getEnvAddress } from "../../../utils/getEnvVar";
 import logger from "../../../utils/logger";
-import { getFallbackClients } from "../../../utils/getViemClients";
+import { config } from "../constants/config";
+import { callContract } from "../../common/contractCaller/callContract";
 
 export async function requestCLFMessageReport(log: DecodedLog) {
     // todo:
@@ -11,22 +11,20 @@ export async function requestCLFMessageReport(log: DecodedLog) {
 
     const { chainName, contractAddress, decodedLog } = log;
 
-    const { publicClient } = getFallbackClients(conceroNetworks.base);
-    const tx = await publicClient.getTransaction({ hash: log });
+    const { abi: CLFRouterAbi } = await import("../constants/CLFRouter.json");
+    const { id, message } = decodedLog.args;
 
-    const { ccipMessageId } = decodedLog.args;
     try {
-        const chain = conceroNetworks[chainName];
         const [address] = getEnvAddress("conceroCLFRouter", chainName);
-        console.log(`Requesting CLF message report for message ID: ${ccipMessageId}`);
 
-        // const hash = await callContract({
-        //     chain,
-        //     address,
-        //     abi: conceroRouterAbi,
-        //     functionName: "requestCLFMessageReport",
-        //     args: [ccipMessageId],
-        // });
+        console.log(`[${chainName}] Requesting CLF message report...`);
+        const hash = await callContract({
+            chain: config.networks.conceroCLFRouter,
+            address,
+            abi: CLFRouterAbi,
+            functionName: "requestCLFMessageReport",
+            args: [id, message],
+        });
     } catch (error) {
         logger.error(`[${chainName}] Error requesting CLF message report:`, error);
     }

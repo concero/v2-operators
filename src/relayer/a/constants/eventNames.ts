@@ -1,5 +1,5 @@
 export const eventNames = {
-    NewMessage: "NewMessage",
+    ConceroMessageSent: "ConceroMessageSent",
     CCIPSent: "CCIPSent",
     UnconfirmedTXSent: "UnconfirmedTXSent",
     RequestFulfilled: "RequestFulfilled",

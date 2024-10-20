@@ -11,8 +11,7 @@ export async function onLogs(chainName: ConceroNetworkNames, contractAddress: Ad
     for (const log of res.decodedLogs) {
         console.log(`[${chainName}] Decoded log:`, log);
         switch (log.decodedLog.eventName) {
-            case eventNames.CCIPSent:
-                //todo: pass whole tx object
+            case eventNames.ConceroMessageSent:
                 await requestCLFMessageReport(log);
                 break;
 

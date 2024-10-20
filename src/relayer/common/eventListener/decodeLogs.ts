@@ -18,7 +18,7 @@ export function decodeLogs(
                 abi, // Use the passed ABI for decoding
                 data: log.data,
                 topics: log.topics,
-                strict: true,
+                strict: false,
             });
 
             // console.log(`[${chainName}] Decoded ${decodedLog.eventName} event:`, decodedLog.args);

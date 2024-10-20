@@ -3,60 +3,30 @@ import { Abi } from "viem";
 const conceroCLFRouterAbi: Abi = [
     {
         type: "event",
-        name: "UnconfirmedTXSent",
+        name: "ConceroMessageSent",
         inputs: [
-            { name: "ccipMessageId", type: "bytes32", indexed: true },
-            { name: "sender", type: "address", indexed: false },
-            { name: "recipient", type: "address", indexed: false },
-            { name: "amount", type: "uint256", indexed: false },
-            { name: "token", type: "uint8", indexed: false },
-            { name: "dstChainSelector", type: "uint64", indexed: false },
-        ],
-    },
-    {
-        type: "event",
-        name: "UnconfirmedTXAdded",
-        inputs: [
-            { name: "ccipMessageId", type: "bytes32", indexed: true },
-            { name: "sender", type: "address", indexed: false },
-            { name: "recipient", type: "address", indexed: false },
-            { name: "amount", type: "uint256", indexed: false },
-            { name: "token", type: "uint8", indexed: false },
-            { name: "srcChainSelector", type: "uint64", indexed: false },
-        ],
-    },
-    {
-        type: "event",
-        name: "TXReleased",
-        inputs: [
-            { name: "ccipMessageId", type: "bytes32", indexed: true },
-            { name: "sender", type: "address", indexed: true },
-            { name: "recipient", type: "address", indexed: true },
-            { name: "token", type: "address", indexed: false },
-            { name: "amount", type: "uint256", indexed: false },
-        ],
-    },
-    {
-        type: "event",
-        name: "TXConfirmed",
-        inputs: [
-            { name: "ccipMessageId", type: "bytes32", indexed: true },
-            { name: "sender", type: "address", indexed: true },
-            { name: "recipient", type: "address", indexed: true },
-            { name: "amount", type: "uint256", indexed: false },
-            { name: "token", type: "uint8", indexed: false },
-        ],
-    },
-    {
-        type: "event",
-        name: "CCIPSent",
-        inputs: [
-            { name: "ccipMessageId", type: "bytes32", indexed: true },
-            { name: "sender", type: "address", indexed: false },
-            { name: "recipient", type: "address", indexed: false },
-            { name: "token", type: "uint8", indexed: false }, // Assuming CCIPToken is uint8
-            { name: "amount", type: "uint256", indexed: false },
-            { name: "dstChainSelector", type: "uint64", indexed: false },
+            { name: "id", type: "bytes32", indexed: true },
+            {
+                name: "message",
+                type: "tuple",
+                components: [
+                    { name: "srcChainSelector", type: "uint64" },
+                    { name: "dstChainSelector", type: "uint64" },
+                    { name: "receiver", type: "address" },
+                    { name: "sender", type: "address" },
+                    {
+                        name: "tokenAmounts",
+                        type: "tuple",
+                        components: [
+                            { name: "token", type: "address" },
+                            { name: "amount", type: "uint256" },
+                        ],
+                    },
+                    { name: "relayers", type: "uint8[]" },
+                    { name: "data", type: "bytes" },
+                    { name: "extraArgs", type: "bytes" },
+                ],
+            },
         ],
     },
 ];

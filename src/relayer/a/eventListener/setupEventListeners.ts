@@ -1,21 +1,22 @@
 import { setupEventListener } from "../../common/eventListener/setupEventListener";
-import conceroRouterAbi from "../constants/conceroRouterAbi";
+
 import { getEnvAddress } from "../../../utils/getEnvVar";
-import { conceroNetworks, liveNetworks } from "../../../constants";
 import { onLogs } from "./onLogs";
-import conceroCLFRouterAbi from "../constants/conceroCLFRouterAbi";
+import { config } from "../constants/config";
 
 export async function setupEventListeners(POLLING_INTERVAL_MS: number) {
     //todo: in testing environment should listen to localhost
 
+    const { abi: conceroRouterAbi } = await import("../constants/ConceroRouter.json");
+    const { abi: conceroCLFRouterAbi } = await import("../constants/CLFRouter.json");
     // ConceroRouter event listeners
-    for (const network of liveNetworks) {
+    for (const network of config.networks.conceroRouter) {
         const [contractAddress] = getEnvAddress("conceroRouter", network.name);
         await setupEventListener(network.name, contractAddress, conceroRouterAbi, onLogs, POLLING_INTERVAL_MS);
     }
 
     // ConceroCLFRouter event listener
-    const clfNetwork = conceroNetworks.base;
+    const clfNetwork = config.networks.conceroCLFRouter;
     const [contractAddress] = getEnvAddress("conceroCLFRouter", clfNetwork.name);
     await setupEventListener(clfNetwork.name, contractAddress, conceroCLFRouterAbi, onLogs, POLLING_INTERVAL_MS);
 }
