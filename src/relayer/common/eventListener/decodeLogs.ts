@@ -22,7 +22,7 @@ export function decodeLogs(
             });
 
             // console.log(`[${chainName}] Decoded ${decodedLog.eventName} event:`, decodedLog.args);
-            decodedLogs.push({ chainName, contractAddress, decodedLog });
+            decodedLogs.push({ ...log, decodedLog, chainName });
         } catch (error) {
             if (error instanceof AbiEventSignatureNotFoundError) {
                 // Skip logs not found in ABI

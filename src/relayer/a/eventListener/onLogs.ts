@@ -9,13 +9,13 @@ export async function onLogs(chainName: ConceroNetworkNames, contractAddress: Ad
     const res = decodeLogs(chainName, contractAddress, logs, abi);
 
     for (const log of res.decodedLogs) {
-        console.log(`[${chainName}] Decoded log:`, log);
+        // console.log(`[${chainName}] Decoded log:`, log);
         switch (log.decodedLog.eventName) {
             case eventNames.ConceroMessageSent:
                 await requestCLFMessageReport(log);
                 break;
 
-            case eventNames.RequestFulfilled:
+            case eventNames.CLFMessageReport:
                 await submitCLFMessageReport(log);
                 break;
 
