@@ -15,9 +15,8 @@ export async function requestCLFMessageReport(log: DecodedLog) {
     const { id, message } = decodedLog.args;
 
     try {
-        const [address] = getEnvAddress("conceroCLFRouter", chainName);
+        const [address] = getEnvAddress("clfRouterProxy", chainName);
 
-        console.log(`[${chainName}] Requesting CLF message report...`);
         const hash = await callContract({
             chain: config.networks.conceroCLFRouter,
             address,
@@ -25,6 +24,8 @@ export async function requestCLFMessageReport(log: DecodedLog) {
             functionName: "requestCLFMessageReport",
             args: [id, message],
         });
+
+        logger.info(`[${chainName}] CLF message report requested with hash: ${hash}`);
     } catch (error) {
         logger.error(`[${chainName}] Error requesting CLF message report:`, error);
     }

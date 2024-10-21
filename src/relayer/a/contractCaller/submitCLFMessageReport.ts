@@ -19,7 +19,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 
     try {
         const chain = conceroNetworks[chainName];
-        const [address] = getEnvAddress("conceroCLFRouter", chainName);
+        const [address] = getEnvAddress("clfRouterProxy", chainName);
         console.log(`Requesting CLF message report for message ID: ${ccipMessageId}`);
 
         // const hash = await callContract({

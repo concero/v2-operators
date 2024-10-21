@@ -14,7 +14,7 @@ export async function callContract({
     try {
         const { publicClient, walletClient, account } = getFallbackClients(chain);
 
-        const request = await publicClient.simulateContract({
+        const { request } = await publicClient.simulateContract({
             account,
             chain: chain.viemChain,
             address,
@@ -24,7 +24,7 @@ export async function callContract({
             options,
         });
 
-        const hash = await walletClient.sendTransaction(request);
+        const hash = await walletClient.writeContract(request);
 
         const { cumulativeGasUsed } = await publicClient.waitForTransactionReceipt({
             ...viemReceiptConfig,

@@ -11,12 +11,12 @@ export async function setupEventListeners(POLLING_INTERVAL_MS: number) {
     const { abi: conceroCLFRouterAbi } = await import("../constants/CLFRouter.json");
     // ConceroRouter event listeners
     for (const network of config.networks.conceroRouter) {
-        const [contractAddress] = getEnvAddress("conceroRouter", network.name);
+        const [contractAddress] = getEnvAddress("routerProxy", network.name);
         await setupEventListener(network.name, contractAddress, conceroRouterAbi, onLogs, POLLING_INTERVAL_MS);
     }
 
     // ConceroCLFRouter event listener
     const clfNetwork = config.networks.conceroCLFRouter;
-    const [contractAddress] = getEnvAddress("conceroCLFRouter", clfNetwork.name);
+    const [contractAddress] = getEnvAddress("clfRouterProxy", clfNetwork.name);
     await setupEventListener(clfNetwork.name, contractAddress, conceroCLFRouterAbi, onLogs, POLLING_INTERVAL_MS);
 }

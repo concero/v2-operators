@@ -4,8 +4,8 @@ import conceroNetworks from "./conceroNetworks";
 export const testnetNetworks: ConceroNetwork[] = [
     conceroNetworks.baseSepolia,
     conceroNetworks.arbitrumSepolia,
-    conceroNetworks.optimismSepolia,
-    conceroNetworks.avalancheFuji,
+    // conceroNetworks.optimismSepolia,
+    // conceroNetworks.avalancheFuji,
 ];
 export const mainnetNetworks: ConceroNetwork[] = [
     conceroNetworks.base,
