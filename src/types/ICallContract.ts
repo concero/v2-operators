@@ -9,6 +9,6 @@ export interface ICallContract {
     abi: Abi;
     options?: {
         gasPrice?: bigint;
-        gasLimit?: bigint;
+        gas?: bigint;
     };
 }
