@@ -18,7 +18,6 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 
     const { publicClient: clfPublicClient } = getFallbackClients(conceroNetworks[chainName]);
     const tx = await clfPublicClient.getTransaction({ hash: transactionHash });
-    console.log(tx);
 
     // console.log(tx);
     // console.log(`Submitting CLF message report for message ID: ${conceroId}`);
@@ -86,7 +85,6 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         args: [reportSubmission, message],
     });
 
-    console.log(hash);
     logger.info(`[${chainName}] CLF message report submitted with hash: ${hash}`);
 }
 //

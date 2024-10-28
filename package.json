@@ -5,7 +5,8 @@
   "scripts": {
     "build": "swc src -d dist",
     "lint": "eslint --ext .ts src/",
-    "format": "prettier --write **/*.ts"
+    "format": "prettier --write **/*.ts",
+    "start:relayerA": "bun ./src/relayer/a/index.ts"
   },
   "devDependencies": { "prettier": "^3.3.3", "swc": "^1.0.11" },
   "peerDependencies": {
