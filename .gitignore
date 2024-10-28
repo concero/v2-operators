@@ -24,4 +24,5 @@ dist
 !.env.clccip
 
 *.log
+/logs/
 
