@@ -15,7 +15,7 @@ export function decodeLogs(
     logs.forEach(log => {
         try {
             const decodedLog = decodeEventLog({
-                abi, // Use the passed ABI for decoding
+                abi,
                 data: log.data,
                 topics: log.topics,
                 strict: false,

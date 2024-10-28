@@ -3,6 +3,7 @@ import { getEnvAddress } from "../../../utils/getEnvVar";
 import logger from "../../../utils/logger";
 import { config } from "../constants/config";
 import { callContract } from "../../common/contractCaller/callContract";
+import { abi as CLFRouterAbi } from "../../../abi/CLFRouter.json";
 
 export async function requestCLFMessageReport(log: DecodedLog) {
     // todo:
@@ -10,8 +11,6 @@ export async function requestCLFMessageReport(log: DecodedLog) {
     //  request CLF to check the message on the SRC.
 
     const { chainName, contractAddress, decodedLog } = log;
-
-    const { abi: CLFRouterAbi } = await import("../constants/CLFRouter.json");
     const { id, message } = decodedLog.args;
 
     try {

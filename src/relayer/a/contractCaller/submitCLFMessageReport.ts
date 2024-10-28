@@ -8,22 +8,17 @@ import { decodeEventLog } from "viem";
 import { eventNames } from "../constants/eventNames";
 import { callContract } from "../../common/contractCaller/callContract";
 import logger from "../../../utils/logger";
+import { abi as routerAbi } from "../../../abi/ConceroRouter.json";
 
 export async function submitCLFMessageReport(log: DecodedLog) {
-    const { abi: conceroRouterAbi } = await import("../constants/ConceroRouter.json");
-
-    //todo:
-    // get srcBlockNumber and ConceroMessageId from CLFMessageReport log
-    // fetch message from SRC
-    // (optional) verify that message data hash matches the hash in the CLFMessageReport
-    // send CLF report with message data to DST ConceroRouter
-
     const { chainName, address, transactionHash, decodedLog } = log;
-
     const { conceroId } = decodedLog.args;
+    // console.log(`[${chainName}] New log: ${decodedLog.eventName} event:`, decodedLog.args);
+    // console.log(conceroId);
 
     const { publicClient: clfPublicClient } = getFallbackClients(conceroNetworks[chainName]);
     const tx = await clfPublicClient.getTransaction({ hash: transactionHash });
+    console.log(tx);
 
     // console.log(tx);
     // console.log(`Submitting CLF message report for message ID: ${conceroId}`);
@@ -49,7 +44,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     logs.forEach(log => {
         try {
             const decodedLog = decodeEventLog({
-                abi: conceroRouterAbi, // Use the passed ABI for decoding
+                abi: routerAbi, // Use the passed ABI for decoding
                 data: log.data,
                 topics: log.topics,
                 strict: false,
@@ -86,7 +81,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     const hash = await callContract({
         chain: dstChain,
         address: dstConceroRouter,
-        abi: conceroRouterAbi,
+        abi: routerAbi,
         functionName: "submitMessageReport",
         args: [reportSubmission, message],
     });
