@@ -1,10 +1,10 @@
 export type EnvPrefixes = {
     router: string;
     routerProxy: string;
-    clfRouter: string;
-    clfRouterProxy: string;
+    verifier: string;
+    verifierProxy: string;
     routerProxyAdmin: string;
-    clfRouterProxyAdmin: string;
+    verifierProxyAdmin: string;
     lpToken: string;
     create3Factory: string;
     pause: string;

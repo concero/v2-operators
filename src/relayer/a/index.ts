@@ -1,4 +1,4 @@
-import { configureDotEnv } from "../../utils/dotenvConfig";
+import { configureDotEnv } from "../common/utils/dotenvConfig";
 import { setupEventListeners } from "./eventListener/setupEventListeners";
 import { config } from "./constants/config";
 

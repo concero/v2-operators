@@ -1,14 +1,14 @@
 const { INFURA_API_KEY, ALCHEMY_API_KEY, BLAST_API_KEY, CHAINSTACK_API_KEY, TENDERLY_API_KEY } = process.env;
 
 export const rpcUrl: Record<string, string> = {
-    localhost: "http://127.0.0.1:8546",
+    localhost: "http://127.0.0.1:8545",
     arbitrum: `https://arbitrum-mainnet.infura.io/v3/${INFURA_API_KEY}`,
     arbitrumSepolia: `https://arbitrum-sepolia.infura.io/v3/${INFURA_API_KEY}`,
     base: `https://base-sepolia.infura.io/v3/${INFURA_API_KEY}`,
     baseSepolia: `https://base-sepolia.infura.io/v3/${INFURA_API_KEY}`,
     avalanche: `https://avalanche-mainnet.infura.io/v3/${INFURA_API_KEY}`,
     avalancheFuji: `https://avalanche-fuji.infura.io/v3/${INFURA_API_KEY}`,
-    mainnet: `https://mainnet.infura.io/v3/${INFURA_API_KEY}`,
+    ethereum: `https://mainnet.infura.io/v3/${INFURA_API_KEY}`,
     sepolia: `https://sepolia.infura.io/v3/${INFURA_API_KEY}`,
     optimism: `https://optimism-mainnet.infura.io/v3/${INFURA_API_KEY}`,
     optimismSepolia: `https://optimism-sepolia.infura.io/v3/${INFURA_API_KEY}`,
@@ -18,9 +18,9 @@ export const rpcUrl: Record<string, string> = {
 
 // Warning: ANKR endpoints are limited to 30 requests/sec and not suitable for production use
 
-export const urls: Record<string, string[]> = {
+export const rpcUrls: Record<string, string[]> = {
     localhost: [rpcUrl.localhost],
-    mainnet: [
+    ethereum: [
         `https://mainnet.infura.io/v3/${INFURA_API_KEY}`,
         `https://eth-mainnet.blastapi.io/${BLAST_API_KEY}`,
         "https://rpc.ankr.com/eth",
@@ -90,5 +90,3 @@ export const urls: Record<string, string[]> = {
     polygonZkEvm: [`https://polygon-zkevm-mainnet.blastapi.io/${BLAST_API_KEY}`],
     polygonZkEvmCardona: [`https://polygon-zkevm-cardona.blastapi.io/${BLAST_API_KEY}`],
 };
-
-export default rpcUrl;

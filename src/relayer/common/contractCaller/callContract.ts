@@ -1,4 +1,4 @@
-import { getFallbackClients } from "../../../utils/getViemClients";
+import { getFallbackClients } from "../utils/getViemClients";
 import { viemReceiptConfig } from "../../../constants/config";
 import { ICallContract } from "../../../types/ICallContract";
 import { Hash } from "viem";

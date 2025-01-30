@@ -1,10 +1,10 @@
-import { type env } from "../types/env";
+import { type env } from "../../../types/env";
 import process from "process";
 import { shorten } from "./formatting";
-import { envPrefixes, networkEnvKeys } from "../constants";
+import { envPrefixes, networkEnvKeys } from "../../../constants";
 import { Address } from "viem";
-import { type EnvPrefixes } from "../types/envPrefixes";
-import { ConceroNetworkNames } from "../types/ConceroNetwork";
+import { type EnvPrefixes } from "../../../types/envPrefixes";
+import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
 
 function getEnvVar(key: keyof env): string {
     const value = process.env[key];

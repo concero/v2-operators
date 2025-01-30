@@ -1,9 +1,9 @@
 import { DecodedLog } from "../../../types/DecodedLog";
-import { getEnvAddress } from "../../../utils/getEnvVar";
-import logger from "../../../utils/logger";
+import { getEnvAddress } from "../../common/utils/getEnvVar";
+import logger from "../../common/utils/logger";
 import { config } from "../constants/config";
 import { callContract } from "../../common/contractCaller/callContract";
-import { abi as CLFRouterAbi } from "../../../abi/CLFRouter.json";
+import { abi as VerifierAbi } from "../../../abi/Verifier.json";
 
 export async function requestCLFMessageReport(log: DecodedLog) {
     // todo:
@@ -14,12 +14,12 @@ export async function requestCLFMessageReport(log: DecodedLog) {
     const { id, message } = decodedLog.args;
 
     try {
-        const [address] = getEnvAddress("clfRouterProxy", chainName);
+        const [address] = getEnvAddress("verifierProxy", chainName);
 
         const hash = await callContract({
-            chain: config.networks.conceroCLFRouter,
+            chain: config.networks.conceroVerifier,
             address,
-            abi: CLFRouterAbi,
+            abi: VerifierAbi,
             functionName: "requestCLFMessageReport",
             args: [id, message],
         });

@@ -1,7 +1,7 @@
 import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
-import { getFallbackClients } from "../../../utils/getViemClients";
+import { getFallbackClients } from "../utils/getViemClients";
 import { conceroNetworks } from "../../../constants";
-import logger from "../../../utils/logger";
+import logger from "../utils/logger";
 import { pollLogs } from "./pollLogs";
 import { Address } from "viem";
 

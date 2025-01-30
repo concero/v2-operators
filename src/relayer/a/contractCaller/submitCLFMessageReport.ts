@@ -1,13 +1,13 @@
 import { DecodedLog } from "../../../types/DecodedLog";
 import { conceroNetworks } from "../../../constants";
-import { getFallbackClients } from "../../../utils/getViemClients";
-import { decodeCLFReport, decodeCLFReportResult } from "../../../utils/decodeCLFReport";
-import { getChainBySelector } from "../../../utils/getChainBySelector";
-import { getEnvAddress } from "../../../utils/getEnvVar";
+import { getFallbackClients } from "../../common/utils/getViemClients";
+import { decodeCLFReport, decodeCLFReportResult } from "../../common/utils/decodeCLFReport";
+import { getChainBySelector } from "../../common/utils/getChainBySelector";
+import { getEnvAddress } from "../../common/utils/getEnvVar";
 import { decodeEventLog } from "viem";
 import { eventNames } from "../constants/eventNames";
 import { callContract } from "../../common/contractCaller/callContract";
-import logger from "../../../utils/logger";
+import logger from "../../common/utils/logger";
 import { abi as routerAbi } from "../../../abi/ConceroRouter.json";
 
 export async function submitCLFMessageReport(log: DecodedLog) {
