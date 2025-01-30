@@ -1,12 +1,11 @@
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
+import { config } from "../../../constants/config";
 
-// Define log level based on the environment variable or default to 'info'
-const logLevel = process.env.LOG_LEVEL || "info";
+const logLevel = config.LOG_LEVEL;
 
-// Define common log format with timestamps and pretty print for development
 const logFormat = winston.format.combine(
-    winston.format.colorize({ level: true }), // Apply color only to the log level
+    winston.format.colorize({ level: true }),
     winston.format.timestamp({
         format: "YYYY-MM-DD HH:mm:ss",
     }),
@@ -18,16 +17,15 @@ const logFormat = winston.format.combine(
     }),
 );
 
-// Create the logger instance
 const logger = winston.createLogger({
-    level: logLevel, // Control log level from environment
-    format: winston.format.json(), // Default format is JSON
+    level: logLevel,
+    format: winston.format.json(),
     transports: [
         new DailyRotateFile({
             filename: "logs/log-%DATE%.log",
             datePattern: "YYYY-MM-DD",
-            maxSize: "20m", // Rotate the log file when it reaches 20MB
-            maxFiles: "14d", // Keep logs for the last 14 days
+            maxSize: "20m",
+            maxFiles: "14d",
         }),
         new DailyRotateFile({
             level: "error",
@@ -48,7 +46,6 @@ if (process.env.NODE_ENV !== "production") {
     );
 }
 
-// Graceful log level control for dynamic changes in environments
 logger.level = logLevel;
 
 export default logger;

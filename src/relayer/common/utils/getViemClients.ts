@@ -7,6 +7,8 @@ import { ConceroNetwork } from "../../../types/ConceroNetwork";
 import { activeNetworks } from "../../../constants";
 import { fetchRpcUrls } from "./fetchers";
 import { config } from "../../../constants/config";
+import { AppError } from "./AppError";
+import { getEnvVar } from "./getEnvVar";
 
 type Clients = {
     walletClient: WalletClient;
@@ -35,20 +37,13 @@ class ViemClientManager {
     }
 
     private initializeClients(chain: ConceroNetwork): Clients {
-        const privateKey = process.env.OPERATOR_PRIVATE_KEY;
-        if (!privateKey) {
-            throw new Error("OPERATOR_PRIVATE_KEY environment variable is not set");
-        }
+        const privateKey = getEnvVar("OPERATOR_PRIVATE_KEY");
 
         const account = privateKeyToAccount(`0x${privateKey}`);
         const transport = this.createTransport(chain);
 
         const publicClient = createPublicClient({ transport, chain: chain.viemChain });
         const walletClient = createWalletClient({ transport, chain: chain.viemChain, account });
-
-        if (!publicClient) {
-            throw new Error(`Failed to create publicClient for chain: ${chain.name}`);
-        }
 
         return {
             publicClient,
@@ -94,7 +89,7 @@ class ViemClientManager {
                 this.rpcUrls[chain.name] = newUrls;
                 this.rotateViemClients(chain);
             } catch (error) {
-                console.error(`Failed to update RPC URLs for chain: ${chain.name}`, error);
+                throw new AppError("FailedHTTPRequest", error);
             }
         }
     }
@@ -108,7 +103,7 @@ class ViemClientManager {
             try {
                 await this.updateRpcUrls(chains);
             } catch (error) {
-                console.error("Failed to update RPC URLs:", error);
+                throw new AppError("FailedHTTPRequest", error);
             }
             await this.sleep(config.VIEM.CLIENT_ROTATION_INTERVAL_MS);
         }
@@ -120,7 +115,7 @@ class ViemClientManager {
                 const urls = await fetchRpcUrls(chain.viemChain.id);
                 this.rpcUrls[chain.name] = urls;
             } catch (error) {
-                console.error(`Failed to initialize RPC URLs for chain: ${chain.name}`, error);
+                throw new AppError("FailedHTTPRequest", error);
             }
         }
     }
