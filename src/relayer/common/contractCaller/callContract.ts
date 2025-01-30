@@ -1,5 +1,5 @@
 import { getFallbackClients } from "../utils/getViemClients";
-import { viemReceiptConfig } from "../../../constants/config";
+import { config } from "../../../constants/config";
 import { ICallContract } from "../../../types/ICallContract";
 import { Hash } from "viem";
 
@@ -27,7 +27,7 @@ export async function callContract({
         const hash = await walletClient.writeContract(request);
 
         const { cumulativeGasUsed } = await publicClient.waitForTransactionReceipt({
-            ...viemReceiptConfig,
+            ...config.VIEM.RECEIPT,
             hash,
         });
 

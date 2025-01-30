@@ -11,7 +11,7 @@ export async function setupEventListener<T>(
     onLogs: (chainName: ConceroNetworkNames, contractAddress: Address, logs: T[]) => void, // Callback for log processing
     pollingIntervalMs: number,
 ): Promise<void> {
-    const { publicClient } = getFallbackClients(conceroNetworks[chainName]);
+    const { publicClient } = await getFallbackClients(conceroNetworks[chainName]);
     let lastBlockNumber: bigint = await publicClient.getBlockNumber();
 
     logger.info(`[${chainName}] Monitoring contract: ${contractAddress} from block ${lastBlockNumber}`);

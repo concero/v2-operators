@@ -6,7 +6,6 @@ import { config } from "../constants/config";
 export async function setupEventListeners(POLLING_INTERVAL_MS: number) {
     // ConceroRouter event listeners
     for (const [networkKey, network] of Object.entries(config.networks.conceroRouter)) {
-        console.log(network);
         const [contractAddress] = getEnvAddress("routerProxy", network.name);
         await setupEventListener(network.name, contractAddress, onRouterLogs, POLLING_INTERVAL_MS);
     }

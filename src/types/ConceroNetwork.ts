@@ -15,7 +15,9 @@ export type ConceroTestnetNetworkNames =
     | "avalancheFuji"
     | "baseSepolia"
     | "polygonAmoy";
+
 export type ConceroTestingNetworkNames = "localhost";
+
 export type ConceroNetworkNames = ConceroMainnetNetworkNames | ConceroTestnetNetworkNames | ConceroTestingNetworkNames;
 
 export type ConceroNetwork = {
@@ -26,7 +28,6 @@ export type ConceroNetwork = {
     accounts: string[];
     viemChain: Chain;
     confirmations: number;
-    rpcUrls: string[];
 };
 
 export type NetworkType = "mainnet" | "testnet";
