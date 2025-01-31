@@ -1,10 +1,15 @@
-import { createPublicClient, createWalletClient, fallback, http } from "viem";
+import {
+    createPublicClient,
+    createWalletClient,
+    fallback,
+    http,
+    PublicClient,
+    WalletClient,
+} from "viem";
+
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
-import { PublicClient } from "viem/clients/createPublicClient";
-import { WalletClient } from "viem/clients/createWalletClient";
-import { activeNetworks } from "../../../constants";
-import { globalConfig } from "../../../constants/globalConfig";
+import { activeNetworks, globalConfig } from "../../../constants";
 import { ConceroNetwork } from "../../../types/ConceroNetwork";
 import { fetchRpcUrls } from "./fetchers";
 import { getEnvVar } from "./getEnvVar";

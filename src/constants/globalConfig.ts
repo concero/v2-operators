@@ -1,9 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { getEnvVar } from "../relayer/common/utils/getEnvVar";
-import { ConceroNetwork } from "../types/ConceroNetwork";
 import { type GlobalConfig } from "../types/GlobalConfig";
-import { conceroNetworks } from "./conceroNetworks";
 
 const CONCERO_VERIFIER_ABI = JSON.parse(
     fs.readFileSync(path.join(__dirname, "../abi/ConceroVerifier.json"), "utf8"),
@@ -12,8 +10,6 @@ const CONCERO_VERIFIER_ABI = JSON.parse(
 const CONCERO_ROUTER_ABI = JSON.parse(
     fs.readFileSync(path.join(__dirname, "../abi/ConceroRouter.json"), "utf8"),
 );
-
-console.log(CONCERO_VERIFIER_ABI);
 
 const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar("NETWORK_MODE"),
@@ -55,11 +51,4 @@ const globalConfig: GlobalConfig = {
     },
 };
 
-const filterWhitelistedNetworks = (networks: Record<string, ConceroNetwork>): ConceroNetwork[] => {
-    const whitelistedIds = globalConfig.WHITELISTED_NETWORK_IDS[globalConfig.NETWORK_MODE];
-    return Object.values(networks).filter(network => whitelistedIds.includes(network.id));
-};
-
-const activeNetworks: ConceroNetwork[] = filterWhitelistedNetworks(conceroNetworks);
-
-export { activeNetworks, globalConfig };
+export { globalConfig };

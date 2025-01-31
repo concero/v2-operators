@@ -1,7 +1,6 @@
 import process from "process";
 import { Address } from "viem";
-import { envPrefixes, networkEnvKeys } from "../../../constants";
-import { AppErrorEnum } from "../../../constants/appErrors";
+import { AppErrorEnum, envPrefixes, networkEnvKeys } from "../../../constants";
 import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
 import { type env } from "../../../types/env";
 import { type EnvPrefixes } from "../../../types/envPrefixes";

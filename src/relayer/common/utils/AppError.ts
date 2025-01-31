@@ -1,4 +1,4 @@
-import { AppErrorEnum, appErrors } from "../../../constants/appErrors";
+import { AppErrorEnum, appErrors } from "../../../constants";
 import { logger } from "./logger";
 
 class AppError extends Error {

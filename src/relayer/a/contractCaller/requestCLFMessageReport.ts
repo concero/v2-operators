@@ -1,4 +1,4 @@
-import { abi as VerifierAbi } from "../../../abi/Verifier.json";
+import { globalConfig } from "../../../constants";
 import { DecodedLog } from "../../../types/DecodedLog";
 import { callContract, getEnvAddress, logger } from "../../common/utils";
 import { config } from "../constants/";
@@ -17,7 +17,7 @@ export async function requestCLFMessageReport(log: DecodedLog) {
         const hash = await callContract({
             chain: config.networks.conceroVerifier,
             address,
-            abi: VerifierAbi,
+            abi: globalConfig.ABI.CONCERO_VERIFIER,
             functionName: "requestCLFMessageReport",
             args: [id, message],
         });

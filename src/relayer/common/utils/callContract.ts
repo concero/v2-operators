@@ -1,28 +1,12 @@
-import { Hash } from "viem";
+import { Hash, type PublicClient, type SimulateContractParameters, type WalletClient } from "viem";
 import { globalConfig } from "../../../constants";
-import { ICallContract } from "../../../types/ICallContract";
-import { getFallbackClients } from "./getViemClients";
-
-export async function callContract({
-    chain,
-    address,
-    abi,
-    functionName,
-    args,
-    options = {},
-}: ICallContract): Promise<Hash | undefined> {
+export async function callContract(
+    publicClient: PublicClient,
+    walletClient: WalletClient,
+    simulateContractParams: SimulateContractParameters,
+): Promise<Hash | undefined> {
     try {
-        const { publicClient, walletClient, account } = await getFallbackClients(chain);
-
-        const { request } = await publicClient.simulateContract({
-            account,
-            chain: chain.viemChain,
-            address,
-            abi,
-            functionName,
-            args,
-            options,
-        });
+        const { request } = await publicClient.simulateContract(simulateContractParams);
 
         const hash = await walletClient.writeContract(request);
 
@@ -30,6 +14,8 @@ export async function callContract({
             ...globalConfig.VIEM.RECEIPT,
             hash,
         });
+
+        const transaction = await publicClient.getTransaction(hash);
 
         return hash;
     } catch (error) {

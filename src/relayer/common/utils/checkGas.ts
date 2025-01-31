@@ -1,6 +1,4 @@
-import { activeNetworks } from "../../../constants";
-import { AppErrorEnum } from "../../../constants/appErrors";
-import { globalConfig } from "../../../constants/globalConfig";
+import { activeNetworks, AppErrorEnum, globalConfig } from "../../../constants";
 import { AppError, getFallbackClients, logger } from "../utils";
 
 const MINIMUM_NATIVE_VALUE = 1_000_000; // 0.001 ETH

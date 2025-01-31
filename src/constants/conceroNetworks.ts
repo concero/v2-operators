@@ -21,6 +21,7 @@ import {
     ConceroTestnetNetworkNames,
     NetworkType,
 } from "../types/ConceroNetwork";
+import { globalConfig } from "./globalConfig";
 
 const DEFAULT_BLOCK_CONFIRMATIONS = 2;
 const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
@@ -174,4 +175,11 @@ const conceroNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
     ...testingNetworks,
 };
 
-export { conceroNetworks, mainnetNetworks, networkTypes, testnetNetworks };
+const filterWhitelistedNetworks = (networks: Record<string, ConceroNetwork>): ConceroNetwork[] => {
+    const whitelistedIds = globalConfig.WHITELISTED_NETWORK_IDS[globalConfig.NETWORK_MODE];
+    return Object.values(networks).filter(network => whitelistedIds.includes(network.id));
+};
+
+const activeNetworks: ConceroNetwork[] = filterWhitelistedNetworks(conceroNetworks);
+
+export { activeNetworks, conceroNetworks, mainnetNetworks, networkTypes, testnetNetworks };

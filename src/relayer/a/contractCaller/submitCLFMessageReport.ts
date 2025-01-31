@@ -1,6 +1,5 @@
 import { decodeEventLog } from "viem";
-import { abi as routerAbi } from "../../../abi/ConceroRouter.json";
-import { conceroNetworks } from "../../../constants";
+import { conceroNetworks, globalConfig } from "../../../constants";
 import { DecodedLog } from "../../../types/DecodedLog";
 import {
     callContract,
@@ -46,7 +45,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     logs.forEach(log => {
         try {
             const decodedLog = decodeEventLog({
-                abi: routerAbi, // Use the passed ABI for decoding
+                abi: globalConfig.ABI.CONCERO_ROUTER,
                 data: log.data,
                 topics: log.topics,
                 strict: false,
@@ -83,7 +82,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     const hash = await callContract({
         chain: dstChain,
         address: dstConceroRouter,
-        abi: routerAbi,
+        abi: globalConfig.ABI.CONCERO_ROUTER,
         functionName: "submitMessageReport",
         args: [reportSubmission, message],
     });
