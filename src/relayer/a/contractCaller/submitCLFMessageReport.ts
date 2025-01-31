@@ -1,14 +1,17 @@
-import { DecodedLog } from "../../../types/DecodedLog";
-import { conceroNetworks } from "../../../constants";
-import { getFallbackClients } from "../../common/utils/getViemClients";
-import { decodeCLFReport, decodeCLFReportResult } from "../../common/utils/decodeCLFReport";
-import { getChainBySelector } from "../../common/utils/getChainBySelector";
-import { getEnvAddress } from "../../common/utils/getEnvVar";
 import { decodeEventLog } from "viem";
-import { eventNames } from "../constants/eventNames";
-import { callContract } from "../../common/contractCaller/callContract";
-import logger from "../../common/utils/logger";
 import { abi as routerAbi } from "../../../abi/ConceroRouter.json";
+import { conceroNetworks } from "../../../constants";
+import { DecodedLog } from "../../../types/DecodedLog";
+import {
+    callContract,
+    decodeCLFReport,
+    decodeCLFReportResult,
+    getChainBySelector,
+    getEnvAddress,
+    getFallbackClients,
+    logger,
+} from "../../common/utils";
+import { eventNames } from "../constants";
 
 export async function submitCLFMessageReport(log: DecodedLog) {
     const { chainName, address, transactionHash, decodedLog } = log;
@@ -16,7 +19,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     // console.log(`[${chainName}] New log: ${decodedLog.eventName} event:`, decodedLog.args);
     // console.log(conceroId);
 
-    const { publicClient: clfPublicClient } = getFallbackClients(conceroNetworks[chainName]);
+    const { publicClient: clfPublicClient } = await getFallbackClients(conceroNetworks[chainName]);
     const tx = await clfPublicClient.getTransaction({ hash: transactionHash });
 
     // console.log(tx);
@@ -29,7 +32,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     // console.log(decodedCLFResult);
     // 1. go to src chain and fetch message
     const srcChain = getChainBySelector(decodedCLFResult.srcChainSelector);
-    const { publicClient: srcPublicClient } = getFallbackClients(srcChain);
+    const { publicClient: srcPublicClient } = await getFallbackClients(srcChain);
     const [srcContractAddress] = getEnvAddress("routerProxy", srcChain.name);
 
     const logs = await srcPublicClient.getLogs({

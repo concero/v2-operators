@@ -1,6 +1,6 @@
 import { configureDotEnv } from "../common/utils/dotenvConfig";
-import { setupEventListeners } from "./eventListener/setupEventListeners";
 import { config } from "./constants/config";
+import { setupEventListeners } from "./eventListener/setupEventListeners";
 
 function main() {
     configureDotEnv();

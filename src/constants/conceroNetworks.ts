@@ -1,11 +1,4 @@
 import {
-    ConceroMainnetNetworkNames,
-    type ConceroNetwork,
-    ConceroNetworkNames,
-    ConceroTestnetNetworkNames,
-    NetworkType,
-} from "../types/ConceroNetwork";
-import {
     arbitrum,
     arbitrumSepolia,
     avalanche,
@@ -21,47 +14,39 @@ import {
 } from "viem/chains";
 import { getEnvVar } from "../relayer/common/utils/getEnvVar";
 import { localhostViemChain } from "../relayer/common/utils/localhostViemChain";
+import {
+    ConceroMainnetNetworkNames,
+    type ConceroNetwork,
+    ConceroNetworkNames,
+    ConceroTestnetNetworkNames,
+    NetworkType,
+} from "../types/ConceroNetwork";
 
 const DEFAULT_BLOCK_CONFIRMATIONS = 2;
 const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
 
-export const networkTypes: Record<NetworkType, NetworkType> = {
+const networkTypes: Record<NetworkType, NetworkType> = {
     mainnet: "mainnet",
     testnet: "testnet",
 };
 
-export const networkEnvKeys: Record<ConceroNetworkNames, string> = {
-    // mainnets
-    ethereum: "ETHEREUM",
-    arbitrum: "ARBITRUM",
-    optimism: "OPTIMISM",
-    polygon: "POLYGON",
-    polygonZkEvm: "POLYGON_ZKEVM",
-    avalanche: "AVALANCHE",
-    base: "BASE",
-    // testnets
-    sepolia: "ETHEREUM_SEPOLIA",
-    optimismSepolia: "OPTIMISM_SEPOLIA",
-    arbitrumSepolia: "ARBITRUM_SEPOLIA",
-    avalancheFuji: "AVALANCHE_FUJI",
-    baseSepolia: "BASE_SEPOLIA",
-    polygonAmoy: "POLYGON_AMOY",
-    localhost: "LOCALHOST",
-};
-
-export const testingNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
+const testingNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
     localhost: {
         name: "localhost",
         type: networkTypes.testnet,
-        id: 1337,
+        id: 31337,
         accounts: [operatorPK],
-        chainSelector: "1337",
+        chainSelector: "31337",
         confirmations: 1,
         viemChain: localhostViemChain,
+        addresses: {
+            conceroVerifier: getEnvVar("CONCERO_VERIFIER_ADDRESS_LOCALHOST"),
+            conceroRouter: getEnvVar("CONCERO_ROUTER_ADDRESS_LOCALHOST"),
+        },
     },
 };
 
-export const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
+const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
     sepolia: {
         name: "sepolia",
         type: networkTypes.testnet,
@@ -117,7 +102,7 @@ export const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork>
         viemChain: polygonAmoy,
     },
 };
-export const mainnetNetworks: Record<ConceroMainnetNetworkNames, ConceroNetwork> = {
+const mainnetNetworks: Record<ConceroMainnetNetworkNames, ConceroNetwork> = {
     ethereum: {
         name: "ethereum",
         type: networkTypes.mainnet,
@@ -183,10 +168,10 @@ export const mainnetNetworks: Record<ConceroMainnetNetworkNames, ConceroNetwork>
     },
 };
 
-export const conceroNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
+const conceroNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
     ...testnetNetworks,
     ...mainnetNetworks,
     ...testingNetworks,
 };
 
-export default conceroNetworks;
+export { conceroNetworks, mainnetNetworks, networkTypes, testnetNetworks };

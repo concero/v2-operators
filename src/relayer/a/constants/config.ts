@@ -1,5 +1,11 @@
-import { conceroNetworks, mainnetNetworks, testnetNetworks } from "../../../constants";
-import { config as globalConfig } from "../../../constants/config";
+import {
+    AppErrorEnum,
+    conceroNetworks,
+    globalConfig,
+    mainnetNetworks,
+    testnetNetworks,
+} from "../../../constants";
+import { AppError } from "../../common/utils";
 
 let conceroRouterNetworks;
 let conceroVerifierNetwork;
@@ -18,7 +24,7 @@ switch (globalConfig.NETWORK_MODE) {
         conceroVerifierNetwork = conceroNetworks.base;
         break;
     default:
-        throw new Error("Invalid env.NETWORK_MODE");
+        throw new AppError(AppErrorEnum.InvalidNetworkMode);
 }
 
 export type RelayerAConfig = {

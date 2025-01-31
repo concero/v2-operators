@@ -1,13 +1,15 @@
-import { config } from "../../../constants/config";
+import { AppErrorEnum, globalConfig } from "../../../constants/";
 import { AppError } from "./AppError";
-import logger from "./logger";
+import { logger } from "./logger";
 
-const DEFAULT_TIMEOUT = config.HTTPCLIENT.DEFAULT_TIMEOUT;
-const MAX_RETRIES = config.HTTPCLIENT.MAX_RETRIES;
-const RETRY_DELAY = config.HTTPCLIENT.RETRY_DELAY;
+const { RETRY_DELAY, MAX_RETRIES, DEFAULT_TIMEOUT } = globalConfig.HTTPCLIENT;
 
 class HttpClient {
-    private async fetchWithTimeout(resource: string, options: RequestInit, timeout: number): Promise<Response> {
+    private async fetchWithTimeout(
+        resource: string,
+        options: RequestInit,
+        timeout: number,
+    ): Promise<Response> {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeout);
         try {
@@ -19,7 +21,7 @@ class HttpClient {
             return response;
         } catch (error) {
             clearTimeout(id);
-            throw new AppError("FailedHTTPRequest", error);
+            throw new AppError(AppErrorEnum.FailedHTTPRequest, error);
         }
     }
 
@@ -32,7 +34,10 @@ class HttpClient {
         try {
             const response = await this.fetchWithTimeout(resource, options, timeout);
             if (!response.ok) {
-                throw new AppError("FailedHTTPRequest", new Error(`HTTP error! status: ${response.status}`));
+                throw new AppError(
+                    AppErrorEnum.FailedHTTPRequest,
+                    new Error(`HTTP error! status: ${response.status}`),
+                );
             }
             return response;
         } catch (error) {
@@ -41,14 +46,23 @@ class HttpClient {
                 await new Promise(res => setTimeout(res, RETRY_DELAY));
                 return this.retryFetch(resource, options, retries - 1, timeout);
             } else {
-                throw new AppError("FailedHTTPRequest", error);
+                throw new AppError(AppErrorEnum.FailedHTTPRequest, error);
             }
         }
     }
 
-    public async get(url: string, options: RequestInit = {}, timeout: number = DEFAULT_TIMEOUT): Promise<any> {
+    public async get(
+        url: string,
+        options: RequestInit = {},
+        timeout: number = DEFAULT_TIMEOUT,
+    ): Promise<any> {
         logger.debug(`GET request to ${url} with options: ${JSON.stringify(options)}`);
-        const response = await this.retryFetch(url, { ...options, method: "GET" }, MAX_RETRIES, timeout);
+        const response = await this.retryFetch(
+            url,
+            { ...options, method: "GET" },
+            MAX_RETRIES,
+            timeout,
+        );
         return response.json();
     }
 
@@ -72,4 +86,4 @@ class HttpClient {
 }
 
 const httpClient = new HttpClient();
-export default httpClient;
+export { httpClient };

@@ -1,5 +1,5 @@
-import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
 import { Address } from "viem";
+import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
 
 export async function pollLogs<T>(
     chainName: ConceroNetworkNames,

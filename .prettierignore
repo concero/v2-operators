@@ -1,4 +1,12 @@
+**/node_modules/**
+**/generated/**
+core/
+**/dist/**
+**/artifacts/**
+**/public/**
+**/build/**
 pnpm-lock.yaml
+coverage
 cache
 node_modules
 **/vendor
@@ -7,4 +15,5 @@ node_modules
 **/**.d.ts
 **/**.d.ts.map
 
-*.md
+docs/
+venv/

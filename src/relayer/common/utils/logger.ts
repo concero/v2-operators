@@ -1,8 +1,8 @@
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
-import { config } from "../../../constants/config";
+import { globalConfig } from "../../../constants/globalConfig";
 
-const logLevel = config.LOG_LEVEL;
+const logLevel = globalConfig.LOG_LEVEL;
 
 const logFormat = winston.format.combine(
     winston.format.colorize({ level: true }),
@@ -10,7 +10,8 @@ const logFormat = winston.format.combine(
         format: "YYYY-MM-DD HH:mm:ss",
     }),
     winston.format.printf(({ level, message, timestamp, ...meta }) => {
-        const formattedMessage = typeof message === "object" ? JSON.stringify(message, null, 2) : message;
+        const formattedMessage =
+            typeof message === "object" ? JSON.stringify(message, null, 2) : message;
         const formattedMeta = meta && Object.keys(meta).length ? JSON.stringify(meta, null, 2) : "";
 
         return `${formattedMeta} ${timestamp} [${level}]: ${formattedMessage}`;
@@ -48,4 +49,4 @@ if (process.env.NODE_ENV !== "production") {
 
 logger.level = logLevel;
 
-export default logger;
+export { logger };

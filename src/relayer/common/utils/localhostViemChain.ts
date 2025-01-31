@@ -11,5 +11,11 @@ export const localhostViemChain = defineChain({
     rpcUrls: {
         default: { http: [process.env.LOCALHOST_RPC_URL] },
     },
+    blockExplorers: [
+        {
+            name: "localhost",
+            url: process.env.LOCALHOST_RPC_URL,
+        },
+    ],
     testnet: true,
 });

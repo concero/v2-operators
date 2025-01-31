@@ -1,4 +1,4 @@
-import { Chain } from "viem";
+import { Address, Chain } from "viem";
 
 export type ConceroMainnetNetworkNames =
     | "ethereum"
@@ -18,7 +18,10 @@ export type ConceroTestnetNetworkNames =
 
 export type ConceroTestingNetworkNames = "localhost";
 
-export type ConceroNetworkNames = ConceroMainnetNetworkNames | ConceroTestnetNetworkNames | ConceroTestingNetworkNames;
+export type ConceroNetworkNames =
+    | ConceroMainnetNetworkNames
+    | ConceroTestnetNetworkNames
+    | ConceroTestingNetworkNames;
 
 export type ConceroNetwork = {
     id: number;
@@ -28,6 +31,10 @@ export type ConceroNetwork = {
     accounts: string[];
     viemChain: Chain;
     confirmations: number;
+    addresses: {
+        conceroVerifier: Address;
+        conceroRouter: Address;
+    };
 };
 
 export type NetworkType = "mainnet" | "testnet";

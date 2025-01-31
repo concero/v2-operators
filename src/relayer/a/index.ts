@@ -1,7 +1,6 @@
-import { configureDotEnv } from "../common/utils/dotenvConfig";
-import { setupEventListeners } from "./eventListener/setupEventListeners";
-import { config } from "./constants/config";
-import { AppError } from "../common/utils/AppError";
+import { AppErrorEnum } from "../../constants";
+import { AppError, configureDotEnv } from "../common/utils";
+import { register } from "./register";
 
 const globalErrorHandler = (error: Error) => {
     if (error instanceof AppError) {
@@ -9,7 +8,7 @@ const globalErrorHandler = (error: Error) => {
             process.exit(1);
         }
     } else {
-        const appError = new AppError("UnknownError", error);
+        const appError = new AppError(AppErrorEnum.UnknownError, error);
         if (!appError.isOperational) {
             process.exit(1);
         }
@@ -18,17 +17,22 @@ const globalErrorHandler = (error: Error) => {
 
 process.on("unhandledRejection", (reason: any) => {
     globalErrorHandler(
-        new AppError("UnhandledRejection", reason instanceof Error ? reason : new Error(String(reason))),
+        new AppError(
+            AppErrorEnum.UnhandledRejection,
+            reason instanceof Error ? reason : new Error(String(reason)),
+        ),
     );
 });
 
 process.on("uncaughtException", (error: Error) => {
-    globalErrorHandler(new AppError("UncaughtException", error));
+    globalErrorHandler(new AppError(AppErrorEnum.UncaughtException, error));
 });
 
-function main() {
+async function main() {
     configureDotEnv();
-    setupEventListeners(config.POLLING_INTERVAL_MS).then();
+    // checkGas();
+    await register();
+    // await setupEventListeners(config.POLLING_INTERVAL_MS).then();
 }
 
 main();

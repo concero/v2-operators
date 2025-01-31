@@ -1,5 +1,5 @@
-import { ConceroNetwork } from "./ConceroNetwork";
 import { Abi, Address } from "viem";
+import { ConceroNetwork } from "./ConceroNetwork";
 
 export interface ICallContract {
     chain: ConceroNetwork;

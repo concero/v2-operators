@@ -1,7 +1,7 @@
 import { setupEventListener } from "../../common/eventListener/setupEventListener";
-import { getEnvAddress } from "../../common/utils/getEnvVar";
+import { getEnvAddress } from "../../common/utils";
+import { config } from "../constants";
 import { onRouterLogs, onVerifierLogs } from "./onLogs";
-import { config } from "../constants/config";
 
 export async function setupEventListeners(POLLING_INTERVAL_MS: number) {
     // ConceroRouter event listeners

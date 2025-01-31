@@ -29,6 +29,7 @@ const reportAbiParameters = parseAbiParameters([
 
 /**
  * Decodes the Chainlink Functions report from a transaction hash.
+ *
  * @param {GetTransactionReturnType} tx - The transaction to decode.
  * @returns {Promise<object>} - The formatted report data.
  */
@@ -65,6 +66,7 @@ export function decodeCLFReport(tx: GetTransactionReturnType) {
 
 /**
  * Decodes the report results and logs the data.
+ *
  * @param {string[]} results - The report results to decode.
  */
 

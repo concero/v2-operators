@@ -1,8 +1,8 @@
 // A generic function that processes logs using the provided ABI for decoding
-import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
 import { Abi, AbiEventSignatureNotFoundError, Address, decodeEventLog } from "viem";
-import logger from "../utils/logger";
+import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
 import { DecodedLog } from "../../../types/DecodedLog";
+import { logger } from "../utils";
 
 export function decodeLogs(
     chainName: ConceroNetworkNames,

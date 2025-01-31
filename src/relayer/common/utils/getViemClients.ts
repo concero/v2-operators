@@ -1,14 +1,14 @@
-import { privateKeyToAccount } from "viem/accounts";
 import { createPublicClient, createWalletClient, fallback, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
-import { WalletClient } from "viem/clients/createWalletClient";
 import { PublicClient } from "viem/clients/createPublicClient";
-import { ConceroNetwork } from "../../../types/ConceroNetwork";
+import { WalletClient } from "viem/clients/createWalletClient";
 import { activeNetworks } from "../../../constants";
+import { globalConfig } from "../../../constants/globalConfig";
+import { ConceroNetwork } from "../../../types/ConceroNetwork";
 import { fetchRpcUrls } from "./fetchers";
-import { config } from "../../../constants/config";
-import { AppError } from "./AppError";
 import { getEnvVar } from "./getEnvVar";
+import { logger } from "./logger";
 
 type Clients = {
     walletClient: WalletClient;
@@ -28,11 +28,7 @@ class ViemClientManager {
     private createTransport(chain: ConceroNetwork) {
         return fallback(
             this.rpcUrls[chain.name].map(url => http(url)),
-            {
-                rank: true,
-                retryCount: 3,
-                retryDelay: 1000,
-            },
+            globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
         );
     }
 
@@ -78,19 +74,15 @@ class ViemClientManager {
     private rotateViemClients(chain: ConceroNetwork): void {
         setTimeout(() => {
             this.rotateClients(chain);
-            console.log(`Clients rotated for chain: ${chain.name}`);
+            logger.debug(`Clients rotated for chain: ${chain.name}`);
         }, 0);
     }
 
     private async updateRpcUrls(chains: ConceroNetwork[]): Promise<void> {
         for (const chain of chains) {
-            try {
-                const newUrls = await fetchRpcUrls(chain.viemChain.id);
-                this.rpcUrls[chain.name] = newUrls;
-                this.rotateViemClients(chain);
-            } catch (error) {
-                throw new AppError("FailedHTTPRequest", error);
-            }
+            const newUrls = await fetchRpcUrls(chain.viemChain.id);
+            this.rpcUrls[chain.name] = newUrls;
+            this.rotateViemClients(chain);
         }
     }
 
@@ -100,23 +92,15 @@ class ViemClientManager {
 
     private async setupUpdateLoop(chains: ConceroNetwork[]) {
         while (true) {
-            try {
-                await this.updateRpcUrls(chains);
-            } catch (error) {
-                throw new AppError("FailedHTTPRequest", error);
-            }
-            await this.sleep(config.VIEM.CLIENT_ROTATION_INTERVAL_MS);
+            await this.updateRpcUrls(chains);
+            await this.sleep(globalConfig.VIEM.CLIENT_ROTATION_INTERVAL_MS);
         }
     }
 
     private async initializeRpcUrls(chains: ConceroNetwork[]) {
         for (const chain of chains) {
-            try {
-                const urls = await fetchRpcUrls(chain.viemChain.id);
-                this.rpcUrls[chain.name] = urls;
-            } catch (error) {
-                throw new AppError("FailedHTTPRequest", error);
-            }
+            const urls = await fetchRpcUrls(chain.viemChain.id);
+            this.rpcUrls[chain.name] = urls;
         }
     }
 
@@ -128,5 +112,7 @@ class ViemClientManager {
 
 const viemClientManager = new ViemClientManager();
 
-export const getFallbackClients = (chain: ConceroNetwork): Promise<Clients> =>
-    viemClientManager.getFallbackClients(chain);
+export async function getFallbackClients(chain: ConceroNetwork): Promise<Clients> {
+    const clients = await viemClientManager.getFallbackClients(chain);
+    return clients;
+}

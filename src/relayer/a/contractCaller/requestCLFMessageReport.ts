@@ -1,9 +1,7 @@
-import { DecodedLog } from "../../../types/DecodedLog";
-import { getEnvAddress } from "../../common/utils/getEnvVar";
-import logger from "../../common/utils/logger";
-import { config } from "../constants/config";
-import { callContract } from "../../common/contractCaller/callContract";
 import { abi as VerifierAbi } from "../../../abi/Verifier.json";
+import { DecodedLog } from "../../../types/DecodedLog";
+import { callContract, getEnvAddress, logger } from "../../common/utils";
+import { config } from "../constants/";
 
 export async function requestCLFMessageReport(log: DecodedLog) {
     // todo:

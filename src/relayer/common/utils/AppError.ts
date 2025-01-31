@@ -1,10 +1,10 @@
-import { appErrors } from "../../../constants/appErrors";
-import logger from "./logger";
+import { AppErrorEnum, appErrors } from "../../../constants/appErrors";
+import { logger } from "./logger";
 
 class AppError extends Error {
     public readonly isOperational: boolean;
 
-    constructor(errorType: string, originalError?: Error) {
+    constructor(errorType: AppErrorEnum, originalError?: Error) {
         const { message, isOperational } = appErrors[errorType];
         super(originalError ? `${message}: ${originalError.message}` : message);
         Object.setPrototypeOf(this, new.target.prototype);
