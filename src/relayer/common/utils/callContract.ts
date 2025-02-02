@@ -1,5 +1,7 @@
 import { Hash, type PublicClient, type SimulateContractParameters, type WalletClient } from "viem";
-import { globalConfig } from "../../../constants";
+import { AppErrorEnum, globalConfig } from "../../../constants";
+import { AppError } from "./AppError";
+
 export async function callContract(
     publicClient: PublicClient,
     walletClient: WalletClient,
@@ -15,10 +17,9 @@ export async function callContract(
             hash,
         });
 
-        const transaction = await publicClient.getTransaction(hash);
-
+        // const transaction = await publicClient.getTransaction(hash);
         return hash;
     } catch (error) {
-        console.error("Error executing contract call:", error);
+        throw new AppError(AppErrorEnum.ContractCallError, error);
     }
 }

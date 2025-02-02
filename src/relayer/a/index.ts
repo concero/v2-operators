@@ -1,5 +1,6 @@
 import { AppErrorEnum } from "../../constants";
-import { AppError, configureDotEnv } from "../common/utils";
+import { AppError, checkGas, configureDotEnv } from "../common/utils";
+import { makeDeposit } from "./contractCaller/makeDeposit";
 import { registerOperator } from "./contractCaller/registerOperator";
 
 const globalErrorHandler = (error: Error) => {
@@ -30,7 +31,8 @@ process.on("uncaughtException", (error: Error) => {
 
 async function main() {
     configureDotEnv();
-    // checkGas();
+    await checkGas();
+    await makeDeposit();
     await registerOperator();
     // await setupEventListeners(config.POLLING_INTERVAL_MS).then();
 }

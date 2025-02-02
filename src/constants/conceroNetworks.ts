@@ -35,9 +35,9 @@ const testingNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
     localhost: {
         name: "localhost",
         type: networkTypes.testnet,
-        id: 31337,
+        id: 1,
         accounts: [operatorPK],
-        chainSelector: "31337",
+        chainSelector: "1",
         confirmations: 1,
         viemChain: localhostViemChain,
         addresses: {
@@ -170,16 +170,39 @@ const mainnetNetworks: Record<ConceroMainnetNetworkNames, ConceroNetwork> = {
 };
 
 const conceroNetworks: Record<ConceroNetworkNames, ConceroNetwork> = {
+    ...testingNetworks,
     ...testnetNetworks,
     ...mainnetNetworks,
-    ...testingNetworks,
 };
 
-const filterWhitelistedNetworks = (networks: Record<string, ConceroNetwork>): ConceroNetwork[] => {
-    const whitelistedIds = globalConfig.WHITELISTED_NETWORK_IDS[globalConfig.NETWORK_MODE];
-    return Object.values(networks).filter(network => whitelistedIds.includes(network.id));
+const filterWhitelistedNetworks = (
+    networkType: "mainnet" | "testnet" | "localhost",
+): ConceroNetwork[] => {
+    let filteredNetworks: ConceroNetwork[] = [];
+    const whitelistedIds = globalConfig.WHITELISTED_NETWORK_IDS[networkType];
+
+    switch (networkType) {
+        case "localhost": {
+            filteredNetworks = Object.values(testingNetworks);
+            break;
+        }
+        case "testnet": {
+            filteredNetworks = Object.values(testnetNetworks).filter(network =>
+                whitelistedIds.includes(network.id),
+            );
+            break;
+        }
+        case "mainnet": {
+            filteredNetworks = Object.values(mainnetNetworks).filter(network =>
+                whitelistedIds.includes(network.id),
+            );
+            break;
+        }
+    }
+
+    return filteredNetworks;
 };
 
-const activeNetworks: ConceroNetwork[] = filterWhitelistedNetworks(conceroNetworks);
+const activeNetworks: ConceroNetwork[] = filterWhitelistedNetworks(globalConfig.NETWORK_MODE);
 
 export { activeNetworks, conceroNetworks, mainnetNetworks, networkTypes, testnetNetworks };

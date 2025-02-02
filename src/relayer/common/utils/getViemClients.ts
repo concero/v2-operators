@@ -9,7 +9,8 @@ import {
 
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
-import { activeNetworks, globalConfig } from "../../../constants";
+import { activeNetworks } from "../../../constants/conceroNetworks";
+import { globalConfig } from "../../../constants/globalConfig";
 import { ConceroNetwork } from "../../../types/ConceroNetwork";
 import { fetchRpcUrls } from "./fetchers";
 import { getEnvVar } from "./getEnvVar";

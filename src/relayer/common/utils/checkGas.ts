@@ -14,10 +14,9 @@ export async function checkGas() {
                 throw new AppError(AppErrorEnum.ChainNotFound);
             }
 
-            const { publicClient } = getFallbackClients(chain);
-            console.log(JSON.stringify(publicClient.transport, null, 2));
+            const { publicClient } = await getFallbackClients(chain);
             const balance = await publicClient.getBalance({
-                address: "0xddDd5f804B9D293dce8819d232e8D76381605a62",
+                address: operatorAddress,
             });
 
             return { networkId, balance };
@@ -25,7 +24,6 @@ export async function checkGas() {
 
         const balances = await Promise.all(balancePromises);
 
-        console.log(balances);
         balances.forEach(({ networkId, balance }) => {
             if (balance < MINIMUM_NATIVE_VALUE) {
                 throw new AppError(

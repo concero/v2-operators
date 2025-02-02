@@ -13,6 +13,7 @@ export enum AppErrorEnum {
     ChainNotFound = "ChainNotFound",
     InsufficientGas = "InsufficientGas",
     InvalidNetworkMode = "InvalidNetworkMode",
+    ContractCallError = "ContractCallError",
 }
 
 const appErrors: Record<AppErrorEnum, AppErrorType> = {
@@ -51,6 +52,10 @@ const appErrors: Record<AppErrorEnum, AppErrorType> = {
     [AppErrorEnum.InvalidNetworkMode]: {
         message: "Invalid network mode",
         isOperational: false,
+    },
+    [AppErrorEnum.ContractCallError]: {
+        message: "Failed to call contract",
+        isOperational: true,
     },
 };
 

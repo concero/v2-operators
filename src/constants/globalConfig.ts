@@ -17,7 +17,7 @@ const globalConfig: GlobalConfig = {
     WHITELISTED_NETWORK_IDS: {
         mainnet: [1, 137],
         testnet: [84532, 80002],
-        localhost: [31337],
+        localhost: [1],
     },
     LOG_LEVEL: getEnvVar("LOG_LEVEL") || "info", // "error" | "warn" | "info" | "debug"
     LOG_DIR: "logs",
@@ -28,7 +28,8 @@ const globalConfig: GlobalConfig = {
     VIEM: {
         RECEIPT: {
             timeout: 0,
-            confirmations: 2,
+            confirmations: 1,
+            //todo: for localhost chain this needs to be set to 1. Mainnet chains need their per-chain confirmations found in conceroNetowrks.ts
         },
         WRITE_CONTRACT: {
             gas: 3000000n,
