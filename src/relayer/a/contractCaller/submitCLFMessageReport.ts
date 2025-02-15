@@ -1,5 +1,5 @@
 import { decodeEventLog } from "viem";
-import { conceroNetworks, globalConfig } from "../../../constants";
+import { globalConfig } from "../../../constants";
 import { DecodedLog } from "../../../types/DecodedLog";
 import {
     callContract,
@@ -10,26 +10,22 @@ import {
     getFallbackClients,
     logger,
 } from "../../common/utils";
-import { eventNames } from "../constants";
+import { config, eventNames } from "../constants";
 
 export async function submitCLFMessageReport(log: DecodedLog) {
-    const { chainName, address, transactionHash, decodedLog } = log;
-    const { conceroId } = decodedLog.args;
-    // console.log(`[${chainName}] New log: ${decodedLog.eventName} event:`, decodedLog.args);
-    // console.log(conceroId);
+    const { address, transactionHash, args } = log;
+    const { conceroId } = args;
 
-    const { publicClient: clfPublicClient } = await getFallbackClients(conceroNetworks[chainName]);
-    const tx = await clfPublicClient.getTransaction({ hash: transactionHash });
+    // 1. fetch & decode full CLF message report
+    const { publicClient: verifierPublicClient } = await getFallbackClients(
+        config.networks.conceroVerifier,
+    );
+    const messageReportTx = await verifierPublicClient.getTransaction({ hash: transactionHash });
 
-    // console.log(tx);
-    // console.log(`Submitting CLF message report for message ID: ${conceroId}`);
-
-    const decodedCLFReport = decodeCLFReport(tx);
+    const decodedCLFReport = decodeCLFReport(messageReportTx);
     const decodedCLFResult = decodeCLFReportResult(decodedCLFReport.report.results);
 
-    // console.log(decodedCLFResult);
-    // console.log(decodedCLFResult);
-    // 1. go to src chain and fetch message
+    // 2. go to src chain and fetch original message bytes
     const srcChain = getChainBySelector(decodedCLFResult.srcChainSelector);
     const { publicClient: srcPublicClient } = await getFallbackClients(srcChain);
     const [srcContractAddress] = getEnvAddress("routerProxy", srcChain.name);
@@ -63,7 +59,8 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     );
 
     const { message } = conceroMessageSentLog.decodedLog.args;
-    // 2. get dst chain from message and post report + message to dst chain
+
+    // 3. Send report + message to dst chain router
     const dstChain = getChainBySelector(message.dstChainSelector.toString());
 
     const [dstConceroRouter] = getEnvAddress("routerProxy", dstChain.name);

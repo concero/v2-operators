@@ -1,9 +1,4 @@
-import { Address } from "viem";
+import { Log } from "ethers";
 import { DecodeEventLogReturnType } from "viem/utils/abi/decodeEventLog";
-import { ConceroNetworkNames } from "./ConceroNetwork";
 
-export type DecodedLog = {
-    chainName: ConceroNetworkNames;
-    contractAddress: Address;
-    decodedLog: DecodeEventLogReturnType;
-};
+export type DecodedLog = Log & DecodeEventLogReturnType;

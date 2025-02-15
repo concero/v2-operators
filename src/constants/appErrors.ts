@@ -14,6 +14,7 @@ export enum AppErrorEnum {
     InsufficientGas = "InsufficientGas",
     InvalidNetworkMode = "InvalidNetworkMode",
     ContractCallError = "ContractCallError",
+    LogDecodingFailed = "LogDecodingFailed",
 }
 
 const appErrors: Record<AppErrorEnum, AppErrorType> = {
@@ -55,6 +56,10 @@ const appErrors: Record<AppErrorEnum, AppErrorType> = {
     },
     [AppErrorEnum.ContractCallError]: {
         message: "Failed to call contract",
+        isOperational: true,
+    },
+    [AppErrorEnum.LogDecodingFailed]: {
+        message: "Failed to decode log",
         isOperational: true,
     },
 };

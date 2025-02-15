@@ -1,15 +1,9 @@
-import fs from "fs";
-import path from "path";
 import { getEnvVar } from "../relayer/common/utils/getEnvVar";
 import { type GlobalConfig } from "../types/GlobalConfig";
 
-const CONCERO_VERIFIER_ABI = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "../abi/ConceroVerifier.json"), "utf8"),
-);
-
-const CONCERO_ROUTER_ABI = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "../abi/ConceroRouter.json"), "utf8"),
-);
+import { Abi } from "viem";
+import { abi as conceroRouterAbi } from "../abi/ConceroRouter.json";
+import { abi as conceroVerifierAbi } from "../abi/ConceroVerifier.json";
 
 const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar("NETWORK_MODE"),
@@ -19,6 +13,7 @@ const globalConfig: GlobalConfig = {
         testnet: [84532, 80002],
         localhost: [1],
     },
+    POLLING_INTERVAL_MS: 5000,
     LOG_LEVEL: getEnvVar("LOG_LEVEL") || "info", // "error" | "warn" | "info" | "debug"
     LOG_DIR: "logs",
     URLS: {
@@ -47,8 +42,8 @@ const globalConfig: GlobalConfig = {
         RETRY_DELAY: 1000,
     },
     ABI: {
-        CONCERO_VERIFIER: CONCERO_VERIFIER_ABI,
-        CONCERO_ROUTER: CONCERO_ROUTER_ABI,
+        CONCERO_VERIFIER: conceroVerifierAbi as Abi,
+        CONCERO_ROUTER: conceroRouterAbi as Abi,
     },
 };
 

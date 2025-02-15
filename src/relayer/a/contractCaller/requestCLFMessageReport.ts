@@ -8,7 +8,7 @@ export async function requestCLFMessageReport(log: DecodedLog) {
     //  extract conceroMessageId & srcBlockNumber from ConceroRouter log
     //  request CLF to check the message on the SRC.
 
-    const { chainName, contractAddress, decodedLog } = log;
+    const { chainName, decodedLog } = log;
     const { id, message } = decodedLog.args;
 
     try {

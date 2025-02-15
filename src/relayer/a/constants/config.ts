@@ -36,7 +36,6 @@ export type RelayerAConfig = {
 };
 
 export const config: RelayerAConfig = {
-    POLLING_INTERVAL_MS: 5000,
     networks: {
         conceroRouter: conceroRouterNetworks,
         conceroVerifier: conceroVerifierNetwork,

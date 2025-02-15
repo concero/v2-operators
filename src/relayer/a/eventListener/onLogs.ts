@@ -1,37 +1,40 @@
-import { Address } from "viem";
-import { abi as routerAbi } from "../../../abi/ConceroRouter.json";
-import { abi as verifierAbi } from "../../../abi/Verifier.json";
-import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
+import { getAbiItem, Log } from "viem";
+import { globalConfig } from "../../../constants";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
 import { eventNames } from "../constants";
 import { requestCLFMessageReport } from "../contractCaller/requestCLFMessageReport";
 import { submitCLFMessageReport } from "../contractCaller/submitCLFMessageReport";
 
-// filters abi to only pick ConceroMessageSent event
-// const routerEventsAbi = getAbiItem({ abi: routerAbi, name: eventNames.ConceroMessageSent });
-// const VerifierEventsAbi = getAbiItem({ abi: verifierAbi, name: eventNames.CLFMessageReport });
+const logsAbi = {
+    conceroRouter: [
+        getAbiItem({
+            abi: globalConfig.ABI.CONCERO_ROUTER,
+            name: eventNames.ConceroMessageSent,
+        }),
+    ],
+    conceroVerifier: [
+        getAbiItem({
+            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            name: eventNames.CLFMessageReport,
+        }),
+    ],
+};
 
-export async function onRouterLogs(
-    chainName: ConceroNetworkNames,
-    contractAddress: Address,
-    logs: any[],
-) {
-    const res = decodeLogs(chainName, contractAddress, logs, routerAbi);
-    for (const log of res.decodedLogs) {
-        if (log.decodedLog.eventName === eventNames.ConceroMessageSent) {
+export async function onRouterLogs(logs: Log[]) {
+    const decodedLogs = decodeLogs(logs, logsAbi.conceroRouter);
+
+    for (const log of decodedLogs) {
+        if (log.eventName === eventNames.ConceroMessageSent) {
             await requestCLFMessageReport(log);
         }
     }
 }
 
-export async function onVerifierLogs(
-    chainName: ConceroNetworkNames,
-    contractAddress: Address,
-    logs: any[],
-) {
-    const res = decodeLogs(chainName, contractAddress, logs, verifierAbi);
-    for (const log of res.decodedLogs) {
-        if (log.decodedLog.eventName === eventNames.CLFMessageReport) {
+export async function onVerifierLogs(logs: Log[]) {
+    const decodedLogs = decodeLogs(logs, logsAbi.conceroVerifier);
+
+    for (const log of decodedLogs) {
+        if (log.eventName === eventNames.CLFMessageReport) {
             await submitCLFMessageReport(log);
         }
     }

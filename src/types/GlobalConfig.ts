@@ -1,4 +1,5 @@
 import {
+    Abi,
     Address,
     FallbackTransportConfig,
     WaitForTransactionReceiptParameters,
@@ -31,8 +32,8 @@ type GlobalConfig = {
     };
     OPERATOR_ADDRESS: Address;
     ABI: {
-        CONCERO_VERIFIER: string;
-        CONCERO_ROUTER: string;
+        CONCERO_VERIFIER: Abi;
+        CONCERO_ROUTER: Abi;
     };
 };
 
