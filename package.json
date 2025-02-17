@@ -5,7 +5,7 @@
   "scripts": {
     "build": "swc src -d dist",
     "lint": "eslint --config .eslint.config.mjs",
-    "format": "prettier --config .prettierrc.json --write **/*.{ts,js,json}",
+    "format": "prettier --config .prettierrc.json --write **/*.{ts,json}",
     "start:relayerA": "bun ./src/relayer/a/index.ts",
     "check-updates": "npx npm-check-updates",
     "prepare": "husky"
