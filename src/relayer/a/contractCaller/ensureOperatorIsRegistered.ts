@@ -85,9 +85,10 @@ export async function waitForOperatorRegistration(
                 try {
                     const decoded = decodeEventLog({
                         abi: globalConfig.ABI.CONCERO_VERIFIER,
-                        eventName: "operatorRegistered",
+                        eventName: "OperatorRegistered",
                         data: log.data,
                         topics: log.topics,
+                        strict: true,
                     });
                     if (
                         decoded &&
