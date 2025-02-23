@@ -59,6 +59,8 @@ async function requestOperatorRegistration(
         account,
     });
 
+    config.eventEmitter.emit("requestOperatorRegistration", { txHash });
+
     return txHash;
 }
 
@@ -123,6 +125,7 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
     }
 
     const txHash = await requestOperatorRegistration(publicClient, walletClient, account);
+
     logger.info(`Requested operator registration with txHash ${txHash}`);
 
     const transaction = await publicClient.getTransaction({ hash: txHash });

@@ -1,3 +1,4 @@
+import { EventEmitter } from "node:events";
 import {
     AppErrorEnum,
     conceroNetworks,
@@ -33,6 +34,7 @@ export type RelayerAConfig = {
         conceroRouter: typeof conceroRouterNetworks;
         conceroVerifier: typeof conceroVerifierNetwork;
     };
+    eventEmitter: EventEmitter;
 };
 
 export const config: RelayerAConfig = {
@@ -40,4 +42,5 @@ export const config: RelayerAConfig = {
         conceroRouter: conceroRouterNetworks,
         conceroVerifier: conceroVerifierNetwork,
     },
+    eventEmitter: new EventEmitter(),
 };
