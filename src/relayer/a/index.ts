@@ -33,10 +33,10 @@ process.on("uncaughtException", (error: Error) => {
 });
 
 async function main() {
-    void (await checkGas());
-    void (await ensureDeposit());
-    void (await ensureOperatorIsRegistered());
-    void (await setupEventListeners());
+    await checkGas();
+    await ensureDeposit();
+    await ensureOperatorIsRegistered();
+    await setupEventListeners();
 }
 
 main();

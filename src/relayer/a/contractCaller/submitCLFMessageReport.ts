@@ -28,7 +28,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     // 2. go to src chain and fetch original message bytes
     const srcChain = getChainBySelector(decodedCLFResult.srcChainSelector);
     const { publicClient: srcPublicClient } = await getFallbackClients(srcChain);
-    const [srcContractAddress] = getEnvAddress("routerProxy", srcChain.name);
+    const [srcContractAddress] = getEnvAddress("router", srcChain.name);
 
     const logs = await srcPublicClient.getLogs({
         address: srcContractAddress,
@@ -63,7 +63,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     // 3. Send report + message to dst chain router
     const dstChain = getChainBySelector(message.dstChainSelector.toString());
 
-    const [dstConceroRouter] = getEnvAddress("routerProxy", dstChain.name);
+    const [dstConceroRouter] = getEnvAddress("router", dstChain.name);
     const { publicClient: dstPublicClient } = getFallbackClients(dstChain);
 
     //encodes object into bytes

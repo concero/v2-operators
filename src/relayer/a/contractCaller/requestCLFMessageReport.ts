@@ -1,29 +1,47 @@
+import { encodeAbiParameters, keccak256 } from "viem";
 import { globalConfig } from "../../../constants";
 import { DecodedLog } from "../../../types/DecodedLog";
-import { callContract, getEnvAddress, logger } from "../../common/utils";
+import {callContract, getEnvAddress, getFallbackClients, logger} from "../../common/utils";
 import { config } from "../constants/";
 
 export async function requestCLFMessageReport(log: DecodedLog) {
-    // todo:
-    //  extract conceroMessageId & srcBlockNumber from ConceroRouter log
-    //  request CLF to check the message on the SRC.
+    const network = config.networks.conceroVerifier
+    const {publicClient, walletClient} = await getFallbackClients(network);
 
-    const { chainName, decodedLog } = log;
-    const { id, message } = decodedLog.args;
+    const { messageId, internalMessageConfig, message } = log.args;
 
+    const routerTx = await publicClient.getTransaction({hash: log.transactionHash});
+    const encodedSrcChainData = encodeAbiParameters(
+            [
+                {
+                    type: 'tuple',
+                    components: [
+                        { name: 'blockNumber', type: 'uint256' },
+                        { name: 'sender', type: 'address' }
+                    ]
+                }
+            ],
+            [{
+                blockNumber: log.blockNumber,
+                sender: routerTx.from
+            }]
+        );
     try {
-        const [address] = getEnvAddress("verifierProxy", chainName);
+        const [verifierAddress] = getEnvAddress("verifier", network.name);
 
-        const hash = await callContract({
-            chain: config.networks.conceroVerifier,
-            address,
+        const txHash = await callContract(
+            publicClient, walletClient, {
+            chain: network.viemChain,
+            address: verifierAddress,
+            account: walletClient.account,
             abi: globalConfig.ABI.CONCERO_VERIFIER,
-            functionName: "requestCLFMessageReport",
-            args: [id, message],
+            functionName: "requestMessageReport",
+            args: [internalMessageConfig, messageId, keccak256(message), encodedSrcChainData],
         });
 
-        logger.info(`[${chainName}] CLF message report requested with hash: ${hash}`);
+        config.eventEmitter.emit("requestMessageReport", { txHash });
+        logger.info(`[${network.name}] CLF message report requested with hash: ${txHash}`);
     } catch (error) {
-        logger.error(`[${chainName}] Error requesting CLF message report:`, error);
+        logger.error(`[${network.name}] Error requesting CLF message report:`, error);
     }
 }

@@ -6,7 +6,7 @@ import { onLogs } from "./onLogs";
 
 export async function setupEventListeners(POLLING_INTERVAL_MS: number) {
     const network = conceroNetworks.base;
-    const [contractAddress] = getEnvAddress("routerProxy", network.name);
+    const [contractAddress] = getEnvAddress("router", network.name);
     await setupEventListener(
         network.name,
         contractAddress,

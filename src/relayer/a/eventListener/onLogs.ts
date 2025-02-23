@@ -4,6 +4,7 @@ import { decodeLogs } from "../../common/eventListener/decodeLogs";
 import { eventNames } from "../constants";
 import { requestCLFMessageReport } from "../contractCaller/requestCLFMessageReport";
 import { submitCLFMessageReport } from "../contractCaller/submitCLFMessageReport";
+import {ConceroNetwork} from "../../../types/ConceroNetwork";
 
 const logsAbi = {
     conceroRouter: [
@@ -20,7 +21,7 @@ const logsAbi = {
     ],
 };
 
-export async function onRouterLogs(logs: Log[]) {
+export async function onRouterLogs(logs: Log[], network: ConceroNetwork) {
     const decodedLogs = decodeLogs(logs, logsAbi.conceroRouter);
 
     for (const log of decodedLogs) {
@@ -30,7 +31,7 @@ export async function onRouterLogs(logs: Log[]) {
     }
 }
 
-export async function onVerifierLogs(logs: Log[]) {
+export async function onVerifierLogs(logs: Log[], network: ConceroNetwork) {
     const decodedLogs = decodeLogs(logs, logsAbi.conceroVerifier);
 
     for (const log of decodedLogs) {
