@@ -10,7 +10,7 @@ function getEnvVar(key: keyof env): string {
     const value = process.env[key];
     if (value === undefined || value === "")
         throw new Error(
-            AppErrorEnum.ENV_KEY_MISSING,
+            AppErrorEnum.EnvKeyMissing,
             `Missing or empty required environment variable ${key}`,
         );
     return value;

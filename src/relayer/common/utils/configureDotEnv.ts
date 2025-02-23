@@ -15,3 +15,4 @@ export function configureDotEnv(basePath = "./"): void {
         dotenv.config({ path: `${normalizedBasePath}${file}` });
     });
 }
+configureDotEnv();

@@ -7,7 +7,7 @@ import { onRouterLogs, onVerifierLogs } from "./onLogs";
 export async function setupEventListeners() {
     // ConceroRouter event listeners
     for (const [networkKey, network] of Object.entries(config.networks.conceroRouter)) {
-        const [contractAddress] = getEnvAddress("routerProxy", network.name);
+        const [contractAddress] = getEnvAddress("router", network.name);
 
         await setupEventListener(
             network,
@@ -19,7 +19,7 @@ export async function setupEventListeners() {
 
     // conceroVerifier event listener
     const verifierNetwork = config.networks.conceroVerifier;
-    const [contractAddress] = getEnvAddress("verifierProxy", verifierNetwork.name);
+    const [contractAddress] = getEnvAddress("verifier", verifierNetwork.name);
 
     await setupEventListener(
         verifierNetwork,
