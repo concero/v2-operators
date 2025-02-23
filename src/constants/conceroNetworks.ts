@@ -41,8 +41,8 @@ const testingNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         confirmations: 1,
         viemChain: localhostViemChain,
         addresses: {
-            conceroVerifier: getEnvVar("CONCERO_VERIFIER_ADDRESS_LOCALHOST"),
-            conceroRouter: getEnvVar("CONCERO_ROUTER_ADDRESS_LOCALHOST"),
+            conceroVerifier: getEnvVar("CONCERO_VERIFIER_LOCALHOST"),
+            conceroRouter: getEnvVar("CONCERO_ROUTER_LOCALHOST"),
         },
     },
 };
