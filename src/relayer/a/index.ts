@@ -1,6 +1,6 @@
-import "../common/utils/configureDotEnv";
 import { AppErrorEnum } from "../../constants";
 import { AppError, checkGas } from "../common/utils";
+import "../common/utils/configureDotEnv";
 import { ensureDeposit } from "./contractCaller/ensureDeposit";
 import { ensureOperatorIsRegistered } from "./contractCaller/ensureOperatorIsRegistered";
 import { setupEventListeners } from "./eventListener/setupEventListeners";
@@ -19,7 +19,7 @@ const globalErrorHandler = (error: Error) => {
 };
 
 process.on("unhandledRejection", (reason: any) => {
-    console.log(reason)
+    console.log(reason);
     globalErrorHandler(
         new AppError(
             AppErrorEnum.UnhandledRejection,
