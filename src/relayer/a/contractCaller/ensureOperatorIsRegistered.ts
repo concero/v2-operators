@@ -1,4 +1,4 @@
-import { type Address, decodeEventLog, PublicClient, WalletClient } from "viem";
+import { type Address, decodeEventLog, Hash, PublicClient, WalletClient } from "viem";
 import { conceroNetworks, globalConfig } from "../../../constants";
 import { ConceroNetwork } from "../../../types/ConceroNetwork";
 import {
@@ -70,13 +70,14 @@ async function requestOperatorRegistration(
  * @param conceroVerifierNetwork - The network instance to monitor.
  * @param fromBlockNumber - The block number from which to start polling.
  * @param operatorAddress - The operator address to wait for registration.
+ * @returns {Promise<Hash>} The transaction hash of the operator registration.
  */
 export async function waitForOperatorRegistration(
     network: ConceroNetwork,
     contractAddress: Address,
     fromBlockNumber: bigint,
     operatorAddress: string,
-): Promise<void> {
+): Promise<Hash> {
     return new Promise((resolve, reject) => {
         let listenerHandle: EventListenerHandle;
 
@@ -92,12 +93,13 @@ export async function waitForOperatorRegistration(
                     });
                     if (
                         decoded &&
-                        decoded.operatorAddress &&
-                        decoded.operatorAddress.toLowerCase() === operatorAddress.toLowerCase() &&
+                        decoded.args &&
+                        decoded.args.operator &&
+                        decoded.args.operator.toLowerCase() === operatorAddress.toLowerCase() &&
                         BigInt(log.blockNumber) >= fromBlockNumber
                     ) {
                         listenerHandle.stop();
-                        resolve();
+                        resolve(log.transactionHash);
                         break;
                     }
                 } catch (error) {}
