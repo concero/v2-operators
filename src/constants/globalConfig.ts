@@ -13,7 +13,7 @@ const globalConfig: GlobalConfig = {
         testnet: [84532, 80002],
         localhost: [1],
     },
-    POLLING_INTERVAL_MS: getEnvVar("POLLING_INTERVAL_MS") || 5000,
+    POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
     LOG_LEVEL: getEnvVar("LOG_LEVEL") || "info", // "error" | "warn" | "info" | "debug"
     LOG_DIR: "logs",
     URLS: {
