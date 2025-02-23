@@ -1,6 +1,6 @@
 import { type Address, decodeEventLog, PublicClient, WalletClient } from "viem";
 import { conceroNetworks, globalConfig } from "../../../constants";
-import { ConceroNetwork, type ConceroNetworkNames } from "../../../types/ConceroNetwork";
+import { ConceroNetwork } from "../../../types/ConceroNetwork";
 import {
     EventListenerHandle,
     setupEventListener,
@@ -77,16 +77,14 @@ export async function waitForOperatorRegistration(
     fromBlockNumber: bigint,
     operatorAddress: string,
 ): Promise<void> {
-    const conceroVerifierAbi = await import("../../../abi/ConceroVerifier.json");
-
     return new Promise((resolve, reject) => {
         let listenerHandle: EventListenerHandle;
 
-        const onLogs = (_chain: ConceroNetworkNames, _address: Address, logs: any[]) => {
+        const onLogs = (logs: any[]) => {
             for (const log of logs) {
                 try {
                     const decoded = decodeEventLog({
-                        abi: conceroVerifierAbi,
+                        abi: globalConfig.ABI.CONCERO_VERIFIER,
                         eventName: "operatorRegistered",
                         data: log.data,
                         topics: log.topics,
@@ -138,4 +136,6 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
     );
 
     logger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
+
+    config.eventEmitter.emit("operatorRegistered", { txHash: confirmedTxHash });
 }
