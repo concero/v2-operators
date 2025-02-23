@@ -1,10 +1,10 @@
 import { getAbiItem, Log } from "viem";
 import { globalConfig } from "../../../constants";
+import { ConceroNetwork } from "../../../types/ConceroNetwork";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
 import { eventNames } from "../constants";
 import { requestCLFMessageReport } from "../contractCaller/requestCLFMessageReport";
 import { submitCLFMessageReport } from "../contractCaller/submitCLFMessageReport";
-import {ConceroNetwork} from "../../../types/ConceroNetwork";
 
 const logsAbi = {
     conceroRouter: [

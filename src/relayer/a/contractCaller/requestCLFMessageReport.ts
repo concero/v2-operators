@@ -1,36 +1,37 @@
 import { encodeAbiParameters, keccak256 } from "viem";
 import { globalConfig } from "../../../constants";
 import { DecodedLog } from "../../../types/DecodedLog";
-import {callContract, getEnvAddress, getFallbackClients, logger} from "../../common/utils";
+import { callContract, getEnvAddress, getFallbackClients, logger } from "../../common/utils";
 import { config } from "../constants/";
 
 export async function requestCLFMessageReport(log: DecodedLog) {
-    const network = config.networks.conceroVerifier
-    const {publicClient, walletClient} = await getFallbackClients(network);
+    const network = config.networks.conceroVerifier;
+    const { publicClient, walletClient } = await getFallbackClients(network);
 
     const { messageId, internalMessageConfig, message } = log.args;
 
-    const routerTx = await publicClient.getTransaction({hash: log.transactionHash});
+    const routerTx = await publicClient.getTransaction({ hash: log.transactionHash });
     const encodedSrcChainData = encodeAbiParameters(
-            [
-                {
-                    type: 'tuple',
-                    components: [
-                        { name: 'blockNumber', type: 'uint256' },
-                        { name: 'sender', type: 'address' }
-                    ]
-                }
-            ],
-            [{
+        [
+            {
+                type: "tuple",
+                components: [
+                    { name: "blockNumber", type: "uint256" },
+                    { name: "sender", type: "address" },
+                ],
+            },
+        ],
+        [
+            {
                 blockNumber: log.blockNumber,
-                sender: routerTx.from
-            }]
-        );
+                sender: routerTx.from,
+            },
+        ],
+    );
     try {
         const [verifierAddress] = getEnvAddress("verifier", network.name);
 
-        const txHash = await callContract(
-            publicClient, walletClient, {
+        const txHash = await callContract(publicClient, walletClient, {
             chain: network.viemChain,
             address: verifierAddress,
             account: walletClient.account,
