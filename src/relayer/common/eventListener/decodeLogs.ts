@@ -13,7 +13,7 @@ export function decodeLogs(logs: Log[], abi: Abi): DecodedLog[] {
                 abi,
                 data: log.data,
                 topics: log.topics,
-                strict: false,
+                strict: true,
             });
 
             decodedLogs.push({ ...log, ...decodedLog });
