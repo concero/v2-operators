@@ -1,4 +1,4 @@
 export const eventNames = {
     ConceroMessageSent: "ConceroMessageSent",
-    CLFMessageReport: "CLFMessageReport",
+    MessageReport: "MessageReport",
 };

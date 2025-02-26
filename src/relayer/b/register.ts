@@ -1,4 +1,4 @@
 export async function register() {
     // This function is not implemented yet
-    console.log("Registering relayer A");
+    // console.log("Registering relayer B");
 }
