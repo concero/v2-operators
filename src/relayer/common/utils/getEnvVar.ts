@@ -9,10 +9,7 @@ import { shorten } from "./formatting";
 function getEnvVar(key: keyof env): string {
     const value = process.env[key];
     if (value === undefined || value === "")
-        throw new Error(
-            AppErrorEnum.EnvKeyMissing,
-            `Missing or empty required environment variable ${key}`,
-        );
+        throw new Error(`Missing environment variable ${key}`);
     return value;
 }
 
