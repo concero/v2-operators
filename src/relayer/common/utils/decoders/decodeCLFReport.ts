@@ -27,7 +27,6 @@ const clfReportAbi = parseAbiParameters([
     "bytes[] offchainMetadata",
 ]);
 
-
 /**
  * Decodes the Chainlink Functions report from a transaction hash.
  *

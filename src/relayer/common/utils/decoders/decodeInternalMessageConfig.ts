@@ -1,5 +1,5 @@
 // Function to decode the internal message config
-import {bitMasks, messageConfigBitOffsets} from "../../constants";
+import { bitMasks, messageConfigBitOffsets } from "../../constants";
 
 export type DecodedInternalMessageConfig = {
     version: number;
@@ -9,9 +9,9 @@ export type DecodedInternalMessageConfig = {
     minDstConfirmations: number;
     relayerConfig: number;
     isCallbackable: boolean;
-}
+};
 
-export function decodeInternalMessageConfig(configBytes: string) : DecodedInternalMessageConfig {
+export function decodeInternalMessageConfig(configBytes: string): DecodedInternalMessageConfig {
     // Convert bytes32 to BigInt for bitwise operations
     const configUint = BigInt(`0x${configBytes.slice(2)}`);
 

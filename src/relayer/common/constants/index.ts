@@ -1,2 +1,2 @@
-export {bitMasks} from "./bitmasks";
-export {messageConfigBitSizes, messageConfigBitOffsets} from "./messageConfig";
+export { bitMasks } from "./bitmasks";
+export { messageConfigBitOffsets, messageConfigBitSizes } from "./messageConfig";

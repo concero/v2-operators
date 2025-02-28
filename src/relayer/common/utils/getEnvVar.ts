@@ -1,6 +1,6 @@
 import process from "process";
 import { Address } from "viem";
-import { AppErrorEnum, envPrefixes, networkEnvKeys } from "../../../constants";
+import { envPrefixes, networkEnvKeys } from "../../../constants";
 import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
 import { type env } from "../../../types/env";
 import { type EnvPrefixes } from "../../../types/envPrefixes";
@@ -8,8 +8,7 @@ import { shorten } from "./formatting";
 
 function getEnvVar(key: keyof env): string {
     const value = process.env[key];
-    if (value === undefined || value === "")
-        throw new Error(`Missing environment variable ${key}`);
+    if (value === undefined || value === "") throw new Error(`Missing environment variable ${key}`);
     return value;
 }
 

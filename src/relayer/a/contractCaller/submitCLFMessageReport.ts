@@ -1,4 +1,4 @@
-import {AbiEvent, decodeEventLog, getAbiItem} from "viem";
+import { AbiEvent, decodeEventLog, getAbiItem } from "viem";
 import { globalConfig } from "../../../constants";
 import { DecodedLog } from "../../../types/DecodedLog";
 import {
@@ -29,7 +29,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     // console.log('decodedCLFReport');
     // console.log(decodedCLFReport);
     const decodedMessageResult = decodeMessageReportResult(decodedCLFReport.report.results[0]);
-    const { srcChainSelector, dstChainSelector} = decodedMessageResult.decodedMessageConfig;
+    const { srcChainSelector, dstChainSelector } = decodedMessageResult.decodedMessageConfig;
     const messageId = decodedMessageResult.messageId;
 
     // 2. go to src chain and fetch original message bytes
@@ -42,12 +42,15 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     // Find the ConceroMessageSent event with our messageId
     const logs = await srcPublicClient.getLogs({
         address: srcContractAddress,
-        event: getAbiItem({abi: globalConfig.ABI.CONCERO_ROUTER, name: eventNames.ConceroMessageSent}) as AbiEvent,
+        event: getAbiItem({
+            abi: globalConfig.ABI.CONCERO_ROUTER,
+            name: eventNames.ConceroMessageSent,
+        }) as AbiEvent,
         args: {
-            messageId: messageId
+            messageId: messageId,
         },
         fromBlock: currentBlock - BigInt(1000),
-        toBlock: currentBlock
+        toBlock: currentBlock,
     });
 
     const decodedLogs = [];
@@ -68,7 +71,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 
     // Find the ConceroMessageSent event
     const conceroMessageSentLog = decodedLogs.find(
-        log => log.decodedLog.eventName === eventNames.ConceroMessageSent
+        log => log.decodedLog.eventName === eventNames.ConceroMessageSent,
     );
 
     if (!conceroMessageSentLog) {
@@ -83,7 +86,8 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     const dstChain = getChainBySelector(dstChainSelector.toString());
 
     const [dstConceroRouter] = getEnvAddress("router", dstChain.name);
-    const { publicClient: dstPublicClient, walletClient: dstWalletClient } = await getFallbackClients(dstChain);
+    const { publicClient: dstPublicClient, walletClient: dstWalletClient } =
+        await getFallbackClients(dstChain);
 
     const reportSubmission = {
         context: decodedCLFReport.reportContext,
