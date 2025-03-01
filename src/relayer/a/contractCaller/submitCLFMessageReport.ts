@@ -46,9 +46,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
             abi: globalConfig.ABI.CONCERO_ROUTER,
             name: eventNames.ConceroMessageSent,
         }) as AbiEvent,
-        args: {
-            messageId: messageId,
-        },
+
         fromBlock: currentBlock - BigInt(1000),
         toBlock: currentBlock,
     });
@@ -63,28 +61,30 @@ export async function submitCLFMessageReport(log: DecodedLog) {
                 strict: true,
             });
 
-            decodedLogs.push({ ...log, decodedLog, chainName: srcChain.name });
+            decodedLogs.push({ ...log, ...decodedLog, chainName: srcChain.name });
         } catch (error) {
             console.error(`[${srcChain.name}] Error decoding log:`, error);
         }
     });
 
-
     // Find the ConceroMessageSent event
     const conceroMessageSentLog = decodedLogs.find(
-        log => log.decodedLog.eventName === eventNames.ConceroMessageSent,
+        log => log.eventName === eventNames.ConceroMessageSent &&
+               log.args.messageId.toLowerCase() === messageId.toLowerCase()
     );
+
 
     if (!conceroMessageSentLog) {
         throw new Error(`Could not find ConceroMessageSent event with messageId ${messageId}`);
     }
 
-    logger.info(`[${srcChain.name}] Found ConceroMessageSent event with messageId ${messageId}`);
+    // logger.info(`[${srcChain.name}] Found ConceroMessageSent event with messageId ${messageId}`);
 
-    const { message } = conceroMessageSentLog.decodedLog.args;
+    const { message } = conceroMessageSentLog.args;
 
     // 3. Send report + message to dst chain router
     const dstChain = getChainBySelector(dstChainSelector.toString());
+
 
     const [dstConceroRouter] = getEnvAddress("router", dstChain.name);
     const { publicClient: dstPublicClient, walletClient: dstWalletClient } =

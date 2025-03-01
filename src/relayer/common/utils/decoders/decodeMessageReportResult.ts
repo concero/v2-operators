@@ -1,4 +1,4 @@
-import { parseAbiParameters, decodeAbiParameters } from "viem";
+import { decodeAbiParameters, parseAbiParameters } from "viem";
 import { decodeCLFReportConfig } from "./DecodeCLFReportConfig";
 import { decodeInternalMessageConfig } from "./decodeInternalMessageConfig";
 
@@ -16,19 +16,26 @@ function decodeMessageReportResult(resultBytes: string): DecodedMessageReportRes
     try {
         // Define the ABI structure matching the Solidity struct
         const messageReportResultAbi = parseAbiParameters([
-            'bytes32 reportConfig',
-            'bytes32 internalMessageConfig',
-            'bytes32 messageId',
-            'bytes32 messageHashSum',
-            'bytes dstChainData',
-            'bytes[] allowedOperators'
+            "bytes32 reportConfig",
+            "bytes32 internalMessageConfig",
+            "bytes32 messageId",
+            "bytes32 messageHashSum",
+            "bytes dstChainData",
+            "bytes[] allowedOperators",
         ]);
 
         // Use viem's decoder for proper ABI decoding
         const decodedData = decodeAbiParameters(messageReportResultAbi, resultBytes);
 
         // Extract values from the decoded data
-        const [reportConfig, internalMessageConfig, messageId, messageHashSum, dstChainData, allowedOperators] = decodedData;
+        const [
+            reportConfig,
+            internalMessageConfig,
+            messageId,
+            messageHashSum,
+            dstChainData,
+            allowedOperators,
+        ] = decodedData;
 
         return {
             reportConfig,
