@@ -69,10 +69,10 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 
     // Find the ConceroMessageSent event
     const conceroMessageSentLog = decodedLogs.find(
-        log => log.eventName === eventNames.ConceroMessageSent &&
-               log.args.messageId.toLowerCase() === messageId.toLowerCase()
+        log =>
+            log.eventName === eventNames.ConceroMessageSent &&
+            log.args.messageId.toLowerCase() === messageId.toLowerCase(),
     );
-
 
     if (!conceroMessageSentLog) {
         throw new Error(`Could not find ConceroMessageSent event with messageId ${messageId}`);
@@ -84,7 +84,6 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 
     // 3. Send report + message to dst chain router
     const dstChain = getChainBySelector(dstChainSelector.toString());
-
 
     const [dstConceroRouter] = getEnvAddress("router", dstChain.name);
     const { publicClient: dstPublicClient, walletClient: dstWalletClient } =
