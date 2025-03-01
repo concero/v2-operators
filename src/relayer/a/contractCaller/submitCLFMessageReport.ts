@@ -69,6 +69,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         }
     });
 
+
     // Find the ConceroMessageSent event
     const conceroMessageSentLog = decodedLogs.find(
         log => log.decodedLog.eventName === eventNames.ConceroMessageSent,
@@ -103,6 +104,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         abi: globalConfig.ABI.CONCERO_ROUTER,
         functionName: "submitMessageReport",
         args: [reportSubmission, message],
+        account: dstWalletClient.account,
     });
 
     logger.info(`[${dstChain.name}] CLF message report submitted with hash: ${hash}`);

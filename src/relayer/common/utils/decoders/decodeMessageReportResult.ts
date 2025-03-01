@@ -1,3 +1,4 @@
+import { parseAbiParameters, decodeAbiParameters } from "viem";
 import { decodeCLFReportConfig } from "./DecodeCLFReportConfig";
 import { decodeInternalMessageConfig } from "./decodeInternalMessageConfig";
 
@@ -11,32 +12,23 @@ export type DecodedMessageReportResult = {
     decodedConfig: ReturnType<typeof decodeCLFReportConfig>;
     decodedMessageConfig: ReturnType<typeof decodeInternalMessageConfig>;
 };
-
 function decodeMessageReportResult(resultBytes: string): DecodedMessageReportResult {
     try {
-        // Remove 0x prefix if present
-        const data = resultBytes.startsWith("0x") ? resultBytes.slice(2) : resultBytes;
+        // Define the ABI structure matching the Solidity struct
+        const messageReportResultAbi = parseAbiParameters([
+            'bytes32 reportConfig',
+            'bytes32 internalMessageConfig',
+            'bytes32 messageId',
+            'bytes32 messageHashSum',
+            'bytes dstChainData',
+            'bytes[] allowedOperators'
+        ]);
 
-        // In ABI encoding, each field is 32 bytes (64 hex chars)
-        // The first 32 bytes is the reportConfig
-        const reportConfig = "0x" + data.slice(0, 64);
+        // Use viem's decoder for proper ABI decoding
+        const decodedData = decodeAbiParameters(messageReportResultAbi, resultBytes);
 
-        // The next 32 bytes is the internalMessageConfig
-        const internalMessageConfig = "0x" + data.slice(64, 128);
-
-        // Next 32 bytes for messageId
-        const messageId = "0x" + data.slice(128, 192);
-
-        // Next 32 bytes for messageHashSum
-        const messageHashSum = "0x" + data.slice(192, 256);
-
-        // For dynamic fields (bytes and arrays), the next values are offsets
-        // We'd need to follow offset pointers to get the actual data
-        // This gets more complex with nested dynamic types
-
-        // For simplicity in this implementation:
-        let dstChainData = "0x";
-        let allowedOperators = [];
+        // Extract values from the decoded data
+        const [reportConfig, internalMessageConfig, messageId, messageHashSum, dstChainData, allowedOperators] = decodedData;
 
         return {
             reportConfig,
@@ -46,7 +38,7 @@ function decodeMessageReportResult(resultBytes: string): DecodedMessageReportRes
             dstChainData,
             allowedOperators,
 
-            // For convenience, also return the decoded values
+            // Also return decoded configurations
             decodedConfig: decodeCLFReportConfig(reportConfig),
             decodedMessageConfig: decodeInternalMessageConfig(internalMessageConfig),
         };
