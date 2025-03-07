@@ -6,13 +6,13 @@ import { type env } from "../../../types/env";
 import { type EnvPrefixes } from "../../../types/envPrefixes";
 import { shorten } from "./formatting";
 
-function getEnvVar(key: keyof env): string {
+export function getEnvVar<K extends keyof env>(key: K): env[K] {
     const value = process.env[key];
     if (value === undefined || value === "") throw new Error(`Missing environment variable ${key}`);
-    return value;
+    return value as env[K];
 }
 
-function getEnvAddress(
+export function getEnvAddress(
     prefix: keyof EnvPrefixes,
     networkName?: ConceroNetworkNames,
 ): [Address, string] {
@@ -24,5 +24,3 @@ function getEnvAddress(
 
     return [value, friendlyName];
 }
-
-export { getEnvAddress, getEnvVar };

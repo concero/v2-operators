@@ -32,7 +32,7 @@ export type ConceroNetwork = {
     viemChain: Chain;
     confirmations: number;
     addresses: {
-        conceroVerifier: Address;
+        conceroVerifier?: Address;
         conceroRouter: Address;
     };
 };

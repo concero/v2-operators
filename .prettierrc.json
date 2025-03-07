@@ -1,15 +1,15 @@
 {
-    "overrides": [
-        {
-            "files": ["*.ts", "**/*.ts"],
-            "options": {
-                "arrowParens": "avoid",
-                "printWidth": 100,
-                "tabWidth": 4,
-                "trailingComma": "all",
-                "plugins": ["prettier-plugin-organize-imports", "prettier-plugin-jsdoc"],
-                "parser": "typescript"
-            }
-        }
-    ]
+  "overrides": [
+    {
+      "files": ["*.ts", "**/*.ts"],
+      "options": {
+        "arrowParens": "avoid",
+        "printWidth": 100,
+        "tabWidth": 4,
+        "trailingComma": "all",
+        "plugins": ["prettier-plugin-jsdoc"],
+        "parser": "typescript"
+      }
+    }
+  ]
 }

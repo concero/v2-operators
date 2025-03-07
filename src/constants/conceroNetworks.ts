@@ -22,6 +22,7 @@ import {
     NetworkType,
 } from "../types/ConceroNetwork";
 import { globalConfig } from "./globalConfig";
+import { Address } from "viem";
 
 const DEFAULT_BLOCK_CONFIRMATIONS = 2;
 const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
@@ -83,6 +84,10 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "421614",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: arbitrumSepolia,
+        addresses: {
+            conceroRouter: getEnvVar("CONCERO_ROUTER_ARBITRUM_SEPOLIA"),
+            conceroVerifier: getEnvVar("CONCERO_VERIFIER_ARBITRUM_SEPOLIA"),
+        },
     },
     baseSepolia: {
         name: "baseSepolia",
@@ -92,6 +97,9 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "84532",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: baseSepolia,
+        addresses: {
+            conceroRouter: getEnvVar("CONCERO_ROUTER_BASE_SEPOLIA") as Address,
+        },
     },
     polygonAmoy: {
         name: "polygonAmoy",

@@ -18,10 +18,12 @@ node_modules
 # env files
 .env.*
 .env
-!.env.deployments
+!.env.deployments.*
 !.env.clf
 !.env.tokens
 !.env.clccip
 
 *.log
 /logs/
+
+/dist
