@@ -14,7 +14,7 @@ let conceroVerifierNetwork;
 switch (globalConfig.NETWORK_MODE) {
     case "testnet":
         conceroRouterNetworks = testnetNetworks;
-        conceroVerifierNetwork = conceroNetworks.baseSepolia;
+        conceroVerifierNetwork = conceroNetworks.arbitrumSepolia;
         break;
     case "localhost":
         conceroRouterNetworks = [conceroNetworks.localhost];
@@ -22,7 +22,7 @@ switch (globalConfig.NETWORK_MODE) {
         break;
     case "mainnet":
         conceroRouterNetworks = mainnetNetworks;
-        conceroVerifierNetwork = conceroNetworks.base;
+        conceroVerifierNetwork = conceroNetworks.arbitrum;
         break;
     default:
         throw new AppError(AppErrorEnum.InvalidNetworkMode);
