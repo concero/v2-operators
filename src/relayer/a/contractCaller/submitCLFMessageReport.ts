@@ -13,21 +13,14 @@ import {
 import { config, eventNames } from "../constants";
 
 export async function submitCLFMessageReport(log: DecodedLog) {
-    const { address, transactionHash, args } = log;
-    const { conceroId } = args;
+    const { transactionHash } = log;
 
     // 1. fetch & decode full CLF message report
     const { publicClient: verifierPublicClient } = await getFallbackClients(
         config.networks.conceroVerifier,
     );
     const messageReportTx = await verifierPublicClient.getTransaction({ hash: transactionHash });
-
-    // console.log('messageReportTx');
-    // console.log(messageReportTx);
     const decodedCLFReport = decodeCLFReport(messageReportTx);
-
-    // console.log('decodedCLFReport');
-    // console.log(decodedCLFReport);
     const decodedMessageResult = decodeMessageReportResult(decodedCLFReport.report.results[0]);
     const { srcChainSelector, dstChainSelector } = decodedMessageResult.decodedMessageConfig;
     const messageId = decodedMessageResult.messageId;

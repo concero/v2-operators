@@ -13,6 +13,7 @@ export type DecodedInternalMessageConfig = {
 
 export function decodeInternalMessageConfig(configBytes: string): DecodedInternalMessageConfig {
     // Convert bytes32 to BigInt for bitwise operations
+
     const configUint = BigInt(`0x${configBytes.slice(2)}`);
 
     return {

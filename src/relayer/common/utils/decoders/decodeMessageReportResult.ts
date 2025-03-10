@@ -12,7 +12,8 @@ export type DecodedMessageReportResult = {
     decodedConfig: ReturnType<typeof decodeCLFReportConfig>;
     decodedMessageConfig: ReturnType<typeof decodeInternalMessageConfig>;
 };
-function decodeMessageReportResult(resultBytes: string): DecodedMessageReportResult {
+
+export function decodeMessageReportResult(resultBytes: string): DecodedMessageReportResult {
     try {
         // Define the ABI structure matching the Solidity struct
         const messageReportResultAbi = parseAbiParameters([
@@ -54,5 +55,3 @@ function decodeMessageReportResult(resultBytes: string): DecodedMessageReportRes
         throw new Error("Failed to decode CLF message report response");
     }
 }
-
-export { decodeMessageReportResult };
