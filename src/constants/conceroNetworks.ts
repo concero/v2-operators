@@ -58,18 +58,18 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
     //     confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
     //     viemChain: sepolia,
     // },
-    // avalancheFuji: {
-    //     name: "avalancheFuji",
-    //     type: networkTypes.testnet,
-    //     id: 43113,
-    //     accounts: [operatorPK],
-    //     chainSelector: "43113",
-    //     confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
-    //     viemChain: avalancheFuji,
-    //     addresses: {
-    //         conceroRouter: getEnvVar("CONCERO_ROUTER_AVALANCHE_FUJI"),
-    //     },
-    // },
+    avalancheFuji: {
+        name: "avalancheFuji",
+        type: networkTypes.testnet,
+        id: 43113,
+        accounts: [operatorPK],
+        chainSelector: "43113",
+        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+        viemChain: avalancheFuji,
+        addresses: {
+            conceroRouter: getEnvVar("CONCERO_ROUTER_AVALANCHE_FUJI"),
+        },
+    },
     optimismSepolia: {
         name: "optimismSepolia",
         type: networkTypes.testnet,

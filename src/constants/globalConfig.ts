@@ -10,11 +10,7 @@ const globalConfig: GlobalConfig = {
     OPERATOR_ADDRESS: getEnvVar("OPERATOR_ADDRESS"),
     WHITELISTED_NETWORK_IDS: {
         mainnet: [1, 137],
-        testnet: [
-            84532, 421614,
-            //  43113
-            11155420, 80002,
-        ],
+        testnet: [84532, 421614, 43113, 11155420, 80002],
         localhost: [1],
     },
     POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
