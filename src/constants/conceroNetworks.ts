@@ -66,16 +66,22 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
     //     chainSelector: "43113",
     //     confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
     //     viemChain: avalancheFuji,
+    //     addresses: {
+    //         conceroRouter: getEnvVar("CONCERO_ROUTER_AVALANCHE_FUJI"),
+    //     },
     // },
-    // optimismSepolia: {
-    //     name: "optimismSepolia",
-    //     type: networkTypes.testnet,
-    //     id: 11155420,
-    //     accounts: [operatorPK],
-    //     chainSelector: "11155420",
-    //     confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
-    //     viemChain: optimismSepolia,
-    // },
+    optimismSepolia: {
+        name: "optimismSepolia",
+        type: networkTypes.testnet,
+        id: 11155420,
+        accounts: [operatorPK],
+        chainSelector: "11155420",
+        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+        viemChain: optimismSepolia,
+        addresses: {
+            conceroRouter: getEnvVar("CONCERO_ROUTER_OPTIMISM_SEPOLIA"),
+        },
+    },
     arbitrumSepolia: {
         name: "arbitrumSepolia",
         type: networkTypes.testnet,
@@ -98,18 +104,21 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: baseSepolia,
         addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_BASE_SEPOLIA") as Address,
+            conceroRouter: getEnvVar("CONCERO_ROUTER_BASE_SEPOLIA"),
         },
     },
-    // polygonAmoy: {
-    //     name: "polygonAmoy",
-    //     type: networkTypes.testnet,
-    //     id: 80002,
-    //     accounts: [operatorPK],
-    //     chainSelector: "80002",
-    //     confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
-    //     viemChain: polygonAmoy,
-    // },
+    polygonAmoy: {
+        name: "polygonAmoy",
+        type: networkTypes.testnet,
+        id: 80002,
+        accounts: [operatorPK],
+        chainSelector: "80002",
+        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+        viemChain: polygonAmoy,
+        addresses: {
+            conceroRouter: getEnvVar("CONCERO_ROUTER_POLYGON_AMOY"),
+        },
+    },
 };
 const mainnetNetworks: Record<ConceroMainnetNetworkNames, ConceroNetwork> = {
     ethereum: {

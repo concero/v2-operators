@@ -10,7 +10,11 @@ const globalConfig: GlobalConfig = {
     OPERATOR_ADDRESS: getEnvVar("OPERATOR_ADDRESS"),
     WHITELISTED_NETWORK_IDS: {
         mainnet: [1, 137],
-        testnet: [84532, 421614],
+        testnet: [
+            84532, 421614,
+            //  43113
+            11155420, 80002,
+        ],
         localhost: [1],
     },
     POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
@@ -23,15 +27,14 @@ const globalConfig: GlobalConfig = {
     VIEM: {
         RECEIPT: {
             timeout: 0,
-            confirmations: 1,
+            confirmations: 2,
             //todo: for localhost chain this needs to be set to 1. Mainnet chains need their per-chain confirmations found in conceroNetowrks.ts
         },
         WRITE_CONTRACT: {
             gas: 3000000n,
         },
         FALLBACK_TRANSPORT_OPTIONS: {
-            rank: true,
-            retryCount: 3,
+            retryCount: 5,
             retryDelay: 1000,
         },
         CLIENT_ROTATION_INTERVAL_MS: 1000 * 60 * 60 * 1,

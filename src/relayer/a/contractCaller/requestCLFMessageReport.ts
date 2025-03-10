@@ -1,7 +1,14 @@
 import { encodeAbiParameters, keccak256 } from "viem";
 import { globalConfig } from "../../../constants";
 import { DecodedLog } from "../../../types/DecodedLog";
-import { callContract, getEnvAddress, getFallbackClients, logger } from "../../common/utils";
+import {
+    callContract,
+    decodeInternalMessageConfig,
+    getChainBySelector,
+    getEnvAddress,
+    getFallbackClients,
+    logger,
+} from "../../common/utils";
 import { config } from "../constants/";
 
 export async function requestCLFMessageReport(log: DecodedLog) {
@@ -9,8 +16,14 @@ export async function requestCLFMessageReport(log: DecodedLog) {
     const { publicClient, walletClient } = await getFallbackClients(network);
 
     const { messageId, internalMessageConfig, message } = log.args;
+    const { srcChainSelector } = decodeInternalMessageConfig(internalMessageConfig);
 
-    const routerTx = await publicClient.getTransaction({ hash: log.transactionHash });
+    const { publicClient: srcPublicClient } = await getFallbackClients(
+        getChainBySelector(srcChainSelector.toString()),
+    );
+
+    const routerTx = await srcPublicClient.getTransaction({ hash: log.transactionHash });
+
     const encodedSrcChainData = encodeAbiParameters(
         [
             {
