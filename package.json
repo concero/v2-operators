@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "swc src -d dist",
+    "build": "swc src -d dist && bun run copy-assets",
+    "copy-assets": "mkdir -p dist/abi && cp -r src/abi/* dist/abi/",
     "lint": "eslint --config .eslint.config.mjs",
     "format": "prettier --config .prettierrc.json --write **/*.{ts,json}",
     "start:relayerA": "bun ./src/relayer/a/index.ts",
