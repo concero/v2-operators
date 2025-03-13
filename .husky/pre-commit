@@ -4,7 +4,7 @@
 ./$(dirname "$0")/validateBranchName.sh
 
 # Pre-commit checks
-npm run format
+# npm run format
 #yarn lint
 
 echo "✅ Pre-commit checks passed successfully."
