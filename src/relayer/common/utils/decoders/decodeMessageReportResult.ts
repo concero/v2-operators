@@ -7,6 +7,7 @@ export type DecodedMessageReportResult = {
     internalMessageConfig: string;
     messageId: string;
     messageHashSum: string;
+    sender: string;
     dstChainData: string;
     allowedOperators: string[];
     decodedConfig: ReturnType<typeof decodeCLFReportConfig>;
@@ -21,6 +22,7 @@ export function decodeMessageReportResult(resultBytes: string): DecodedMessageRe
             "bytes32 internalMessageConfig",
             "bytes32 messageId",
             "bytes32 messageHashSum",
+            "bytes sender",
             "bytes dstChainData",
             "bytes[] allowedOperators",
         ]);
@@ -34,6 +36,7 @@ export function decodeMessageReportResult(resultBytes: string): DecodedMessageRe
             internalMessageConfig,
             messageId,
             messageHashSum,
+            sender,
             dstChainData,
             allowedOperators,
         ] = decodedData;
@@ -43,6 +46,7 @@ export function decodeMessageReportResult(resultBytes: string): DecodedMessageRe
             internalMessageConfig,
             messageId,
             messageHashSum,
+            sender,
             dstChainData,
             allowedOperators,
 
