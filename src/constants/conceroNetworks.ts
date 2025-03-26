@@ -10,7 +10,7 @@ import {
     optimismSepolia,
     polygon,
     polygonAmoy,
-    sepolia,
+    saigon,
 } from "viem/chains";
 import { getEnvVar } from "../relayer/common/utils/getEnvVar";
 import { localhostViemChain } from "../relayer/common/utils/localhostViemChain";
@@ -22,7 +22,7 @@ import {
     NetworkType,
 } from "../types/ConceroNetwork";
 import { globalConfig } from "./globalConfig";
-import { Address } from "viem";
+import { astarShibuya } from "./customViemChains";
 
 const DEFAULT_BLOCK_CONFIRMATIONS = 2;
 const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
@@ -42,8 +42,8 @@ const testingNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         confirmations: 1,
         viemChain: localhostViemChain,
         addresses: {
-            conceroVerifier: getEnvVar("CONCERO_VERIFIER_LOCALHOST"),
-            conceroRouter: getEnvVar("CONCERO_ROUTER_LOCALHOST"),
+            conceroVerifier: getEnvVar("CONCERO_ROUTER_PROXY_LOCALHOST"),
+            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_LOCALHOST"),
         },
     },
 };
@@ -67,7 +67,7 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: avalancheFuji,
         addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_AVALANCHE_FUJI"),
+            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_AVALANCHE_FUJI"),
         },
     },
     optimismSepolia: {
@@ -79,7 +79,7 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: optimismSepolia,
         addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_OPTIMISM_SEPOLIA"),
+            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_OPTIMISM_SEPOLIA"),
         },
     },
     arbitrumSepolia: {
@@ -91,8 +91,8 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: arbitrumSepolia,
         addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_ARBITRUM_SEPOLIA"),
-            conceroVerifier: getEnvVar("CONCERO_VERIFIER_ARBITRUM_SEPOLIA"),
+            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_ARBITRUM_SEPOLIA"),
+            conceroVerifier: getEnvVar("CONCERO_VERIFIER_PROXY_ARBITRUM_SEPOLIA"),
         },
     },
     baseSepolia: {
@@ -104,7 +104,7 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: baseSepolia,
         addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_BASE_SEPOLIA"),
+            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_BASE_SEPOLIA"),
         },
     },
     polygonAmoy: {
@@ -116,7 +116,31 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: polygonAmoy,
         addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_POLYGON_AMOY"),
+            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_POLYGON_AMOY"),
+        },
+    },
+    astarShibuya: {
+        name: "astarShibuya",
+        type: networkTypes.testnet,
+        id: 81,
+        accounts: [operatorPK],
+        chainSelector: "81",
+        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+        viemChain: astarShibuya,
+        addresses: {
+            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_ASTAR_SHIBUYA"),
+        },
+    },
+    roninSaigon: {
+        name: "roninSaigon",
+        type: networkTypes.testnet,
+        id: 2021,
+        accounts: [operatorPK],
+        chainSelector: "2021",
+        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+        viemChain: saigon,
+        addresses: {
+            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_RONIN_SAIGON"),
         },
     },
 };

@@ -17,4 +17,8 @@ export const networkEnvKeys: Record<ConceroNetworkNames, string> = {
     baseSepolia: "BASE_SEPOLIA",
     polygonAmoy: "POLYGON_AMOY",
     localhost: "LOCALHOST",
+    soneiumMinato: "SONEIUM_MINATO",
+    sonicBlaze: "SONIC_BLAZE",
+    astarShibuya: "ASTAR_SHIBUYA",
+    roninSaigon: "RONIN_SAIGON",
 };

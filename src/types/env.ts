@@ -14,6 +14,8 @@ export interface env {
     CONCERO_ROUTER_AVALANCHE_FUJI: Address;
     CONCERO_ROUTER_POLYGON_AMOY: Address;
     CONCERO_ROUTER_OPTIMISM_SEPOLIA: Address;
+    CONCERO_ROUTER_RONIN_SAIGON: Address;
+    CONCERO_ROUTER_ASTAR_SHIBUYA: Address;
 }
 
 export default env;
