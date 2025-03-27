@@ -16,8 +16,6 @@ export async function callContract(
             // @dev we use it to avoid simulation. on arbitrum sepolia it fakely says the transaction will fail regardless of the rpc
         );
 
-        console.log("\n\nhash: ", hash);
-
         // @dev TODO: We need to check the status of the tx
         const { cumulativeGasUsed } = await publicClient.waitForTransactionReceipt({
             // ...globalConfig.VIEM.RECEIPT,
