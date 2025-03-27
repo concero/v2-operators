@@ -21,4 +21,5 @@ export const networkEnvKeys: Record<ConceroNetworkNames, string> = {
     sonicBlaze: "SONIC_BLAZE",
     astarShibuya: "ASTAR_SHIBUYA",
     roninSaigon: "RONIN_SAIGON",
+    megaethTestnet: "MEGAETH_TESTNET",
 };

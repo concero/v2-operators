@@ -36,7 +36,7 @@ class HttpClient {
             if (!response.ok) {
                 throw new AppError(
                     AppErrorEnum.FailedHTTPRequest,
-                    new Error(`HTTP error! status: ${response.status}`),
+                    new Error(`HTTP error! status: ${response.status}. URL: ${resource}`),
                 );
             }
             return response;

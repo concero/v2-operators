@@ -6,6 +6,7 @@ import {
     base,
     baseSepolia,
     mainnet,
+    megaethTestnet,
     optimism,
     optimismSepolia,
     polygon,
@@ -47,6 +48,8 @@ const testingNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         },
     },
 };
+
+const accounts = [operatorPK];
 
 const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
     // sepolia: {
@@ -141,6 +144,18 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         viemChain: saigon,
         addresses: {
             conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_RONIN_SAIGON"),
+        },
+    },
+    megaethTestnet: {
+        name: "megaethTestnet",
+        type: networkTypes.testnet,
+        id: 6342,
+        accounts,
+        chainSelector: "6342",
+        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+        viemChain: megaethTestnet,
+        addresses: {
+            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_MEGAETH_TESTNET"),
         },
     },
 };
