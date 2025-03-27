@@ -41,6 +41,7 @@ export async function requestCLFMessageReport(log: DecodedLog) {
             },
         ],
     );
+
     try {
         const [verifierAddress] = getEnvAddress("verifier", network.name);
 
