@@ -25,7 +25,6 @@ export async function callContract(
         // const transaction = await publicClient.getTransaction(hash);
         return hash;
     } catch (error) {
-        console.log("\n\nerror: ", error);
         throw new AppError(AppErrorEnum.ContractCallError, error);
     }
 }
