@@ -11,6 +11,7 @@ export async function checkGas() {
         const balancePromises = networkIds.map(async networkId => {
             const chain = activeNetworks.find(network => network.id === networkId);
             if (!chain) {
+                console.log(`chain ${networkId} not found\n\n\n`);
                 throw new AppError(AppErrorEnum.ChainNotFound);
             }
 
