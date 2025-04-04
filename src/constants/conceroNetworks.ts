@@ -111,18 +111,18 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
             conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_AVALANCHE_FUJI"),
         },
     },
-    astarShibuya: {
-        name: "astarShibuya",
-        type: networkTypes.testnet,
-        id: 81,
-        accounts,
-        chainSelector: "81",
-        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
-        viemChain: astarShibuya,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_ASTAR_SHIBUYA"),
-        },
-    },
+    // astarShibuya: {
+    //     name: "astarShibuya",
+    //     type: networkTypes.testnet,
+    //     id: 81,
+    //     accounts,
+    //     chainSelector: "81",
+    //     confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+    //     viemChain: astarShibuya,
+    //     addresses: {
+    //         conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_ASTAR_SHIBUYA"),
+    //     },
+    // },
     roninSaigon: {
         name: "roninSaigon",
         type: networkTypes.testnet,
@@ -303,18 +303,18 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
             conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_CELO_ALFAJORES"),
         },
     },
-    coreTestnet: {
-        name: "coreTestnet",
-        type: networkTypes.testnet,
-        id: 1114,
-        accounts,
-        chainSelector: "1114",
-        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
-        viemChain: coreTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_CORE_TESTNET"),
-        },
-    },
+    // coreTestnet: {
+    //     name: "coreTestnet",
+    //     type: networkTypes.testnet,
+    //     id: 1114,
+    //     accounts,
+    //     chainSelector: "1114",
+    //     confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+    //     viemChain: coreTestnet,
+    //     addresses: {
+    //         conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_CORE_TESTNET"),
+    //     },
+    // },
     cronosTestnet: {
         name: "cronosTestnet",
         type: networkTypes.testnet,
