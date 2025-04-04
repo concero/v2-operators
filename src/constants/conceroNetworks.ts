@@ -45,7 +45,7 @@ import {
     NetworkType,
 } from "../types/ConceroNetwork";
 import { globalConfig } from "./globalConfig";
-import { apechainCurtis, astarShibuya, coreTestnet } from "./customViemChains";
+import { apechainCurtis } from "./customViemChains";
 
 const DEFAULT_BLOCK_CONFIRMATIONS = 2;
 const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
