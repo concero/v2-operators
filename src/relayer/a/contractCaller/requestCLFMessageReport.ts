@@ -51,7 +51,7 @@ export async function requestCLFMessageReport(log: DecodedLog) {
             account: walletClient.account,
             abi: globalConfig.ABI.CONCERO_VERIFIER,
             functionName: "requestMessageReport",
-            args: [internalMessageConfig, messageId, keccak256(message), encodedSrcChainData],
+            args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
         });
 
         config.eventEmitter.emit("requestMessageReport", { txHash });
