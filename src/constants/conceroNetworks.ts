@@ -45,7 +45,7 @@ import {
     NetworkType,
 } from "../types/ConceroNetwork";
 import { globalConfig } from "./globalConfig";
-import { apechainCurtis } from "./customViemChains";
+import { apechainCurtis, coreTestnet } from "./customViemChains";
 
 const DEFAULT_BLOCK_CONFIRMATIONS = 2;
 const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
@@ -303,18 +303,18 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
             conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_CELO_ALFAJORES"),
         },
     },
-    // coreTestnet: {
-    //     name: "coreTestnet",
-    //     type: networkTypes.testnet,
-    //     id: 1114,
-    //     accounts,
-    //     chainSelector: "1114",
-    //     confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
-    //     viemChain: coreTestnet,
-    //     addresses: {
-    //         conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_CORE_TESTNET"),
-    //     },
-    // },
+    coreTestnet: {
+        name: "coreTestnet",
+        type: networkTypes.testnet,
+        id: 1114,
+        accounts,
+        chainSelector: "1114",
+        confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
+        viemChain: coreTestnet,
+        addresses: {
+            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_CORE_TESTNET"),
+        },
+    },
     cronosTestnet: {
         name: "cronosTestnet",
         type: networkTypes.testnet,
