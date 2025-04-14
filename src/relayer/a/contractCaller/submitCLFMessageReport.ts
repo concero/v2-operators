@@ -40,7 +40,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
             name: eventNames.ConceroMessageSent,
         }) as AbiEvent,
 
-        fromBlock: currentBlock - BigInt(1000),
+        fromBlock: currentBlock - BigInt(100),
         toBlock: currentBlock,
     });
 
