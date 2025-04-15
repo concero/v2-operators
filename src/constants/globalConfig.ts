@@ -21,7 +21,7 @@ const globalConfig: GlobalConfig = {
     LOG_LEVEL: getEnvVar("LOG_LEVEL") || "info", // "error" | "warn" | "info" | "debug"
     LOG_DIR: "logs",
     URLS: {
-        CONCERO_RPCS: "https://raw.githubusercontent.com/concero/rpcs/refs/heads/master/output/",
+        CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${process.env.RPC_SERIVCE_GIT_BRANCH}/output/${process.env.NETWORK_MODE}/`,
     },
     LOG_MAX_FILES: "7d",
     VIEM: {
