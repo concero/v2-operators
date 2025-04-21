@@ -1,4 +1,5 @@
-import { globalConfig, testnetNetworks } from "../../../constants/";
+import { globalConfig } from "../../../constants/";
+import { getChainNameById } from "./getChainNameById";
 import { httpClient } from "./httpClient";
 
 export const fetchRpcUrls = async (chainId: number): Promise<string[]> => {
@@ -6,7 +7,7 @@ export const fetchRpcUrls = async (chainId: number): Promise<string[]> => {
         return [process.env.LOCALHOST_RPC_URL as string];
     }
 
-    const chainName = Object.values(testnetNetworks).findLast(e => e.id === chainId).name;
+    const chainName = await getChainNameById(chainId);
     const chainConfig = await httpClient.get(
         `${globalConfig.URLS.CONCERO_RPCS}${globalConfig.NETWORK_MODE}/${chainId}-${chainName}.json`,
     );
