@@ -4,7 +4,7 @@ import { type GlobalConfig } from "../types/GlobalConfig";
 import { Abi } from "viem";
 import { abi as conceroRouterAbi } from "../abi/ConceroRouter.json";
 import { abi as conceroVerifierAbi } from "../abi/ConceroVerifier.json";
-import { getRpcServiceBranch } from "./getRpcSrviceBranch";
+import { getRpcServiceBranch } from "./getRpcServiceBranch";
 
 const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar("NETWORK_MODE"),
