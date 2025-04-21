@@ -8,7 +8,7 @@ export const fetchRpcUrls = async (chainId: number): Promise<string[]> => {
 
     const chainName = Object.values(testnetNetworks).findLast(e => e.id === chainId).name;
     const chainConfig = await httpClient.get(
-        `${globalConfig.URLS.CONCERO_RPCS}${chainId}-${chainName}.json`,
+        `${globalConfig.URLS.CONCERO_RPCS}${globalConfig.NETWORK_MODE}/${chainId}-${chainName}.json`,
     );
     return chainConfig.urls.map((url: string) => `https://${url}`);
 };
