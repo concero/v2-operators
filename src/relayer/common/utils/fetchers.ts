@@ -12,5 +12,5 @@ export const fetchRpcUrls = async (chainId: number): Promise<string[]> => {
         `${globalConfig.URLS.CONCERO_RPCS}${globalConfig.NETWORK_MODE}/${chainId}-${chainName}.json`,
     );
 
-    return chainConfig.urls;
+    return (await chainConfig.json()).urls;
 };
