@@ -64,10 +64,6 @@ const testingNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "1",
         confirmations: 1,
         viemChain: localhostViemChain,
-        addresses: {
-            conceroVerifier: getEnvVar("CONCERO_ROUTER_PROXY_LOCALHOST"),
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_LOCALHOST"),
-        },
     },
 };
 
@@ -82,9 +78,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "43113",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: avalancheFuji,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_AVALANCHE_FUJI"),
-        },
     },
     arbitrumSepolia: {
         name: "arbitrumSepolia",
@@ -94,10 +87,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "421614",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: arbitrumSepolia,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_ARBITRUM_SEPOLIA"),
-            conceroVerifier: getEnvVar("CONCERO_VERIFIER_PROXY_ARBITRUM_SEPOLIA"),
-        },
     },
     baseSepolia: {
         name: "baseSepolia",
@@ -107,9 +96,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "84532",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: baseSepolia,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_AVALANCHE_FUJI"),
-        },
     },
     // astarShibuya: {
     //     name: "astarShibuya",
@@ -131,9 +117,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "2021",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: saigon,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_RONIN_SAIGON"),
-        },
     },
     megaethTestnet: {
         name: "megaethTestnet",
@@ -143,9 +126,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "6342",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: megaethTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_MEGAETH_TESTNET"),
-        },
     },
     sonicBlaze: {
         name: "sonicBlaze",
@@ -155,9 +135,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "57054",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: sonicBlazeTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_SONIC_BLAZE"),
-        },
     },
     monadTestnet: {
         name: "monadTestnet",
@@ -167,9 +144,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "10143",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: monadTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_MONAD_TESTNET"),
-        },
     },
     sepolia: {
         name: "sepolia",
@@ -179,9 +153,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "11155111",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: sepolia,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_SEPOLIA"),
-        },
     },
     lineaSepolia: {
         name: "lineaSepolia",
@@ -191,9 +162,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "59141",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: lineaSepolia,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_LINEA_SEPOLIA"),
-        },
     },
     bnbTestnet: {
         name: "bnbTestnet",
@@ -203,9 +171,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "97",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: bscTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_BNB_TESTNET"),
-        },
     },
     soneiumMinato: {
         name: "soneiumMinato",
@@ -215,9 +180,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "1946",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: soneiumMinato,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_SONEIUM_MINATO"),
-        },
     },
     apechainCurtis: {
         name: "apechainCurtis",
@@ -227,9 +189,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "33111",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: apechainCurtis,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_APECHAIN_CURTIS"),
-        },
     },
     optimismSepolia: {
         name: "optimismSepolia",
@@ -239,9 +198,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "11155420",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: optimismSepolia,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_OPTIMISM_SEPOLIA"),
-        },
     },
     polygonAmoy: {
         name: "polygonAmoy",
@@ -251,9 +207,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "80002",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: polygonAmoy,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_POLYGON_AMOY"),
-        },
     },
     bitlayerTestnet: {
         name: "bitlayerTestnet",
@@ -263,9 +216,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "200810",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: bitlayerTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_BITLAYER_TESTNET"),
-        },
     },
     blastSepolia: {
         name: "blastSepolia",
@@ -275,9 +225,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "1685877",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: blastSepolia,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_BLAST_SEPOLIA"),
-        },
     },
     botanixTestnet: {
         name: "botanixTestnet",
@@ -287,9 +234,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "3636",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: botanixTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_BOTANIX_TESTNET"),
-        },
     },
     celoAlfajores: {
         name: "celoAlfajores",
@@ -299,9 +243,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "44787",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: celoAlfajores,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_CELO_ALFAJORES"),
-        },
     },
     coreTestnet: {
         name: "coreTestnet",
@@ -311,9 +252,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "1114",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: coreTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_CORE_TESTNET"),
-        },
     },
     cronosTestnet: {
         name: "cronosTestnet",
@@ -323,9 +261,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "338",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: cronosTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_CRONOS_TESTNET"),
-        },
     },
     gnosisChiado: {
         name: "gnosisChiado",
@@ -335,9 +270,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "10200",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: gnosisChiado,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_GNOSIS_CHIADO"),
-        },
     },
     hashkeyTestnet: {
         name: "hashkeyTestnet",
@@ -347,9 +279,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "133",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: hashkeyTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_HASHKEY_TESTNET"),
-        },
     },
     inkSepolia: {
         name: "inkSepolia",
@@ -359,9 +288,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "763373",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: inkSepolia,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_INK_SEPOLIA"),
-        },
     },
     mantleSepolia: {
         name: "mantleSepolia",
@@ -371,9 +297,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "5003",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: mantleSepoliaTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_MANTLE_SEPOLIA"),
-        },
     },
     scrollSepolia: {
         name: "scrollSepolia",
@@ -383,9 +306,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "534351",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: scrollSepolia,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_SCROLL_SEPOLIA"),
-        },
     },
     seiTestnet: {
         name: "seiTestnet",
@@ -395,9 +315,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "1328",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: seiTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_SEI_TESTNET"),
-        },
     },
     shibariumPuppynet: {
         name: "shibariumPuppynet",
@@ -407,9 +324,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "157",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: shibariumTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_SHIBARIUM_PUPPYNET"),
-        },
     },
     unichainSepolia: {
         name: "unichainSepolia",
@@ -419,9 +333,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "1301",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: unichainSepolia,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_UNICHAIN_SEPOLIA"),
-        },
     },
     xlayerSepolia: {
         name: "xlayerSepolia",
@@ -431,9 +342,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "195",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: xLayerTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_XLAYER_SEPOLIA"),
-        },
     },
     zircuitTestnet: {
         name: "zircuitTestnet",
@@ -443,9 +351,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "48899",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: zircuitTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_ZIRCUIT_TESTNET"),
-        },
     },
     modeTestnet: {
         name: "modeTestnet",
@@ -455,9 +360,6 @@ const testnetNetworks: Record<ConceroTestnetNetworkNames, ConceroNetwork> = {
         chainSelector: "919",
         confirmations: DEFAULT_BLOCK_CONFIRMATIONS,
         viemChain: modeTestnet,
-        addresses: {
-            conceroRouter: getEnvVar("CONCERO_ROUTER_PROXY_MODE_TESTNET"),
-        },
     },
 };
 

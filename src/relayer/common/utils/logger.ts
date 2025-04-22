@@ -9,6 +9,7 @@ const logFormat = winston.format.combine(
     winston.format.timestamp({
         format: "YYYY-MM-DD HH:mm:ss",
     }),
+
     winston.format.printf(({ level, message, timestamp, ...meta }) => {
         const formattedMessage =
             typeof message === "object" ? JSON.stringify(message, null, 2) : message;

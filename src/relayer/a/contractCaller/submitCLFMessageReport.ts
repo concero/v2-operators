@@ -6,11 +6,11 @@ import {
     decodeCLFReport,
     decodeMessageReportResult,
     getChainBySelector,
-    getEnvAddress,
     getFallbackClients,
     logger,
 } from "../../common/utils";
 import { config, eventNames } from "../constants";
+import { deploymentsManager } from "../../common/constants/deploymentsManager";
 
 export async function submitCLFMessageReport(log: DecodedLog) {
     const { transactionHash } = log;
@@ -28,7 +28,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     // 2. go to src chain and fetch original message bytes
     const srcChain = getChainBySelector(srcChainSelector.toString());
     const { publicClient: srcPublicClient } = await getFallbackClients(srcChain);
-    const [srcContractAddress] = getEnvAddress("router", srcChain.name);
+    const [srcContractAddress] = await deploymentsManager.getRouterByChainName(srcChain.name);
 
     const currentBlock = await srcPublicClient.getBlockNumber();
 
@@ -78,7 +78,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     // 3. Send report + message to dst chain router
     const dstChain = getChainBySelector(dstChainSelector.toString());
 
-    const [dstConceroRouter] = getEnvAddress("router", dstChain.name);
+    const dstConceroRouter = await deploymentsManager.getRouterByChainName(dstChain.name);
     const { publicClient: dstPublicClient, walletClient: dstWalletClient } =
         await getFallbackClients(dstChain);
 

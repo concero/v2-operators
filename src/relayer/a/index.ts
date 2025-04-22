@@ -19,7 +19,6 @@ const globalErrorHandler = (error: Error) => {
 };
 
 process.on("unhandledRejection", (reason: any) => {
-    console.log("\n\nreason: ", reason);
     globalErrorHandler(
         new AppError(
             AppErrorEnum.UnhandledRejection,
@@ -29,8 +28,6 @@ process.on("unhandledRejection", (reason: any) => {
 });
 
 process.on("uncaughtException", (error: Error) => {
-    console.log("\n\n\nerror: ", error);
-
     globalErrorHandler(new AppError(AppErrorEnum.UncaughtException, error));
 });
 

@@ -18,6 +18,7 @@ type GlobalConfig = {
     LOG_MAX_FILES: string;
     URLS: {
         CONCERO_RPCS: string;
+        CONCERO_DEPLOYMENTS: string;
     };
     HTTPCLIENT: {
         DEFAULT_TIMEOUT: number;

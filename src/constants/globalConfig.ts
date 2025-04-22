@@ -5,6 +5,7 @@ import { Abi } from "viem";
 import { abi as conceroRouterAbi } from "../abi/ConceroRouter.json";
 import { abi as conceroVerifierAbi } from "../abi/ConceroVerifier.json";
 import { getRpcServiceBranch } from "./getRpcServiceBranch";
+import { getDeploymentsServiceBranch } from "./getDeploymentsServiceBranch";
 
 const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar("NETWORK_MODE"),
@@ -23,6 +24,7 @@ const globalConfig: GlobalConfig = {
     LOG_DIR: "logs",
     URLS: {
         CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${getRpcServiceBranch()}/output/`,
+        CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${getDeploymentsServiceBranch()}/.env.deployments.${getEnvVar("NETWORK_MODE")}`,
     },
     LOG_MAX_FILES: "7d",
     VIEM: {

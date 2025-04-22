@@ -1,5 +1,5 @@
 import { type Address, decodeEventLog, Hash, PublicClient, WalletClient } from "viem";
-import { conceroNetworks, globalConfig } from "../../../constants";
+import { globalConfig } from "../../../constants";
 import { ConceroNetwork } from "../../../types/ConceroNetwork";
 import {
     EventListenerHandle,
@@ -7,6 +7,7 @@ import {
 } from "../../common/eventListener/setupEventListener";
 import { callContract, getFallbackClients, logger } from "../../common/utils";
 import { config } from "../constants";
+import { deploymentsManager } from "../../common/constants/deploymentsManager";
 
 const ChainType = {
     EVM: 0,
@@ -31,7 +32,7 @@ async function isOperatorRegistered(publicClient: any): Promise<boolean> {
 
     const isRegistered = await publicClient.readContract({
         chain: conceroVerifierNetwork.viemChain,
-        address: conceroNetworks[conceroVerifierNetwork.name].addresses.conceroVerifier,
+        address: await deploymentsManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "isOperatorRegistered",
         args: [globalConfig.OPERATOR_ADDRESS],
@@ -52,7 +53,7 @@ async function requestOperatorRegistration(
 
     const txHash = await callContract(publicClient, walletClient, {
         chain: conceroVerifierNetwork.viemChain,
-        address: conceroNetworks[conceroVerifierNetwork.name].addresses.conceroVerifier,
+        address: await deploymentsManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "requestOperatorRegistration",
         args: [chainTypes, operatorActions, operatorAddresses],
@@ -133,7 +134,7 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
 
     const confirmedTxHash = await waitForOperatorRegistration(
         conceroVerifierNetwork,
-        conceroNetworks[conceroVerifierNetwork.name].addresses.conceroVerifier,
+        await deploymentsManager.getConceroVerifier(),
         transaction.blockNumber,
         globalConfig.OPERATOR_ADDRESS,
     );

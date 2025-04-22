@@ -1,7 +1,8 @@
 import { Hash } from "viem";
-import { conceroNetworks, globalConfig } from "../../../constants";
+import { globalConfig } from "../../../constants";
 import { callContract, getFallbackClients, logger } from "../../common/utils";
 import { config } from "../constants";
+import { deploymentsManager } from "../../common/constants/deploymentsManager";
 
 /**
  * @returns {bigint} The minimum deposit amount.
@@ -13,7 +14,7 @@ async function getMinimumDeposit(): Promise<bigint> {
     const { publicClient } = await getFallbackClients(conceroVerifierNetwork);
     const depositAmount = await publicClient.readContract({
         chain: conceroVerifierNetwork.viemChain,
-        address: conceroNetworks[conceroVerifierNetwork.name].addresses.conceroVerifier,
+        address: await deploymentsManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "getCLFDeposit",
         args: [],
@@ -30,7 +31,7 @@ async function getCurrentOperatorDeposit(): Promise<bigint> {
     const { publicClient } = await getFallbackClients(conceroVerifierNetwork);
     const currentDeposit = await publicClient.readContract({
         chain: conceroVerifierNetwork.viemChain,
-        address: conceroNetworks[conceroVerifierNetwork.name].addresses.conceroVerifier,
+        address: await deploymentsManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "getOperatorDeposit",
         args: [globalConfig.OPERATOR_ADDRESS],
@@ -58,7 +59,7 @@ async function ensureDeposit(): Promise<Hash | undefined> {
 
     const txHash = await callContract(publicClient, walletClient, {
         chain: conceroVerifierNetwork.viemChain,
-        address: conceroNetworks[conceroVerifierNetwork.name].addresses.conceroVerifier,
+        address: await deploymentsManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "operatorDeposit",
         args: [globalConfig.OPERATOR_ADDRESS],
