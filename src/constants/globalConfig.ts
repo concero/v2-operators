@@ -10,15 +10,16 @@ import { getDeploymentsServiceBranch } from "./getDeploymentsServiceBranch";
 const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar("NETWORK_MODE"),
     OPERATOR_ADDRESS: getEnvVar("OPERATOR_ADDRESS"),
-    WHITELISTED_NETWORK_IDS: {
-        mainnet: [1, 137],
-        testnet: [
-            84532, 421614, 43113, 11155420, 80002, 2021, 6342, 57054, 10_143, 11155111, 59141, 97,
-            1946, 33111, 200810, 168587773, 3636, 44787, 338, 10200, 133, 763373, 5003, 534351,
-            1328, 157, 1301, 195, 48899, 919, 1114,
-        ],
-        localhost: [1],
-    },
+    IGNORED_NETWORK_IDS: [],
+    // WHITELISTED_NETWORK_IDS: {
+    //     mainnet: [1, 137],
+    //     testnet: [
+    //         84532, 421614, 43113, 11155420, 80002, 2021, 6342, 57054, 10_143, 11155111, 59141, 97,
+    //         1946, 33111, 200810, 168587773, 3636, 44787, 338, 10200, 133, 763373, 5003, 534351,
+    //         1328, 157, 1301, 195, 48899, 919, 1114,
+    //     ],
+    //     localhost: [1],
+    // },
     POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
     LOG_LEVEL: getEnvVar("LOG_LEVEL") || "info", // "error" | "warn" | "info" | "debug"
     LOG_DIR: "logs",

@@ -26,7 +26,7 @@ export type ConceroNetworkNames =
 export type ConceroNetwork = {
     id: number;
     name: ConceroNetworkNames;
-    type: "mainnet" | "testnet";
+    type: "mainnet" | "testnet" | "localhost";
     chainSelector: string;
     accounts: string[];
     viemChain: Chain;
