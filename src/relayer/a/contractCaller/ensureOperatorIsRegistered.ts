@@ -107,11 +107,11 @@ export async function waitForOperatorRegistration(
             }
         };
 
-        setupEventListener(network, contractAddress, onLogs, globalConfig.POLLING_INTERVAL_MS)
-            .then(handle => {
+        setupEventListener(network, contractAddress, onLogs, globalConfig.POLLING_INTERVAL_MS).then(
+            handle => {
                 listenerHandle = handle;
-            })
-            .catch(reject);
+            },
+        );
     });
 }
 

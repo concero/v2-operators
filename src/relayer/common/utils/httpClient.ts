@@ -21,6 +21,7 @@ class HttpClient {
             return response;
         } catch (error) {
             clearTimeout(id);
+            throw error;
             throw new AppError(AppErrorEnum.FailedHTTPRequest, error);
         }
     }
@@ -63,7 +64,8 @@ class HttpClient {
             MAX_RETRIES,
             timeout,
         );
-        return response.json();
+
+        return response;
     }
 
     public async post(
@@ -81,7 +83,7 @@ class HttpClient {
             MAX_RETRIES,
             timeout,
         );
-        return response.json();
+        return response;
     }
 }
 

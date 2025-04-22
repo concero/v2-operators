@@ -36,10 +36,12 @@ export class DeploymentsManager {
     }
 
     private async updateDeployments() {
-        const deploymentsEnv = await httpClient.get(globalConfig.URLS.CONCERO_DEPLOYMENTS);
-        console.log(deploymentsEnv);
+        const deploymentsEnv = await (
+            await httpClient.get(globalConfig.URLS.CONCERO_DEPLOYMENTS)
+        ).text();
+
         const deploymentsEnvArr = deploymentsEnv.split("\n");
-        const conceroRouterDeploymentsEnv = deploymentsEnvArr.find((d: string) =>
+        const conceroRouterDeploymentsEnv = deploymentsEnvArr.filter((d: string) =>
             d.startsWith("CONCERO_ROUTER_PROXY"),
         );
 
@@ -48,9 +50,14 @@ export class DeploymentsManager {
             conceroRouterDeploymentsEnv[getNetworkName(name.slice(21, name.length))] = address;
         }
 
-        this.conceroVerifier = deploymentsEnvArr.findLast((d: string) =>
-            d.startsWith("CONCERO_VERIFIER_PROXY"),
-        );
+        this.conceroVerifier = deploymentsEnvArr
+            .find((d: string) => {
+                return d.startsWith(
+                    "CONCERO_VERIFIER_PROXY_" +
+                        (globalConfig.NETWORK_MODE === "testnet" ? "ARBITRUM_SEPOLIA" : "ARBITRUM"),
+                );
+            })
+            .split("=")[1];
     }
 
     private isLocalhostEnv() {
