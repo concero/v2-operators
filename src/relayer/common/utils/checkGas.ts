@@ -4,23 +4,16 @@ import { AppError, getFallbackClients, logger } from "../utils";
 const MINIMUM_NATIVE_VALUE = 1_000_000; // 0.001 ETH
 
 export async function checkGas() {
-    const networkIds = globalConfig.WHITELISTED_NETWORK_IDS[globalConfig.NETWORK_MODE];
     const operatorAddress = globalConfig.OPERATOR_ADDRESS;
 
     try {
-        const balancePromises = networkIds.map(async networkId => {
-            const chain = activeNetworks.find(network => network.id === networkId);
-            if (!chain) {
-                console.log(`chain ${networkId} not found\n\n\n`);
-                throw new AppError(AppErrorEnum.ChainNotFound);
-            }
-
-            const { publicClient } = await getFallbackClients(chain);
+        const balancePromises = activeNetworks.map(async (network) => {
+            const { publicClient } = await getFallbackClients(network);
             const balance = await publicClient.getBalance({
                 address: operatorAddress,
             });
 
-            return { networkId, balance };
+            return { networkId: network.id, balance };
         });
 
         const balances = await Promise.all(balancePromises);

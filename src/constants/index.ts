@@ -3,7 +3,6 @@ export {
     activeNetworks,
     conceroNetworks,
     mainnetNetworks,
-    networkTypes,
     testnetNetworks,
 } from "./conceroNetworks";
 export { envPrefixes } from "./envPrefixes";

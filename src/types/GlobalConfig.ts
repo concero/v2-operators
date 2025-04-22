@@ -8,11 +8,7 @@ import {
 
 type GlobalConfig = {
     NETWORK_MODE: string;
-    WHITELISTED_NETWORK_IDS: {
-        mainnet: number[];
-        testnet: number[];
-        localhost: number[];
-    };
+    IGNORED_NETWORK_IDS: number[];
     LOG_LEVEL: "error" | "warn" | "info" | "debug";
     LOG_DIR: string;
     LOG_MAX_FILES: string;
