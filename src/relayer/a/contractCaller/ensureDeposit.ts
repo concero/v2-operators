@@ -16,7 +16,7 @@ async function getMinimumDeposit(): Promise<bigint> {
         chain: conceroVerifierNetwork.viemChain,
         address: await deploymentsManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
-        functionName: "getCLFDeposit",
+        functionName: "getMinimumOperatorDeposit",
         args: [],
     });
     return BigInt(depositAmount);
