@@ -3,12 +3,17 @@ import { globalConfig } from "../../../constants";
 import { ConceroNetworkNames } from "../../../types/ConceroNetwork";
 import { getNetworkName } from "./getNetworkName";
 import { httpClient } from "./httpClient";
+import { getEnvVar } from "./getEnvVar";
 
 export class DeploymentsManager {
     private conceroRoutersMapByChainName: Record<ConceroNetworkNames, Address> = {};
     private conceroVerifier: Address | undefined;
 
     async getRouterByChainName(chainName: ConceroNetworkNames) {
+        if (this.isLocalhostEnv()) {
+            return getEnvVar("CONCERO_ROUTER_PROXY_LOCALHOST");
+        }
+
         const router = this.conceroRoutersMapByChainName[chainName];
 
         if (router !== undefined) return router;
@@ -19,6 +24,10 @@ export class DeploymentsManager {
     }
 
     async getConceroVerifier() {
+        if (this.isLocalhostEnv()) {
+            return getEnvVar("CONCERO_VERIFIER_PROXY_LOCALHOST");
+        }
+
         if (this.conceroVerifier !== undefined) return this.conceroVerifier;
 
         await this.updateDeployments();
@@ -42,5 +51,9 @@ export class DeploymentsManager {
         this.conceroVerifier = deploymentsEnvArr.findLast((d: string) =>
             d.startsWith("CONCERO_VERIFIER_PROXY"),
         );
+    }
+
+    private isLocalhostEnv() {
+        return globalConfig.NETWORK_MODE === "localhost";
     }
 }
