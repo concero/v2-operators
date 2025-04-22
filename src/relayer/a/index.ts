@@ -18,18 +18,18 @@ const globalErrorHandler = (error: Error) => {
     }
 };
 
-// process.on("unhandledRejection", (reason: any) => {
-//     globalErrorHandler(
-//         new AppError(
-//             AppErrorEnum.UnhandledRejection,
-//             reason instanceof Error ? reason : new Error(String(reason)),
-//         ),
-//     );
-// });
+process.on("unhandledRejection", (reason: any) => {
+    globalErrorHandler(
+        new AppError(
+            AppErrorEnum.UnhandledRejection,
+            reason instanceof Error ? reason : new Error(String(reason)),
+        ),
+    );
+});
 
-// process.on("uncaughtException", (error: Error) => {
-//     globalErrorHandler(new AppError(AppErrorEnum.UncaughtException, error));
-// });
+process.on("uncaughtException", (error: Error) => {
+    globalErrorHandler(new AppError(AppErrorEnum.UncaughtException, error));
+});
 
 async function main() {
     await checkGas();
