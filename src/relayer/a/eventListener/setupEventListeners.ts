@@ -1,27 +1,27 @@
 import { globalConfig } from "../../../constants";
 import { deploymentsManager } from "../../common/managers/DeploymentManager";
 import { setupEventListener } from "../../common/eventListener/setupEventListener";
-import { config } from "../constants";
 import { onRouterLogs, onVerifierLogs } from "./onLogs";
 import { networkManager } from "../../common/managers/NetworkManager";
 
 export async function setupEventListeners() {
     // ConceroRouter event listeners
-    const conceroRouters = await deploymentsManager.getConceroRouters();
-    for (const [networkKey, network] of conceroRouters) {
-        const conceroRouterAddress = await deploymentsManager.getRouterByChainName(network.name);
-
+    const activeNetworks = networkManager.getActiveNetworks();
+    activeNetworks.forEach(async network => {
+        const routerAddress = await deploymentsManager.getRouterByChainName(network.name);
         await setupEventListener(
             network,
-            conceroRouterAddress,
+            routerAddress,
             onRouterLogs,
             globalConfig.POLLING_INTERVAL_MS,
         );
-    }
+    });
 
+    const verifierNetwork = networkManager.getVerifierNetwork();
+    const verifierAddress = await deploymentsManager.getConceroVerifier();
     await setupEventListener(
-        networkManager.getVerifierNetwork(),
-        deploymentsManager.getConceroVerifier(),
+        verifierNetwork,
+        verifierAddress,
         onVerifierLogs,
         globalConfig.POLLING_INTERVAL_MS,
     );
