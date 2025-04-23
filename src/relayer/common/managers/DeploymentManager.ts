@@ -12,8 +12,6 @@ export class DeploymentManager implements IDeploymentsManager, NetworkUpdateList
     private conceroVerifier: Address | undefined;
     private initialized: boolean = false;
 
-    private constructor() {}
-
     public static getInstance(): DeploymentManager {
         if (!DeploymentManager.instance) {
             DeploymentManager.instance = new DeploymentManager();
