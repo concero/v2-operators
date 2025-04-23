@@ -1,7 +1,7 @@
 import { AppErrorEnum, appErrors } from "../../../constants";
 import { logger } from "./logger";
 
-class AppError extends Error {
+export class AppError extends Error {
     public readonly isOperational: boolean;
 
     constructor(errorType: AppErrorEnum, originalError?: Error) {
@@ -11,8 +11,7 @@ class AppError extends Error {
 
         this.name = this.constructor.name;
         this.isOperational = isOperational;
-
-        Error.captureStackTrace(this);
+        this.stack = originalError?.stack;
 
         this.logError();
     }
@@ -30,5 +29,3 @@ class AppError extends Error {
         }
     }
 }
-
-export { AppError };
