@@ -1,6 +1,7 @@
 import { Log, type Address } from "viem";
 import { ConceroNetwork } from "../../../types/ConceroNetwork";
-import { getFallbackClients, logger } from "../utils";
+import { logger } from "../utils";
+import { viemClientManager } from "../../common/managers/ViemClientManager";
 
 /** @notice Represents a handle for controlling an active event listener. */
 export interface EventListenerHandle {
@@ -21,7 +22,7 @@ export async function setupEventListener<T>(
     onLogs: (logs: Log[], network: ConceroNetwork) => void,
     pollingIntervalMs: number,
 ): Promise<EventListenerHandle> {
-    const { publicClient } = await getFallbackClients(network);
+    const { publicClient } = viemClientManager.getClients(network);
     let lastBlockNumber: bigint = await publicClient.getBlockNumber();
 
     logger.info(
@@ -34,7 +35,7 @@ export async function setupEventListener<T>(
     async function pollLogs() {
         if (cancelled) return;
         try {
-            const { publicClient } = await getFallbackClients(network);
+            const { publicClient } = viemClientManager.getClients(network);
             const latestBlockNumber = await publicClient.getBlockNumber();
             if (latestBlockNumber > lastBlockNumber) {
                 //todo: only if logs not null, invoke onlogs

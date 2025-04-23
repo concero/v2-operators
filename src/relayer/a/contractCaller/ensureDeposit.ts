@@ -1,17 +1,17 @@
 import { Hash } from "viem";
 import { globalConfig } from "../../../constants";
-import { callContract, getFallbackClients, logger } from "../../common/utils";
-import { config } from "../constants";
-import { deploymentsManager } from "../../common/constants/deploymentsManager";
-
+import { callContract, logger } from "../../common/utils";
+import { deploymentsManager } from "../../common/managers/DeploymentManager";
+import { networkManager } from "../../common/managers/NetworkManager";
+import { viemClientManager } from "../../common/managers/ViemClientManager";
 /**
  * @returns {bigint} The minimum deposit amount.
  * @notice Retrieves the minimum required deposit from the conceroVerifier contract.
  */
 
 async function getMinimumDeposit(): Promise<bigint> {
-    const conceroVerifierNetwork = config.networks.conceroVerifier;
-    const { publicClient } = await getFallbackClients(conceroVerifierNetwork);
+    const conceroVerifierNetwork = networkManager.getVerifierNetwork();
+    const { publicClient } = viemClientManager.getClients(conceroVerifierNetwork);
     const depositAmount = await publicClient.readContract({
         chain: conceroVerifierNetwork.viemChain,
         address: await deploymentsManager.getConceroVerifier(),
@@ -27,8 +27,8 @@ async function getMinimumDeposit(): Promise<bigint> {
  * @notice Retrieves the current deposit amount for the operator.
  */
 async function getCurrentOperatorDeposit(): Promise<bigint> {
-    const conceroVerifierNetwork = config.networks.conceroVerifier;
-    const { publicClient } = await getFallbackClients(conceroVerifierNetwork);
+    const conceroVerifierNetwork = networkManager.getVerifierNetwork();
+    const { publicClient } = viemClientManager.getClients(conceroVerifierNetwork);
     const currentDeposit = await publicClient.readContract({
         chain: conceroVerifierNetwork.viemChain,
         address: await deploymentsManager.getConceroVerifier(),
@@ -45,9 +45,9 @@ async function getCurrentOperatorDeposit(): Promise<bigint> {
  * @notice Makes an operator deposit if the current deposit is insufficient.
  */
 async function ensureDeposit(): Promise<Hash | undefined> {
-    const conceroVerifierNetwork = config.networks.conceroVerifier;
+    const conceroVerifierNetwork = networkManager.getVerifierNetwork();
     const { publicClient, walletClient, account } =
-        await getFallbackClients(conceroVerifierNetwork);
+        viemClientManager.getClients(conceroVerifierNetwork);
 
     const requiredDeposit = await getMinimumDeposit();
     const currentDeposit = await getCurrentOperatorDeposit();

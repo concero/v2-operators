@@ -5,9 +5,11 @@ import {
     EventListenerHandle,
     setupEventListener,
 } from "../../common/eventListener/setupEventListener";
-import { callContract, getFallbackClients, logger } from "../../common/utils";
+import { callContract, logger } from "../../common/utils";
 import { config } from "../constants";
-import { deploymentsManager } from "../../common/constants/deploymentsManager";
+import { viemClientManager } from "../../common/managers/ViemClientManager";
+import { deploymentsManager } from "../../common/managers/DeploymentManager";
+import { networkManager } from "../../common/managers/NetworkManager";
 
 const ChainType = {
     EVM: 0,
@@ -28,7 +30,7 @@ const OperatorRegistrationAction = {
  */
 
 async function isOperatorRegistered(publicClient: any): Promise<boolean> {
-    const conceroVerifierNetwork = config.networks.conceroVerifier;
+    const conceroVerifierNetwork = networkManager.getVerifierNetwork();
 
     const isRegistered = await publicClient.readContract({
         chain: conceroVerifierNetwork.viemChain,
@@ -46,7 +48,7 @@ async function requestOperatorRegistration(
     walletClient: WalletClient,
     account: any,
 ): Promise<`0x${string}`> {
-    const conceroVerifierNetwork = config.networks.conceroVerifier;
+    const conceroVerifierNetwork = networkManager.getVerifierNetwork();
     const chainTypes = [BigInt(ChainType.EVM)];
     const operatorActions = [BigInt(OperatorRegistrationAction.Register)];
     const operatorAddresses = [globalConfig.OPERATOR_ADDRESS];
@@ -116,9 +118,9 @@ export async function waitForOperatorRegistration(
 }
 
 export async function ensureOperatorIsRegistered(): Promise<void> {
-    const conceroVerifierNetwork = config.networks.conceroVerifier;
+    const conceroVerifierNetwork = networkManager.getVerifierNetwork();
     const { publicClient, walletClient, account } =
-        await getFallbackClients(conceroVerifierNetwork);
+        viemClientManager.getViemClients(conceroVerifierNetwork);
 
     const registered = await isOperatorRegistered(publicClient);
     if (registered) {

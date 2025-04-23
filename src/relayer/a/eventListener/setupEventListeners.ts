@@ -1,9 +1,9 @@
 import { globalConfig } from "../../../constants";
-import { deploymentsManager } from "../../common/constants/deploymentsManager";
+import { deploymentsManager } from "../../common/managers/DeploymentManager";
 import { setupEventListener } from "../../common/eventListener/setupEventListener";
-import { getEnvAddress } from "../../common/utils";
 import { config } from "../constants";
 import { onRouterLogs, onVerifierLogs } from "./onLogs";
+import { networkManager } from "../../common/managers/NetworkManager";
 
 export async function setupEventListeners() {
     // ConceroRouter event listeners
@@ -18,13 +18,9 @@ export async function setupEventListeners() {
         );
     }
 
-    // conceroVerifier event listener
-    const verifierNetwork = config.networks.conceroVerifier;
-    const conceroVerifierAddress = await deploymentsManager.getConceroVerifier();
-
     await setupEventListener(
-        verifierNetwork,
-        conceroVerifierAddress,
+        networkManager.getVerifierNetwork(),
+        deploymentsManager.getConceroVerifier(),
         onVerifierLogs,
         globalConfig.POLLING_INTERVAL_MS,
     );

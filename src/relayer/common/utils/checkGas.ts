@@ -1,5 +1,7 @@
-import { activeNetworks, AppErrorEnum, globalConfig } from "../../../constants";
-import { AppError, getFallbackClients, logger } from "../utils";
+import { AppErrorEnum, globalConfig } from "../../../constants";
+import { AppError, logger } from "../utils";
+import { networkManager } from "../managers/NetworkManager";
+import { viemClientManager } from "../../common/managers/ViemClientManager";
 
 const MINIMUM_NATIVE_VALUE = 1_000_000; // 0.001 ETH
 
@@ -7,29 +9,36 @@ export async function checkGas() {
     const operatorAddress = globalConfig.OPERATOR_ADDRESS;
 
     try {
-        const balancePromises = activeNetworks.map(async (network) => {
-            const { publicClient } = await getFallbackClients(network);
+        const activeNetworks = networkManager.getActiveNetworks();
+
+        if (activeNetworks.length === 0) {
+            logger.warn("No active networks found when checking gas balances");
+            return;
+        }
+
+        const balancePromises = activeNetworks.map(async network => {
+            const { publicClient } = viemClientManager.getClients(network);
             const balance = await publicClient.getBalance({
                 address: operatorAddress,
             });
 
-            return { networkId: network.id, balance };
+            return { network, balance };
         });
 
         const balances = await Promise.all(balancePromises);
 
-        balances.forEach(({ networkId, balance }) => {
+        balances.forEach(({ network, balance }) => {
             if (balance < MINIMUM_NATIVE_VALUE) {
                 throw new AppError(
                     AppErrorEnum.InsufficientGas,
                     Error(
-                        `Insufficient gas on ${networkId}. Minimum required: ${MINIMUM_NATIVE_VALUE}, actual: ${balance}`,
+                        `Insufficient gas on ${network.name} (chain ID: ${network.id}). Minimum required: ${MINIMUM_NATIVE_VALUE}, actual: ${balance}`,
                     ),
                 );
             }
         });
 
-        logger.info("All chains have sufficient gas.");
+        logger.info(`All chains (${activeNetworks.length}) have sufficient gas.`);
     } catch (error) {
         logger.error("Error checking gas balances:", error);
         throw error;

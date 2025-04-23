@@ -4,22 +4,22 @@ import { DecodedLog } from "../../../types/DecodedLog";
 import {
     callContract,
     decodeInternalMessageConfig,
-    getChainBySelector,
     getEnvAddress,
-    getFallbackClients,
     logger,
 } from "../../common/utils";
 import { config } from "../constants/";
+import { networkManager } from "../../common/managers/NetworkManager";
+import { viemClientManager } from "../../common/managers/ViemClientManager";
 
 export async function requestCLFMessageReport(log: DecodedLog) {
-    const network = config.networks.conceroVerifier;
-    const { publicClient, walletClient } = await getFallbackClients(network);
+    const network = networkManager.getVerifierNetwork();
+    const { publicClient, walletClient } = viemClientManager.getClients(network);
 
     const { messageId, internalMessageConfig, message } = log.args;
     const { srcChainSelector } = decodeInternalMessageConfig(internalMessageConfig);
 
-    const { publicClient: srcPublicClient } = await getFallbackClients(
-        getChainBySelector(srcChainSelector.toString()),
+    const { publicClient: srcPublicClient } = viemClientManager.getClients(
+        networkManager.getNetworkBySelector(srcChainSelector.toString()),
     );
 
     const routerTx = await srcPublicClient.getTransaction({ hash: log.transactionHash });

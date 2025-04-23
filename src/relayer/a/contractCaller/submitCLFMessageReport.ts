@@ -5,20 +5,21 @@ import {
     callContract,
     decodeCLFReport,
     decodeMessageReportResult,
-    getChainBySelector,
-    getFallbackClients,
     logger,
 } from "../../common/utils";
-import { config, eventNames } from "../constants";
-import { deploymentsManager } from "../../common/constants/deploymentsManager";
+import { eventNames } from "../constants";
+import { deploymentsManager } from "../../common/managers/DeploymentManager";
+import { networkManager } from "../../common/managers/NetworkManager";
+import { viemClientManager } from "../../common/managers/ViemClientManager";
 
 export async function submitCLFMessageReport(log: DecodedLog) {
     const { transactionHash } = log;
 
     // 1. fetch & decode full CLF message report
-    const { publicClient: verifierPublicClient } = await getFallbackClients(
-        config.networks.conceroVerifier,
+    const { publicClient: verifierPublicClient } = viemClientManager.getClients(
+        networkManager.getVerifierNetwork(),
     );
+
     const messageReportTx = await verifierPublicClient.getTransaction({ hash: transactionHash });
     const decodedCLFReport = decodeCLFReport(messageReportTx);
     const decodedMessageResult = decodeMessageReportResult(decodedCLFReport.report.results[0]);
@@ -26,8 +27,8 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     const messageId = decodedMessageResult.messageId;
 
     // 2. go to src chain and fetch original message bytes
-    const srcChain = getChainBySelector(srcChainSelector.toString());
-    const { publicClient: srcPublicClient } = await getFallbackClients(srcChain);
+    const srcChain = networkManager.getNetworkBySelector(srcChainSelector.toString());
+    const { publicClient: srcPublicClient } = viemClientManager.getClients(srcChain);
     const [srcContractAddress] = await deploymentsManager.getRouterByChainName(srcChain.name);
 
     const currentBlock = await srcPublicClient.getBlockNumber();
@@ -76,11 +77,11 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     const { message } = conceroMessageSentLog.args;
 
     // 3. Send report + message to dst chain router
-    const dstChain = getChainBySelector(dstChainSelector.toString());
+    const dstChain = networkManager.getNetworkBySelector(dstChainSelector.toString());
 
     const dstConceroRouter = await deploymentsManager.getRouterByChainName(dstChain.name);
     const { publicClient: dstPublicClient, walletClient: dstWalletClient } =
-        await getFallbackClients(dstChain);
+        viemClientManager.getClients(dstChain);
 
     const reportSubmission = {
         context: decodedCLFReport.reportContext,
@@ -103,7 +104,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 }
 //
 // async function test() {
-//     const { publicClient } = getFallbackClients(conceroNetworks["base"]);
+//     const { publicClient } = viemClientManager.getClients(conceroNetworks["base"]);
 //     const tx = await publicClient.getTransaction({
 //         hash: "0x3018db9bf3525621578311b8ee09b5f735bc68dfbfd2142154b671ece68691a1",
 //     });
