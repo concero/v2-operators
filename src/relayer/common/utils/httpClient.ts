@@ -109,7 +109,7 @@ class HttpClient {
     }
 }
 
-const httpQueue = new HttpClient(3);
+const httpQueue = new HttpClient(2);
 const httpClient = new HttpClient();
 
 export { httpQueue, httpClient };
