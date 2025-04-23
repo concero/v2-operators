@@ -48,6 +48,19 @@ export class DeploymentManager implements IDeploymentsManager, NetworkUpdateList
         return updatedRouter;
     }
 
+    async getConceroRouters(): Promise<Record<string, Address>> {
+        if (this.isLocalhostEnv()) {
+            return {
+                [getEnvVar("LOCALHOST_FORK_CHAIN_ID")]: getEnvVar(
+                    "CONCERO_ROUTER_PROXY_LOCALHOST",
+                ) as Address,
+            };
+        }
+
+        const routers = this.conceroRoutersMapByChainName;
+        return routers;
+    }
+
     async getConceroVerifier(): Promise<Address> {
         if (this.isLocalhostEnv()) {
             return getEnvVar("CONCERO_VERIFIER_PROXY_LOCALHOST") as Address;
