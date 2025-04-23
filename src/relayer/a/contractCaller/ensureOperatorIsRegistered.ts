@@ -120,7 +120,7 @@ export async function waitForOperatorRegistration(
 export async function ensureOperatorIsRegistered(): Promise<void> {
     const conceroVerifierNetwork = networkManager.getVerifierNetwork();
     const { publicClient, walletClient, account } =
-        viemClientManager.getViemClients(conceroVerifierNetwork);
+        viemClientManager?.getClients(conceroVerifierNetwork);
 
     const registered = await isOperatorRegistered(publicClient);
     if (registered) {
