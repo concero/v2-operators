@@ -25,7 +25,7 @@ const globalConfig: GlobalConfig = {
     LOG_DIR: "logs",
     URLS: {
         CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${getRpcServiceBranch()}/output/`,
-        CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${getDeploymentsServiceBranch()}/.env.deployments.${getEnvVar("NETWORK_MODE")}`,
+        CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${getDeploymentsServiceBranch()}/.env.deployments.${getEnvVar("NETWORK_MODE") === "localhost" ? "testnet" : "mainnet"}`,
         V2_NETWORKS: {
             MAINNET_SUMMARY:
                 "https://github.com/concero/v2-networks/raw/refs/heads/master/networks/mainnet.json",
