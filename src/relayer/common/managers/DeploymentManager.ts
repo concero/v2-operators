@@ -12,8 +12,6 @@ export class DeploymentManager implements IDeploymentsManager, NetworkUpdateList
     private conceroVerifier: Address | undefined;
     private initialized: boolean = false;
 
-    private constructor() {}
-
     public static getInstance(): DeploymentManager {
         if (!DeploymentManager.instance) {
             DeploymentManager.instance = new DeploymentManager();
@@ -112,7 +110,7 @@ export class DeploymentManager implements IDeploymentsManager, NetworkUpdateList
         }
     }
 
-    onNetworksUpdated(): void {
+    onNetworksUpdated() {
         logger.debug("DeploymentManager received onNetworksUpdated");
         this.updateDeployments().catch(err =>
             logger.error("Failed to update deployments after network update:", err),

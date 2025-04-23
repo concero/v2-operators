@@ -12,8 +12,6 @@ export class RpcManager implements IRpcManager, NetworkUpdateListener {
     private rpcUpdateListeners: RpcUpdateListener[] = [];
     private initialized: boolean = false;
 
-    private constructor() {}
-
     public static getInstance(): RpcManager {
         if (!RpcManager.instance) {
             RpcManager.instance = new RpcManager();
