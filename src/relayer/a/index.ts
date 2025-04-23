@@ -35,7 +35,7 @@ process.on("uncaughtException", (error: Error) => {
     globalErrorHandler(new AppError(AppErrorEnum.UncaughtException, error));
 });
 
-async function initializeManagers() {
+export async function initializeManagers() {
     try {
         await rpcManager.initialize();
         await networkManager.initialize();
@@ -50,7 +50,7 @@ async function initializeManagers() {
     }
 }
 
-async function main() {
+export async function main() {
     await initializeManagers();
 
     await checkGas();
