@@ -11,7 +11,7 @@ export async function onRouterLogs(logs: Log[], network: ConceroNetwork) {
 
     for (const log of decodedLogs) {
         if (log.eventName === eventNames.ConceroMessageSent) {
-            await requestCLFMessageReport(log);
+            await requestCLFMessageReport(log, network.chainSelector);
         }
     }
 }

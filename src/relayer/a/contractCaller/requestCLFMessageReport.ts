@@ -6,14 +6,14 @@ import { config } from "../constants/";
 import { networkManager } from "../../common/managers/NetworkManager";
 import { viemClientManager } from "../../common/managers/ViemClientManager";
 
-export async function requestCLFMessageReport(log: DecodedLog) {
+export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector: string) {
     const network = networkManager.getVerifierNetwork();
     const { publicClient, walletClient } = viemClientManager.getClients(network);
 
-    const { messageId, message, srcChainSelector } = log.args;
+    const { messageId, message } = log.args;
 
     const { publicClient: srcPublicClient } = viemClientManager.getClients(
-        networkManager.getNetworkBySelector(srcChainSelector.toString()),
+        networkManager.getNetworkBySelector(srcChainSelector),
     );
 
     const routerTx = await srcPublicClient.getTransaction({ hash: log.transactionHash });
