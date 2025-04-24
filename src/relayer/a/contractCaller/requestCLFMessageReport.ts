@@ -38,7 +38,7 @@ export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector:
     );
 
     try {
-        const verifierAddress = deploymentsManager.getConceroVerifier();
+        const verifierAddress = await deploymentsManager.getConceroVerifier();
 
         const txHash = await callContract(publicClient, walletClient, {
             chain: network.viemChain,
