@@ -23,13 +23,13 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     const messageReportTx = await verifierPublicClient.getTransaction({ hash: transactionHash });
     const decodedCLFReport = decodeCLFReport(messageReportTx);
     const decodedMessageResult = decodeMessageReportResult(decodedCLFReport.report.results[0]);
-    const { srcChainSelector, dstChainSelector } = decodedMessageResult.decodedMessageConfig;
+    const { srcChainSelector, dstChainSelector } = decodedMessageResult;
     const messageId = decodedMessageResult.messageId;
 
     // 2. go to src chain and fetch original message bytes
     const srcChain = networkManager.getNetworkBySelector(srcChainSelector.toString());
     const { publicClient: srcPublicClient } = viemClientManager.getClients(srcChain);
-    const [srcContractAddress] = await deploymentsManager.getRouterByChainName(srcChain.name);
+    const srcContractAddress = await deploymentsManager.getRouterByChainName(srcChain.name);
 
     const currentBlock = await srcPublicClient.getBlockNumber();
 

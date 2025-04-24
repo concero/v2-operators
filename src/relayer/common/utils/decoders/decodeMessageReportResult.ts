@@ -1,58 +1,50 @@
-import { decodeAbiParameters, parseAbiParameters } from "viem";
-import { decodeCLFReportConfig } from "./DecodeCLFReportConfig";
-import { decodeInternalMessageConfig } from "./decodeInternalMessageConfig";
+import { decodeAbiParameters } from "viem";
+import { ByteArray } from "viem";
+import { DecodedMessageReportResult } from "./types";
 
-export type DecodedMessageReportResult = {
-    reportConfig: string;
-    internalMessageConfig: string;
-    messageId: string;
-    messageHashSum: string;
-    sender: string;
-    dstChainData: string;
-    allowedOperators: string[];
-    decodedConfig: ReturnType<typeof decodeCLFReportConfig>;
-    decodedMessageConfig: ReturnType<typeof decodeInternalMessageConfig>;
-};
-
-export function decodeMessageReportResult(resultBytes: string): DecodedMessageReportResult {
+export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessageReportResult {
     try {
-        // Define the ABI structure matching the Solidity struct
-        const messageReportResultAbi = parseAbiParameters([
-            "bytes32 reportConfig",
-            "bytes32 internalMessageConfig",
-            "bytes32 messageId",
-            "bytes32 messageHashSum",
-            "bytes sender",
-            "bytes dstChainData",
-            "bytes[] allowedOperators",
-        ]);
+        const decodedClfResult = decodeAbiParameters(
+            [
+                {
+                    type: "tuple",
+                    name: "reportConfig",
+                    components: [
+                        { type: "uint8", name: "type" },
+                        { type: "uint8", name: "payloadVersion" },
+                        { type: "address", name: "requester" },
+                    ],
+                },
+                { type: "bytes", name: "payload" },
+            ],
+            resultBytes,
+        );
 
-        // Use viem's decoder for proper ABI decoding
-        const decodedData = decodeAbiParameters(messageReportResultAbi, resultBytes);
+        // TODO: add versioning in the future
 
-        // Extract values from the decoded data
-        const [
-            reportConfig,
-            internalMessageConfig,
-            messageId,
-            messageHashSum,
-            sender,
-            dstChainData,
-            allowedOperators,
-        ] = decodedData;
+        const decodedPayload = decodeAbiParameters(
+            [
+                { type: "bytes32", name: "messageId" },
+                { type: "bytes32", name: "messageHash" },
+                { type: "bytes", name: "sender" },
+                { type: "uint24", name: "srcChainSelector" },
+                { type: "uint24", name: "dstChainSelector" },
+                {
+                    type: "tuple",
+                    name: "dstChainData",
+                    components: [
+                        { type: "address", name: "receiver" },
+                        { type: "bytes", name: "data" },
+                    ],
+                },
+                { type: "bytes", name: "data" },
+            ],
+            decodedClfResult.payload,
+        );
 
         return {
-            reportConfig,
-            internalMessageConfig,
-            messageId,
-            messageHashSum,
-            sender,
-            dstChainData,
-            allowedOperators,
-
-            // Also return decoded configurations
-            decodedConfig: decodeCLFReportConfig(reportConfig),
-            decodedMessageConfig: decodeInternalMessageConfig(internalMessageConfig),
+            reportConfig: decodedClfResult.reportConfig,
+            ...decodedPayload,
         };
     } catch (error) {
         console.error("Error decoding CLF message report response:", error);

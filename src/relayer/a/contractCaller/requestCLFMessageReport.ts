@@ -1,12 +1,7 @@
 import { encodeAbiParameters, keccak256 } from "viem";
 import { globalConfig } from "../../../constants";
 import { DecodedLog } from "../../../types/DecodedLog";
-import {
-    callContract,
-    decodeInternalMessageConfig,
-    getEnvAddress,
-    logger,
-} from "../../common/utils";
+import { callContract, getEnvAddress, logger } from "../../common/utils";
 import { config } from "../constants/";
 import { networkManager } from "../../common/managers/NetworkManager";
 import { viemClientManager } from "../../common/managers/ViemClientManager";
@@ -15,8 +10,7 @@ export async function requestCLFMessageReport(log: DecodedLog) {
     const network = networkManager.getVerifierNetwork();
     const { publicClient, walletClient } = viemClientManager.getClients(network);
 
-    const { messageId, internalMessageConfig, message } = log.args;
-    const { srcChainSelector } = decodeInternalMessageConfig(internalMessageConfig);
+    const { messageId, message, srcChainSelector } = log.args;
 
     const { publicClient: srcPublicClient } = viemClientManager.getClients(
         networkManager.getNetworkBySelector(srcChainSelector.toString()),

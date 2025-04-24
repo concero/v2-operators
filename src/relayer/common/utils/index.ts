@@ -3,7 +3,6 @@ export { callContract } from "./callContract";
 export { checkGas } from "./checkGas";
 export { configureDotEnv } from "./configureDotEnv";
 export { decodeCLFReport } from "./decoders/decodeCLFReport";
-export { decodeInternalMessageConfig } from "./decoders/decodeInternalMessageConfig";
 export { decodeMessageReportResult } from "./decoders/decodeMessageReportResult";
 export * as formatting from "./formatting";
 export { getEnvAddress, getEnvVar } from "./getEnvVar";
