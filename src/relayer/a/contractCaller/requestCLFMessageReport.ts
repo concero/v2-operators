@@ -1,10 +1,11 @@
 import { encodeAbiParameters, keccak256 } from "viem";
 import { globalConfig } from "../../../constants";
 import { DecodedLog } from "../../../types/DecodedLog";
-import { callContract, getEnvAddress, logger } from "../../common/utils";
+import { callContract, logger } from "../../common/utils";
 import { config } from "../constants/";
 import { networkManager } from "../../common/managers/NetworkManager";
 import { viemClientManager } from "../../common/managers/ViemClientManager";
+import { deploymentsManager } from "../../common/managers/DeploymentManager";
 
 export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector: string) {
     const network = networkManager.getVerifierNetwork();
@@ -37,7 +38,7 @@ export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector:
     );
 
     try {
-        const [verifierAddress] = getEnvAddress("verifier", network.name);
+        const verifierAddress = deploymentsManager.getConceroVerifier();
 
         const txHash = await callContract(publicClient, walletClient, {
             chain: network.viemChain,
