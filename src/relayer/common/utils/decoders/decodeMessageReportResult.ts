@@ -1,4 +1,4 @@
-import { decodeAbiParameters } from "viem";
+import { decodeAbiParameters, hexToBytes } from "viem";
 import { ByteArray } from "viem";
 import { DecodedMessageReportResult } from "./types";
 
@@ -39,7 +39,7 @@ export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessag
                 },
                 { type: "bytes", name: "data" },
             ],
-            decodedClfResult.payload,
+            hexToBytes(decodedClfResult.payload),
         );
 
         return {
