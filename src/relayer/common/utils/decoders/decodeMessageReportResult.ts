@@ -24,20 +24,25 @@ export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessag
 
         const decodedPayload = decodeAbiParameters(
             [
-                { type: "bytes32", name: "messageId" },
-                { type: "bytes32", name: "messageHash" },
-                { type: "bytes", name: "sender" },
-                { type: "uint24", name: "srcChainSelector" },
-                { type: "uint24", name: "dstChainSelector" },
                 {
                     type: "tuple",
-                    name: "dstChainData",
                     components: [
-                        { type: "address", name: "receiver" },
-                        { type: "bytes", name: "data" },
+                        { type: "bytes32", name: "messageId" },
+                        { type: "bytes32", name: "messageHash" },
+                        { type: "bytes", name: "sender" },
+                        { type: "uint24", name: "srcChainSelector" },
+                        { type: "uint24", name: "dstChainSelector" },
+                        {
+                            type: "tuple",
+                            name: "dstChainData",
+                            components: [
+                                { type: "address", name: "receiver" },
+                                { type: "bytes", name: "data" },
+                            ],
+                        },
+                        { type: "bytes[]", name: "allowedOperators" },
                     ],
                 },
-                { type: "bytes", name: "data" },
             ],
             hexToBytes(decodedClfResult[1]),
         );
