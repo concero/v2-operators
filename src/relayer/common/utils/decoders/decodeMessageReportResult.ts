@@ -39,11 +39,11 @@ export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessag
                 },
                 { type: "bytes", name: "data" },
             ],
-            hexToBytes(decodedClfResult.payload),
+            hexToBytes(decodedClfResult[1]),
         );
 
         return {
-            reportConfig: decodedClfResult.reportConfig,
+            reportConfig: decodedClfResult[0],
             ...decodedPayload,
         };
     } catch (error) {
