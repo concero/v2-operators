@@ -28,7 +28,7 @@ export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessag
                     type: "tuple",
                     components: [
                         { type: "bytes32", name: "messageId" },
-                        { type: "bytes32", name: "messageHash" },
+                        { type: "bytes32", name: "messageHashSum" },
                         { type: "bytes", name: "sender" },
                         { type: "uint24", name: "srcChainSelector" },
                         { type: "uint24", name: "dstChainSelector" },
@@ -37,7 +37,7 @@ export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessag
                             name: "dstChainData",
                             components: [
                                 { type: "address", name: "receiver" },
-                                { type: "bytes", name: "data" },
+                                { type: "uint256", name: "gasLimit" },
                             ],
                         },
                         { type: "bytes[]", name: "allowedOperators" },
