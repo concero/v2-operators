@@ -227,6 +227,15 @@ export class NetworkManager implements INetworkManager {
                 confirmations: 1,
                 viemChain: localhostViemChain,
             },
+            localhostPolygon: {
+                name: "localhost",
+                type: "localhost",
+                id: 137,
+                accounts: [operatorPK],
+                chainSelector: "137",
+                confirmations: 1,
+                viemChain: localhostViemChain,
+            },
         };
     }
 

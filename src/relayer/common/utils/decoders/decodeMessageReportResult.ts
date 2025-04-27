@@ -49,7 +49,7 @@ export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessag
 
         return {
             reportConfig: decodedClfResult[0],
-            ...decodedPayload,
+            ...decodedPayload[0],
         };
     } catch (error) {
         console.error("Error decoding CLF message report response:", error);
