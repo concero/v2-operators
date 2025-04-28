@@ -1,6 +1,9 @@
 import { ConceroNetworkNames } from "../types/ConceroNetwork";
 
 export const networkEnvKeys: Record<ConceroNetworkNames, string> = {
+    //test
+    localhost: "LOCALHOST",
+
     // mainnets
     ethereum: "ETHEREUM",
     arbitrum: "ARBITRUM",
