@@ -157,12 +157,12 @@ export class NetworkManager implements INetworkManager {
                 [operatorPK],
             );
 
-            const testingNetworks = this.getTestingNetworks(operatorPK);
+            // const testingNetworks = this.getTestingNetworks(operatorPK);
             this.testnetNetworks = {
                 ...this.createNetworkConfig<ConceroTestnetNetworkNames>(fetchedTestnet, "testnet", [
                     operatorPK,
                 ]),
-                ...testingNetworks,
+                // ...testingNetworks,
             };
 
             this.allNetworks = {

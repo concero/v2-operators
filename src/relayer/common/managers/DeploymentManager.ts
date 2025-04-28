@@ -40,6 +40,8 @@ export class DeploymentManager implements IDeploymentsManager, NetworkUpdateList
         const router = this.conceroRoutersMapByChainName[chainName];
         if (router !== undefined) return router;
 
+        await this.updateDeployments();
+
         const updatedRouter = this.conceroRoutersMapByChainName[chainName];
         if (!updatedRouter) {
             throw new Error(`Router not found for chain: ${chainName}`);
@@ -68,6 +70,8 @@ export class DeploymentManager implements IDeploymentsManager, NetworkUpdateList
 
         if (this.conceroVerifier !== undefined) return this.conceroVerifier;
 
+        await this.updateDeployments();
+
         if (!this.conceroVerifier) {
             throw new Error("Concero verifier address not found after update");
         }
@@ -85,9 +89,10 @@ export class DeploymentManager implements IDeploymentsManager, NetworkUpdateList
 
             const deploymentsEnvArr = deployments.split("\n");
 
-            // Process router deployments
-            const conceroRouterDeploymentsEnv = deploymentsEnvArr.filter((d: string) =>
-                d.startsWith("CONCERO_ROUTER_PROXY"),
+            const conceroRouterDeploymentsEnv = deploymentsEnvArr.filter(
+                (d: string) =>
+                    d.startsWith("CONCERO_ROUTER_PROXY") &&
+                    !d.startsWith("CONCERO_ROUTER_PROXY_ADMIN"),
             );
 
             const routerMap: Record<string, Address> = {} as Record<string, Address>;
@@ -102,7 +107,6 @@ export class DeploymentManager implements IDeploymentsManager, NetworkUpdateList
 
             this.conceroRoutersMapByChainName = routerMap;
 
-            // Find verifier address
             const verifierEntry = deploymentsEnvArr.find((d: string) => {
                 const networkSuffix =
                     globalConfig.NETWORK_MODE === "testnet" ? "ARBITRUM_SEPOLIA" : "ARBITRUM";
@@ -132,10 +136,15 @@ export class DeploymentManager implements IDeploymentsManager, NetworkUpdateList
 
     private extractNetworkName(key: string): string | null {
         const prefix = "CONCERO_ROUTER_PROXY_";
-        if (key.startsWith(prefix)) {
-            return key.slice(prefix.length);
-        }
-        return null;
+
+        const parts = key.slice(prefix.length).toLowerCase().split("_");
+        return (
+            parts[0] +
+            parts
+                .slice(1)
+                .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+                .join("")
+        );
     }
 
     private isLocalhostEnv(): boolean {
