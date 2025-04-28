@@ -1,16 +1,6 @@
 import { decodeAbiParameters, parseAbiParameters } from "viem";
 import type { GetTransactionReturnType } from "viem/actions/public/getTransaction";
 
-//bun hardhat decode-clf-fulfill --txhash 0x3018db9bf3525621578311b8ee09b5f735bc68dfbfd2142154b671ece68691a1 --network base
-
-// Authorized node operator addresses
-// const authorizedSigners = [
-//     getEnvVar("CLF_DON_SIGNING_KEY_0_BASE"),
-//     getEnvVar("CLF_DON_SIGNING_KEY_1_BASE"),
-//     getEnvVar("CLF_DON_SIGNING_KEY_2_BASE"),
-//     getEnvVar("CLF_DON_SIGNING_KEY_3_BASE"),
-// ];
-
 const clfReportSubmissionAbi = parseAbiParameters([
     "bytes32[3] reportContext",
     "bytes report",

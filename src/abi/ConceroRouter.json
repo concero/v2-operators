@@ -662,9 +662,9 @@
               "type": "bytes32[]"
             },
             {
-              "internalType": "bytes",
+              "internalType": "bytes32",
               "name": "rawVs",
-              "type": "bytes"
+              "type": "bytes32"
             }
           ],
           "internalType": "struct Types.ClfDonReportSubmission",
