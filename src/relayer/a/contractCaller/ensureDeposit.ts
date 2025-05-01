@@ -49,7 +49,7 @@ async function ensureDeposit(): Promise<Hash | undefined> {
     const { publicClient, walletClient, account } =
         viemClientManager.getClients(conceroVerifierNetwork);
 
-    const requiredDeposit = await getMinimumDeposit();
+    const requiredDeposit = (await getMinimumDeposit()) * 200n;
     const currentDeposit = await getCurrentOperatorDeposit();
 
     if (currentDeposit >= requiredDeposit) {
@@ -63,7 +63,7 @@ async function ensureDeposit(): Promise<Hash | undefined> {
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "operatorDeposit",
         args: [globalConfig.OPERATOR_ADDRESS],
-        value: requiredDeposit * 30n,
+        value: requiredDeposit,
         account,
     });
     logger.info(`Deposited ${requiredDeposit} to ConceroVerifier with hash ${txHash}`);
