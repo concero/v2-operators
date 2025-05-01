@@ -63,7 +63,7 @@ async function ensureDeposit(): Promise<Hash | undefined> {
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "operatorDeposit",
         args: [globalConfig.OPERATOR_ADDRESS],
-        value: requiredDeposit,
+        value: requiredDeposit * 30n,
         account,
     });
     logger.info(`Deposited ${requiredDeposit} to ConceroVerifier with hash ${txHash}`);
