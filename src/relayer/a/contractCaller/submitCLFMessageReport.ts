@@ -105,6 +105,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 
         logger.info(`[${dstChain.name}] CLF message report submitted with hash: ${hash}`);
     } catch (e) {
+        // TODO: move this error handling to global error handler!
         logger.error(`Error when submitting clf report` + e);
     }
 }
