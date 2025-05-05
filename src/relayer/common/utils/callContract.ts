@@ -1,7 +1,7 @@
 import { Hash, type PublicClient, type SimulateContractParameters, type WalletClient } from "viem";
 import { AppErrorEnum } from "../../../constants";
 import { AppError } from "./AppError";
-import { nonceManager } from "../managers/NonceManager";
+import { nonceManager } from "../managers/nonceManager";
 
 export async function callContract(
     publicClient: PublicClient,
