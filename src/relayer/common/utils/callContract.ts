@@ -14,7 +14,7 @@ export async function callContract(
         const hash = await walletClient.writeContract(
             {
                 ...simulateContractParams,
-                gas: 2_000_000n,
+                gas: 1_000_000n,
                 nonce: await nonceManager.consume({
                     chainId: publicClient.chain?.id,
                     client: publicClient,
