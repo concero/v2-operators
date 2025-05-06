@@ -2,20 +2,12 @@ import { Log, type Address } from "viem";
 import { ConceroNetwork } from "../../../types/ConceroNetwork";
 import { logger } from "../utils";
 import { viemClientManager } from "../../common/managers/ViemClientManager";
+import { blockCheckpointManager } from "../managers/BlockCheckpointManager";
 
-/** @notice Represents a handle for controlling an active event listener. */
 export interface EventListenerHandle {
     stop: () => void;
 }
 
-/**
- * @param chainName The name of the chain to monitor.
- * @param contractAddress The address of the contract to monitor.
- * @param onLogs Callback to process fetched logs.
- * @param pollingIntervalMs The polling interval in milliseconds.
- * @returns {Promise<EventListenerHandle>} An object with a `stop` method to cancel polling.
- * @notice Sets up an event listener for contract logs and returns a handle for controlling it.
- */
 export async function setupEventListener<T>(
     network: ConceroNetwork,
     contractAddress: Address,
@@ -23,52 +15,71 @@ export async function setupEventListener<T>(
     pollingIntervalMs: number,
 ): Promise<EventListenerHandle> {
     const { publicClient } = viemClientManager.getClients(network);
-    let lastBlockNumber: bigint = await publicClient.getBlockNumber();
+
+    const initialBlockNumber = await determineStartingBlock(network);
 
     logger.info(
-        `[${network.name}] Monitoring contract: ${contractAddress} from block ${lastBlockNumber}`,
+        `[${network.name}] Monitoring contract: ${contractAddress} from block ${initialBlockNumber}`,
     );
 
-    let cancelled = false;
-    let timerId: ReturnType<typeof setTimeout>;
+    let lastProcessedBlock = initialBlockNumber;
 
-    async function pollLogs() {
-        if (cancelled) return;
-        try {
-            const { publicClient } = viemClientManager.getClients(network);
-            const latestBlockNumber = await publicClient.getBlockNumber();
-            if (latestBlockNumber > lastBlockNumber) {
-                //todo: only if logs not null, invoke onlogs
+    const unwatchFn = publicClient.watchBlocks({
+        emitMissed: true,
+        pollingInterval: pollingIntervalMs,
+        onBlock: async block => {
+            try {
+                const currentBlockNumber =
+                    block.number !== null ? block.number : await publicClient.getBlockNumber();
+
+                if (currentBlockNumber <= lastProcessedBlock) {
+                    return;
+                }
+
                 const logs = await publicClient.getLogs({
                     address: contractAddress,
-                    fromBlock: lastBlockNumber + 1n,
-                    toBlock: latestBlockNumber,
+                    fromBlock: lastProcessedBlock + 1n,
+                    toBlock: currentBlockNumber,
                 });
 
                 if (logs.length > 0) {
-                    // logger.info(`[${chainName}] Received ${logs.length} logs for contract: ${contractAddress}`);
                     onLogs(logs, network);
                 }
-                lastBlockNumber = latestBlockNumber;
+
+                lastProcessedBlock = currentBlockNumber;
+                blockCheckpointManager.updateLastProcessedBlock(network, lastProcessedBlock);
+            } catch (error) {
+                logger.error(
+                    `[${network.name}] Error processing block for contract ${contractAddress}:`,
+                    error,
+                );
             }
-        } catch (error) {
+        },
+        onError: error => {
             logger.error(
-                `[${network.name}] Error in polling loop for contract ${contractAddress}:`,
+                `[${network.name}] Error in watchBlocks for contract ${contractAddress}:`,
                 error,
             );
-        } finally {
-            if (!cancelled) {
-                timerId = setTimeout(pollLogs, pollingIntervalMs);
-            }
-        }
+        },
+    });
+
+    return {
+        stop: () => {
+            unwatchFn();
+            logger.info(`[${network.name}] Stopped monitoring contract: ${contractAddress}`);
+        },
+    };
+}
+
+async function determineStartingBlock(network: ConceroNetwork): Promise<bigint> {
+    const { publicClient } = viemClientManager.getClients(network);
+    const savedBlock = blockCheckpointManager.getLastProcessedBlock(network);
+
+    if (savedBlock !== undefined) {
+        logger.info(`[${network.name}] Resuming from previously saved block ${savedBlock}`);
+        return savedBlock;
     }
 
-    pollLogs();
-
-    const stop = () => {
-        cancelled = true;
-        if (timerId) clearTimeout(timerId);
-    };
-
-    return { stop };
+    const currentBlock = await publicClient.getBlockNumber();
+    return currentBlock;
 }

@@ -94,7 +94,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
             rawVs: decodedCLFReport.rawVs,
         };
 
-        const hash = await callContract(dstPublicClient, dstWalletClient, {
+        const { transactionHash: txHash } = await callContract(dstPublicClient, dstWalletClient, {
             chain: dstChain.viemChain,
             address: dstConceroRouter,
             abi: globalConfig.ABI.CONCERO_ROUTER,
@@ -103,9 +103,9 @@ export async function submitCLFMessageReport(log: DecodedLog) {
             account: dstWalletClient.account,
         });
 
-        logger.info(`[${dstChain.name}] CLF message report submitted with hash: ${hash}`);
+        logger.info(`[${dstChain.name}] CLF message report submitted with hash: ${txHash}`);
     } catch (e) {
         // TODO: move this error handling to global error handler!
-        logger.error(`Error when submitting clf report` + e);
+        logger.error(`Error when submitting clf report: ` + e);
     }
 }

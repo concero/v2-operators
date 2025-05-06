@@ -53,7 +53,7 @@ async function requestOperatorRegistration(
     const operatorActions = [BigInt(OperatorRegistrationAction.Register)];
     const operatorAddresses = [globalConfig.OPERATOR_ADDRESS];
 
-    const txHash = await callContract(publicClient, walletClient, {
+    const { transactionHash } = await callContract(publicClient, walletClient, {
         chain: conceroVerifierNetwork.viemChain,
         address: await deploymentsManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
@@ -62,9 +62,9 @@ async function requestOperatorRegistration(
         account,
     });
 
-    config.eventEmitter.emit("requestOperatorRegistration", { txHash });
+    config.eventEmitter.emit("requestOperatorRegistration", { txHash: transactionHash });
 
-    return txHash;
+    return transactionHash;
 }
 
 /**

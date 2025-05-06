@@ -40,7 +40,7 @@ export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector:
     try {
         const verifierAddress = await deploymentsManager.getConceroVerifier();
 
-        const txHash = await callContract(publicClient, walletClient, {
+        const { transactionHash } = await callContract(publicClient, walletClient, {
             chain: network.viemChain,
             address: verifierAddress,
             account: walletClient.account,
@@ -49,8 +49,8 @@ export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector:
             args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
         });
 
-        config.eventEmitter.emit("requestMessageReport", { txHash });
-        logger.info(`[${network.name}] CLF message report requested with hash: ${txHash}`);
+        config.eventEmitter.emit("requestMessageReport", { txHash: transactionHash });
+        logger.info(`[${network.name}] CLF message report requested with hash: ${transactionHash}`);
     } catch (error) {
         // TODO: move this error handling to global error handler!
         logger.error(`[${network.name}] Error requesting CLF message report:`, error);

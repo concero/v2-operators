@@ -1,38 +1,56 @@
-import { Hash, type PublicClient, type SimulateContractParameters, type WalletClient } from "viem";
+import {
+    Hash,
+    NonceTooHighError,
+    type PublicClient,
+    type SimulateContractParameters,
+    type WalletClient,
+} from "viem";
 import { AppErrorEnum } from "../../../constants";
 import { AppError } from "./AppError";
 import { nonceManager } from "../managers/nonceManager";
+import { TransactionReceipt } from "viem";
+import { BaseError } from "viem";
+import { NonceTooLowError } from "viem";
 
 export async function callContract(
     publicClient: PublicClient,
     walletClient: WalletClient,
     simulateContractParams: SimulateContractParameters,
-): Promise<Hash | undefined> {
+    options?: {
+        skipSimulation?: boolean;
+        receiptTimeout?: number;
+        receiptConfirmations?: number;
+    },
+): Promise<TransactionReceipt> {
     try {
-        // const { request } = await publicClient.simulateContract(simulateContractParams);
+        let transactionRequest;
 
-        const hash = await walletClient.writeContract(
-            {
-                ...simulateContractParams,
-                gas: 1_000_000n,
-                nonce: await nonceManager.consume({
-                    chainId: publicClient.chain?.id,
-                    client: publicClient,
-                    address: walletClient.account?.address,
-                }),
-            },
-            // request,
-            // @dev we use it to avoid simulation. on arbitrum sepolia it fakely says the transaction will fail regardless of the rpc
-        );
+        if (!options?.skipSimulation) {
+            const { request } = await publicClient.simulateContract(simulateContractParams);
+            transactionRequest = request;
+        } else {
+            transactionRequest = simulateContractParams;
+        }
 
-        // @dev TODO: We need to check the status of the tx
-        const { cumulativeGasUsed } = await publicClient.waitForTransactionReceipt({
-            // ...globalConfig.VIEM.RECEIPT,
-            hash,
+        const nonce = await nonceManager.consume({
+            chainId: publicClient.chain?.id,
+            client: publicClient,
+            address: walletClient.account?.address,
         });
 
-        // const transaction = await publicClient.getTransaction(hash);
-        return hash;
+        const hash = await walletClient.writeContract({
+            ...transactionRequest,
+            gas: 1_000_000n,
+            nonce,
+        });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+            hash,
+            confirmations: options?.receiptConfirmations ?? 3,
+            timeout: options?.receiptTimeout ?? 60_000, // Default 60 seconds
+        });
+
+        return receipt;
     } catch (error) {
         throw new AppError(AppErrorEnum.ContractCallError, error);
     }

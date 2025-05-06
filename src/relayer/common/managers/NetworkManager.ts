@@ -151,17 +151,13 @@ export class NetworkManager implements INetworkManager {
             );
 
             // Update network collections
-            this.mainnetNetworks = this.createNetworkConfig<ConceroMainnetNetworkNames>(
-                fetchedMainnet,
-                "mainnet",
-                [operatorPK],
-            );
+            this.mainnetNetworks = this.createNetworkConfig(fetchedMainnet, "mainnet", [
+                operatorPK,
+            ]);
 
             // const testingNetworks = this.getTestingNetworks(operatorPK);
             this.testnetNetworks = {
-                ...this.createNetworkConfig<ConceroTestnetNetworkNames>(fetchedTestnet, "testnet", [
-                    operatorPK,
-                ]),
+                ...this.createNetworkConfig(fetchedTestnet, "testnet", [operatorPK]),
                 // ...testingNetworks,
             };
 

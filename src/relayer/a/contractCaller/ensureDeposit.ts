@@ -57,7 +57,7 @@ async function ensureDeposit(): Promise<Hash | undefined> {
         return undefined;
     }
 
-    const txHash = await callContract(publicClient, walletClient, {
+    const { transactionHash } = await callContract(publicClient, walletClient, {
         chain: conceroVerifierNetwork.viemChain,
         address: await deploymentsManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
@@ -66,8 +66,8 @@ async function ensureDeposit(): Promise<Hash | undefined> {
         value: requiredDeposit,
         account,
     });
-    logger.info(`Deposited ${requiredDeposit} to ConceroVerifier with hash ${txHash}`);
-    return txHash;
+    logger.info(`Deposited ${requiredDeposit} to ConceroVerifier with hash ${transactionHash}`);
+    return transactionHash;
 }
 
 export { ensureDeposit };
