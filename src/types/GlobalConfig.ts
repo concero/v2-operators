@@ -38,6 +38,7 @@ type GlobalConfig = {
         CONCERO_VERIFIER: Abi;
         CONCERO_ROUTER: Abi;
     };
+    RPC: { OVERRIDE: any; EXTENSION: any };
 };
 
 export { GlobalConfig };

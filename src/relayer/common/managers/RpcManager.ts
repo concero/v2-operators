@@ -54,6 +54,9 @@ export class RpcManager implements IRpcManager, NetworkUpdateListener {
         chainType: "mainnet" | "testnet" | "localhost",
     ): Promise<string[]> {
         try {
+            const rpcOverride = globalConfig.RPC.OVERRIDE[chainId.toString()];
+            if (rpcOverride && rpcOverride.length) return rpcOverride;
+
             if (chainType === "localhost") {
                 const localhostUrl = process.env.LOCALHOST_RPC_URL;
                 if (!localhostUrl) {
@@ -72,11 +75,21 @@ export class RpcManager implements IRpcManager, NetworkUpdateListener {
             const response = await chainConfig;
             logger.debug(`Parsed response for ${chainName}:`, response);
 
-            if (!response.urls || !Array.isArray(response.urls)) {
+            const urls = response.urls;
+
+            const rpcsExtension = globalConfig.RPC.EXTENSION[chainId.toString()];
+
+            if (rpcsExtension) {
+                rpcsExtension.forEach((url: string) => {
+                    urls.push(url);
+                });
+            }
+
+            if (!urls) {
                 throw new Error(`Invalid RPC URL response format for chain ${chainName}`);
             }
 
-            return response.urls;
+            return urls;
         } catch (error) {
             logger.error(`Error fetching RPC URLs for ${chainName}:`, error);
             throw error;
