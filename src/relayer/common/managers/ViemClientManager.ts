@@ -1,11 +1,4 @@
-import {
-    createPublicClient,
-    createWalletClient,
-    fallback,
-    http,
-    PublicClient,
-    WalletClient,
-} from "viem";
+import { createPublicClient, createWalletClient, fallback, PublicClient, WalletClient } from "viem";
 
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";

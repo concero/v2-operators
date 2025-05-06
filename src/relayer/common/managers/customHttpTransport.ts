@@ -1,6 +1,6 @@
 import { Transport } from "viem";
 
-export function createCustomHttpTransport(url: string, options?: any): Transport {
+export function createCustomHttpTransport(url: string): Transport {
     return () => ({
         name: `customHttp-${url}`,
         async request({ method, params }: { method: string; params: unknown[] }) {
@@ -29,6 +29,23 @@ export function createCustomHttpTransport(url: string, options?: any): Transport
 
             return jsonResponse.result;
         },
-        config: options,
+        config: {
+            onFetchResponse(response: Response) {
+                if (!response.ok) {
+                    console.log("RPC node response:", {
+                        status: response.status,
+                        node: response.url,
+                    });
+                    if (
+                        (response.status >= 500 && response.status <= 599) ||
+                        response.status === 429 ||
+                        response.status === 403
+                    ) {
+                        throw new Error("RPC Server error, switching to another node...");
+                    }
+                }
+            },
+            batch: true,
+        },
     });
 }

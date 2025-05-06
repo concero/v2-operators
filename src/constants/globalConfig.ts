@@ -49,8 +49,8 @@ const globalConfig: GlobalConfig = {
             gas: 3000000n,
         },
         FALLBACK_TRANSPORT_OPTIONS: {
-            retryCount: 5,
-            retryDelay: 1000,
+            retryCount: 3,
+            retryDelay: 2000,
         },
         CLIENT_ROTATION_INTERVAL_MS: 1000 * 60 * 60 * 1,
     },
