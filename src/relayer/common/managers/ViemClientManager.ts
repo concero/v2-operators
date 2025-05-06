@@ -15,6 +15,7 @@ import { globalConfig } from "../../../constants/globalConfig";
 
 import { getEnvVar } from "../utils/getEnvVar";
 import { logger } from "../utils/logger";
+import { createCustomHttpTransport } from "./customHttpTransport";
 
 export interface ViemClients {
     walletClient: WalletClient;
@@ -57,7 +58,7 @@ export class ViemClientManager implements RpcUpdateListener {
         }
 
         return fallback(
-            rpcUrls.map(url => http(url)),
+            rpcUrls.map(url => createCustomHttpTransport(url)),
             globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
         );
     }
