@@ -6,6 +6,7 @@ import { abi as conceroRouterAbi } from "../abi/ConceroRouter.json";
 import { abi as conceroVerifierAbi } from "../abi/ConceroVerifier.json";
 import { getRpcServiceBranch } from "./getRpcServiceBranch";
 import { getDeploymentsServiceBranch } from "./getDeploymentsServiceBranch";
+import { getRpcOverride, getRpcExtension } from "./localRpcLoaders";
 
 const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar("NETWORK_MODE"),
@@ -61,6 +62,10 @@ const globalConfig: GlobalConfig = {
     ABI: {
         CONCERO_VERIFIER: conceroVerifierAbi as Abi,
         CONCERO_ROUTER: conceroRouterAbi as Abi,
+    },
+    RPC: {
+        OVERRIDE: getRpcOverride(),
+        EXTENSION: getRpcExtension(),
     },
 };
 

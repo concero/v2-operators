@@ -52,6 +52,7 @@ export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector:
         config.eventEmitter.emit("requestMessageReport", { txHash });
         logger.info(`[${network.name}] CLF message report requested with hash: ${txHash}`);
     } catch (error) {
+        // TODO: move this error handling to global error handler!
         logger.error(`[${network.name}] Error requesting CLF message report:`, error);
     }
 }

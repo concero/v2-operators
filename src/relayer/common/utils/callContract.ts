@@ -1,6 +1,7 @@
 import { Hash, type PublicClient, type SimulateContractParameters, type WalletClient } from "viem";
-import { AppErrorEnum, globalConfig } from "../../../constants";
+import { AppErrorEnum } from "../../../constants";
 import { AppError } from "./AppError";
+import { nonceManager } from "../managers/nonceManager";
 
 export async function callContract(
     publicClient: PublicClient,
@@ -11,7 +12,15 @@ export async function callContract(
         // const { request } = await publicClient.simulateContract(simulateContractParams);
 
         const hash = await walletClient.writeContract(
-            { ...simulateContractParams, gas: 2_000_000n },
+            {
+                ...simulateContractParams,
+                gas: 1_000_000n,
+                nonce: await nonceManager.consume({
+                    chainId: publicClient.chain?.id,
+                    client: publicClient,
+                    address: walletClient.account?.address,
+                }),
+            },
             // request,
             // @dev we use it to avoid simulation. on arbitrum sepolia it fakely says the transaction will fail regardless of the rpc
         );
