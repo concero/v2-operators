@@ -1,25 +1,69 @@
-import { Hash, type PublicClient, type SimulateContractParameters, type WalletClient } from "viem";
+import {
+    ContractFunctionExecutionError,
+    Hash,
+    NonceTooHighError,
+    TransactionExecutionError,
+    type PublicClient,
+    type SimulateContractParameters,
+    type WalletClient,
+} from "viem";
 import { AppErrorEnum } from "../../../constants";
 import { AppError } from "./AppError";
+import { asyncRetry } from "./asyncRetry";
+import { NonceManagerSource } from "../managers/NonceManagerSource";
+import { nonceManager } from "../managers/nonceManager";
+import { NonceTooLowError } from "viem";
+
+async function executeTransaction(
+    publicClient: PublicClient,
+    walletClient: WalletClient,
+    simulateContractParams: SimulateContractParameters,
+) {
+    // const { request } = await publicClient.simulateContract(simulateContractParams);
+    // const hash = await walletClient.writeContract(request);
+
+    const hash = await walletClient.writeContract(simulateContractParams);
+
+    // @dev TODO: We need to check the status of the tx
+    // await publicClient.waitForTransactionReceipt({ hash });
+
+    return hash;
+}
 
 export async function callContract(
     publicClient: PublicClient,
     walletClient: WalletClient,
     simulateContractParams: SimulateContractParameters,
-): Promise<Hash | undefined> {
+): Promise<Hash> {
     try {
-        // const { request } = await publicClient.simulateContract(simulateContractParams);
+        const isRetryableError = (error: any) => {
+            if (error instanceof ContractFunctionExecutionError) {
+                if (error.cause instanceof TransactionExecutionError) {
+                    if (
+                        error.cause.cause instanceof NonceTooHighError ||
+                        error.cause.cause instanceof NonceTooLowError
+                    ) {
+                        const chainId = publicClient.chain!.id;
+                        const address = walletClient.account!.address;
 
-        const hash = await walletClient.writeContract(simulateContractParams);
+                        nonceManager.reset({ chainId, address });
+                        NonceManagerSource.getInstance().set({ chainId, address }, 0);
 
-        // @dev TODO: We need to check the status of the tx
-        // const { cumulativeGasUsed } = await publicClient.waitForTransactionReceipt({
-        //     // ...globalConfig.VIEM.RECEIPT,
-        //     hash,
-        // });
+                        return true;
+                    }
+                }
+            }
 
-        // const transaction = await publicClient.getTransaction(hash);
-        return hash;
+            return false;
+        };
+
+        return asyncRetry(
+            () => executeTransaction(publicClient, walletClient, simulateContractParams),
+            {
+                maxRetries: 5,
+                isRetryableError,
+            },
+        );
     } catch (error) {
         throw new AppError(AppErrorEnum.ContractCallError, error);
     }
