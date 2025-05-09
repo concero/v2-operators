@@ -39,12 +39,7 @@ async function getCurrentOperatorDeposit(): Promise<bigint> {
     return BigInt(currentDeposit);
 }
 
-/**
- * @returns {Promise<Hash | undefined>} Transaction hash if deposit was made, undefined if no
- *   deposit was needed.
- * @notice Makes an operator deposit if the current deposit is insufficient.
- */
-async function ensureDeposit(): Promise<Hash | undefined> {
+async function fetchDepositAndDepositIfNeeded() {
     const conceroVerifierNetwork = networkManager.getVerifierNetwork();
     const { publicClient, walletClient, account } =
         viemClientManager.getClients(conceroVerifierNetwork);
@@ -67,7 +62,17 @@ async function ensureDeposit(): Promise<Hash | undefined> {
         account,
     });
     logger.info(`Deposited ${requiredDeposit} to ConceroVerifier with hash ${txHash}`);
-    return txHash;
 }
 
-export { ensureDeposit };
+/**
+ * @returns {Promise<Hash | undefined>} Transaction hash if deposit was made, undefined if no
+ *   deposit was needed.
+ * @notice Makes an operator deposit if the current deposit is insufficient.
+ */
+export async function ensureDeposit() {
+    await fetchDepositAndDepositIfNeeded();
+
+    setInterval(async () => {
+        await fetchDepositAndDepositIfNeeded();
+    }, globalConfig.NOTIFICATIONS.INTERVAL);
+}

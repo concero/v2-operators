@@ -39,6 +39,13 @@ type GlobalConfig = {
         CONCERO_ROUTER: Abi;
     };
     RPC: { OVERRIDE: any; EXTENSION: any };
+    NOTIFICATIONS: {
+        SLACK: {
+            MONITORING_SYSTEM_CHANNEL_ID: string | undefined;
+            BOT_TOKEN: string | undefined;
+        };
+        INTERVAL: number;
+    };
 };
 
 export { GlobalConfig };

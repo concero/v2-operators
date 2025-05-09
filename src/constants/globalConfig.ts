@@ -8,7 +8,7 @@ import { getRpcServiceBranch } from "./getRpcServiceBranch";
 import { getDeploymentsServiceBranch } from "./getDeploymentsServiceBranch";
 import { getRpcOverride, getRpcExtension } from "./localRpcLoaders";
 
-const globalConfig: GlobalConfig = {
+export const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar("NETWORK_MODE"),
     OPERATOR_ADDRESS: getEnvVar("OPERATOR_ADDRESS"),
     IGNORED_NETWORK_IDS: [],
@@ -67,6 +67,11 @@ const globalConfig: GlobalConfig = {
         OVERRIDE: getRpcOverride(),
         EXTENSION: getRpcExtension(),
     },
+    NOTIFICATIONS: {
+        SLACK: {
+            MONITORING_SYSTEM_CHANNEL_ID: process.env.SLACK_MONITORING_SYSTEM_CHANNEL_ID,
+            BOT_TOKEN: process.env.SLACK_BOT_TOKEN,
+        },
+        INTERVAL: 60 * 60 * 1000,
+    },
 };
-
-export { globalConfig };

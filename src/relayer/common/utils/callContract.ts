@@ -9,27 +9,22 @@ export async function callContract(
     simulateContractParams: SimulateContractParameters,
 ): Promise<Hash | undefined> {
     try {
-        // const { request } = await publicClient.simulateContract(simulateContractParams);
+        const { request } = await publicClient.simulateContract(simulateContractParams);
 
-        const hash = await walletClient.writeContract(
-            {
-                ...simulateContractParams,
-                gas: 1_000_000n,
-                nonce: await nonceManager.consume({
-                    chainId: publicClient.chain?.id,
-                    client: publicClient,
-                    address: walletClient.account?.address,
-                }),
-            },
-            // request,
-            // @dev we use it to avoid simulation. on arbitrum sepolia it fakely says the transaction will fail regardless of the rpc
-        );
+        const hash = await walletClient.writeContract({
+            ...request,
+            nonce: await nonceManager.consume({
+                chainId: publicClient.chain?.id,
+                client: publicClient,
+                address: walletClient.account?.address,
+            }),
+        });
 
         // @dev TODO: We need to check the status of the tx
-        const { cumulativeGasUsed } = await publicClient.waitForTransactionReceipt({
-            // ...globalConfig.VIEM.RECEIPT,
-            hash,
-        });
+        // const { cumulativeGasUsed } = await publicClient.waitForTransactionReceipt({
+        //     // ...globalConfig.VIEM.RECEIPT,
+        //     hash,
+        // });
 
         // const transaction = await publicClient.getTransaction(hash);
         return hash;

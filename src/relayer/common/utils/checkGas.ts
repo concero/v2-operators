@@ -1,11 +1,36 @@
-import { AppErrorEnum, globalConfig } from "../../../constants";
-import { AppError, logger } from "../utils";
+import { globalConfig } from "../../../constants";
+import { logger } from "../utils";
 import { networkManager } from "../managers/NetworkManager";
 import { viemClientManager } from "../../common/managers/ViemClientManager";
+import { getChainOperatorMinBalance } from "./getChainOperatorMinBalance";
+import { WebClient } from "@slack/web-api";
+import { formatUnits } from "viem";
 
-const MINIMUM_NATIVE_VALUE = 1_000_000; // 0.001 ETH
+async function notifyInSlack(message: string) {
+    try {
+        if (
+            !globalConfig.NOTIFICATIONS.SLACK.MONITORING_SYSTEM_CHANNEL_ID ||
+            !globalConfig.NOTIFICATIONS.SLACK.BOT_TOKEN
+        ) {
+            return;
+        }
 
-export async function checkGas() {
+        const webClient = new WebClient(globalConfig.NOTIFICATIONS.SLACK.BOT_TOKEN);
+
+        const res = await webClient.chat.postMessage({
+            channel: globalConfig.NOTIFICATIONS.SLACK.MONITORING_SYSTEM_CHANNEL_ID,
+            text: message,
+        });
+
+        if (!res.ok) {
+            console.error(`Failed to send message to slack: ${res.error}`);
+        }
+    } catch (error) {
+        console.error(JSON.stringify(error, null, 2));
+    }
+}
+
+async function checkAndNotifyInsufficientGas() {
     const operatorAddress = globalConfig.OPERATOR_ADDRESS;
 
     try {
@@ -18,29 +43,51 @@ export async function checkGas() {
 
         const balancePromises = activeNetworks.map(async network => {
             const { publicClient } = viemClientManager.getClients(network);
-            const balance = await publicClient.getBalance({
-                address: operatorAddress,
-            });
+            const [balance, operatorMinBalance] = await Promise.all([
+                publicClient.getBalance({
+                    address: operatorAddress,
+                }),
+                getChainOperatorMinBalance(network),
+            ]);
 
-            return { network, balance };
+            return { network, balance, operatorMinBalance };
         });
 
-        const balances = await Promise.all(balancePromises);
+        const chainsInfo = await Promise.all(balancePromises);
 
-        balances.forEach(({ network, balance }) => {
-            if (balance < MINIMUM_NATIVE_VALUE) {
-                throw new AppError(
-                    AppErrorEnum.InsufficientGas,
-                    Error(
-                        `Insufficient gas on ${network.name} (chain ID: ${network.id}). Minimum required: ${MINIMUM_NATIVE_VALUE}, actual: ${balance}`,
-                    ),
-                );
+        for (const chainInfo of chainsInfo) {
+            const { balance, operatorMinBalance, network } = chainInfo;
+
+            if (balance < operatorMinBalance) {
+                const message = `Insufficient gas on ${network.name} (chain ID: ${network.id}). Minimum required: ${formatUnits(operatorMinBalance, 18)}, actual: ${formatUnits(balance, 18)}`;
+
+                await notifyInSlack(message);
+                logger.info(message);
             }
-        });
+        }
 
-        logger.info(`All chains (${activeNetworks.length}) have sufficient gas.`);
+        // balances.forEach(({ network, balance, operatorMinBalance }) => {
+        // if (balance < operatorMinBalance) {
+        // throw new AppError(
+        //     AppErrorEnum.InsufficientGas,
+        //     Error(
+        //         `Insufficient gas on ${network.name} (chain ID: ${network.id}). Minimum required: ${operatorMinBalance}, actual: ${balance}`,
+        //     ),
+        // );
+        // }
+        // });
+
+        // logger.info(`All chains (${activeNetworks.length}) have sufficient gas.`);
     } catch (error) {
         logger.error("Error checking gas balances:", error);
         throw error;
     }
+}
+
+export async function checkGas() {
+    await checkAndNotifyInsufficientGas();
+
+    setInterval(async () => {
+        await checkAndNotifyInsufficientGas();
+    }, globalConfig.NOTIFICATIONS.INTERVAL);
 }
