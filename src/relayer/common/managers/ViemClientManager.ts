@@ -9,7 +9,6 @@ import { globalConfig } from "../../../constants/globalConfig";
 import { getEnvVar } from "../utils/getEnvVar";
 import { logger } from "../utils/logger";
 import { createCustomHttpTransport } from "./customHttpTransport";
-import { nonceManager } from "./nonceManager";
 
 export interface ViemClients {
     walletClient: WalletClient;
@@ -59,7 +58,7 @@ export class ViemClientManager implements RpcUpdateListener {
 
     private initializeClients(chain: ConceroNetwork): ViemClients {
         const privateKey = getEnvVar("OPERATOR_PRIVATE_KEY");
-        const account = privateKeyToAccount(`0x${privateKey}`, { nonceManager: nonceManager });
+        const account = privateKeyToAccount(`0x${privateKey}`);
         const transport = this.createTransport(chain);
 
         const publicClient = createPublicClient({ transport, chain: chain.viemChain });

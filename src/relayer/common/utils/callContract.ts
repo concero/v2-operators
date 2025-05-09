@@ -22,7 +22,14 @@ async function executeTransaction(
     // const { request } = await publicClient.simulateContract(simulateContractParams);
     // const hash = await walletClient.writeContract(request);
 
-    const hash = await walletClient.writeContract(simulateContractParams);
+    const hash = await walletClient.writeContract({
+        ...simulateContractParams,
+        nonce: await nonceManager.consume({
+            chainId: publicClient.chain?.id,
+            address: walletClient.account?.address,
+            client: walletClient,
+        }),
+    });
 
     // @dev TODO: We need to check the status of the tx
     // await publicClient.waitForTransactionReceipt({ hash });
