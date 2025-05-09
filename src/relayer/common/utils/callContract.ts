@@ -1,7 +1,6 @@
 import { Hash, type PublicClient, type SimulateContractParameters, type WalletClient } from "viem";
 import { AppErrorEnum } from "../../../constants";
 import { AppError } from "./AppError";
-import { nonceManager } from "../managers/nonceManager";
 
 export async function callContract(
     publicClient: PublicClient,
@@ -9,16 +8,9 @@ export async function callContract(
     simulateContractParams: SimulateContractParameters,
 ): Promise<Hash | undefined> {
     try {
-        const { request } = await publicClient.simulateContract(simulateContractParams);
+        // const { request } = await publicClient.simulateContract(simulateContractParams);
 
-        const hash = await walletClient.writeContract({
-            ...request,
-            nonce: await nonceManager.consume({
-                chainId: publicClient.chain?.id,
-                client: publicClient,
-                address: walletClient.account?.address,
-            }),
-        });
+        const hash = await walletClient.writeContract(simulateContractParams);
 
         // @dev TODO: We need to check the status of the tx
         // const { cumulativeGasUsed } = await publicClient.waitForTransactionReceipt({
