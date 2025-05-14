@@ -1,19 +1,23 @@
-import {
-    Address,
-    Client,
-    createPublicClient,
-    NonceManagerSource as INonceManagerSource,
-} from "viem";
+import { Address, Client, createPublicClient } from "viem";
 import { Singleton } from "./Singleton";
 
-export class NonceManagerSource extends Singleton implements INonceManagerSource {
+interface INonceManagerParams {
+    address: Address;
+    chainId: number;
+}
+
+interface IGetNonceManagerParams extends INonceManagerParams {
+    client: Client;
+}
+
+export class NonceManagerSource extends Singleton {
     private noncesMap: Record<number, number> = {};
 
     protected constructor() {
         super();
     }
 
-    async get(parameters: { address: Address; chainId: number } & { client: Client }) {
+    async get(parameters: IGetNonceManagerParams) {
         if (!this.noncesMap[parameters.chainId]) {
             const publicClient = createPublicClient({
                 transport: () => parameters.client.transport,
@@ -31,7 +35,17 @@ export class NonceManagerSource extends Singleton implements INonceManagerSource
         return this.noncesMap[parameters.chainId];
     }
 
-    set(parameters: { address: Address; chainId: number }, nonce: number) {
+    async consume(parameters: IGetNonceManagerParams) {
+        const nonce = await this.get(parameters);
+        this.set(parameters, nonce + 1);
+        return nonce;
+    }
+
+    reset(parameters: INonceManagerParams) {
+        this.set(parameters, 0);
+    }
+
+    set(parameters: INonceManagerParams, nonce: number) {
         this.noncesMap[parameters.chainId] = nonce;
     }
 }

@@ -10,25 +10,24 @@ import {
 import { AppErrorEnum } from "../../../constants";
 import { AppError } from "./AppError";
 import { asyncRetry } from "./asyncRetry";
-import { NonceManagerSource } from "../managers/NonceManagerSource";
-import { nonceManager } from "../managers/nonceManager";
 import { NonceTooLowError } from "viem";
+import { NonceManagerSource } from "../managers/NonceManagerSource";
 
 async function executeTransaction(
     publicClient: PublicClient,
     walletClient: WalletClient,
     simulateContractParams: SimulateContractParameters,
 ) {
-    // const { request } = await publicClient.simulateContract(simulateContractParams);
-    // const hash = await walletClient.writeContract(request);
+    const chainId = publicClient.chain!.id;
+    const address = walletClient.account!.address;
 
     const hash = await walletClient.writeContract({
         ...simulateContractParams,
-        // nonce: await nonceManager.consume({
-        //     chainId: publicClient.chain?.id,
-        //     address: walletClient.account?.address,
-        //     client: walletClient,
-        // }),
+        nonce: await NonceManagerSource.getInstance().consume({
+            address,
+            chainId,
+            client: publicClient,
+        }),
     });
 
     // @dev TODO: We need to check the status of the tx
@@ -43,7 +42,7 @@ export async function callContract(
     simulateContractParams: SimulateContractParameters,
 ): Promise<Hash> {
     try {
-        const isRetryableError = (error: any) => {
+        const isRetryableError = async (error: any) => {
             if (error instanceof ContractFunctionExecutionError) {
                 if (error.cause instanceof TransactionExecutionError) {
                     if (
@@ -53,8 +52,7 @@ export async function callContract(
                         const chainId = publicClient.chain!.id;
                         const address = walletClient.account!.address;
 
-                        nonceManager.reset({ chainId, address });
-                        NonceManagerSource.getInstance().set({ chainId, address }, 0);
+                        NonceManagerSource.getInstance().reset({ chainId, address });
 
                         return true;
                     }
@@ -68,6 +66,7 @@ export async function callContract(
             () => executeTransaction(publicClient, walletClient, simulateContractParams),
             {
                 maxRetries: 5,
+                delayMs: 1000,
                 isRetryableError,
             },
         );

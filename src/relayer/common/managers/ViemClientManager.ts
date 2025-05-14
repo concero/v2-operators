@@ -1,4 +1,11 @@
-import { createPublicClient, createWalletClient, fallback, PublicClient, WalletClient } from "viem";
+import {
+    createPublicClient,
+    createWalletClient,
+    fallback,
+    nonceManager,
+    PublicClient,
+    WalletClient,
+} from "viem";
 
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
@@ -58,7 +65,7 @@ export class ViemClientManager implements RpcUpdateListener {
 
     private initializeClients(chain: ConceroNetwork): ViemClients {
         const privateKey = getEnvVar("OPERATOR_PRIVATE_KEY");
-        const account = privateKeyToAccount(`0x${privateKey}`);
+        const account = privateKeyToAccount(`0x${privateKey}`, { nonceManager });
         const transport = this.createTransport(chain);
 
         const publicClient = createPublicClient({ transport, chain: chain.viemChain });

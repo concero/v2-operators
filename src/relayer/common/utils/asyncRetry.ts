@@ -3,7 +3,7 @@ import { logger } from "./logger";
 export interface RetryOptions {
     maxRetries?: number;
     delayMs?: number;
-    isRetryableError?: (error: any) => boolean;
+    isRetryableError?: (error: any) => Promise<boolean>;
 }
 
 export async function asyncRetry<T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
@@ -17,7 +17,7 @@ export async function asyncRetry<T>(fn: () => Promise<T>, options: RetryOptions 
             return await fn();
         } catch (error) {
             lastError = error;
-            if (isRetryableError(error) && attempt < maxRetries) {
+            if ((await isRetryableError(error)) && attempt < maxRetries) {
                 ++attempt;
                 logger.warn(
                     `Retry attempt ${attempt} failed: ${error.message}. Retrying in ${delayMs}ms...`,
