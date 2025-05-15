@@ -8,20 +8,30 @@ import { submitCLFMessageReport } from "../contractCaller/submitCLFMessageReport
 
 export async function onRouterLogs(logs: Log[], network: ConceroNetwork) {
     const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_ROUTER);
+    const promises = [];
 
     for (const log of decodedLogs) {
         if (log.eventName === eventNames.ConceroMessageSent) {
-            await requestCLFMessageReport(log, network.chainSelector);
+            promises.push(requestCLFMessageReport(log, network.chainSelector));
         }
+    }
+
+    if (promises.length) {
+        await Promise.all(promises);
     }
 }
 
 export async function onVerifierLogs(logs: Log[], network: ConceroNetwork) {
     const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_VERIFIER);
+    const promises = [];
 
     for (const log of decodedLogs) {
         if (log.eventName === eventNames.MessageReport) {
-            await submitCLFMessageReport(log);
+            promises.push(submitCLFMessageReport(log));
         }
+    }
+
+    if (promises.length) {
+        await Promise.all(promises);
     }
 }
