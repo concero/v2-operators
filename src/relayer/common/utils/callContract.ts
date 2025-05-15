@@ -31,7 +31,7 @@ async function executeTransaction(
     });
 
     // @dev TODO: We need to check the status of the tx
-    // await publicClient.waitForTransactionReceipt({ hash });
+    await publicClient.waitForTransactionReceipt({ hash, confirmations: 2 });
 
     return hash;
 }
