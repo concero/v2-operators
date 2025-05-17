@@ -19,6 +19,8 @@ import { logger } from "../utils/logger";
 import { createCustomHttpTransport } from "./customHttpTransport";
 import { HttpRequestError } from "viem";
 import { RpcRequestError } from "viem";
+import { UnknownRpcError } from "viem";
+import { UnknownNodeError } from "viem";
 
 export interface ViemClients {
     walletClient: WalletClient;
@@ -68,7 +70,9 @@ export class ViemClientManager implements RpcUpdateListener {
                     if (
                         error instanceof HttpRequestError ||
                         error instanceof RpcRequestError ||
-                        error instanceof TransactionNotFoundError
+                        error instanceof TransactionNotFoundError ||
+                        error instanceof UnknownRpcError ||
+                        error instanceof UnknownNodeError
                     ) {
                         return false;
                     }
