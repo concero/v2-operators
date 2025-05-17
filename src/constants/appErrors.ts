@@ -32,11 +32,11 @@ const appErrors: Record<AppErrorEnum, AppErrorType> = {
     },
     [AppErrorEnum.UnhandledRejection]: {
         message: "Unhandled promise rejection",
-        isOperational: false,
+        isOperational: true,
     },
     [AppErrorEnum.UncaughtException]: {
         message: "Uncaught exception",
-        isOperational: false,
+        isOperational: true,
     },
     [AppErrorEnum.EnvKeyMissing]: {
         message: "Missing or empty required environment variable",
