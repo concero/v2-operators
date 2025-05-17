@@ -22,7 +22,10 @@ export async function onRouterLogs(logs: Log[], network: ConceroNetwork) {
 }
 
 export async function onVerifierLogs(logs: Log[], network: ConceroNetwork) {
-    const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_VERIFIER);
+    const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_VERIFIER).filter(
+        (log, idx, arr) => idx === arr.findIndex(l => l.transactionHash === log.transactionHash),
+    );
+
     const promises = [];
 
     for (const log of decodedLogs) {

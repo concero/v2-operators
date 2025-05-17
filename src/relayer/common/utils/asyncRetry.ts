@@ -1,4 +1,5 @@
 import { logger } from "./logger";
+import { sleep } from "./sleep";
 
 export interface RetryOptions {
     maxRetries?: number;
@@ -22,7 +23,8 @@ export async function asyncRetry<T>(fn: () => Promise<T>, options: RetryOptions 
                 logger.warn(
                     `Retry attempt ${attempt} failed: ${error.message}. Retrying in ${delayMs}ms...`,
                 );
-                await new Promise(res => setTimeout(res, delayMs));
+
+                await sleep(delayMs);
             } else {
                 throw error;
             }
