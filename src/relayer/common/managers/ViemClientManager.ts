@@ -4,6 +4,7 @@ import {
     fallback,
     nonceManager,
     PublicClient,
+    TransactionNotFoundError,
     WalletClient,
 } from "viem";
 
@@ -16,6 +17,8 @@ import { globalConfig } from "../../../constants/globalConfig";
 import { getEnvVar } from "../utils/getEnvVar";
 import { logger } from "../utils/logger";
 import { createCustomHttpTransport } from "./customHttpTransport";
+import { HttpRequestError } from "viem";
+import { RpcRequestError } from "viem";
 
 export interface ViemClients {
     walletClient: WalletClient;
@@ -59,7 +62,20 @@ export class ViemClientManager implements RpcUpdateListener {
 
         return fallback(
             rpcUrls.map(url => createCustomHttpTransport(url)),
-            globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
+            {
+                ...globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
+                shouldThrow: (error: Error) => {
+                    if (
+                        error instanceof HttpRequestError ||
+                        error instanceof RpcRequestError ||
+                        error instanceof TransactionNotFoundError
+                    ) {
+                        return false;
+                    }
+
+                    return true;
+                },
+            },
         );
     }
 
