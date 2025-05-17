@@ -28,6 +28,7 @@ async function executeTransaction(
             chainId,
             client: publicClient,
         }),
+        gas: 2_000_000n,
     });
 
     // @dev TODO: We need to check the status of the tx
