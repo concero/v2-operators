@@ -65,7 +65,7 @@ export async function callContract(
         return asyncRetry(
             () => executeTransaction(publicClient, walletClient, simulateContractParams),
             {
-                maxRetries: 5,
+                maxRetries: 100,
                 delayMs: 1000,
                 isRetryableError,
             },
