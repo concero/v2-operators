@@ -13,7 +13,7 @@ const globalConfig: GlobalConfig = {
     IGNORED_NETWORK_IDS: [44787],
     WHITELISTED_NETWORK_IDS: {
         // mainnet: [1, 137],
-        // testnet: [421614],
+        testnet: [421614],
         // localhost: [1],
     },
     POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,

@@ -49,18 +49,18 @@ export async function submitCLFMessageReport(log: DecodedLog) {
             throw new Error(`Could not retrieve latest block for chain ${srcChain.name}`);
         }
 
-        // Find the ConceroMessageSent event with our messageId
-        const conceroSentEvent = getAbiItem({
-            abi: globalConfig.ABI.CONCERO_ROUTER,
-            name: eventNames.ConceroMessageSent,
-        }) as AbiEvent;
-
         const logs = await txManager.getLogs(
             {
                 address: srcContractAddress,
-                event: conceroSentEvent,
+                event: getAbiItem({
+                    abi: globalConfig.ABI.CONCERO_ROUTER,
+                    name: eventNames.ConceroMessageSent,
+                }),
                 fromBlock: currentBlock - BigInt(100),
                 toBlock: currentBlock,
+                args: {
+                    messageId,
+                },
             },
             srcChain,
         );

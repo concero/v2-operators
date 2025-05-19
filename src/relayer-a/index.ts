@@ -1,5 +1,6 @@
 import "../common/utils/configureDotEnv";
 
+import { BlockManagerRegistry } from "../common/managers";
 import { AppError, checkGas } from "../common/utils";
 import { initializeManagers } from "../common/utils/initializeManagers";
 import { AppErrorEnum } from "../constants";
@@ -39,6 +40,11 @@ export async function main() {
     await ensureDeposit();
     await ensureOperatorIsRegistered();
     await setupEventListeners();
+
+    const blockManagerRegistry = BlockManagerRegistry.getInstance();
+    for (const blockManager of blockManagerRegistry.getAllBlockManagers()) {
+        await blockManager.startPolling();
+    }
 }
 
 main().catch(globalErrorHandler);

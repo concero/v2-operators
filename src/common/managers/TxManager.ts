@@ -36,8 +36,6 @@ export interface TxSubmissionParams {
     };
 }
 
-// Removed duplicate interface ITxManager, now imported from types/managers/ITxManager
-
 export interface TxAttempt {
     txHash: string;
     submissionBlock: bigint | null;
@@ -86,7 +84,13 @@ export class TxManager extends ManagerBase implements ITxManager {
     private otherTxs: Map<string, ManagedTx> = new Map();
 
     private logWatchers: Map<string, LogWatcher> = new Map();
-    private cachedLogs: Map<string, LogResult[]> = new Map();
+    private cachedLogs: Map<
+        string, // contract address
+        Map<
+            string, // event name (or empty string for all)
+            LogResult[]
+        >
+    > = new Map();
     private blockManagerUnwatchers: Map<string, () => void> = new Map();
 
     private networkManager: NetworkManager;
@@ -125,7 +129,7 @@ export class TxManager extends ManagerBase implements ITxManager {
         if (this.initialized) return;
 
         try {
-            this.txMonitor = new TxMonitor(this, this.viemClientManager);
+            this.txMonitor = TxMonitor.createInstance(this, this.viemClientManager);
 
             const networks = this.networkManager.getActiveNetworks();
             for (const network of networks) {
@@ -291,36 +295,105 @@ export class TxManager extends ManagerBase implements ITxManager {
                     toBlock: endBlock,
                 };
 
-                const logs = await this.getLogs(query, network);
+                // Fetch logs from chain
+                const { publicClient } = this.viemClientManager.getClients(network);
+                let logs;
+                try {
+                    logs = await publicClient.getLogs({
+                        address: query.address,
+                        fromBlock: query.fromBlock,
+                        toBlock: query.toBlock,
+                    } as any);
+                } catch (error) {
+                    logger.error(`[TxManager]: Error fetching logs for ${network.name}`, error);
+                    continue;
+                }
 
-                if (logs.length === 0) continue;
+                if (!logs || logs.length === 0) continue;
 
                 logger.info(
                     `[TxManager]: Found ${logs.length} logs for contract ${address} on ${network.name} in blocks ${startBlock}-${endBlock}`,
                 );
 
-                for (const watcher of watchers) {
-                    try {
-                        const filteredLogs = watcher.event
-                            ? logs.filter(log => {
-                                  const eventTopic = toEventSelector(watcher.event);
-                                  return log.topics[0] === eventTopic;
-                              })
-                            : logs;
+                // Store logs in nested cache by contract address and event name
+                let contractLogs = this.cachedLogs.get(address);
+                if (!contractLogs) {
+                    contractLogs = new Map();
+                    this.cachedLogs.set(address, contractLogs);
+                }
 
-                        if (filteredLogs.length > 0) {
+                // Decode and distribute logs to watchers
+                for (const watcher of watchers) {
+                    let filteredLogs: LogResult[] = [];
+                    const eventName = watcher.event?.name || "";
+
+                    if (watcher.event) {
+                        const eventTopic = toEventSelector(watcher.event);
+                        filteredLogs = logs
+                            .filter(log => log.topics[0] === eventTopic)
+                            .map(log => {
+                                const result: LogResult = {
+                                    address: address as Address,
+                                    data: log.data,
+                                    topics: [...log.topics],
+                                    blockNumber: log.blockNumber,
+                                    transactionHash: log.transactionHash,
+                                    logIndex: log.logIndex ?? 0,
+                                    removed: false,
+                                    chainName: network.name,
+                                };
+                                try {
+                                    result.decodedLog = decodeEventLog({
+                                        abi: [watcher.event!],
+                                        data: log.data,
+                                        topics: log.topics as unknown as [
+                                            `0x${string}`,
+                                            ...`0x${string}`[],
+                                        ],
+                                    });
+                                } catch (error) {
+                                    logger.debug(
+                                        `[TxManager]: Error decoding log for ${network.name}`,
+                                        error,
+                                    );
+                                }
+                                return result;
+                            });
+                    } else {
+                        filteredLogs = logs.map(log => ({
+                            address: address as Address,
+                            data: log.data,
+                            topics: [...log.topics],
+                            blockNumber: log.blockNumber,
+                            transactionHash: log.transactionHash,
+                            logIndex: log.logIndex ?? 0,
+                            removed: false,
+                            chainName: network.name,
+                        }));
+                    }
+
+                    // Store in cache
+                    let eventLogs = contractLogs.get(eventName);
+                    if (!eventLogs) {
+                        eventLogs = [];
+                        contractLogs.set(eventName, eventLogs);
+                    }
+                    eventLogs.push(...filteredLogs);
+
+                    if (filteredLogs.length > 0) {
+                        try {
                             await watcher.onLogs(filteredLogs, network);
+                        } catch (error) {
+                            logger.error(
+                                `[TxManager]: Error in log watcher ${watcher.id} for contract ${address}:`,
+                                error,
+                            );
                         }
-                    } catch (error) {
-                        logger.error(
-                            `[TxManager]: Error in log watcher ${watcher.id} for contract ${address}:`,
-                            error,
-                        );
                     }
                 }
             } catch (error) {
                 logger.error(
-                    `[TxManager]: Error fetching logs for contract ${address} on ${network.name}:`,
+                    `[TxManager]: Error processing logs for contract ${address} on ${network.name}:`,
                     error,
                 );
             }
@@ -372,9 +445,7 @@ export class TxManager extends ManagerBase implements ITxManager {
         }
     }
 
-    private createLogKey(query: LogQuery): string {
-        return `${query.address}_${query.fromBlock}_${query.toBlock}_${JSON.stringify(query.event || "")}`;
-    }
+    // Removed createLogKey, no longer needed
 
     public getClients(network: ConceroNetwork) {
         return this.viemClientManager.getClients(network);
@@ -499,12 +570,25 @@ export class TxManager extends ManagerBase implements ITxManager {
     }
 
     public async getLogs(query: LogQuery, network: ConceroNetwork): Promise<LogResult[]> {
-        const logKey = this.createLogKey(query);
-
-        if (this.cachedLogs.has(logKey)) {
-            return this.cachedLogs.get(logKey) || [];
+        const contractLogs = this.cachedLogs.get(query.address);
+        const eventName = query.event?.name || "";
+        if (contractLogs && contractLogs.has(eventName)) {
+            let logs = contractLogs.get(eventName) || [];
+            // Optionally filter by event.args if provided
+            if (query.event?.args) {
+                logs = logs.filter(log => {
+                    if (!log.decodedLog || !log.decodedLog.args) return false;
+                    // Shallow compare args (customize as needed for deep equality)
+                    for (const [key, value] of Object.entries(query.event!.args!)) {
+                        if (log.decodedLog.args[key] !== value) return false;
+                    }
+                    return true;
+                });
+            }
+            return logs;
         }
 
+        // If not cached, fetch from chain
         const { publicClient } = this.viemClientManager.getClients(network);
 
         let logs;
@@ -547,9 +631,32 @@ export class TxManager extends ManagerBase implements ITxManager {
             return result;
         });
 
-        this.cachedLogs.set(logKey, processedLogs);
+        // Store in cache
+        let contractCache = this.cachedLogs.get(query.address);
+        if (!contractCache) {
+            contractCache = new Map();
+            this.cachedLogs.set(query.address, contractCache);
+        }
+        let eventCache = contractCache.get(eventName);
+        if (!eventCache) {
+            eventCache = [];
+            contractCache.set(eventName, eventCache);
+        }
+        eventCache.push(...processedLogs);
 
-        return processedLogs;
+        // Optionally filter by event.args if provided
+        let filteredLogs = processedLogs;
+        if (query.event?.args) {
+            filteredLogs = processedLogs.filter(log => {
+                if (!log.decodedLog || !log.decodedLog.args) return false;
+                for (const [key, value] of Object.entries(query.event!.args!)) {
+                    if (log.decodedLog.args[key] !== value) return false;
+                }
+                return true;
+            });
+        }
+
+        return filteredLogs;
     }
 
     public override dispose(): void {

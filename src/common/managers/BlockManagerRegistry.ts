@@ -109,6 +109,7 @@ export class BlockManagerRegistry
         }
     }
 
+    //TODO: attempt to refactor createInstance to a base class
     public static createInstance(
         blockCheckpointManager: BlockCheckpointManager,
         networkManager: NetworkManager,
@@ -176,9 +177,7 @@ export class BlockManagerRegistry
     }
 
     public async getBlockManager(networkName: string): Promise<BlockManager | null> {
-        // If we already have a BlockManager for this network, return it
         if (this.blockManagers.has(networkName)) {
-            logger.debug(`[BlockManagerService]: Using cached BlockManager for ${networkName}`);
             return this.blockManagers.get(networkName)!;
         }
 
@@ -191,6 +190,10 @@ export class BlockManagerRegistry
 
         logger.error(`[BlockManagerService]: Network ${networkName} not found`);
         return null;
+    }
+
+    public getAllBlockManagers(): BlockManager[] {
+        return Array.from(this.blockManagers.values());
     }
 
     public getAllManagedNetworks(): string[] {

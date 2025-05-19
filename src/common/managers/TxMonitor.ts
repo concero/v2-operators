@@ -26,6 +26,7 @@ interface MonitoredTransaction {
 }
 
 export class TxMonitor implements ITxMonitor {
+    private static instance: TxMonitor | undefined;
     private transactions: Map<string, MonitoredTransaction> = new Map();
     private txManager: TxManager;
     private viemClientManager: ViemClientManager;
@@ -34,7 +35,22 @@ export class TxMonitor implements ITxMonitor {
     constructor(txManager: TxManager, viemClientManager: ViemClientManager) {
         this.txManager = txManager;
         this.viemClientManager = viemClientManager;
-        logger.info("[TxMonitor]: Transaction monitor initialized");
+        logger.info("[TxMonitor]: initialized successfully");
+    }
+
+    public static createInstance(
+        txManager: TxManager,
+        viemClientManager: ViemClientManager,
+    ): TxMonitor {
+        TxMonitor.instance = new TxMonitor(txManager, viemClientManager);
+        return TxMonitor.instance;
+    }
+
+    public static getInstance(): TxMonitor {
+        if (!TxMonitor.instance) {
+            throw new Error("TxMonitor is not initialized. Call createInstance() first.");
+        }
+        return TxMonitor.instance;
     }
 
     public addTransaction(txHash: string, managedTx: ManagedTx): void {

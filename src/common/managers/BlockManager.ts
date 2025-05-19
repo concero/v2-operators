@@ -70,16 +70,13 @@ export class BlockManager implements IBlockManager {
             blockCheckpointManager,
         );
 
-        // Start the polling process after creation
-        await blockManager.startPolling();
-
         return blockManager;
     }
 
     /**
      * Start the polling process to check for new blocks at regular intervals
      */
-    private async startPolling(): Promise<void> {
+    public async startPolling(): Promise<void> {
         if (this.isPolling) {
             logger.debug(
                 `[BlockManager] ${this.network.name}: Already polling, ignoring start request`,
@@ -89,6 +86,7 @@ export class BlockManager implements IBlockManager {
 
         this.isPolling = true;
 
+        logger.debug(`[BlockManager] ${this.network.name}: Starting block polling`);
         // Perform initial catchup
         await this.performCatchup();
 

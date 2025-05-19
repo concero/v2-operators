@@ -234,10 +234,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
     private filterNetworks(networkType: "mainnet" | "testnet" | "localhost"): ConceroNetwork[] {
         let networks: ConceroNetwork[] = [];
         const ignoredIds = globalConfig.IGNORED_NETWORK_IDS || [];
-        const whitelistedIds =
-            globalConfig.WHITELISTED_NETWORK_IDS[
-                networkType as keyof typeof globalConfig.WHITELISTED_NETWORK_IDS
-            ] || [];
+        const whitelistedIds = globalConfig.WHITELISTED_NETWORK_IDS[networkType] || [];
 
         switch (networkType) {
             case "localhost":
