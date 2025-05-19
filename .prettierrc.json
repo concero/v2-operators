@@ -7,8 +7,25 @@
         "printWidth": 100,
         "tabWidth": 4,
         "trailingComma": "all",
-        "plugins": ["prettier-plugin-jsdoc"],
-        "parser": "typescript"
+        "plugins": ["@trivago/prettier-plugin-sort-imports"],
+        "parser": "typescript",
+        "importOrderSeparation": true,
+        "importOrderSortSpecifiers": true,
+        "importOrder": [
+          "./utils/configureDotEnv",
+          "./utils/configureOperatorEnv",
+          "^viem(.*)$",
+          "^[a-zA-Z](.*)$",
+          "^@(.*)$",
+          "^@concero/(.*)$",
+          "^src/common/(.*)$",
+          "^src/constants(.*)$",
+          "^src/types(.*)$",
+          "^../../common/(.*)$",
+          "^../(.*)$",
+          "^./(.*)$",
+          "^[./]"
+        ]
       }
     }
   ]

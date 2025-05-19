@@ -1,28 +1,28 @@
-import { getEnvVar } from "../relayer/common/utils/getEnvVar";
-import { type GlobalConfig } from "../types/GlobalConfig";
-
 import { Abi } from "viem";
+
 import { abi as conceroRouterAbi } from "../abi/ConceroRouter.json";
 import { abi as conceroVerifierAbi } from "../abi/ConceroVerifier.json";
-import { getRpcServiceBranch } from "./getRpcServiceBranch";
-import { getDeploymentsServiceBranch } from "./getDeploymentsServiceBranch";
-import { getRpcOverride, getRpcExtension } from "./localRpcLoaders";
+import { getEnvVar } from "../common/utils/getEnvVar";
+import { type GlobalConfig } from "../types/GlobalConfig";
+
+import { getRpcExtension, getRpcOverride } from "./localRpcLoaders";
 
 const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar("NETWORK_MODE"),
     OPERATOR_ADDRESS: getEnvVar("OPERATOR_ADDRESS"),
-    IGNORED_NETWORK_IDS: [],
-    // WHITELISTED_NETWORK_IDS: {
-    //     // mainnet: [1, 137],
-    //     testnet: [421614],
-    //     localhost: [1],
-    // },
+    IGNORED_NETWORK_IDS: [44787],
+    WHITELISTED_NETWORK_IDS: {
+        // mainnet: [1, 137],
+        // testnet: [421614],
+        // localhost: [1],
+    },
     POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
+    BLOCK_HISTORY_SIZE: parseInt(getEnvVar("BLOCK_HISTORY_SIZE")) || 400, // Number of blocks to store for reorg detection
     LOG_LEVEL: getEnvVar("LOG_LEVEL") || "info", // "error" | "warn" | "info" | "debug"
     LOG_DIR: "logs",
     URLS: {
-        CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${getRpcServiceBranch()}/output/`,
-        CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${getDeploymentsServiceBranch()}/.env.deployments.${getEnvVar("NETWORK_MODE") === "localhost" || getEnvVar("NETWORK_MODE") === "testnet" ? "testnet" : "mainnet"}`,
+        CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${process.env.RPC_SERVICE_GIT_BRANCH ?? "master"}/output/`,
+        CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${process.env.DEPLOYMENTS_SERVICE_GIT_BRANCH ?? "master"}/.env.deployments.${getEnvVar("NETWORK_MODE") === "localhost" || getEnvVar("NETWORK_MODE") === "testnet" ? "testnet" : "mainnet"}`,
         V2_NETWORKS: {
             MAINNET_SUMMARY:
                 "https://github.com/concero/v2-networks/raw/refs/heads/master/networks/mainnet.json",
@@ -48,7 +48,6 @@ const globalConfig: GlobalConfig = {
             retryCount: 3,
             retryDelay: 2000,
         },
-        CLIENT_ROTATION_INTERVAL_MS: 1000 * 60 * 60 * 1,
     },
     HTTPCLIENT: {
         DEFAULT_TIMEOUT: 5000,
@@ -62,6 +61,22 @@ const globalConfig: GlobalConfig = {
     RPC: {
         OVERRIDE: getRpcOverride(),
         EXTENSION: getRpcExtension(),
+    },
+    TX_MANAGER: {
+        DRY_RUN: getEnvVar("DRY_RUN") === "true" ? true : false,
+        DEFAULT_GAS: 1_000_000n,
+        DEFAULT_CONFIRMATIONS: 3,
+        DEFAULT_RECEIPT_TIMEOUT: 60_000,
+    },
+    NETWORK_MANAGER: {
+        DEFAULT_BLOCK_CONFIRMATIONS: 2,
+        NETWORK_UPDATE_INTERVAL_MS: 1000 * 60 * 60, // 1 hour
+    },
+    BLOCK_MANAGER: {
+        SEQUENTIAL_BATCH_SIZE: 100n,
+        CATCHUP_BATCH_SIZE: 500n,
+        MAX_BLOCKS_TO_PROCESS: 100n,
+        USE_CHECKPOINTS: true,
     },
 };
 

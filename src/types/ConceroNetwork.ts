@@ -4,13 +4,14 @@ export type ConceroTestingNetworkNames = "localhost";
 
 export type ConceroNetwork = {
     id: number;
-    name: "string";
+    name: string;
     type: "mainnet" | "testnet" | "localhost";
     chainSelector: string;
     accounts: string[];
     viemChain: Chain;
     confirmations: number;
-    addresses: {
+    finalityConfirmations?: number;
+    addresses?: {
         conceroVerifier?: Address;
         conceroRouter: Address;
     };
