@@ -1,7 +1,8 @@
-import { AppErrorEnum, globalConfig } from "../../../constants";
-import { AppError, logger } from ".";
+import { AppErrorEnum, globalConfig } from "../../constants";
 import { NetworkManager } from "../managers/NetworkManager";
 import { ViemClientManager } from "../managers/ViemClientManager";
+
+import { AppError, logger } from ".";
 
 const MINIMUM_NATIVE_VALUE = 1_000_000; // 0.001 ETH
 
