@@ -445,8 +445,6 @@ export class TxManager extends ManagerBase implements ITxManager {
         }
     }
 
-    // Removed createLogKey, no longer needed
-
     public getClients(network: ConceroNetwork) {
         return this.viemClientManager.getClients(network);
     }
@@ -469,7 +467,6 @@ export class TxManager extends ManagerBase implements ITxManager {
                 params.chain,
             );
 
-            // Prepare transaction parameters
             const contractParams = {
                 chain: params.chain.viemChain,
                 address: params.contractAddress as Address,
