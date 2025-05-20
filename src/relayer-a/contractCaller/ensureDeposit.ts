@@ -1,8 +1,9 @@
 import { Hash, PublicClient } from "viem";
 
-import { globalConfig } from "../../../constants";
-import { callContract, logger } from "../../common/utils";
 import { DeploymentManager, NetworkManager, ViemClientManager } from "../../common/managers";
+import { callContract, logger } from "../../common/utils";
+
+import { globalConfig } from "../../constants";
 
 /**
  * @returns {bigint} The minimum deposit amount.
@@ -43,12 +44,12 @@ async function fetchDepositAndDepositIfNeeded() {
     const viemClientManager = ViemClientManager.getInstance();
     const deploymentManager = DeploymentManager.getInstance();
 
-    const conceroVerifierNetwork = networkManager.getVerifierNetwork();
-    const { publicClient, walletClient, account } =
-        viemClientManager.getClients(conceroVerifierNetwork);
+    const verifierNetwork = networkManager.getVerifierNetwork();
+    const verifierAddress = await deploymentManager.getConceroVerifier();
+    const { publicClient, walletClient, account } = viemClientManager.getClients(verifierNetwork);
 
-    const requiredDeposit = (await getMinimumDeposit()) * 200n;
-    const currentDeposit = await getCurrentOperatorDeposit();
+    const requiredDeposit = (await getMinimumDeposit(publicClient, verifierAddress)) * 200n;
+    const currentDeposit = await getCurrentOperatorDeposit(publicClient, verifierAddress);
 
     if (currentDeposit >= requiredDeposit) {
         logger.info(`Sufficient deposit of ${currentDeposit} already exists`);
@@ -56,8 +57,8 @@ async function fetchDepositAndDepositIfNeeded() {
     }
 
     const txHash = await callContract(publicClient, walletClient, {
-        chain: conceroVerifierNetwork.viemChain,
-        address: await deploymentManager.getConceroVerifier(),
+        chain: verifierNetwork.viemChain,
+        address: verifierAddress,
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "operatorDeposit",
         args: [globalConfig.OPERATOR_ADDRESS],

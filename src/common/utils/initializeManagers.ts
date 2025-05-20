@@ -1,10 +1,13 @@
-import { BlockCheckpointManager } from "../managers/BlockCheckpointManager";
-import { BlockManagerRegistry } from "../managers/BlockManagerRegistry";
-import { DeploymentManager } from "../managers/DeploymentManager";
-import { NetworkManager } from "../managers/NetworkManager";
-import { RpcManager } from "../managers/RpcManager";
-import { TxManager } from "../managers/TxManager";
-import { ViemClientManager } from "../managers/ViemClientManager";
+import {
+    BlockCheckpointManager,
+    BlockManagerRegistry,
+    DeploymentManager,
+    NetworkManager,
+    NonceManager,
+    RpcManager,
+    TxManager,
+    ViemClientManager,
+} from "../managers";
 
 import { logger } from "./logger";
 
@@ -32,6 +35,8 @@ export async function initializeManagers(): Promise<void> {
             blockManagerRegistry,
         );
 
+        const nonceManager = NonceManager.createInstance();
+
         // Initialize all managers in proper dependency order
         await rpcManager.initialize();
         await viemClientManager.initialize();
@@ -40,6 +45,7 @@ export async function initializeManagers(): Promise<void> {
         await blockCheckpointManager.initialize();
         await blockManagerRegistry.initialize();
         await txManager.initialize();
+        await nonceManager.initialize();
     } catch (error) {
         logger.error("[Managers]: Failed to initialize managers", error);
         throw new Error(

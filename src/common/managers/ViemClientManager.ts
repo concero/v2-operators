@@ -1,13 +1,21 @@
-import { PublicClient, WalletClient, createPublicClient, createWalletClient, fallback } from "viem";
+import {
+    PublicClient,
+    TransactionNotFoundError,
+    WalletClient,
+    createPublicClient,
+    createWalletClient,
+    fallback,
+} from "viem";
+import { HttpRequestError, RpcRequestError, UnknownNodeError, UnknownRpcError } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
 
-import { globalConfig } from "../../constants/globalConfig";
+import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
+import { getEnvVar } from "../utils";
+import { logger } from "../utils";
 import { createCustomHttpTransport } from "../utils/customHttpTransport";
-import { getEnvVar } from "../utils/getEnvVar";
-import { logger } from "../utils/logger";
 
 import { ManagerBase } from "./ManagerBase";
 
@@ -59,7 +67,22 @@ export class ViemClientManager
 
         return fallback(
             rpcUrls.map(url => createCustomHttpTransport(url)),
-            globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
+            {
+                ...globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
+                shouldThrow: (error: Error) => {
+                    if (
+                        error instanceof HttpRequestError ||
+                        error instanceof RpcRequestError ||
+                        error instanceof TransactionNotFoundError ||
+                        error instanceof UnknownRpcError ||
+                        error instanceof UnknownNodeError
+                    ) {
+                        return false;
+                    }
+
+                    return true;
+                },
+            },
         );
     }
 

@@ -1,10 +1,15 @@
-import { globalConfig } from "../../../constants";
-import { logger } from "../utils";
-import { NetworkManager } from "../managers/NetworkManager";
-import { ViemClientManager } from "../managers/ViemClientManager";
-import { getChainOperatorMinBalance } from "./getChainOperatorMinBalance";
+import { PublicClient, formatUnits } from "viem";
+
+import { ConceroNetwork } from "@concero/contract-utils";
 import { WebClient } from "@slack/web-api";
-import { formatUnits } from "viem";
+
+import { globalConfig } from "../../constants";
+import { NetworkManager } from "../managers";
+import { ViemClientManager } from "../managers";
+import { logger } from "../utils";
+
+const DEFAULT_GAS_LIMIT = 1_000_000n;
+const SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE = 10n;
 
 async function notifyInSlack(message: string) {
     try {
@@ -30,6 +35,13 @@ async function notifyInSlack(message: string) {
     }
 }
 
+export async function getChainOperatorMinBalance(publicClient: PublicClient) {
+    const currentGasPrice = await publicClient.getGasPrice();
+    const averageTxCostInWei = currentGasPrice * DEFAULT_GAS_LIMIT;
+
+    return averageTxCostInWei * SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE;
+}
+
 async function checkAndNotifyInsufficientGas() {
     const operatorAddress = globalConfig.OPERATOR_ADDRESS;
     const viemClientManager = ViemClientManager.getInstance();
@@ -49,7 +61,7 @@ async function checkAndNotifyInsufficientGas() {
                 publicClient.getBalance({
                     address: operatorAddress,
                 }),
-                getChainOperatorMinBalance(network),
+                getChainOperatorMinBalance(publicClient),
             ]);
 
             return { network, balance, operatorMinBalance };

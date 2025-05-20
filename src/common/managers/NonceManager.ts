@@ -1,4 +1,6 @@
 import { Address, Client, createPublicClient } from "viem";
+
+import { ManagerBase } from "./ManagerBase";
 import { Singleton } from "./Singleton";
 
 interface INonceManagerParams {
@@ -10,11 +12,32 @@ interface IGetNonceManagerParams extends INonceManagerParams {
     client: Client;
 }
 
-export class NonceManagerSource extends Singleton {
+export class NonceManager extends ManagerBase {
+    private static instance: NonceManager | null = null;
     private noncesMap: Record<number, number> = {};
 
     protected constructor() {
         super();
+    }
+
+    static createInstance(): NonceManager {
+        if (!NonceManager.instance) {
+            NonceManager.instance = new NonceManager();
+        }
+        return NonceManager.instance;
+    }
+
+    static getInstance(): NonceManager {
+        if (!NonceManager.instance) {
+            throw new Error(
+                "NonceManager instance has not been created. Call createInstance() first.",
+            );
+        }
+        return NonceManager.instance;
+    }
+
+    static dispose(): void {
+        NonceManager.instance = null;
     }
 
     async get(parameters: IGetNonceManagerParams) {
