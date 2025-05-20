@@ -30,3 +30,7 @@ logs/
 
 rpcs.override.json
 rpcs.extension.json
+
+# Prisma/SQLite databases
+prisma/*.db
+*.db
