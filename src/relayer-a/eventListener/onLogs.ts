@@ -5,8 +5,8 @@ import { logger } from "../../common/utils";
 import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { DecodedLog } from "../../types/DecodedLog";
-import { requestCLFMessageReport } from "../contractCaller/requestCLFMessageReport";
-import { submitCLFMessageReport } from "../contractCaller/submitCLFMessageReport";
+import { requestCLFMessageReport } from "../businessLogic/requestCLFMessageReport";
+import { submitCLFMessageReport } from "../businessLogic/submitCLFMessageReport";
 
 /**
  * Handle ConceroMessageSent events from ConceroRouter.

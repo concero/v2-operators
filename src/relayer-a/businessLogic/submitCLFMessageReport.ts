@@ -10,7 +10,6 @@ import { decodeCLFReport, decodeMessageReportResult, logger } from "../../common
 
 import { globalConfig } from "../../constants";
 import { DecodedLog } from "../../types/DecodedLog";
-import { eventNames } from "../constants";
 
 export async function submitCLFMessageReport(log: DecodedLog) {
     const networkManager = NetworkManager.getInstance();
@@ -54,7 +53,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
                 address: srcContractAddress,
                 event: getAbiItem({
                     abi: globalConfig.ABI.CONCERO_ROUTER,
-                    name: eventNames.ConceroMessageSent,
+                    name: "ConceroMessageSent",
                 }),
                 fromBlock: currentBlock - BigInt(100),
                 toBlock: currentBlock,
@@ -87,7 +86,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         // Find the ConceroMessageSent event
         const conceroMessageSentLog = decodedLogs.find(
             log =>
-                log.eventName === eventNames.ConceroMessageSent &&
+                log.eventName === "ConceroMessageSent" &&
                 log.args?.messageId?.toLowerCase() === messageId.toLowerCase(),
         );
 

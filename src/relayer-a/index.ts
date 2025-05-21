@@ -5,8 +5,8 @@ import { AppError, checkGas } from "../common/utils";
 import { initializeManagers } from "../common/utils/initializeManagers";
 import { AppErrorEnum } from "../constants";
 
-import { ensureDeposit } from "./contractCaller/ensureDeposit";
-import { ensureOperatorIsRegistered } from "./contractCaller/ensureOperatorIsRegistered";
+import { ensureDeposit } from "./businessLogic/ensureDeposit";
+import { ensureOperatorIsRegistered } from "./businessLogic/ensureOperatorIsRegistered";
 import { setupEventListeners } from "./eventListener/setupEventListeners";
 
 const globalErrorHandler = (error: Error) => {

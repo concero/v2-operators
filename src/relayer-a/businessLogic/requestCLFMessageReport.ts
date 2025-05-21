@@ -7,8 +7,8 @@ import { ViemClientManager } from "../../common/managers/ViemClientManager";
 import { logger } from "../../common/utils";
 
 import { globalConfig } from "../../constants";
+import { eventEmitter } from "../../constants/eventEmitter";
 import { DecodedLog } from "../../types/DecodedLog";
-import { config } from "../constants";
 
 export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector: string) {
     const network = NetworkManager.getInstance().getVerifierNetwork();
@@ -48,7 +48,7 @@ export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector:
             logger.info(
                 `[DRY_RUN][${network.name}] CLF message report requested with hash: ${dryRunTxHash}`,
             );
-            config.eventEmitter.emit("requestMessageReport", { txHash: dryRunTxHash });
+            eventEmitter.emit("requestMessageReport", { txHash: dryRunTxHash });
             return;
         }
 
@@ -67,7 +67,9 @@ export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector:
 
         const latestAttempt = managedTx.attempts[managedTx.attempts.length - 1];
         if (latestAttempt && latestAttempt.txHash) {
-            config.eventEmitter.emit("requestMessageReport", { txHash: latestAttempt.txHash });
+            eventEmitter.emit("requestMessageReport", {
+                txHash: latestAttempt.txHash,
+            });
             logger.info(
                 `[${network.name}] CLF message report requested with hash: ${latestAttempt.txHash}`,
             );

@@ -8,8 +8,8 @@ import { DeploymentManager, NetworkManager, ViemClientManager } from "../../comm
 import { callContract, logger } from "../../common/utils";
 
 import { globalConfig } from "../../constants";
+import { eventEmitter } from "../../constants/eventEmitter";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { config } from "../constants";
 
 const ChainType = {
     EVM: 0,
@@ -79,7 +79,7 @@ async function requestOperatorRegistration(
         account,
     });
 
-    config.eventEmitter.emit("requestOperatorRegistration", { txHash: transactionHash });
+    eventEmitter.emit("requestOperatorRegistration", { txHash: transactionHash });
 
     return transactionHash;
 }
@@ -177,5 +177,5 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
 
     logger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
 
-    config.eventEmitter.emit("operatorRegistered", { txHash: confirmedTxHash });
+    eventEmitter.emit("operatorRegistered", { txHash: confirmedTxHash });
 }
