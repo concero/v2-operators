@@ -1,5 +1,4 @@
-import { AbiEvent, Address, Log, TransactionReceipt, decodeEventLog } from "viem";
-import { toEventSelector } from "viem";
+import { AbiEvent, Address, Log, TransactionReceipt, decodeEventLog, toEventSelector } from "viem";
 
 import { randomUUID } from "crypto";
 

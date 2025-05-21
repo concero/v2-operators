@@ -1,7 +1,6 @@
 import { Address, Client, createPublicClient } from "viem";
 
 import { ManagerBase } from "./ManagerBase";
-import { Singleton } from "./Singleton";
 
 interface INonceManagerParams {
     address: Address;

@@ -1,20 +1,22 @@
 import {
+    HttpRequestError,
     PublicClient,
+    RpcRequestError,
     TransactionNotFoundError,
+    UnknownNodeError,
+    UnknownRpcError,
     WalletClient,
     createPublicClient,
     createWalletClient,
     fallback,
 } from "viem";
-import { HttpRequestError, RpcRequestError, UnknownNodeError, UnknownRpcError } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
 
 import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
-import { getEnvVar } from "../utils";
-import { logger } from "../utils";
+import { getEnvVar, logger } from "../utils";
 import { createCustomHttpTransport } from "../utils/customHttpTransport";
 
 import { ManagerBase } from "./ManagerBase";
