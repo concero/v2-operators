@@ -15,7 +15,7 @@ import { submitCLFMessageReport } from "../businessLogic/submitCLFMessageReport"
 export async function onRouterConceroSentLogs(logs: Log[], network: ConceroNetwork) {
     if (logs.length === 0) return;
 
-    logger.info(
+    logger.debug(
         `[onRouterConceroSentLogs] Processing ${logs.length} ConceroMessageSent logs from ${network.name}`,
     );
 
@@ -99,107 +99,119 @@ export async function onRouterConceroSentLogs(logs: Log[], network: ConceroNetwo
  * Handle ConceroMessageReceived events from ConceroRouter.
  * This is triggered when a message is received on a destination chain.
  */
-export async function onRouterConceroReceivedLogs(logs: Log[], network: ConceroNetwork) {
-    if (logs.length === 0) return;
+// export async function onRouterConceroReceivedLogs(logs: Log[], network: ConceroNetwork) {
+//     if (logs.length === 0) return;
 
-    logger.info(
-        `[onRouterConceroReceivedLogs] Processing ${logs.length} ConceroMessageReceived logs from ${network.name}`,
-    );
+//     logger.debug(
+//         `[onRouterConceroReceivedLogs] Processing ${logs.length} ConceroMessageReceived logs from ${network.name}`,
+//     );
 
-    for (const log of logs) {
-        try {
-            let decodedData;
-            try {
-                const receivedEvent = getAbiItem({
-                    abi: globalConfig.ABI.CONCERO_ROUTER,
-                    name: "ConceroMessageReceived",
-                });
-                decodedData = decodeEventLog({
-                    abi: [receivedEvent],
-                    data: log.data,
-                    topics: log.topics as any,
-                });
-            } catch (decodeError) {
-                logger.error(`[onRouterConceroReceivedLogs] Failed to decode log: `, decodeError);
-                continue;
-            }
+//     const promises = [];
 
-            const args = decodedData ? decodedData.args : null;
-            let messageId: any;
+//     for (const log of logs) {
+//         promises.push(async () => {
+//             try {
+//                 let decodedData;
+//                 try {
+//                     const receivedEvent = getAbiItem({
+//                         abi: globalConfig.ABI.CONCERO_ROUTER,
+//                         name: "ConceroMessageReceived",
+//                     });
+//                     decodedData = decodeEventLog({
+//                         abi: [receivedEvent],
+//                         data: log.data,
+//                         topics: log.topics as any,
+//                     });
+//                 } catch (decodeError) {
+//                     return;
+//                 }
 
-            try {
-                if (!args || typeof args !== "object") {
-                    throw new Error("Invalid args for ConceroMessageReceived event");
-                }
-                messageId = args.id;
-            } catch (ex) {
-                messageId = log.topics[1];
-            }
+//                 const args = decodedData ? decodedData.args : null;
+//                 let messageId: any;
 
-            logger.info(
-                `[onRouterConceroReceivedLogs] Message received with ID: ${messageId} on ${network.name}`,
-            );
-        } catch (error) {
-            logger.error(
-                `[onRouterConceroReceivedLogs] Error processing log on ${network.name}:`,
-                error,
-            );
-        }
-    }
-}
+//                 try {
+//                     if (!args || typeof args !== "object") {
+//                         throw new Error("Invalid args for ConceroMessageReceived event");
+//                     }
+//                     messageId = args.id;
+//                 } catch (ex) {
+//                     messageId = log.topics[1];
+//                 }
+
+//                 logger.info(
+//                     `[onRouterConceroReceivedLogs] Message received with ID: ${messageId} on ${network.name}`,
+//                 );
+//             } catch (error) {
+//                 logger.error(
+//                     `[onRouterConceroReceivedLogs] Error processing log on ${network.name}:`,
+//                     error,
+//                 );
+//             }
+//         });
+//     }
+
+//     await Promise.all(promises);
+// }
 
 /**
  * Handle MessageReportRequested events from ConceroVerifier.
  * This is triggered when a message report is requested from the verifier.
  */
-export async function onVerifierMessageReportRequestedLogs(logs: Log[], network: ConceroNetwork) {
-    if (logs.length === 0) return;
+// export async function onVerifierMessageReportRequestedLogs(logs: Log[], network: ConceroNetwork) {
+//     if (logs.length === 0) return;
 
-    logger.info(
-        `[onVerifierMessageReportRequestedLogs] Processing ${logs.length} MessageReportRequested logs`,
-    );
+//     logger.debug(
+//         `[onVerifierMessageReportRequestedLogs] Processing ${logs.length} MessageReportRequested logs`,
+//     );
 
-    for (const log of logs) {
-        try {
-            let decodedData;
-            try {
-                const requestedEvent = getAbiItem({
-                    abi: globalConfig.ABI.CONCERO_VERIFIER,
-                    name: "MessageReportRequested",
-                });
-                decodedData = decodeEventLog({
-                    abi: [requestedEvent],
-                    data: log.data,
-                    topics: log.topics as any,
-                });
-            } catch (decodeError) {
-                logger.error(
-                    `[onVerifierMessageReportRequestedLogs] Failed to decode log: `,
-                    decodeError,
-                );
-                continue;
-            }
+//     const promises = [];
 
-            const args = decodedData ? decodedData.args : null;
-            let messageId: any;
+//     for (const log of logs) {
+//         promises.push(
+//             (async () => {
+//                 try {
+//                     let decodedData;
+//                     try {
+//                         const requestedEvent = getAbiItem({
+//                             abi: globalConfig.ABI.CONCERO_VERIFIER,
+//                             name: "MessageReportRequested",
+//                         });
+//                         decodedData = decodeEventLog({
+//                             abi: [requestedEvent],
+//                             data: log.data,
+//                             topics: log.topics as any,
+//                         });
+//                     } catch {
+//                         return;
+//                     }
 
-            try {
-                if (!args || typeof args !== "object") {
-                    throw new Error("Invalid args for MessageReportRequested event");
-                }
-                messageId = args.messageId;
-            } catch (ex) {
-                messageId = log.topics[1];
-            }
+//                     const args = decodedData ? decodedData.args : null;
+//                     let messageId: any;
 
-            logger.info(
-                `[onVerifierMessageReportRequestedLogs] Report requested for messageId: ${messageId}`,
-            );
-        } catch (error) {
-            logger.error(`[onVerifierMessageReportRequestedLogs] Error processing log:`, error);
-        }
-    }
-}
+//                     try {
+//                         if (!args || typeof args !== "object") {
+//                             throw new Error("Invalid args for MessageReportRequested event");
+//                         }
+//                         messageId = args.messageId;
+//                     } catch (ex) {
+//                         messageId = log.topics[1];
+//                     }
+
+//                     logger.info(
+//                         `[onVerifierMessageReportRequestedLogs] Report requested for messageId: ${messageId}`,
+//                     );
+//                 } catch (error) {
+//                     logger.error(
+//                         `[onVerifierMessageReportRequestedLogs] Error processing log:`,
+//                         error,
+//                     );
+//                 }
+//             })(),
+//         );
+//     }
+
+//     await Promise.all(promises);
+// }
 
 /**
  * Handle MessageReport events from ConceroVerifier.
@@ -208,53 +220,60 @@ export async function onVerifierMessageReportRequestedLogs(logs: Log[], network:
 export async function onVerifierMessageReportLogs(logs: Log[], network: ConceroNetwork) {
     if (logs.length === 0) return;
 
-    logger.info(`[onVerifierMessageReportLogs] Processing ${logs.length} MessageReport logs`);
+    logger.debug(`[onVerifierMessageReportLogs] Processing ${logs.length} MessageReport logs`);
+
+    const promises = [];
 
     for (const log of logs) {
-        try {
-            let decodedData;
-            try {
-                const reportEvent = getAbiItem({
-                    abi: globalConfig.ABI.CONCERO_VERIFIER,
-                    name: "MessageReport",
-                });
-                decodedData = decodeEventLog({
-                    abi: [reportEvent],
-                    data: log.data,
-                    topics: log.topics as any,
-                });
-            } catch (decodeError) {
-                logger.error(`[onVerifierMessageReportLogs] Failed to decode log: `, decodeError);
-                continue;
-            }
+        promises.push(
+            (async () => {
+                try {
+                    let decodedData;
+                    try {
+                        const reportEvent = getAbiItem({
+                            abi: globalConfig.ABI.CONCERO_VERIFIER,
+                            name: "MessageReport",
+                        });
+                        decodedData = decodeEventLog({
+                            abi: [reportEvent],
+                            data: log.data,
+                            topics: log.topics as any,
+                        });
+                    } catch {
+                        return;
+                    }
 
-            const args = decodedData ? decodedData.args : null;
-            let messageId: any;
+                    const args = decodedData ? decodedData.args : null;
+                    let messageId: any;
 
-            try {
-                if (!args || typeof args !== "object") {
-                    throw new Error("Invalid args for MessageReport event");
+                    try {
+                        if (!args || typeof args !== "object") {
+                            throw new Error("Invalid args for MessageReport event");
+                        }
+                        messageId = args.messageId;
+                    } catch (ex) {
+                        messageId = log.topics[1];
+                    }
+
+                    logger.info(
+                        `[onVerifierMessageReportLogs] Report available for messageId: ${messageId}`,
+                    );
+
+                    const decodedLog: DecodedLog = {
+                        ...(log as any),
+                        args: {
+                            messageId,
+                        },
+                        eventName: "MessageReport",
+                    };
+
+                    return submitCLFMessageReport(decodedLog);
+                } catch (error) {
+                    logger.error(`[onVerifierMessageReportLogs] Error processing log:`, error);
                 }
-                messageId = args.messageId;
-            } catch (ex) {
-                messageId = log.topics[1];
-            }
-
-            logger.info(
-                `[onVerifierMessageReportLogs] Report available for messageId: ${messageId}`,
-            );
-
-            const decodedLog: DecodedLog = {
-                ...(log as any),
-                args: {
-                    messageId,
-                },
-                eventName: "MessageReport",
-            };
-
-            await submitCLFMessageReport(decodedLog);
-        } catch (error) {
-            logger.error(`[onVerifierMessageReportLogs] Error processing log:`, error);
-        }
+            })(),
+        );
     }
+
+    await Promise.all(promises);
 }
