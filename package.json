@@ -10,6 +10,8 @@
     "format": "prettier --config .prettierrc.json --write **/*.{ts,json}",
     "start:relayerA": "bun ./src/relayer-a/index.ts",
     "check-updates": "npx npm-check-updates",
+    "prisma:reset": "npx prisma migrate reset",
+    "prisma:studio": "npx prisma studio --schema=prisma/schema.prisma",
     "prepare": "husky",
     "test": "jest"
   },

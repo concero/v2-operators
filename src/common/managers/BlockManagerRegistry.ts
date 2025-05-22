@@ -176,19 +176,12 @@ export class BlockManagerRegistry
         return blockManager;
     }
 
-    public async getBlockManager(networkName: string): Promise<BlockManager | null> {
+    public getBlockManager(networkName: string): BlockManager | null {
         if (this.blockManagers.has(networkName)) {
             return this.blockManagers.get(networkName)!;
         }
 
-        // Try to find the network and create a BlockManager for it
-        const network = this.networkManager.getNetworkByName(networkName);
-        if (network) {
-            logger.debug(`[BlockManagerService]: Creating new BlockManager for ${networkName}`);
-            return await this.ensureBlockManagerForNetwork(network);
-        }
-
-        logger.error(`[BlockManagerService]: Network ${networkName} not found`);
+        logger.warn(`[BlockManagerService]: BlockManager for ${networkName} not found`);
         return null;
     }
 
@@ -201,7 +194,7 @@ export class BlockManagerRegistry
     }
 
     public async getLatestBlockForChain(networkName: string): Promise<bigint | null> {
-        const blockManager = await this.getBlockManager(networkName);
+        const blockManager = this.getBlockManager(networkName);
         if (!blockManager) {
             logger.error(`[BlockManagerService]: BlockManager for ${networkName} not found`);
             return null;

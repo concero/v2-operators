@@ -9,7 +9,8 @@ import {
 } from "viem";
 import { NonceTooLowError } from "viem";
 
-import { AppErrorEnum, globalConfig } from "../../constants";
+import { AppErrorEnum } from "../../constants";
+import { globalConfig } from "../../constants/globalConfig";
 import { NonceManager } from "../managers";
 
 import { AppError } from "./AppError";
@@ -18,23 +19,36 @@ import { asyncRetry } from "./asyncRetry";
 async function executeTransaction(
     publicClient: PublicClient,
     walletClient: WalletClient,
-    simulateContractParams: SimulateContractParameters,
+    contractParams: SimulateContractParameters,
 ) {
     const chainId = publicClient.chain!.id;
     const address = walletClient.account!.address;
 
     const nonceManager = NonceManager.getInstance();
-    const hash = await walletClient.writeContract({
-        ...simulateContractParams,
+
+    let paramsToSend = {
+        ...contractParams,
         nonce: await nonceManager.consume({
             address,
             chainId,
             client: publicClient,
         }),
         gas: globalConfig.VIEM.WRITE_CONTRACT.gas,
-    });
+    };
 
-    return hash;
+    let txHash: string;
+
+    if (globalConfig.VIEM.SIMULATE_TX) {
+        const { request } = await publicClient.simulateContract(contractParams);
+        txHash = await walletClient.writeContract({
+            ...request,
+            gas: globalConfig.VIEM.WRITE_CONTRACT.gas,
+        } as any);
+    } else {
+        txHash = await walletClient.writeContract(paramsToSend as any);
+    }
+
+    return txHash;
 }
 
 export async function callContract(

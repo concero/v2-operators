@@ -35,9 +35,10 @@ type GlobalConfig = {
         RETRY_DELAY: number;
     };
     VIEM: {
-        RECEIPT: WaitForTransactionReceiptParameters;
-        WRITE_CONTRACT: WriteContractParameters;
-        FALLBACK_TRANSPORT_OPTIONS: FallbackTransportConfig;
+        RECEIPT: Partial<WaitForTransactionReceiptParameters>;
+        WRITE_CONTRACT: Partial<WriteContractParameters>;
+        FALLBACK_TRANSPORT_OPTIONS: Partial<FallbackTransportConfig>;
+        SIMULATE_TX: boolean;
     };
     OPERATOR_ADDRESS: Address;
     ABI: {

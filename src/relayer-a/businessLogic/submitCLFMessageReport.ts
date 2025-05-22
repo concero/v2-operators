@@ -1,6 +1,8 @@
 import { AbiEvent, decodeEventLog, getAbiItem } from "viem";
 
 import {
+    BlockManager,
+    BlockManagerRegistry,
     DeploymentManager,
     NetworkManager,
     TxManager,
@@ -15,7 +17,12 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     const networkManager = NetworkManager.getInstance();
     const viemClientManager = ViemClientManager.getInstance();
     const deploymentManager = DeploymentManager.getInstance();
+    const blockManagerRegistry = BlockManagerRegistry.getInstance();
     const txManager = TxManager.getInstance();
+
+    // Get active networks once at the beginning
+    const activeNetworks = networkManager.getActiveNetworks();
+    const activeNetworkNames = activeNetworks.map(network => network.name);
 
     try {
         const { transactionHash } = log;
@@ -37,13 +44,27 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 
         // 2. go to src chain and fetch original message bytes
         const srcChain = networkManager.getNetworkBySelector(srcChainSelector.toString());
+
         if (!srcChain) {
             throw new Error(`No source chain found for selector ${srcChainSelector}`);
         }
+
+        if (!activeNetworkNames.includes(srcChain.name)) {
+            logger.warn(
+                `[submitCLFMessageReport]: ${srcChain.name} is not active. Skipping message submission.`,
+            );
+            return;
+        }
+
         const srcContractAddress = await deploymentManager.getRouterByChainName(srcChain.name);
 
-        // Use BlockManager via TxManager to get the latest block for the chain
-        const currentBlock = await txManager.getLatestBlockForChain(srcChain);
+        const srcBlockManager = blockManagerRegistry.getBlockManager(srcChain.name);
+        if (!srcBlockManager) {
+            logger.error(`[submitCLFMessageReport]: No BlockManager for ${srcChain.name}`);
+            return;
+        }
+
+        const currentBlock = await srcBlockManager.getLatestBlock();
         if (!currentBlock) {
             throw new Error(`Could not retrieve latest block for chain ${srcChain.name}`);
         }
@@ -55,7 +76,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
                     abi: globalConfig.ABI.CONCERO_ROUTER,
                     name: "ConceroMessageSent",
                 }),
-                fromBlock: currentBlock - BigInt(100),
+                fromBlock: currentBlock - BigInt(100), //TODO: report must include srcBlockNumber, 100 blocks is very unreliable
                 toBlock: currentBlock,
                 args: {
                     messageId,
@@ -100,6 +121,19 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         const dstChain = networkManager.getNetworkBySelector(dstChainSelector.toString());
         if (!dstChain) {
             throw new Error(`No destination chain found for selector ${dstChainSelector}`);
+        }
+
+        if (!activeNetworkNames.includes(dstChain.name)) {
+            logger.warn(
+                `[submitCLFMessageReport]: ${dstChain.name} is not active. Skipping message submission.`,
+            );
+            return;
+        }
+
+        const dstBlockManager = blockManagerRegistry.getBlockManager(dstChain.name);
+        if (!dstBlockManager) {
+            logger.error(`[submitCLFMessageReport]: No BlockManager for ${dstChain.name}`);
+            return;
         }
 
         const dstConceroRouter = await deploymentManager.getRouterByChainName(dstChain.name);

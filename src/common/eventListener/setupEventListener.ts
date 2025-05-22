@@ -27,7 +27,7 @@ export async function setupEventListener<T>(
     );
 
     // Create a log watcher in TxManager with specific event filter if provided
-    const watcherId = txManager.createLogWatcher(
+    const watcherId = txManager.logWatcher.create(
         contractAddress,
         network.name,
         async (logs, network) => {
@@ -47,7 +47,7 @@ export async function setupEventListener<T>(
 
     return {
         stop: () => {
-            txManager.removeLogWatcher(watcherId);
+            txManager.logWatcher.remove(watcherId);
             logger.info(
                 `[${network.name}] Stopped monitoring contract ${contractAddress} for ${eventName}`,
             );

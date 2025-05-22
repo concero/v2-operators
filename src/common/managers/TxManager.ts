@@ -5,7 +5,8 @@ import { randomUUID } from "crypto";
 import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { ITxManager } from "../../types/managers/ITxManager";
-import { logger } from "../utils";
+import { callContract as genericCallContract } from "../utils/callContract";
+import { logger } from "../utils/logger";
 
 import { BlockManagerRegistry } from "./BlockManagerRegistry";
 import { ManagerBase } from "./ManagerBase";
@@ -77,12 +78,16 @@ export interface LogWatcher {
 export class TxManager extends ManagerBase implements ITxManager {
     private static instance: TxManager;
 
-    private conceroSentTxs: Map<string, ManagedTx> = new Map();
-    private requestMessageReportTxs: Map<string, ManagedTx> = new Map();
-    private submitMessageReportTxs: Map<string, ManagedTx> = new Map();
-    private otherTxs: Map<string, ManagedTx> = new Map();
+    private transactions: Map<string, ManagedTx> = new Map();
+    private txByType: Map<TxType, Set<string>> = new Map([
+        [TxType.ConceroSent, new Set()],
+        [TxType.RequestMessageReport, new Set()],
+        [TxType.SubmitMessageReport, new Set()],
+        [TxType.Other, new Set()],
+    ]);
+    private txHashToId: Map<string, string> = new Map();
 
-    private logWatchers: Map<string, LogWatcher> = new Map();
+    public logWatchers: Map<string, LogWatcher> = new Map();
     private cachedLogs: Map<
         string, // contract address
         Map<
@@ -94,26 +99,26 @@ export class TxManager extends ManagerBase implements ITxManager {
 
     private networkManager: NetworkManager;
     private viemClientManager: ViemClientManager;
-    private blockManagerService: BlockManagerRegistry;
+    private blockManagerRegistry: BlockManagerRegistry;
     private txMonitor!: TxMonitor;
 
     private constructor(
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
-        blockManagerService: BlockManagerRegistry,
+        blockManagerRegistry: BlockManagerRegistry,
     ) {
         super();
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
-        this.blockManagerService = blockManagerService;
+        this.blockManagerRegistry = blockManagerRegistry;
     }
 
     public static createInstance(
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
-        blockManagerService: BlockManagerRegistry,
+        blockManagerRegistry: BlockManagerRegistry,
     ): TxManager {
-        TxManager.instance = new TxManager(networkManager, viemClientManager, blockManagerService);
+        TxManager.instance = new TxManager(networkManager, viemClientManager, blockManagerRegistry);
         return TxManager.instance;
     }
 
@@ -146,7 +151,7 @@ export class TxManager extends ManagerBase implements ITxManager {
     }
 
     private async subscribeToBlockUpdates(network: ConceroNetwork): Promise<void> {
-        const blockManager = await this.blockManagerService.getBlockManager(network.name);
+        const blockManager = this.blockManagerRegistry.getBlockManager(network.name);
         if (!blockManager) {
             logger.warn(`[TxManager]: No BlockManager available for ${network.name}`);
             return;
@@ -180,6 +185,20 @@ export class TxManager extends ManagerBase implements ITxManager {
         }
     }
 
+    private updateTxStatus(txHash: string, status: string): ManagedTx | null {
+        const tx = this.findTransactionByHash(txHash);
+        if (!tx) return null;
+
+        for (const attempt of tx.attempts) {
+            if (attempt.txHash === txHash) {
+                attempt.status = status;
+                break;
+            }
+        }
+
+        return tx;
+    }
+
     public async onTxReorg(txHash: string, chainName: string): Promise<string | null> {
         const tx = this.findTransactionByHash(txHash);
         if (!tx) {
@@ -191,17 +210,14 @@ export class TxManager extends ManagerBase implements ITxManager {
             `[TxManager]: Resubmitting transaction ${txHash} (logical id: ${tx.id}) due to reorg on ${chainName}`,
         );
 
-        const txMap = this.getTxMapByType(tx.type);
-        txMap.delete(tx.id);
+        this.unregisterTx(tx);
 
         try {
             const newTx = await this.callContract(tx.params);
 
             if (tx.messageId) {
                 newTx.messageId = tx.messageId;
-
-                const newTxMap = this.getTxMapByType(newTx.type);
-                newTxMap.set(newTx.id, newTx);
+                this.registerTx(newTx);
             }
 
             return newTx.attempts[0]?.txHash || null;
@@ -212,64 +228,63 @@ export class TxManager extends ManagerBase implements ITxManager {
     }
 
     public onTxFinality(txHash: string, chainName: string): void {
-        const tx = this.findTransactionByHash(txHash);
+        const tx = this.updateTxStatus(txHash, "finalized");
         if (!tx) {
             logger.warn(`[TxManager]: Finalized transaction ${txHash} not found in tracking maps`);
             return;
         }
 
-        logger.info(
+        logger.debug(
             `[TxManager]: Transaction ${txHash} (logical id: ${tx.id}) has reached finality on ${chainName}`,
         );
 
-        for (const attempt of tx.attempts) {
-            if (attempt.txHash === txHash) {
-                attempt.status = "finalized";
-                break;
-            }
-        }
-
         if (tx.attempts.every(a => a.status === "finalized" || a.status === "failed")) {
-            const txMap = this.getTxMapByType(tx.type);
-            txMap.delete(tx.id);
+            this.unregisterTx(tx);
         }
     }
 
-    public createLogWatcher(
-        contractAddress: Address,
-        chainName: string,
-        onLogs: (logs: LogResult[], network: ConceroNetwork) => Promise<void>,
-        event?: AbiEvent,
-    ): string {
-        const watcherId = randomUUID();
+    public logWatcher = {
+        create: (
+            contractAddress: Address,
+            chainName: string,
+            onLogs: (logs: LogResult[], network: ConceroNetwork) => Promise<void>,
+            event?: AbiEvent,
+        ): string => {
+            const watcherId = randomUUID();
 
-        const watcher: LogWatcher = {
-            id: watcherId,
-            contractAddress,
-            chainName,
-            event,
-            onLogs,
-        };
+            const watcher: LogWatcher = {
+                id: watcherId,
+                contractAddress,
+                chainName,
+                event,
+                onLogs,
+            };
 
-        this.logWatchers.set(watcherId, watcher);
-        // logger.debug(
-        //     `[TxManager]: Created log watcher for contract ${contractAddress} on ${chainName}`,
-        // );
+            this.logWatchers.set(watcherId, watcher);
 
-        return watcherId;
-    }
+            return watcherId;
+        },
 
-    public removeLogWatcher(watcherId: string): boolean {
-        const result = this.logWatchers.delete(watcherId);
+        remove: (watcherId: string): boolean => {
+            const result = this.logWatchers.delete(watcherId);
 
-        if (result) {
-            logger.info(`[TxManager]: Removed log watcher ${watcherId}`);
-        } else {
-            logger.warn(`[TxManager]: Attempted to remove non-existent log watcher ${watcherId}`);
-        }
+            if (result) {
+                logger.info(`[TxManager]: Removed log watcher ${watcherId}`);
+            } else {
+                logger.warn(
+                    `[TxManager]: Attempted to remove non-existent log watcher ${watcherId}`,
+                );
+            }
 
-        return result;
-    }
+            return result;
+        },
+
+        getByAddress: (address: Address): LogWatcher[] => {
+            return Array.from(this.logWatchers.values()).filter(
+                watcher => watcher.contractAddress === address,
+            );
+        },
+    };
 
     private async fetchLogsForWatchers(
         network: ConceroNetwork,
@@ -310,7 +325,7 @@ export class TxManager extends ManagerBase implements ITxManager {
 
                 if (!logs || logs.length === 0) continue;
 
-                logger.info(
+                logger.debug(
                     `[TxManager]: Found ${logs.length} logs for contract ${address} on ${network.name} in blocks ${startBlock}-${endBlock}`,
                 );
 
@@ -400,48 +415,71 @@ export class TxManager extends ManagerBase implements ITxManager {
     }
 
     private findTransactionByHash(txHash: string): ManagedTx | null {
-        const allMaps = [
-            this.conceroSentTxs,
-            this.requestMessageReportTxs,
-            this.submitMessageReportTxs,
-            this.otherTxs,
-        ];
+        const txId = this.txHashToId.get(txHash);
+        return txId ? this.transactions.get(txId) || null : null;
+    }
 
-        for (const txMap of allMaps) {
-            for (const tx of txMap.values()) {
-                if (tx.attempts.some(attempt => attempt.txHash === txHash)) {
-                    return tx;
-                }
+    private registerTx(tx: ManagedTx): void {
+        this.transactions.set(tx.id, tx);
+        const typeSet = this.txByType.get(tx.type);
+        if (typeSet) {
+            typeSet.add(tx.id);
+        }
+
+        for (const attempt of tx.attempts) {
+            this.txHashToId.set(attempt.txHash, tx.id);
+        }
+    }
+
+    private unregisterTx(tx: ManagedTx): void {
+        this.transactions.delete(tx.id);
+        const typeSet = this.txByType.get(tx.type);
+        if (typeSet) {
+            typeSet.delete(tx.id);
+        }
+
+        for (const attempt of tx.attempts) {
+            this.txHashToId.delete(attempt.txHash);
+        }
+    }
+
+    private async determineTxType(
+        functionName: string,
+        contractAddress: Address,
+        chainName: string,
+    ): Promise<TxType> {
+        const deploymentManager = await (
+            await import("./DeploymentManager")
+        ).DeploymentManager.getInstance();
+
+        let isRouter = false;
+        try {
+            const routerAddress = await deploymentManager.getRouterByChainName(chainName);
+            isRouter = routerAddress.toLowerCase() === contractAddress.toLowerCase();
+        } catch {}
+
+        let isVerifier = false;
+        try {
+            const verifierAddress = await deploymentManager.getConceroVerifier();
+            isVerifier = verifierAddress.toLowerCase() === contractAddress.toLowerCase();
+        } catch {}
+
+        if (isRouter) {
+            if (functionName === "ConceroMessageSent") {
+                return TxType.ConceroSent;
+            }
+            if (functionName === "ConceroMessageReceived") {
+                return TxType.ConceroSent;
+            }
+        } else if (isVerifier) {
+            if (functionName === "MessageReportRequested") {
+                return TxType.RequestMessageReport;
+            }
+            if (functionName === "MessageReport") {
+                return TxType.SubmitMessageReport;
             }
         }
-
-        return null;
-    }
-
-    private getTxMapByType(type: TxType): Map<string, ManagedTx> {
-        switch (type) {
-            case TxType.ConceroSent:
-                return this.conceroSentTxs;
-            case TxType.RequestMessageReport:
-                return this.requestMessageReportTxs;
-            case TxType.SubmitMessageReport:
-                return this.submitMessageReportTxs;
-            case TxType.Other:
-            default:
-                return this.otherTxs;
-        }
-    }
-
-    private determineTxType(functionName: string): TxType {
-        if (functionName.includes("send") || functionName.includes("Send")) {
-            return TxType.ConceroSent;
-        } else if (functionName.includes("request") || functionName.includes("Request")) {
-            return TxType.RequestMessageReport;
-        } else if (functionName.includes("submit") || functionName.includes("Submit")) {
-            return TxType.SubmitMessageReport;
-        } else {
-            return TxType.Other;
-        }
+        return TxType.Other;
     }
 
     public getClients(network: ConceroNetwork) {
@@ -450,14 +488,17 @@ export class TxManager extends ManagerBase implements ITxManager {
 
     public async callContract(params: TxSubmissionParams): Promise<ManagedTx> {
         const id = randomUUID();
-        const type = this.determineTxType(params.functionName);
-        const txMap = this.getTxMapByType(type);
+        const type = await this.determineTxType(
+            params.functionName,
+            params.contractAddress,
+            params.chain.name,
+        );
 
         let txHash: string | null = null;
         let submissionBlock: bigint | null = null;
         let receipt: TransactionReceipt | null = null;
 
-        logger.info(
+        logger.debug(
             `[TxManager]: Calling contract ${params.contractAddress} on ${params.chain.name} - function: ${params.functionName}`,
         );
 
@@ -473,23 +514,10 @@ export class TxManager extends ManagerBase implements ITxManager {
                 functionName: params.functionName,
                 args: params.args,
                 account: account as any,
+                gas: params.options?.gas ?? globalConfig.VIEM.WRITE_CONTRACT.gas,
             };
 
-            const gas = params.options?.gas ?? globalConfig.VIEM.WRITE_CONTRACT.gas;
-
-            // Handle transaction submission
-            if (!params.options?.skipSimulation) {
-                const { request } = await publicClient.simulateContract(contractParams);
-                txHash = await walletClient.writeContract({
-                    ...request,
-                    gas,
-                } as any);
-            } else {
-                txHash = await walletClient.writeContract({
-                    ...contractParams,
-                    gas,
-                } as any);
-            }
+            txHash = await genericCallContract(publicClient, walletClient, contractParams);
 
             receipt = await publicClient.waitForTransactionReceipt({
                 hash: txHash as `0x${string}`,
@@ -540,7 +568,7 @@ export class TxManager extends ManagerBase implements ITxManager {
                 };
 
                 managedTx.attempts.push(attempt);
-                txMap.set(id, managedTx);
+                this.registerTx(managedTx);
 
                 logger.info(
                     `[TxManager]: Transaction ${txHash} submitted (logical id: ${id}, type: ${type}) for chain ${params.chain.name}`,
@@ -664,10 +692,9 @@ export class TxManager extends ManagerBase implements ITxManager {
         this.blockManagerUnwatchers.clear();
         this.cachedLogs.clear();
         this.logWatchers.clear();
-        this.conceroSentTxs.clear();
-        this.requestMessageReportTxs.clear();
-        this.submitMessageReportTxs.clear();
-        this.otherTxs.clear();
+        this.transactions.clear();
+        this.txByType.forEach(set => set.clear());
+        this.txHashToId.clear();
 
         if (this.txMonitor) {
             this.txMonitor.dispose();
@@ -678,57 +705,13 @@ export class TxManager extends ManagerBase implements ITxManager {
     }
 
     public getPendingTransactions(chainName?: string): ManagedTx[] {
-        const pendingTxs: ManagedTx[] = [];
-
-        const checkMap = (txMap: Map<string, ManagedTx>) => {
-            for (const tx of txMap.values()) {
-                if (chainName && tx.chainName !== chainName) continue;
-                if (tx.attempts.some(a => a.status === "pending")) {
-                    pendingTxs.push(tx);
-                }
-            }
-        };
-
-        checkMap(this.conceroSentTxs);
-        checkMap(this.requestMessageReportTxs);
-        checkMap(this.submitMessageReportTxs);
-        checkMap(this.otherTxs);
-
-        return pendingTxs;
+        return Array.from(this.transactions.values()).filter(tx => {
+            if (chainName && tx.chainName !== chainName) return false;
+            return tx.attempts.some(a => a.status === "pending");
+        });
     }
 
     public getTransactionsByMessageId(messageId: string): ManagedTx[] {
-        const relatedTxs: ManagedTx[] = [];
-
-        const checkMap = (txMap: Map<string, ManagedTx>) => {
-            for (const tx of txMap.values()) {
-                if (tx.messageId === messageId) {
-                    relatedTxs.push(tx);
-                }
-            }
-        };
-
-        checkMap(this.conceroSentTxs);
-        checkMap(this.requestMessageReportTxs);
-        checkMap(this.submitMessageReportTxs);
-        checkMap(this.otherTxs);
-
-        return relatedTxs;
-    }
-
-    public async getLatestBlockForChain(network: ConceroNetwork): Promise<bigint | null> {
-        try {
-            const blockManager = await this.blockManagerService.getBlockManager(network.name);
-            if (!blockManager) {
-                return null;
-            }
-            return await blockManager.getLatestBlock();
-        } catch (error) {
-            logger.error(
-                `[TxManager]: Error getting latest block for chain ${network.name}:`,
-                error,
-            );
-            return null;
-        }
+        return Array.from(this.transactions.values()).filter(tx => tx.messageId === messageId);
     }
 }

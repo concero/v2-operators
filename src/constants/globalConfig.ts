@@ -13,11 +13,7 @@ const globalConfig: GlobalConfig = {
     IGNORED_NETWORK_IDS: [44787],
     WHITELISTED_NETWORK_IDS: {
         //     mainnet: [1, 137],
-        // testnet: [
-        //     84532, 421614, 43113, 11155420, 80002, 2021, 6342, 57054, 10_143, 11155111, 59141, 97,
-        //     1946, 33111, 200810, 168587773, 3636, 44787, 338, 10200, 133, 763373, 5003, 534351,
-        //     1328, 157, 1301, 195, 48899, 919, 1114,
-        // ],
+        testnet: [421614],
         //     localhost: [1],
     },
     POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
@@ -52,6 +48,7 @@ const globalConfig: GlobalConfig = {
             retryCount: 3,
             retryDelay: 2000,
         },
+        SIMULATE_TX: true,
     },
     HTTPCLIENT: {
         DEFAULT_TIMEOUT: 5000,
