@@ -8,7 +8,7 @@
     "copy-assets": "mkdir -p dist/abi && cp -r src/abi/* dist/abi/",
     "lint": "eslint --config .eslint.config.mjs",
     "format": "prettier --config .prettierrc.json --write **/*.{ts,json}",
-    "start:relayerA": "bun ./src/relayer/a/index.ts",
+    "start:relayerA": "bun ./src/relayer-a/index.ts",
     "check-updates": "npx npm-check-updates",
     "prepare": "husky",
     "test": "jest"
