@@ -475,7 +475,7 @@ export class TxManager extends ManagerBase implements ITxManager {
                 account: account as any,
             };
 
-            const gas = params.options?.gas ?? globalConfig.TX_MANAGER.DEFAULT_GAS;
+            const gas = params.options?.gas ?? globalConfig.VIEM.WRITE_CONTRACT.gas;
 
             // Handle transaction submission
             if (!params.options?.skipSimulation) {
