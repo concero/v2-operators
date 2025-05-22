@@ -47,7 +47,6 @@ type GlobalConfig = {
     RPC: { OVERRIDE: any; EXTENSION: any };
     TX_MANAGER: {
         DRY_RUN: boolean;
-        DEFAULT_GAS: bigint;
         DEFAULT_CONFIRMATIONS: number;
         DEFAULT_RECEIPT_TIMEOUT: number;
     };

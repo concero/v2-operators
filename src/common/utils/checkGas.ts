@@ -1,6 +1,5 @@
 import { PublicClient, formatUnits } from "viem";
 
-import { ConceroNetwork } from "@concero/contract-utils";
 import { WebClient } from "@slack/web-api";
 
 import { globalConfig } from "../../constants";

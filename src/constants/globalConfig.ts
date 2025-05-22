@@ -68,7 +68,6 @@ const globalConfig: GlobalConfig = {
     },
     TX_MANAGER: {
         DRY_RUN: getEnvVar("DRY_RUN") === "true" ? true : false,
-        DEFAULT_GAS: 1_000_000n,
         DEFAULT_CONFIRMATIONS: 3,
         DEFAULT_RECEIPT_TIMEOUT: 60_000,
     },

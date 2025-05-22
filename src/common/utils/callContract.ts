@@ -9,7 +9,7 @@ import {
 } from "viem";
 import { NonceTooLowError } from "viem";
 
-import { AppErrorEnum } from "../../constants";
+import { AppErrorEnum, globalConfig } from "../../constants";
 import { NonceManager } from "../managers";
 
 import { AppError } from "./AppError";
@@ -31,11 +31,8 @@ async function executeTransaction(
             chainId,
             client: publicClient,
         }),
-        gas: 2_000_000n,
+        gas: globalConfig.VIEM.WRITE_CONTRACT.gas,
     });
-
-    // @dev TODO: We need to check the status of the tx
-    // await publicClient.waitForTransactionReceipt({ hash });
 
     return hash;
 }
