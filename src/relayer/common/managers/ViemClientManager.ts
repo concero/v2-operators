@@ -21,6 +21,7 @@ import { HttpRequestError } from "viem";
 import { RpcRequestError } from "viem";
 import { UnknownRpcError } from "viem";
 import { UnknownNodeError } from "viem";
+import { InvalidInputRpcError } from "viem";
 
 export interface ViemClients {
     walletClient: WalletClient;
@@ -72,7 +73,8 @@ export class ViemClientManager implements RpcUpdateListener {
                         error instanceof RpcRequestError ||
                         error instanceof TransactionNotFoundError ||
                         error instanceof UnknownRpcError ||
-                        error instanceof UnknownNodeError
+                        error instanceof UnknownNodeError ||
+                        error instanceof InvalidInputRpcError
                     ) {
                         return false;
                     }
