@@ -22,6 +22,7 @@ import { RpcRequestError } from "viem";
 import { UnknownRpcError } from "viem";
 import { UnknownNodeError } from "viem";
 import { InvalidInputRpcError } from "viem";
+import { ContractFunctionExecutionError } from "viem";
 
 export interface ViemClients {
     walletClient: WalletClient;
@@ -77,6 +78,14 @@ export class ViemClientManager implements RpcUpdateListener {
                         error instanceof InvalidInputRpcError
                     ) {
                         return false;
+                    } else if (error instanceof ContractFunctionExecutionError) {
+                        if (
+                            error.details.includes(
+                                "the method eth_sendRawTransaction does not exist",
+                            )
+                        ) {
+                            return false;
+                        }
                     }
 
                     return true;
