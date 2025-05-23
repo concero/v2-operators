@@ -23,6 +23,8 @@ node_modules
 !.env.tokens
 !.env.clccip
 
+!.env.example
+
 *.log
 logs/
 
