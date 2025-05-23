@@ -102,7 +102,6 @@ export class BlockManager implements IBlockManager {
 
         this.isPolling = true;
 
-        this.logger.debug(`${this.network.name}: Starting block polling`);
         await this.performCatchup();
         await this.poll();
     }
@@ -131,9 +130,7 @@ export class BlockManager implements IBlockManager {
 
             if (this.latestBlock > this.lastProcessedBlockNumber) {
                 const startBlock = this.lastProcessedBlockNumber + 1n;
-                this.logger.debug(
-                    `${this.network.name}: Processing ${this.latestBlock - startBlock + 1n} new blocks from ${startBlock} to ${this.latestBlock}`,
-                );
+
                 await this.processBlockRange(startBlock, this.latestBlock);
             }
         } catch (error) {
@@ -155,7 +152,10 @@ export class BlockManager implements IBlockManager {
      * 2. Updating the last processed block checkpoint
      */
     private async processBlockRange(startBlock: bigint, endBlock: bigint): Promise<void> {
-        // Notify all registered handlers about the new block range
+        this.logger.debug(
+            `${this.network.name}: Processing ${this.latestBlock - startBlock + 1n} new blocks from ${startBlock} to ${this.latestBlock}`,
+        );
+
         if (this.blockRangeHandlers.size > 0) {
             // this.logger.debug(
             //     `${this.network.name}: Notifying ${this.blockRangeHandlers.size} handlers about blocks ${startBlock} - ${endBlock}`,
@@ -214,10 +214,6 @@ export class BlockManager implements IBlockManager {
                     this.latestBlock
                         ? this.latestBlock
                         : startBlock + globalConfig.BLOCK_MANAGER.CATCHUP_BATCH_SIZE - 1n;
-
-                this.logger.debug(
-                    `${this.network.name}: Processing ${endBlock - startBlock + 1n} blocks from ${startBlock} - ${endBlock}`,
-                );
 
                 // Process this block range (will notify handlers)
                 await this.processBlockRange(startBlock, endBlock);

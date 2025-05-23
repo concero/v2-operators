@@ -16,9 +16,13 @@ type GlobalConfig = {
     };
     POLLING_INTERVAL_MS: number;
     BLOCK_HISTORY_SIZE: number; // Number of blocks to store for reorg detection
-    LOG_LEVEL: "error" | "warn" | "info" | "debug";
-    LOG_DIR: string;
-    LOG_MAX_FILES: string;
+    LOGGER: {
+        LOG_LEVEL_DEFAULT: string;
+        LOG_LEVELS_GRANULAR: Record<string, string>;
+        LOG_DIR: string;
+        LOG_MAX_FILES: string;
+        LOG_MAX_SIZE: string;
+    };
     URLS: {
         CONCERO_RPCS: string;
         CONCERO_DEPLOYMENTS: string;

@@ -72,7 +72,7 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
         if (this.initialized) return;
 
         await super.initialize();
-        this.logger.debug("Initialized successfully");
+        this.logger.debug("Initialized");
     }
 
     public override dispose(): void {

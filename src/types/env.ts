@@ -16,6 +16,19 @@ export interface env {
     CONCERO_ROUTER_OPTIMISM_SEPOLIA: Address;
     CONCERO_ROUTER_RONIN_SAIGON: Address;
     CONCERO_ROUTER_ASTAR_SHIBUYA: Address;
+    
+    // Config environment variables
+    NETWORK_MODE: string;
+    POLLING_INTERVAL_MS: string;
+    BLOCK_HISTORY_SIZE: string;
+    LOG_LEVEL_DEFAULT: string;
+    LOG_LEVELS_GRANULAR: string;
+    SIMULATE_TX: string;
+    DRY_RUN: string;
+    USE_CHECKPOINTS: string;
+    
+    // Dynamic log level environment variables
+    [key: `LOG_LEVEL_${string}`]: string;
 }
 
 export default env;

@@ -60,7 +60,7 @@ export class ViemClientManager
         // Register as RPC update listener
         this.rpcManager.registerRpcUpdateListener(this);
         await super.initialize();
-        this.logger.debug("Initialized successfully");
+        this.logger.debug("Initialized");
     }
 
     private createTransport(chain: ConceroNetwork) {

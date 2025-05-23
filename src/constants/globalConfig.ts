@@ -3,7 +3,8 @@ import { Abi } from "viem";
 import { abi as conceroRouterAbi } from "../abi/ConceroRouter.json";
 import { abi as conceroVerifierAbi } from "../abi/ConceroVerifier.json";
 import { getEnvVar } from "../common/utils/getEnvVar";
-import { parseGranularLogLevels } from "../common/utils/parseGranularLogLevels";
+import { getOptionalEnvVar } from "../common/utils/getOptionalEnvVar";
+import { getGranularLogLevels } from "../common/utils/parseGranularLogLevels";
 import { type GlobalConfig } from "../types/GlobalConfig";
 
 import { getRpcExtension, getRpcOverride } from "./localRpcLoaders";
@@ -13,15 +14,21 @@ const globalConfig: GlobalConfig = {
     OPERATOR_ADDRESS: getEnvVar("OPERATOR_ADDRESS"),
     IGNORED_NETWORK_IDS: [44787],
     WHITELISTED_NETWORK_IDS: {
-        //     mainnet: [1, 137],
-        // testnet: [421614, 6342],
-        //     localhost: [1],
+        mainnet: [
+            /* 1, 137 */
+        ],
+        testnet: [
+            /* 421614, 6342 */
+        ],
+        localhost: [
+            /* 1 */
+        ],
     },
     POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
     BLOCK_HISTORY_SIZE: parseInt(getEnvVar("BLOCK_HISTORY_SIZE")) || 400, // Number of blocks to store for reorg detection
     LOGGER: {
-        LOG_LEVEL_DEFAULT: getEnvVar("LOG_LEVEL_DEFAULT") || "info",
-        LOG_LEVELS_GRANULAR: parseGranularLogLevels(getEnvVar("LOG_LEVELS_GRANULAR") || ""),
+        LOG_LEVEL_DEFAULT: getOptionalEnvVar("LOG_LEVEL_DEFAULT", "info"),
+        LOG_LEVELS_GRANULAR: getGranularLogLevels(),
         LOG_DIR: "logs",
         LOG_MAX_FILES: "7d",
         LOG_MAX_SIZE: "20m",

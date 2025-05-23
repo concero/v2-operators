@@ -4,7 +4,7 @@ import { Log } from "viem";
 import { v4 as uuidv4 } from "uuid";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { ITxReader, LogQuery, LogResult, LogWatcher } from "../../types/managers/ITxReader";
+import { ITxReader, LogQuery, LogWatcher } from "../../types/managers/ITxReader";
 import { Logger, LoggerInterface } from "../utils/logger";
 
 import { BlockManagerRegistry } from "./BlockManagerRegistry";
@@ -14,7 +14,7 @@ import { ViemClientManager } from "./ViemClientManager";
 export class TxReader implements ITxReader {
     private static instance: TxReader | undefined;
     public logWatchers: Map<string, LogWatcher> = new Map();
-    private cachedLogs: Map<string, Map<string, LogResult>> = new Map();
+    private cachedLogs: Map<string, Map<string, Log>> = new Map();
     private blockManagerUnwatchers: Map<string, () => void> = new Map();
     private logger: LoggerInterface;
 
@@ -51,7 +51,7 @@ export class TxReader implements ITxReader {
 
     public async initialize(): Promise<void> {
         await this.subscribeToBlockUpdates();
-        this.logger.info("Initialized successfully");
+        this.logger.info("Initialized");
     }
 
     private async subscribeToBlockUpdates(): Promise<void> {
@@ -122,7 +122,7 @@ export class TxReader implements ITxReader {
 
         // Initialize cache for this chain if it doesn't exist
         if (!this.cachedLogs.has(chainName)) {
-            this.cachedLogs.set(chainName, new Map<string, LogResult>());
+            this.cachedLogs.set(chainName, new Map<string, Log>());
         }
         const chainCache = this.cachedLogs.get(chainName)!;
 
@@ -188,10 +188,10 @@ export class TxReader implements ITxReader {
         toBlock: bigint,
         events: AbiEvent[],
         network: ConceroNetwork,
-    ): Promise<LogResult[]> {
+    ): Promise<Log[]> {
         if (events.length === 0) return [];
 
-        const allLogs: LogResult[] = [];
+        const allLogs: Log[] = [];
         for (const event of events) {
             const eventLogs = await this.getLogs(
                 {

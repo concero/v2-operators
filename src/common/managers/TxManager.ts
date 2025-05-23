@@ -74,7 +74,7 @@ export class TxManager extends ManagerBase implements ITxManager {
 
     public async initialize(): Promise<void> {
         super.initialize();
-        this.logger.info("initialized successfully");
+        this.logger.info("initialized");
     }
 
     public async callContract(

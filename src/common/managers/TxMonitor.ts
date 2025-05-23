@@ -32,7 +32,7 @@ export class TxMonitor implements ITxMonitor {
         this.txFinalityCallback = txFinalityCallback;
         this.txReorgCallback = txReorgCallback;
         this.logger = Logger.getInstance().getLogger("TxMonitor");
-        this.logger.info("initialized successfully");
+        this.logger.info("initialized");
     }
 
     public static createInstance(
@@ -160,9 +160,7 @@ export class TxMonitor implements ITxMonitor {
 
             this.transactions.delete(tx.txHash);
 
-            this.logger.info(
-                `Transaction ${tx.txHash} has reached finality on ${network.name}`,
-            );
+            this.logger.info(`Transaction ${tx.txHash} has reached finality on ${network.name}`);
 
             tx.lastChecked = Date.now();
         } catch (error) {

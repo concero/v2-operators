@@ -41,7 +41,7 @@ export class DeploymentManager
         if (this.initialized) return;
         try {
             await super.initialize();
-            this.logger.debug("Initialized successfully");
+            this.logger.debug("Initialized");
         } catch (error) {
             this.logger.error("Failed to initialize:", error);
             throw error;
@@ -134,7 +134,7 @@ export class DeploymentManager
             }
 
             this.lastUpdateTime = now;
-            this.logger.debug("Deployments updated successfully");
+            this.logger.debug("Deployments updated");
         } catch (error) {
             this.logger.error("Failed to update deployments:", error);
             throw new Error(

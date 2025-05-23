@@ -1,7 +1,7 @@
 import {
     Abi,
-    Address,
     AbiEvent,
+    Address,
     PublicClient,
     SimulateContractParameters,
     TransactionReceipt,
@@ -14,8 +14,8 @@ import { v4 as uuidv4 } from "uuid";
 import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { ITxWriter, ManagedTx, TxSubmissionParams } from "../../types/managers/ITxWriter";
-import { Logger, LoggerInterface } from "../utils/logger";
 import { callContract } from "../utils/callContract";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { NetworkManager } from "./NetworkManager";
 import { ViemClientManager } from "./ViemClientManager";
@@ -71,7 +71,7 @@ export class TxWriter implements ITxWriter {
     }
 
     public async initialize(): Promise<void> {
-        this.logger.info("Initialized successfully");
+        this.logger.info("Initialized");
     }
 
     public async callContract(
@@ -154,9 +154,7 @@ export class TxWriter implements ITxWriter {
     public async onTxReorg(txHash: string, chainName: string): Promise<string | null> {
         const tx = this.findTransactionByHash(txHash);
         if (!tx) {
-            this.logger.warn(
-                `[${chainName}] Cannot find transaction ${txHash} for reorg handling`,
-            );
+            this.logger.warn(`[${chainName}] Cannot find transaction ${txHash} for reorg handling`);
             return null;
         }
 

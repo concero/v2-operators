@@ -1,4 +1,3 @@
-// v2-operators/src/common/utils/Logger.ts
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
@@ -54,10 +53,11 @@ export class Logger extends ManagerBase {
         );
 
         const logger = winston.createLogger({
-            level: globalConfig.LOGGER.LOG_LEVEL_DEFAULT,
+            level: "debug", // Allow all logs through at base logger level
             format: winston.format.json(),
             transports: [
                 new DailyRotateFile({
+                    level: "debug",
                     dirname: globalConfig.LOGGER.LOG_DIR,
                     filename: "log-%DATE%.log",
                     datePattern: "YYYY-MM-DD",
@@ -78,6 +78,7 @@ export class Logger extends ManagerBase {
         if (process.env.NODE_ENV !== "production") {
             logger.add(
                 new winston.transports.Console({
+                    level: "debug",
                     format: logFormat,
                 }),
             );
@@ -88,12 +89,8 @@ export class Logger extends ManagerBase {
 
     public async initialize(): Promise<void> {
         if (this.initialized) return;
-
-        // Initialize the default logger
-        this.getLogger();
-
-        this.initialized = true;
-        this.getLogger("Logger").debug("Initialized successfully");
+        super.initialize();
+        this.getLogger("Logger").info("Logger initialized");
     }
 
     public getLogger(consumerName?: string): LoggerInterface {
@@ -109,25 +106,35 @@ export class Logger extends ManagerBase {
     }
 
     private createConsumerLogger(consumerName?: string): LoggerInterface {
-        const getLoggerLevel = () => {
-            if (!consumerName) return globalConfig.LOGGER.LOG_LEVEL_DEFAULT;
+        const getLogLevel = (): string => {
+            if (!consumerName) {
+                return globalConfig.LOGGER.LOG_LEVEL_DEFAULT;
+            }
+
             return (
                 globalConfig.LOGGER.LOG_LEVELS_GRANULAR[consumerName] ||
                 globalConfig.LOGGER.LOG_LEVEL_DEFAULT
             );
         };
 
-        const shouldLog = (messageLevel: string): boolean => {
-            const levels: Record<string, number> = {
-                error: 0,
-                warn: 1,
-                info: 2,
-                debug: 3,
-            };
-
-            const configLevel = getLoggerLevel();
-            return levels[messageLevel] <= levels[configLevel];
+        // Map log levels to numeric values for comparison
+        const logLevelValue: Record<string, number> = {
+            error: 0,
+            warn: 1,
+            info: 2,
+            debug: 3,
         };
+
+        // Only log if the message level is <= configured level
+        const shouldLog = (messageLevel: string): boolean => {
+            const configuredLevel = getLogLevel();
+            const configLevelValue = logLevelValue[configuredLevel] || 2; // Default to info
+            const messageLevelValue = logLevelValue[messageLevel] || 0; // Default to error
+
+            return messageLevelValue <= configLevelValue;
+        };
+
+        const logLevel = getLogLevel();
 
         return {
             error: (message: any, ...meta: any[]) => {
@@ -137,25 +144,28 @@ export class Logger extends ManagerBase {
                 );
             },
             warn: (message: any, ...meta: any[]) => {
-                if (!shouldLog("warn")) return;
-                this.baseLogger.warn(
-                    message,
-                    consumerName ? { consumer: consumerName, ...meta } : meta,
-                );
+                if (shouldLog("warn")) {
+                    this.baseLogger.warn(
+                        message,
+                        consumerName ? { consumer: consumerName, ...meta } : meta,
+                    );
+                }
             },
             info: (message: any, ...meta: any[]) => {
-                if (!shouldLog("info")) return;
-                this.baseLogger.info(
-                    message,
-                    consumerName ? { consumer: consumerName, ...meta } : meta,
-                );
+                if (shouldLog("info")) {
+                    this.baseLogger.info(
+                        message,
+                        consumerName ? { consumer: consumerName, ...meta } : meta,
+                    );
+                }
             },
             debug: (message: any, ...meta: any[]) => {
-                if (!shouldLog("debug")) return;
-                this.baseLogger.debug(
-                    message,
-                    consumerName ? { consumer: consumerName, ...meta } : meta,
-                );
+                if (shouldLog("debug")) {
+                    this.baseLogger.debug(
+                        message,
+                        consumerName ? { consumer: consumerName, ...meta } : meta,
+                    );
+                }
             },
         };
     }

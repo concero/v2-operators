@@ -60,7 +60,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             await this.updateNetworks();
             this.setupUpdateCycle();
             this.initialized = true;
-            this.logger.debug("Initialized successfully");
+            this.logger.debug("Initialized");
         } catch (error) {
             this.logger.error("Failed to initialize networks:", error);
             throw error;

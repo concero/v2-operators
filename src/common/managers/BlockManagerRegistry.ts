@@ -101,11 +101,9 @@ export class BlockManagerRegistry
             // Log summary of results
             const successCount = results.filter(result => result !== null).length;
             if (successCount < newNetworks.length) {
-                this.logger.warn(
-                    `${successCount}/${newNetworks.length} BlockManagers created successfully`,
-                );
+                this.logger.warn(`${successCount}/${newNetworks.length} BlockManagers created`);
             } else if (successCount > 0) {
-                this.logger.info(`All ${successCount} BlockManagers created successfully`);
+                this.logger.info(`All ${successCount} BlockManagers created`);
             }
         }
     }
@@ -143,7 +141,7 @@ export class BlockManagerRegistry
             this.networkManager.registerUpdateListener(this);
 
             await super.initialize();
-            this.logger.debug("Initialized successfully");
+            this.logger.debug("Initialized");
 
             // Perform the initial sync of BlockManagers with active networks
             const activeNetworks = this.networkManager.getActiveNetworks();
