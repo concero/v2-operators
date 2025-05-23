@@ -39,16 +39,16 @@ export class Logger extends ManagerBase {
         const logFormat = winston.format.combine(
             winston.format.colorize({ level: true }),
             winston.format.timestamp({
-                format: "YYYY-MM-DD HH:mm:ss",
+                format: "MM-DD HH:mm:ss",
             }),
             winston.format.printf(({ level, message, timestamp, consumer, ...meta }) => {
-                const prefix = consumer ? `[${consumer}]: ` : "";
+                const prefix = consumer ? `${consumer}` : "";
                 const formattedMessage =
                     typeof message === "object" ? JSON.stringify(message, null, 2) : message;
                 const formattedMeta =
                     meta && Object.keys(meta).length ? JSON.stringify(meta, null, 2) : "";
 
-                return `${timestamp} [${level}] ${prefix}${formattedMessage} ${formattedMeta}`.trim();
+                return `${timestamp} ${level} ${prefix}: ${formattedMessage} ${formattedMeta}`.trim();
             }),
         );
 
@@ -90,7 +90,7 @@ export class Logger extends ManagerBase {
     public async initialize(): Promise<void> {
         if (this.initialized) return;
         super.initialize();
-        this.getLogger("Logger").info("Logger initialized");
+        this.getLogger("Logger").info("Initialized");
     }
 
     public getLogger(consumerName?: string): LoggerInterface {

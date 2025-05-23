@@ -99,9 +99,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 
         if (!activeNetworkNames.includes(dstChain.name)) {
             const reportLogger = Logger.getInstance().getLogger("MessageReporter");
-            reportLogger.warn(
-                `${dstChain.name} is not active. Skipping message submission.`,
-            );
+            reportLogger.warn(`${dstChain.name} is not active. Skipping message submission.`);
             return;
         }
 

@@ -1,4 +1,5 @@
 import { ConceroNetwork } from "../ConceroNetwork";
+
 import { ManagedTx } from "./ITxWriter";
 
 export interface MonitoredTransaction {
@@ -14,7 +15,11 @@ export interface MonitoredTransaction {
 
 export interface ITxMonitor {
     addTransaction(txHash: string, managedTx: ManagedTx): void;
-    checkTransactionsInRange(network: ConceroNetwork, startBlock: bigint, endBlock: bigint): Promise<void>;
+    checkTransactionsInRange(
+        network: ConceroNetwork,
+        startBlock: bigint,
+        endBlock: bigint,
+    ): Promise<void>;
     getMonitoredTransactions(chainName?: string): MonitoredTransaction[];
     getTransactionsByMessageId(): Map<string, MonitoredTransaction[]>;
     dispose(): void;

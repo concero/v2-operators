@@ -10,9 +10,7 @@ import { submitCLFMessageReport } from "../businessLogic/submitCLFMessageReport"
 
 export async function onRouterConceroSentLogs(logs: Log[], network: ConceroNetwork) {
     const eventLogger = Logger.getInstance().getLogger("EventListener");
-    eventLogger.debug(
-        `Processing ${logs.length} ConceroMessageSent logs from ${network.name}`,
-    );
+    eventLogger.debug(`Processing ${logs.length} ConceroMessageSent logs from ${network.name}`);
 
     const promises = [];
 
