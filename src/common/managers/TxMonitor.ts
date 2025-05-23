@@ -1,8 +1,8 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { ITxMonitor } from "../../types/managers/ITxMonitor";
+import { ITxMonitor, MonitoredTransaction } from "../../types/managers/ITxMonitor";
+import { ManagedTx } from "../../types/managers/ITxWriter";
 import { logger } from "../utils";
 
-import { ManagedTx, TxManager } from "./TxManager";
 import { ViemClientManager } from "./ViemClientManager";
 
 enum TransactionStatus {
@@ -14,35 +14,31 @@ enum TransactionStatus {
     Failed = "failed",
 }
 
-interface MonitoredTransaction {
-    txHash: string;
-    chainName: string;
-    messageId?: string;
-    blockNumber: bigint | null;
-    firstSeen: number;
-    lastChecked: number;
-    status: TransactionStatus;
-    managedTxId: string;
-}
-
 export class TxMonitor implements ITxMonitor {
     private static instance: TxMonitor | undefined;
     private transactions: Map<string, MonitoredTransaction> = new Map();
-    private txManager: TxManager;
     private viemClientManager: ViemClientManager;
     private disposed: boolean = false;
+    private txFinalityCallback: (txHash: string, chainName: string) => void;
+    private txReorgCallback: (txHash: string, chainName: string) => Promise<string | null>;
 
-    constructor(txManager: TxManager, viemClientManager: ViemClientManager) {
-        this.txManager = txManager;
+    constructor(
+        viemClientManager: ViemClientManager,
+        txFinalityCallback: (txHash: string, chainName: string) => void,
+        txReorgCallback: (txHash: string, chainName: string) => Promise<string | null>,
+    ) {
         this.viemClientManager = viemClientManager;
+        this.txFinalityCallback = txFinalityCallback;
+        this.txReorgCallback = txReorgCallback;
         logger.info("[TxMonitor]: initialized successfully");
     }
 
     public static createInstance(
-        txManager: TxManager,
         viemClientManager: ViemClientManager,
+        txFinalityCallback: (txHash: string, chainName: string) => void,
+        txReorgCallback: (txHash: string, chainName: string) => Promise<string | null>,
     ): TxMonitor {
-        TxMonitor.instance = new TxMonitor(txManager, viemClientManager);
+        TxMonitor.instance = new TxMonitor(viemClientManager, txFinalityCallback, txReorgCallback);
         return TxMonitor.instance;
     }
 
@@ -59,9 +55,8 @@ export class TxMonitor implements ITxMonitor {
             return;
         }
 
-        const attempt = managedTx.attempts.find(a => a.txHash === txHash);
-        if (!attempt) {
-            logger.error(`[TxMonitor]: Cannot find attempt for transaction ${txHash}`);
+        if (managedTx.txHash !== txHash) {
+            logger.error(`[TxMonitor]: Transaction hash mismatch: ${txHash} vs ${managedTx.txHash}`);
             return;
         }
 
@@ -69,7 +64,7 @@ export class TxMonitor implements ITxMonitor {
             txHash,
             chainName: managedTx.chainName,
             messageId: managedTx.messageId,
-            blockNumber: attempt.submissionBlock,
+            blockNumber: managedTx.submissionBlock,
             firstSeen: Date.now(),
             lastChecked: Date.now(),
             status: TransactionStatus.Pending,
@@ -155,7 +150,7 @@ export class TxMonitor implements ITxMonitor {
             // At this point we know the transaction is confirmed with sufficient confirmations
             tx.status = TransactionStatus.Finalized;
 
-            this.txManager.onTxFinality(tx.txHash, tx.chainName);
+            this.txFinalityCallback(tx.txHash, tx.chainName);
 
             if (tx.messageId) {
                 await this.finalizeMessageTransactions(tx.messageId);
@@ -182,7 +177,7 @@ export class TxMonitor implements ITxMonitor {
             `[TxMonitor]: Transaction ${tx.txHash} not found on chain ${network.name}, potential reorg`,
         );
 
-        const newTxHash = await this.txManager.onTxReorg(tx.txHash, tx.chainName);
+        const newTxHash = await this.txReorgCallback(tx.txHash, tx.chainName);
 
         if (newTxHash) {
             this.transactions.delete(tx.txHash);
@@ -205,7 +200,7 @@ export class TxMonitor implements ITxMonitor {
                 );
 
                 tx.status = TransactionStatus.Finalized;
-                this.txManager.onTxFinality(tx.txHash, tx.chainName);
+                this.txFinalityCallback(tx.txHash, tx.chainName);
                 this.transactions.delete(tx.txHash);
             }
         }

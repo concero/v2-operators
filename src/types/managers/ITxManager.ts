@@ -1,26 +1,40 @@
-import { AbiEvent, Address } from "viem";
-
-import { LogResult } from "../../common/managers/TxManager";
+import { AbiEvent, Address, PublicClient, SimulateContractParameters, WalletClient } from "viem";
+import { Log } from "viem";
 
 import { ConceroNetwork } from "../ConceroNetwork";
 
+import { LogQuery } from "./ITxReader";
+import { ManagedTx, TxSubmissionParams } from "./ITxWriter";
+
 export interface ITxManager {
     initialize(): Promise<void>;
+
+    // Contract interaction methods
+    callContract(
+        walletClient: WalletClient,
+        publicClient: PublicClient,
+        params: SimulateContractParameters,
+    ): Promise<ManagedTx>;
+
+    // Transaction monitoring methods
     onTxReorg(txHash: string, chainName: string): Promise<string | null>;
     onTxFinality(txHash: string, chainName: string): void;
+
+    // Log reading methods
+    getLogs(query: LogQuery, network: ConceroNetwork): Promise<Log[]>;
     logWatcher: {
         create(
             contractAddress: Address,
             chainName: string,
-            onLogs: (logs: LogResult[], network: ConceroNetwork) => Promise<void>,
+            onLogs: (logs: Log[], network: ConceroNetwork) => Promise<void>,
             event?: AbiEvent,
         ): string;
         remove(watcherId: string): boolean;
     };
-    callContract(params: any): Promise<any>;
-    getLogs(query: any, network: any): Promise<any[]>;
-    getClients(network: any): any;
-    getPendingTransactions(chainName?: string): any[];
-    getTransactionsByMessageId(messageId: string): any[];
+
+    // Transaction status methods
+    getPendingTransactions(chainName?: string): ManagedTx[];
+    getTransactionsByMessageId(messageId: string): ManagedTx[];
+
     dispose(): void;
 }

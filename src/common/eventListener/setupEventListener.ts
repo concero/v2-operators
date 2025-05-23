@@ -1,7 +1,8 @@
 import { AbiEvent, type Address, Log } from "viem";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { LogResult, TxManager } from "../managers/TxManager";
+import { LogResult } from "../../types/managers/ITxReader";
+import { TxManager } from "../managers/TxManager";
 import { logger } from "../utils/logger";
 
 export interface EventListenerHandle {
@@ -11,22 +12,11 @@ export interface EventListenerHandle {
 export async function setupEventListener<T>(
     network: ConceroNetwork,
     contractAddress: Address,
-    onLogs: (logs: LogResult[], network: ConceroNetwork) => Promise<void>,
-    event?: AbiEvent,
+    onLogs: (logs: Log[], network: ConceroNetwork) => Promise<void>,
+    event: AbiEvent,
 ): Promise<EventListenerHandle> {
-    // Verify that contract address is available
-    if (!contractAddress) {
-        throw new Error(`Contract address is required for network ${network.name}`);
-    }
-
     const txManager = TxManager.getInstance();
 
-    const eventName = event ? event.name : "all events";
-    logger.info(
-        `[setupEventListener] ${network.name} Monitoring contract ${contractAddress} for ${eventName}`,
-    );
-
-    // Create a log watcher in TxManager with specific event filter if provided
     const watcherId = txManager.logWatcher.create(
         contractAddress,
         network.name,
@@ -49,7 +39,7 @@ export async function setupEventListener<T>(
         stop: () => {
             txManager.logWatcher.remove(watcherId);
             logger.info(
-                `[${network.name}] Stopped monitoring contract ${contractAddress} for ${eventName}`,
+                `[${network.name}] Stopped monitoring contract ${contractAddress} for ${event.name}`,
             );
         },
     };

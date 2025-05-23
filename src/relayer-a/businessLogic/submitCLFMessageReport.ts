@@ -1,7 +1,6 @@
-import { AbiEvent, decodeEventLog, getAbiItem } from "viem";
+import { getAbiItem } from "viem";
 
 import {
-    BlockManager,
     BlockManagerRegistry,
     DeploymentManager,
     NetworkManager,
@@ -20,13 +19,10 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     const blockManagerRegistry = BlockManagerRegistry.getInstance();
     const txManager = TxManager.getInstance();
 
-    // Get active networks once at the beginning
     const activeNetworks = networkManager.getActiveNetworks();
     const activeNetworkNames = activeNetworks.map(network => network.name);
 
     try {
-        const { transactionHash } = log;
-
         // 1. fetch & decode full CLF message report
         const verifierNetwork = networkManager.getVerifierNetwork();
 
@@ -34,75 +30,52 @@ export async function submitCLFMessageReport(log: DecodedLog) {
             viemClientManager.getClients(verifierNetwork);
 
         const messageReportTx = await verifierPublicClient.getTransaction({
-            hash: transactionHash,
+            hash: log.transactionHash,
         });
 
         const decodedCLFReport = decodeCLFReport(messageReportTx);
         const decodedMessageResult = decodeMessageReportResult(decodedCLFReport.report.results[0]);
-        const { srcChainSelector, dstChainSelector } = decodedMessageResult;
-        const messageId = decodedMessageResult.messageId;
+        const { srcChainSelector, dstChainSelector, messageId } = decodedMessageResult;
 
         // 2. go to src chain and fetch original message bytes
         const srcChain = networkManager.getNetworkBySelector(srcChainSelector.toString());
 
-        if (!srcChain) {
-            throw new Error(`No source chain found for selector ${srcChainSelector}`);
-        }
-
         if (!activeNetworkNames.includes(srcChain.name)) {
             logger.warn(
-                `[submitCLFMessageReport]: ${srcChain.name} is not active. Skipping message submission.`,
+                `[submitCLFMessageReport]: ${srcChain.name} is not active. Skipping message with id ${messageId}`,
             );
             return;
         }
 
         const srcContractAddress = await deploymentManager.getRouterByChainName(srcChain.name);
-
         const srcBlockManager = blockManagerRegistry.getBlockManager(srcChain.name);
-        if (!srcBlockManager) {
-            logger.error(`[submitCLFMessageReport]: No BlockManager for ${srcChain.name}`);
-            return;
-        }
-
         const currentBlock = await srcBlockManager.getLatestBlock();
-        if (!currentBlock) {
-            throw new Error(`Could not retrieve latest block for chain ${srcChain.name}`);
-        }
 
-        const logs = await txManager.getLogs(
+        const decodedLogs = await txManager.getLogs(
             {
                 address: srcContractAddress,
                 event: getAbiItem({
                     abi: globalConfig.ABI.CONCERO_ROUTER,
                     name: "ConceroMessageSent",
                 }),
-                fromBlock: currentBlock - BigInt(100), //TODO: report must include srcBlockNumber, 100 blocks is very unreliable
-                toBlock: currentBlock,
                 args: {
                     messageId,
                 },
+                fromBlock: currentBlock - BigInt(300), //TODO: report must include srcBlockNumber, 100 blocks is very unreliable
+                toBlock: currentBlock,
             },
             srcChain,
         );
 
-        // Process logs if they don't already have decoded data
-        const decodedLogs = logs.map(log => {
-            if (log.decodedLog) return log;
-
-            try {
-                const decodedLog = decodeEventLog({
-                    abi: globalConfig.ABI.CONCERO_ROUTER,
-                    data: log.data,
-                    topics: log.topics,
-                    strict: true,
-                });
-
-                return { ...log, ...decodedLog };
-            } catch (error) {
-                logger.error(`[${srcChain.name}] Error decoding log: ${error}`);
-                return log;
-            }
-        });
+        if (decodedLogs.length === 0) {
+            logger.warn(
+                `[submitCLFMessageReport] ${srcChain.name}: No decodedLogs found for messageId ${messageId} in the last 100 blocks.`,
+            );
+        } else {
+            logger.info(
+                `[submitCLFMessageReport] ${srcChain.name}: Found ${decodedLogs.length} decodedLogs for messageId ${messageId}`,
+            );
+        }
 
         // Find the ConceroMessageSent event
         const conceroMessageSentLog = decodedLogs.find(
@@ -119,9 +92,6 @@ export async function submitCLFMessageReport(log: DecodedLog) {
 
         // 3. Send report + message to dst chain router
         const dstChain = networkManager.getNetworkBySelector(dstChainSelector.toString());
-        if (!dstChain) {
-            throw new Error(`No destination chain found for selector ${dstChainSelector}`);
-        }
 
         if (!activeNetworkNames.includes(dstChain.name)) {
             logger.warn(
@@ -153,26 +123,24 @@ export async function submitCLFMessageReport(log: DecodedLog) {
             return;
         }
 
-        const managedTx = await txManager.callContract({
+        const { walletClient, publicClient } = viemClientManager.getClients(dstChain);
+        const managedTx = await txManager.callContract(walletClient, publicClient, {
             contractAddress: dstConceroRouter,
             abi: globalConfig.ABI.CONCERO_ROUTER,
             functionName: "submitMessageReport",
             args: [reportSubmission, message],
             chain: dstChain,
             messageId: messageId,
-            options: {
-                receiptConfirmations: 3,
-                receiptTimeout: 60_000,
-            },
         });
 
-        const latestAttempt = managedTx.attempts[managedTx.attempts.length - 1];
-        if (latestAttempt && latestAttempt.txHash) {
+        if (managedTx && managedTx.txHash) {
             logger.info(
-                `[${dstChain.name}] CLF message report submitted with hash: ${latestAttempt.txHash}`,
+                `[${dstChain.name}] CLF message report submitted with hash: ${managedTx.txHash}`,
             );
         } else {
-            logger.error(`[${dstChain.name}] Failed to submit CLF message report transaction`);
+            logger.error(
+                `[${dstChain.name}] Failed to submit CLF message report transaction for messageId ${messageId}`,
+            );
         }
     } catch (e) {
         logger.error(`Error when submitting clf report: ${e}`);

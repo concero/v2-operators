@@ -48,7 +48,7 @@ const globalConfig: GlobalConfig = {
             retryCount: 3,
             retryDelay: 2000,
         },
-        SIMULATE_TX: true,
+        SIMULATE_TX: getEnvVar("SIMULATE_TX") === "true" ? true : false,
     },
     HTTPCLIENT: {
         DEFAULT_TIMEOUT: 5000,
@@ -76,7 +76,7 @@ const globalConfig: GlobalConfig = {
         SEQUENTIAL_BATCH_SIZE: 100n,
         CATCHUP_BATCH_SIZE: 500n,
         MAX_BLOCKS_TO_PROCESS: 100n,
-        USE_CHECKPOINTS: true,
+        USE_CHECKPOINTS: getEnvVar("USE_CHECKPOINTS") === "true" ? true : false,
     },
     NOTIFICATIONS: {
         SLACK: {

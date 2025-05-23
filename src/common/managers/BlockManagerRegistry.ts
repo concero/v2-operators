@@ -101,10 +101,27 @@ export class BlockManagerRegistry
             }
         }
 
-        // Create BlockManagers for new networks
-        for (const network of networks) {
-            if (!currentNetworkNames.has(network.name)) {
-                await this.ensureBlockManagerForNetwork(network);
+        // Create BlockManagers for new networks in parallel
+        const newNetworks = networks.filter(network => !currentNetworkNames.has(network.name));
+        if (newNetworks.length > 0) {
+            logger.info(
+                `[BlockManagerService]: Creating ${newNetworks.length} new BlockManagers in parallel`,
+            );
+            
+            const results = await Promise.all(
+                newNetworks.map(network => this.ensureBlockManagerForNetwork(network))
+            );
+            
+            // Log summary of results
+            const successCount = results.filter(result => result !== null).length;
+            if (successCount < newNetworks.length) {
+                logger.warn(
+                    `[BlockManagerService]: ${successCount}/${newNetworks.length} BlockManagers created successfully`,
+                );
+            } else if (successCount > 0) {
+                logger.info(
+                    `[BlockManagerService]: All ${successCount} BlockManagers created successfully`,
+                );
             }
         }
     }
@@ -176,7 +193,7 @@ export class BlockManagerRegistry
         return blockManager;
     }
 
-    public getBlockManager(networkName: string): BlockManager | null {
+    public getBlockManager(networkName: string): BlockManager | undefined {
         if (this.blockManagers.has(networkName)) {
             return this.blockManagers.get(networkName)!;
         }

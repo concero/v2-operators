@@ -9,9 +9,9 @@ export interface INetworkManager {
     getTestnetNetworks(): Record<string, ConceroNetwork>;
     getAllNetworks(): Record<string, ConceroNetwork>;
     getActiveNetworks(): ConceroNetwork[];
-    getNetworkById(chainId: number): ConceroNetwork | undefined;
-    getNetworkByName(name: string): ConceroNetwork | undefined;
-    getNetworkBySelector(selector: string): ConceroNetwork | undefined;
+    getNetworkById(chainId: number): ConceroNetwork;
+    getNetworkByName(name: string): ConceroNetwork;
+    getNetworkBySelector(selector: string): ConceroNetwork;
     getVerifierNetwork(): ConceroNetwork | undefined;
     forceUpdate(): Promise<void>;
     registerUpdateListener(listener: NetworkUpdateListener): void;

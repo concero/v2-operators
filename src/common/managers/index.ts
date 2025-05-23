@@ -8,6 +8,8 @@ export { NonceManager } from "./NonceManager";
 export { RpcManager } from "./RpcManager";
 export { TxManager } from "./TxManager";
 export { TxMonitor } from "./TxMonitor";
+export { TxReader } from "./TxReader";
+export { TxWriter } from "./TxWriter";
 export { ViemClientManager } from "./ViemClientManager";
 export { ManagerBase } from "./ManagerBase";
 export { Singleton } from "./Singleton";

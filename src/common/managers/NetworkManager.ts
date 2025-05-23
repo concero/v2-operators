@@ -105,16 +105,28 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
         return [...this.activeNetworks];
     }
 
-    public getNetworkById(chainId: number): ConceroNetwork | undefined {
-        return Object.values(this.allNetworks).find(network => network.id === chainId);
+    public getNetworkById(chainId: number): ConceroNetwork {
+        const network = Object.values(this.allNetworks).find(network => network.id === chainId);
+        if (!network) {
+            throw new Error(`Network with chain ID ${chainId} not found`);
+        }
+        return network;
     }
 
-    public getNetworkByName(name: string): ConceroNetwork | undefined {
-        return Object.values(this.allNetworks).find(network => network.name === name);
+    public getNetworkByName(name: string): ConceroNetwork {
+        const network = Object.values(this.allNetworks).find(network => network.name === name);
+        if (!network) {
+            throw new Error(`Network with name "${name}" not found`);
+        }
+        return network;
     }
 
-    public getNetworkBySelector(selector: string): ConceroNetwork | undefined {
-        return Object.values(this.allNetworks).find(network => network.chainSelector === selector);
+    public getNetworkBySelector(selector: string): ConceroNetwork {
+        const network = Object.values(this.allNetworks).find(network => network.chainSelector === selector);
+        if (!network) {
+            throw new Error(`Network with selector "${selector}" not found`);
+        }
+        return network;
     }
 
     public getVerifierNetwork(): ConceroNetwork | undefined {

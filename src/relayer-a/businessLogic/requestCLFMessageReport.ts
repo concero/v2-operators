@@ -1,26 +1,28 @@
 import { encodeAbiParameters, keccak256 } from "viem";
 
-import { DeploymentManager } from "../../common/managers/DeploymentManager";
-import { NetworkManager } from "../../common/managers/NetworkManager";
-import { TxManager } from "../../common/managers/TxManager";
-import { ViemClientManager } from "../../common/managers/ViemClientManager";
+import {
+    DeploymentManager,
+    NetworkManager,
+    TxManager,
+    ViemClientManager,
+} from "../../common/managers";
 import { logger } from "../../common/utils";
 
 import { globalConfig } from "../../constants";
 import { eventEmitter } from "../../constants/eventEmitter";
 import { DecodedLog } from "../../types/DecodedLog";
 
-export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector: string) {
+export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSelector: string) {
     const network = NetworkManager.getInstance().getVerifierNetwork();
     const { publicClient, walletClient } = ViemClientManager.getInstance().getClients(network);
 
-    const { messageId, message } = log.args;
+    const { messageId, message } = decodedLog.args;
 
     const { publicClient: srcPublicClient } = ViemClientManager.getInstance().getClients(
         NetworkManager.getInstance().getNetworkBySelector(srcChainSelector),
     );
 
-    const routerTx = await srcPublicClient.getTransaction({ hash: log.transactionHash });
+    const routerTx = await srcPublicClient.getTransaction({ hash: decodedLog.transactionHash });
 
     const encodedSrcChainData = encodeAbiParameters(
         [
@@ -34,7 +36,7 @@ export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector:
         ],
         [
             {
-                blockNumber: log.blockNumber,
+                blockNumber: decodedLog.blockNumber,
                 sender: routerTx.from,
             },
         ],
@@ -52,7 +54,7 @@ export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector:
             return;
         }
 
-        const managedTx = await TxManager.getInstance().callContract({
+        const managedTx = await TxManager.getInstance().callContract(walletClient, publicClient, {
             contractAddress: verifierAddress,
             abi: globalConfig.ABI.CONCERO_VERIFIER,
             functionName: "requestMessageReport",
@@ -65,13 +67,12 @@ export async function requestCLFMessageReport(log: DecodedLog, srcChainSelector:
             },
         });
 
-        const latestAttempt = managedTx.attempts[managedTx.attempts.length - 1];
-        if (latestAttempt && latestAttempt.txHash) {
+        if (managedTx && managedTx.txHash) {
             eventEmitter.emit("requestMessageReport", {
-                txHash: latestAttempt.txHash,
+                txHash: managedTx.txHash,
             });
             logger.info(
-                `[${network.name}] CLF message report requested with hash: ${latestAttempt.txHash}`,
+                `[${network.name}] CLF message report requested with hash: ${managedTx.txHash}`,
             );
         } else {
             logger.error(
