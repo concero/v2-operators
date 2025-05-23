@@ -1,6 +1,7 @@
 import {
     Abi,
     Address,
+    AbiEvent,
     PublicClient,
     SimulateContractParameters,
     TransactionReceipt,
@@ -13,7 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { ITxWriter, ManagedTx, TxSubmissionParams } from "../../types/managers/ITxWriter";
-import { logger } from "../utils";
+import { Logger, LoggerInterface } from "../utils/logger";
 import { callContract } from "../utils/callContract";
 
 import { NetworkManager } from "./NetworkManager";
@@ -46,10 +47,12 @@ export class TxWriter implements ITxWriter {
 
     private networkManager: NetworkManager;
     private viemClientManager: ViemClientManager;
+    private logger: LoggerInterface;
 
     private constructor(networkManager: NetworkManager, viemClientManager: ViemClientManager) {
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
+        this.logger = Logger.getInstance().getLogger("TxWriter");
     }
 
     public static createInstance(
@@ -68,7 +71,7 @@ export class TxWriter implements ITxWriter {
     }
 
     public async initialize(): Promise<void> {
-        logger.info("[TxWriter]: Initialized successfully");
+        this.logger.info("Initialized successfully");
     }
 
     public async callContract(
@@ -80,7 +83,7 @@ export class TxWriter implements ITxWriter {
 
         try {
             if (globalConfig.TX_MANAGER.DRY_RUN) {
-                logger.info(
+                this.logger.info(
                     `[DRY_RUN][${params.chain.name}] Contract call: ${params.functionName}`,
                 );
                 const mockTxHash = `0xdry${Date.now().toString(16)}`;
@@ -90,12 +93,12 @@ export class TxWriter implements ITxWriter {
 
             const txHash = await callContract(publicClient, walletClient, params);
 
-            logger.info(`[${params.chain.name}] Contract call transaction hash: ${txHash}`);
+            this.logger.debug(`[${params.chain.name}] Contract call transaction hash: ${txHash}`);
             const managedTx = this.createManagedTx(params, txType, txHash);
 
             return managedTx;
         } catch (error) {
-            logger.error(`[${params.chain.name}] Contract call failed: ${error}`);
+            this.logger.error(`[${params.chain.name}] Contract call failed: ${error}`);
             throw error;
         }
     }
@@ -151,13 +154,13 @@ export class TxWriter implements ITxWriter {
     public async onTxReorg(txHash: string, chainName: string): Promise<string | null> {
         const tx = this.findTransactionByHash(txHash);
         if (!tx) {
-            logger.warn(
-                `[TxWriter][${chainName}] Cannot find transaction ${txHash} for reorg handling`,
+            this.logger.warn(
+                `[${chainName}] Cannot find transaction ${txHash} for reorg handling`,
             );
             return null;
         }
 
-        logger.info(`[TxWriter][${chainName}] Handling reorg for transaction ${txHash}`);
+        this.logger.info(`[${chainName}] Handling reorg for transaction ${txHash}`);
 
         // Here you would implement the logic to resend the transaction
         // This is a simplified version
@@ -171,13 +174,13 @@ export class TxWriter implements ITxWriter {
     public onTxFinality(txHash: string, chainName: string): void {
         const tx = this.findTransactionByHash(txHash);
         if (!tx) {
-            logger.warn(
-                `[TxWriter][${chainName}] Cannot find transaction ${txHash} for finality handling`,
+            this.logger.warn(
+                `[${chainName}] Cannot find transaction ${txHash} for finality handling`,
             );
             return;
         }
 
-        logger.info(`[TxWriter][${chainName}] Transaction ${txHash} is now final`);
+        this.logger.info(`[${chainName}] Transaction ${txHash} is now final`);
         tx.status = TxStatus.FINALIZED;
     }
 
@@ -197,6 +200,6 @@ export class TxWriter implements ITxWriter {
     public dispose(): void {
         this.transactions.clear();
         this.txByType.clear();
-        logger.info("[TxWriter]: Disposed");
+        this.logger.info("Disposed");
     }
 }

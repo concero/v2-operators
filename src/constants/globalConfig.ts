@@ -3,6 +3,7 @@ import { Abi } from "viem";
 import { abi as conceroRouterAbi } from "../abi/ConceroRouter.json";
 import { abi as conceroVerifierAbi } from "../abi/ConceroVerifier.json";
 import { getEnvVar } from "../common/utils/getEnvVar";
+import { parseGranularLogLevels } from "../common/utils/parseGranularLogLevels";
 import { type GlobalConfig } from "../types/GlobalConfig";
 
 import { getRpcExtension, getRpcOverride } from "./localRpcLoaders";
@@ -13,13 +14,18 @@ const globalConfig: GlobalConfig = {
     IGNORED_NETWORK_IDS: [44787],
     WHITELISTED_NETWORK_IDS: {
         //     mainnet: [1, 137],
-        testnet: [421614],
+        // testnet: [421614, 6342],
         //     localhost: [1],
     },
     POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
     BLOCK_HISTORY_SIZE: parseInt(getEnvVar("BLOCK_HISTORY_SIZE")) || 400, // Number of blocks to store for reorg detection
-    LOG_LEVEL: getEnvVar("LOG_LEVEL") || "info", // "error" | "warn" | "info" | "debug"
-    LOG_DIR: "logs",
+    LOGGER: {
+        LOG_LEVEL_DEFAULT: getEnvVar("LOG_LEVEL_DEFAULT") || "info",
+        LOG_LEVELS_GRANULAR: parseGranularLogLevels(getEnvVar("LOG_LEVELS_GRANULAR") || ""),
+        LOG_DIR: "logs",
+        LOG_MAX_FILES: "7d",
+        LOG_MAX_SIZE: "20m",
+    },
     URLS: {
         CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${process.env.RPC_SERVICE_GIT_BRANCH ?? "master"}/output/`,
         CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${process.env.DEPLOYMENTS_SERVICE_GIT_BRANCH ?? "master"}/.env.deployments.${getEnvVar("NETWORK_MODE") === "localhost" || getEnvVar("NETWORK_MODE") === "testnet" ? "testnet" : "mainnet"}`,
@@ -34,7 +40,6 @@ const globalConfig: GlobalConfig = {
                 "https://github.com/concero/v2-networks/raw/refs/heads/master/networks/testnet",
         },
     },
-    LOG_MAX_FILES: "7d",
     VIEM: {
         RECEIPT: {
             timeout: 0,

@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { ITxReader, LogQuery, LogResult, LogWatcher } from "../../types/managers/ITxReader";
-import { logger } from "../utils";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { BlockManagerRegistry } from "./BlockManagerRegistry";
 import { NetworkManager } from "./NetworkManager";
@@ -16,6 +16,7 @@ export class TxReader implements ITxReader {
     public logWatchers: Map<string, LogWatcher> = new Map();
     private cachedLogs: Map<string, Map<string, LogResult>> = new Map();
     private blockManagerUnwatchers: Map<string, () => void> = new Map();
+    private logger: LoggerInterface;
 
     private networkManager: NetworkManager;
     private viemClientManager: ViemClientManager;
@@ -29,6 +30,7 @@ export class TxReader implements ITxReader {
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
         this.blockManagerRegistry = blockManagerRegistry;
+        this.logger = Logger.getInstance().getLogger("TxReader");
     }
 
     public static createInstance(
@@ -49,7 +51,7 @@ export class TxReader implements ITxReader {
 
     public async initialize(): Promise<void> {
         await this.subscribeToBlockUpdates();
-        logger.info("[TxReader]: Initialized successfully");
+        this.logger.info("Initialized successfully");
     }
 
     private async subscribeToBlockUpdates(): Promise<void> {
@@ -85,17 +87,17 @@ export class TxReader implements ITxReader {
             };
 
             this.logWatchers.set(id, watcher);
-            logger.debug(
-                `[TxReader] Created log watcher for ${chainName}:${contractAddress} (${event.name})`,
+            this.logger.debug(
+                `Created log watcher for ${chainName}:${contractAddress} (${event.name})`,
             );
             return id;
         },
         remove: (watcherId: string): boolean => {
             const result = this.logWatchers.delete(watcherId);
             if (result) {
-                logger.info(`[TxReader] Removed log watcher ${watcherId}`);
+                this.logger.info(`Removed log watcher ${watcherId}`);
             } else {
-                logger.warn(`[TxReader] Failed to remove log watcher ${watcherId} (not found)`);
+                this.logger.warn(`Failed to remove log watcher ${watcherId} (not found)`);
             }
             return result;
         },
@@ -114,7 +116,7 @@ export class TxReader implements ITxReader {
 
         const network = this.networkManager.getNetworkByName(chainName);
         if (!network) {
-            logger.warn(`[TxReader] Unknown network: ${chainName}`);
+            this.logger.warn(`Unknown network: ${chainName}`);
             return;
         }
 
@@ -152,16 +154,16 @@ export class TxReader implements ITxReader {
                         try {
                             await watcher.callback(watcherLogs, network);
                         } catch (error) {
-                            logger.error(
-                                `[TxReader] Error in watcher callback (ID: ${watcher.id}):`,
+                            this.logger.error(
+                                `Error in watcher callback (ID: ${watcher.id}):`,
                                 error,
                             );
                         }
                     }
                 }
             } catch (error) {
-                logger.error(
-                    `[TxReader] Error fetching logs for ${contractAddress} on ${chainName}:`,
+                this.logger.error(
+                    `Error fetching logs for ${contractAddress} on ${chainName}:`,
                     error,
                 );
             }
@@ -226,7 +228,7 @@ export class TxReader implements ITxReader {
             // console.log(query, logs);
             return logs;
         } catch (error) {
-            logger.error(`[TxReader] Error fetching logs on ${network.name}:`, error);
+            this.logger.error(`Error fetching logs on ${network.name}:`, error);
             return [];
         }
     }
@@ -234,13 +236,13 @@ export class TxReader implements ITxReader {
     public dispose(): void {
         for (const [networkName, unwatcher] of this.blockManagerUnwatchers.entries()) {
             unwatcher();
-            logger.info(`[TxReader] Unsubscribed from block updates for ${networkName}`);
+            this.logger.info(`Unsubscribed from block updates for ${networkName}`);
         }
 
         this.blockManagerUnwatchers.clear();
         this.logWatchers.clear();
         this.cachedLogs.clear();
 
-        logger.info("[TxReader]: Disposed");
+        this.logger.info("Disposed");
     }
 }

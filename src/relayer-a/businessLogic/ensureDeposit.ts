@@ -1,7 +1,8 @@
 import { Hash, PublicClient } from "viem";
 
 import { DeploymentManager, NetworkManager, ViemClientManager } from "../../common/managers";
-import { callContract, logger } from "../../common/utils";
+import { callContract } from "../../common/utils";
+import { Logger, LoggerInterface } from "../../common/utils/logger";
 
 import { globalConfig } from "../../constants";
 
@@ -40,6 +41,8 @@ async function getCurrentOperatorDeposit(
 }
 
 async function fetchDepositAndDepositIfNeeded() {
+    const logger = Logger.getInstance().getLogger("ensureDeposit");
+
     const networkManager = NetworkManager.getInstance();
     const viemClientManager = ViemClientManager.getInstance();
     const deploymentManager = DeploymentManager.getInstance();

@@ -12,65 +12,67 @@ import {
     ViemClientManager,
 } from "../managers";
 
-import { logger } from "./logger";
+import { HttpClient } from "./httpClient";
+import { Logger, LoggerInterface } from "./logger";
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
-    try {
-        // Core infrastructure managers
-        const rpcManager = RpcManager.createInstance();
-        const viemClientManager = ViemClientManager.createInstance(rpcManager);
-        const deploymentManager = DeploymentManager.createInstance();
-        const networkManager = NetworkManager.createInstance(rpcManager, deploymentManager);
-        const blockCheckpointManager = BlockCheckpointManager.createInstance();
+    const logger = Logger.createInstance();
+    await logger.initialize();
 
-        const blockManagerRegistry = BlockManagerRegistry.createInstance(
-            blockCheckpointManager,
-            networkManager,
-            viemClientManager,
-            rpcManager,
-        );
+    const httpClient = HttpClient.getInstance();
+    const httpQueue = HttpClient.getQueueInstance();
+    httpClient.initialize();
+    httpQueue.initialize();
 
-        await rpcManager.initialize();
-        await viemClientManager.initialize();
-        await deploymentManager.initialize();
-        await networkManager.initialize();
-        await blockCheckpointManager.initialize();
-        await blockManagerRegistry.initialize();
+    // Core infrastructure managers
+    const rpcManager = RpcManager.createInstance();
+    const viemClientManager = ViemClientManager.createInstance(rpcManager);
+    const deploymentManager = DeploymentManager.createInstance();
+    const networkManager = NetworkManager.createInstance(rpcManager, deploymentManager);
+    const blockCheckpointManager = BlockCheckpointManager.createInstance();
 
-        const txWriter = TxWriter.createInstance(networkManager, viemClientManager);
-        const txReader = TxReader.createInstance(
-            networkManager,
-            viemClientManager,
-            blockManagerRegistry,
-        );
+    const blockManagerRegistry = BlockManagerRegistry.createInstance(
+        blockCheckpointManager,
+        networkManager,
+        viemClientManager,
+        rpcManager,
+    );
 
-        await txWriter.initialize();
-        await txReader.initialize();
+    await rpcManager.initialize();
+    await viemClientManager.initialize();
+    await deploymentManager.initialize();
+    await networkManager.initialize();
+    await blockCheckpointManager.initialize();
+    await blockManagerRegistry.initialize();
 
-        const txMonitor = TxMonitor.createInstance(
-            viemClientManager,
-            (txHash, chainName) => txWriter.onTxFinality(txHash, chainName),
-            (txHash, chainName) => txWriter.onTxReorg(txHash, chainName),
-        );
+    const txWriter = TxWriter.createInstance(networkManager, viemClientManager);
+    const txReader = TxReader.createInstance(
+        networkManager,
+        viemClientManager,
+        blockManagerRegistry,
+    );
 
-        const txManager = TxManager.createInstance(
-            networkManager,
-            viemClientManager,
-            blockManagerRegistry,
-            txWriter,
-            txReader,
-            txMonitor,
-        );
+    await txWriter.initialize();
+    await txReader.initialize();
 
-        await txManager.initialize();
+    const txMonitor = TxMonitor.createInstance(
+        viemClientManager,
+        (txHash, chainName) => txWriter.onTxFinality(txHash, chainName),
+        (txHash, chainName) => txWriter.onTxReorg(txHash, chainName),
+    );
 
-        const nonceManager = NonceManager.createInstance();
-        await nonceManager.initialize();
-    } catch (error) {
-        logger.error("[Managers]: Failed to initialize managers", error);
-        throw new Error(
-            `Manager initialization failed: ${error instanceof Error ? error.message : String(error)}`,
-        );
-    }
+    const txManager = TxManager.createInstance(
+        networkManager,
+        viemClientManager,
+        blockManagerRegistry,
+        txWriter,
+        txReader,
+        txMonitor,
+    );
+
+    await txManager.initialize();
+
+    const nonceManager = NonceManager.createInstance();
+    await nonceManager.initialize();
 }

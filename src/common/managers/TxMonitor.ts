@@ -1,7 +1,7 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { ITxMonitor, MonitoredTransaction } from "../../types/managers/ITxMonitor";
 import { ManagedTx } from "../../types/managers/ITxWriter";
-import { logger } from "../utils";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { ViemClientManager } from "./ViemClientManager";
 
@@ -21,6 +21,7 @@ export class TxMonitor implements ITxMonitor {
     private disposed: boolean = false;
     private txFinalityCallback: (txHash: string, chainName: string) => void;
     private txReorgCallback: (txHash: string, chainName: string) => Promise<string | null>;
+    private logger: LoggerInterface;
 
     constructor(
         viemClientManager: ViemClientManager,
@@ -30,7 +31,8 @@ export class TxMonitor implements ITxMonitor {
         this.viemClientManager = viemClientManager;
         this.txFinalityCallback = txFinalityCallback;
         this.txReorgCallback = txReorgCallback;
-        logger.info("[TxMonitor]: initialized successfully");
+        this.logger = Logger.getInstance().getLogger("TxMonitor");
+        this.logger.info("initialized successfully");
     }
 
     public static createInstance(
@@ -51,12 +53,12 @@ export class TxMonitor implements ITxMonitor {
 
     public addTransaction(txHash: string, managedTx: ManagedTx): void {
         if (this.transactions.has(txHash)) {
-            logger.debug(`[TxMonitor]: Transaction ${txHash} is already being monitored`);
+            this.logger.debug(`Transaction ${txHash} is already being monitored`);
             return;
         }
 
         if (managedTx.txHash !== txHash) {
-            logger.error(`[TxMonitor]: Transaction hash mismatch: ${txHash} vs ${managedTx.txHash}`);
+            this.logger.error(`Transaction hash mismatch: ${txHash} vs ${managedTx.txHash}`);
             return;
         }
 
@@ -72,8 +74,8 @@ export class TxMonitor implements ITxMonitor {
         };
 
         this.transactions.set(txHash, monitoredTx);
-        logger.info(
-            `[TxMonitor]: Started monitoring transaction ${txHash} on ${managedTx.chainName}` +
+        this.logger.info(
+            `Started monitoring transaction ${txHash} on ${managedTx.chainName}` +
                 (managedTx.messageId ? ` for message ${managedTx.messageId}` : ""),
         );
     }
@@ -103,8 +105,8 @@ export class TxMonitor implements ITxMonitor {
 
         if (txsToCheck.length === 0) return;
 
-        logger.debug(
-            `[TxMonitor] Checking ${txsToCheck.length} transactions for finality on ${network.name} at block ${endBlock}`,
+        this.logger.debug(
+            `Checking ${txsToCheck.length} transactions for finality on ${network.name} at block ${endBlock}`,
         );
 
         for (const tx of txsToCheck) {
@@ -135,8 +137,8 @@ export class TxMonitor implements ITxMonitor {
             }
 
             if (txInfo.blockNumber && tx.blockNumber !== txInfo.blockNumber) {
-                logger.info(
-                    `[TxMonitor]: Transaction ${tx.txHash} block number changed from ${tx.blockNumber} to ${txInfo.blockNumber} (potential reorg)`,
+                this.logger.info(
+                    `Transaction ${tx.txHash} block number changed from ${tx.blockNumber} to ${txInfo.blockNumber} (potential reorg)`,
                 );
                 tx.blockNumber = txInfo.blockNumber;
 
@@ -158,13 +160,13 @@ export class TxMonitor implements ITxMonitor {
 
             this.transactions.delete(tx.txHash);
 
-            logger.info(
-                `[TxMonitor]: Transaction ${tx.txHash} has reached finality on ${network.name}`,
+            this.logger.info(
+                `Transaction ${tx.txHash} has reached finality on ${network.name}`,
             );
 
             tx.lastChecked = Date.now();
         } catch (error) {
-            logger.error(`[TxMonitor]: Error checking transaction ${tx.txHash}:`, error);
+            this.logger.error(`Error checking transaction ${tx.txHash}:`, error);
         }
     }
 
@@ -173,18 +175,18 @@ export class TxMonitor implements ITxMonitor {
         network: ConceroNetwork,
     ): Promise<void> {
         tx.status = TransactionStatus.Reorged;
-        logger.info(
-            `[TxMonitor]: Transaction ${tx.txHash} not found on chain ${network.name}, potential reorg`,
+        this.logger.info(
+            `Transaction ${tx.txHash} not found on chain ${network.name}, potential reorg`,
         );
 
         const newTxHash = await this.txReorgCallback(tx.txHash, tx.chainName);
 
         if (newTxHash) {
             this.transactions.delete(tx.txHash);
-            logger.info(`[TxMonitor]: Transaction ${tx.txHash} replaced with ${newTxHash}`);
+            this.logger.info(`Transaction ${tx.txHash} replaced with ${newTxHash}`);
         } else {
             tx.status = TransactionStatus.Dropped;
-            logger.warn(`[TxMonitor]: Failed to resubmit transaction ${tx.txHash} after reorg`);
+            this.logger.warn(`Failed to resubmit transaction ${tx.txHash} after reorg`);
         }
     }
 
@@ -195,8 +197,8 @@ export class TxMonitor implements ITxMonitor {
 
         for (const tx of relatedTxs) {
             if (tx.status === TransactionStatus.Pending) {
-                logger.info(
-                    `[TxMonitor]: Finalizing related transaction ${tx.txHash} for message ${messageId}`,
+                this.logger.info(
+                    `Finalizing related transaction ${tx.txHash} for message ${messageId}`,
                 );
 
                 tx.status = TransactionStatus.Finalized;
@@ -231,6 +233,6 @@ export class TxMonitor implements ITxMonitor {
     public dispose(): void {
         this.disposed = true;
         this.transactions.clear();
-        logger.info("[TxMonitor]: Disposed");
+        this.logger.info("Disposed");
     }
 }

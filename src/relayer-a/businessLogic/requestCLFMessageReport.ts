@@ -6,7 +6,7 @@ import {
     TxManager,
     ViemClientManager,
 } from "../../common/managers";
-import { logger } from "../../common/utils";
+import { Logger, LoggerInterface } from "../../common/utils/logger";
 
 import { globalConfig } from "../../constants";
 import { eventEmitter } from "../../constants/eventEmitter";
@@ -44,11 +44,12 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
 
     try {
         const verifierAddress = await DeploymentManager.getInstance().getConceroVerifier();
+        const reportLogger = Logger.getInstance().getLogger("MessageReporter");
 
         if (globalConfig.TX_MANAGER.DRY_RUN) {
             const dryRunTxHash = `dry-run-${Date.now()}`;
-            logger.info(
-                `[DRY_RUN][${network.name}] CLF message report requested with hash: ${dryRunTxHash}`,
+            reportLogger.info(
+                `[DRY_RUN]:${network.name} CLF message report requested with hash: ${dryRunTxHash}`,
             );
             eventEmitter.emit("requestMessageReport", { txHash: dryRunTxHash });
             return;
@@ -71,12 +72,12 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
             eventEmitter.emit("requestMessageReport", {
                 txHash: managedTx.txHash,
             });
-            logger.info(
-                `[${network.name}] CLF message report requested with hash: ${managedTx.txHash}`,
+            reportLogger.info(
+                `${network.name} CLF message report requested with hash: ${managedTx.txHash}`,
             );
         } else {
-            logger.error(
-                `[${network.name}] Failed to submit CLF message report request transaction`,
+            reportLogger.error(
+                `${network.name} Failed to submit CLF message report request transaction`,
             );
         }
     } catch (error) {

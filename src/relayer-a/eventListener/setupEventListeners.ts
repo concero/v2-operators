@@ -2,7 +2,7 @@ import { AbiEvent, getAbiItem } from "viem";
 
 import { setupEventListener } from "../../common/eventListener/setupEventListener";
 import { DeploymentManager, NetworkManager } from "../../common/managers";
-import { logger } from "../../common/utils";
+import { Logger, LoggerInterface } from "../../common/utils/logger";
 
 import { globalConfig } from "../../constants";
 
@@ -15,6 +15,7 @@ import { onRouterConceroSentLogs, onVerifierMessageReportLogs } from "./onLogs";
  * - MessageReportRequested and MessageReport on the ConceroVerifier
  */
 export async function setupEventListeners() {
+    const logger = Logger.getInstance().getLogger("setupEventListeners");
     const networkManager = NetworkManager.getInstance();
     const deploymentManager = DeploymentManager.getInstance();
 
@@ -57,52 +58,47 @@ export async function setupEventListeners() {
             // eventListenerHandles.push(receivedHandle);
             // logger.info(`[setupEventListeners] Created ConceroMessageReceived watcher for ${network.name}`);
         } catch (error) {
-            logger.error(
-                `[setupEventListeners] Failed to set up router event listeners for ${network.name}:`,
-                error,
-            );
+            logger.error(`Failed to set up router event listeners for ${network.name}:`, error);
         }
     }
 
     // Set up Verifier event listeners
     const verifierNetwork = networkManager.getVerifierNetwork();
-    if (verifierNetwork) {
-        const verifierAddress = await deploymentManager.getConceroVerifier();
 
-        try {
-            // Create event watcher for MessageReportRequested event
-            // const reportRequestedEvent = getAbiItem({
-            //     abi: globalConfig.ABI.CONCERO_VERIFIER,
-            //     name: "MessageReportRequested",
-            // });
+    const verifierAddress = await deploymentManager.getConceroVerifier();
 
-            // const reportRequestedHandle = await setupEventListener(
-            //     verifierNetwork,
-            //     verifierAddress,
-            //     onVerifierMessageReportRequestedLogs,
-            //     reportRequestedEvent as AbiEvent,
-            // );
-            // eventListenerHandles.push(reportRequestedHandle);
-            // logger.info('[setupEventListeners] Created MessageReportRequested watcher for verifier');
+    try {
+        // Create event watcher for MessageReportRequested event
+        // const reportRequestedEvent = getAbiItem({
+        //     abi: globalConfig.ABI.CONCERO_VERIFIER,
+        //     name: "MessageReportRequested",
+        // });
 
-            // Create event watcher for MessageReport event
-            const messageReportEvent = getAbiItem({
-                abi: globalConfig.ABI.CONCERO_VERIFIER,
-                name: "MessageReport",
-            });
+        // const reportRequestedHandle = await setupEventListener(
+        //     verifierNetwork,
+        //     verifierAddress,
+        //     onVerifierMessageReportRequestedLogs,
+        //     reportRequestedEvent as AbiEvent,
+        // );
+        // eventListenerHandles.push(reportRequestedHandle);
+        // logger.info('[setupEventListeners] Created MessageReportRequested watcher for verifier');
 
-            const messageReportHandle = await setupEventListener(
-                verifierNetwork,
-                verifierAddress,
-                onVerifierMessageReportLogs,
-                messageReportEvent as AbiEvent,
-            );
-            eventListenerHandles.push(messageReportHandle);
-            // logger.info('[setupEventListeners] Created MessageReport watcher for verifier');
-        } catch (error) {
-            logger.error("[setupEventListeners] Failed to set up verifier event listeners:", error);
-        }
-    } else {
-        logger.warn("[setupEventListeners] Verifier network not found");
+        // Create event watcher for MessageReport event
+        const messageReportEvent = getAbiItem({
+            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            name: "MessageReport",
+        });
+
+        const messageReportHandle = await setupEventListener(
+            verifierNetwork,
+            verifierAddress,
+            onVerifierMessageReportLogs,
+            messageReportEvent as AbiEvent,
+        );
+        eventListenerHandles.push(messageReportHandle);
+        logger.info("Created MessageReport watcher for verifier");
+        // logger.info('[setupEventListeners] Created MessageReport watcher for verifier');
+    } catch (error) {
+        logger.error("Failed to set up verifier event listeners:", error);
     }
 }

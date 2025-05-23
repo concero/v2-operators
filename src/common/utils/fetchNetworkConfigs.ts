@@ -1,7 +1,7 @@
 import { globalConfig } from "../../constants";
 
 import { ChainDefinition, createViemChain } from "./createViemChain";
-import { httpQueue } from "./httpClient";
+import { HttpClient } from "./httpClient";
 
 interface NetworkDetail {
     name: string;
@@ -16,22 +16,23 @@ interface NetworkDetail {
 }
 
 export async function fetchNetworkConfigs() {
+    const httpClient = HttpClient.getQueueInstance();
     try {
         const [mainnetSummary, testnetSummary] = await Promise.all([
-            httpQueue.get(globalConfig.URLS.V2_NETWORKS.MAINNET_SUMMARY),
-            httpQueue.get(globalConfig.URLS.V2_NETWORKS.TESTNET_SUMMARY),
+            httpClient.get(globalConfig.URLS.V2_NETWORKS.MAINNET_SUMMARY),
+            httpClient.get(globalConfig.URLS.V2_NETWORKS.TESTNET_SUMMARY),
         ]);
 
         const mainnetDetailPromises = Object.keys(mainnetSummary).map(async networkName => {
             const url = `${globalConfig.URLS.V2_NETWORKS.MAINNET_DETAIL_BASE}/${networkName}.json`;
-            const response = await httpQueue.get(url);
+            const response = await httpClient.get(url);
             const details: NetworkDetail = await response;
             return { networkName, details };
         });
 
         const testnetDetailPromises = Object.keys(testnetSummary).map(async networkName => {
             const url = `${globalConfig.URLS.V2_NETWORKS.TESTNET_DETAIL_BASE}/${networkName}.json`;
-            const response = await httpQueue.get(url);
+            const response = await httpClient.get(url);
             const details: NetworkDetail = await response;
             return { networkName, details };
         });

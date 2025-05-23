@@ -3,8 +3,8 @@ import { Address } from "viem";
 import { globalConfig } from "../../constants";
 import { IDeploymentsManager, NetworkUpdateListener } from "../../types/managers";
 import { getEnvVar } from "../utils/getEnvVar";
-import { httpQueue } from "../utils/httpClient";
-import { logger } from "../utils/logger";
+import { HttpClient } from "../utils/httpClient";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { ManagerBase } from "./ManagerBase";
 
@@ -16,9 +16,13 @@ export class DeploymentManager
 
     private conceroRoutersMapByChainName: Record<string, Address> = {};
     private conceroVerifier: Address | undefined;
+    private httpClient: HttpClient;
+    private logger: LoggerInterface;
 
     private constructor() {
         super();
+        this.httpClient = HttpClient.getQueueInstance();
+        this.logger = Logger.getInstance().getLogger("DeploymentManager");
     }
 
     public static createInstance(): DeploymentManager {
@@ -37,9 +41,9 @@ export class DeploymentManager
         if (this.initialized) return;
         try {
             await super.initialize();
-            logger.debug("[DeploymentManager]: Initialized successfully");
+            this.logger.debug("Initialized successfully");
         } catch (error) {
-            logger.error("[DeploymentManager]: Failed to initialize:", error);
+            this.logger.error("Failed to initialize:", error);
             throw error;
         }
     }
@@ -95,7 +99,7 @@ export class DeploymentManager
         const now = Date.now();
 
         try {
-            const deployments = await httpQueue.get(globalConfig.URLS.CONCERO_DEPLOYMENTS, {
+            const deployments = await this.httpClient.get(globalConfig.URLS.CONCERO_DEPLOYMENTS, {
                 responseType: "text", // Ensure Axios returns raw text
             });
 
@@ -130,9 +134,9 @@ export class DeploymentManager
             }
 
             this.lastUpdateTime = now;
-            logger.debug("[DeploymentManager]: Deployments updated successfully");
+            this.logger.debug("Deployments updated successfully");
         } catch (error) {
-            logger.error("[DeploymentManager]: Failed to update deployments:", error);
+            this.logger.error("Failed to update deployments:", error);
             throw new Error(
                 `Failed to update deployments: ${error instanceof Error ? error.message : String(error)}`,
             );
@@ -140,12 +144,9 @@ export class DeploymentManager
     }
 
     onNetworksUpdated() {
-        // logger.debug("[DeploymentManager]: Received onNetworksUpdated");
+        // this.logger.debug("Received onNetworksUpdated");
         this.updateDeployments().catch(err =>
-            logger.error(
-                "[DeploymentManager]: Failed to update deployments after network update:",
-                err,
-            ),
+            this.logger.error("Failed to update deployments after network update:", err),
         );
     }
 
@@ -168,6 +169,6 @@ export class DeploymentManager
 
     public override dispose(): void {
         super.dispose();
-        logger.debug("[DeploymentManager]: Disposed");
+        this.logger.debug("Disposed");
     }
 }

@@ -1,5 +1,6 @@
 import { Address, Client, createPublicClient } from "viem";
 
+import { Logger, LoggerInterface } from "../utils/logger";
 import { ManagerBase } from "./ManagerBase";
 
 interface INonceManagerParams {

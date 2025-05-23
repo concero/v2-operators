@@ -1,6 +1,6 @@
 import { AppErrorEnum, appErrors } from "../../constants";
 
-import { logger } from "./logger";
+import { Logger } from "./logger";
 
 export class AppError extends Error {
     public readonly isOperational: boolean;
@@ -18,7 +18,7 @@ export class AppError extends Error {
     }
 
     private logError() {
-        logger.error({
+        console.error({
             name: this.name,
             message: this.message,
             stack: this.stack,

@@ -9,7 +9,7 @@ import {
 import { fetchNetworkConfigs } from "../utils/fetchNetworkConfigs";
 import { getEnvVar } from "../utils/getEnvVar";
 import { localhostViemChain } from "../utils/localhostViemChain";
-import { logger } from "../utils/logger";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { ManagerBase } from "./ManagerBase";
 
@@ -24,11 +24,13 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
     private rpcManager: IRpcManager | null = null;
     private deploymentsManager: IDeploymentsManager | null = null;
     private updateListeners: NetworkUpdateListener[] = [];
+    private logger: LoggerInterface;
 
     private constructor(rpcManager?: IRpcManager, deploymentsManager?: IDeploymentsManager) {
         super();
         this.rpcManager = rpcManager || null;
         this.deploymentsManager = deploymentsManager || null;
+        this.logger = Logger.getInstance().getLogger("NetworkManager");
 
         if (this.rpcManager && "onNetworksUpdated" in this.rpcManager) {
             this.registerUpdateListener(this.rpcManager as unknown as NetworkUpdateListener);
@@ -58,9 +60,9 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             await this.updateNetworks();
             this.setupUpdateCycle();
             this.initialized = true;
-            logger.debug("[NetworkManager]: Initialized successfully");
+            this.logger.debug("Initialized successfully");
         } catch (error) {
-            logger.error("[NetworkManager]: Failed to initialize networks:", error);
+            this.logger.error("Failed to initialize networks:", error);
             throw error;
         }
     }
@@ -72,13 +74,11 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
 
         if (existingIndex === -1) {
             this.updateListeners.push(listener);
-            // logger.debug(
-            //     `[NetworkManager]: Registered update listener: ${listener.constructor.name}`,
+            // this.logger.debug(
+            //     `Registered update listener: ${listener.constructor.name}`,
             // );
         } else {
-            logger.warn(
-                `[NetworkManager]: Update listener already registered: ${listener.constructor.name}`,
-            );
+            this.logger.warn(`Update listener already registered: ${listener.constructor.name}`);
         }
     }
 
@@ -122,7 +122,9 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
     }
 
     public getNetworkBySelector(selector: string): ConceroNetwork {
-        const network = Object.values(this.allNetworks).find(network => network.chainSelector === selector);
+        const network = Object.values(this.allNetworks).find(
+            network => network.chainSelector === selector,
+        );
         if (!network) {
             throw new Error(`Network with selector "${selector}" not found`);
         }
@@ -153,7 +155,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
         this.updateIntervalId = setInterval(
             () =>
                 this.updateNetworks().catch(err =>
-                    logger.error("[NetworkManager]: Network update failed:", err),
+                    this.logger.error("Network update failed:", err),
                 ),
             globalConfig.NETWORK_MANAGER.NETWORK_UPDATE_INTERVAL_MS,
         );
@@ -176,12 +178,10 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                 globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
             );
 
-            logger.debug(
-                `[NetworkManager]: Networks updated - Active networks: ${this.activeNetworks.length}`,
-            );
+            this.logger.debug(`Networks updated - Active networks: ${this.activeNetworks.length}`);
             this.notifyListeners();
         } catch (error) {
-            logger.error("[NetworkManager]: Failed to update networks:", error);
+            this.logger.error("Failed to update networks:", error);
             throw error;
         }
     }
@@ -191,7 +191,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             try {
                 listener.onNetworksUpdated(this.activeNetworks);
             } catch (error) {
-                logger.error("[NetworkManager]: Error in network update listener:", error);
+                this.logger.error("Error in network update listener:", error);
             }
         }
     }

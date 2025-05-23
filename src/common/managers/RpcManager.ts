@@ -1,13 +1,21 @@
 import { globalConfig } from "../../constants/globalConfig";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
-import { httpQueue } from "../utils/httpClient";
-import { logger } from "../utils/logger";
+import { HttpClient } from "../utils/httpClient";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { ManagerBase } from "./ManagerBase";
 
 export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdateListener {
     private static instance: RpcManager;
+    private httpClient: HttpClient;
+    private logger: LoggerInterface;
+
+    constructor() {
+        super();
+        this.httpClient = HttpClient.getQueueInstance();
+        this.logger = Logger.getInstance().getLogger("RpcManager");
+    }
 
     public static createInstance(): RpcManager {
         RpcManager.instance = new RpcManager();
@@ -29,7 +37,7 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
         if (this.initialized) return;
 
         await super.initialize();
-        logger.debug("[RpcManager]: Initialized successfully");
+        this.logger.debug("Initialized successfully");
     }
 
     public registerRpcUpdateListener(listener: RpcUpdateListener): void {
@@ -72,9 +80,9 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
             }
 
             const url = `${globalConfig.URLS.CONCERO_RPCS}${chainType}/${chainId}-${chainName}.json`;
-            // logger.debug(`[RpcManager]: Fetching RPC URLs for ${chainName} from ${url}`);
+            // this.logger.debug(`Fetching RPC URLs for ${chainName} from ${url}`);
 
-            const chainConfig = await httpQueue.get(url);
+            const chainConfig = await this.httpClient.get(url);
             const response = await chainConfig;
 
             const urls = response.urls;
@@ -93,7 +101,7 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
 
             return urls;
         } catch (error) {
-            logger.error(`[RpcManager]: Error fetching RPC URLs for ${chainName}:`, error);
+            this.logger.error(`Error fetching RPC URLs for ${chainName}:`, error);
             throw error;
         }
     }
@@ -109,8 +117,8 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
                         updatedNetworks.push(network);
                     })
                     .catch(error => {
-                        logger.error(
-                            `[RpcManager]: Failed to update RPC for network ${network.name}:`,
+                        this.logger.error(
+                            `Failed to update RPC for network ${network.name}:`,
                             error,
                         );
                     }),
@@ -122,8 +130,8 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
         if (updatedNetworks.length > 0) {
             this.notifyRpcUpdateListeners(updatedNetworks);
         }
-        logger.debug(
-            `[RpcManager]: Updated RPC URLs for ${updatedNetworks.map(network => network.name).join(", ")}: ${updatedNetworks.length} networks updated`,
+        this.logger.debug(
+            `Updated RPC URLs for ${updatedNetworks.map(network => network.name).join(", ")}: ${updatedNetworks.length} networks updated`,
         );
     }
 
@@ -135,22 +143,19 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
                 const previousUrls = this.rpcUrls[network.name] || [];
                 this.rpcUrls[network.name] = urls;
                 this.lastUpdateTime[network.name] = Date.now();
-                // logger.debug(
-                //     `[RpcManager]: Updated RPC URLs for ${network.name}: ${urls.length} URLs available`,
+                // this.logger.debug(
+                //     `Updated RPC URLs for ${network.name}: ${urls.length} URLs available`,
                 // );
 
                 if (JSON.stringify(previousUrls) !== JSON.stringify(urls)) {
                     this.notifyRpcUpdateListeners([network]);
                 }
             } else {
-                logger.warn(`[RpcManager]: No RPC URLs found for chain ${network.name}`);
+                this.logger.warn(`No RPC URLs found for chain ${network.name}`);
                 this.rpcUrls[network.name] = [];
             }
         } catch (error) {
-            logger.error(
-                `[RpcManager]: Failed to update RPC URLs for chain ${network.name}:`,
-                error,
-            );
+            this.logger.error(`Failed to update RPC URLs for chain ${network.name}:`, error);
             this.rpcUrls[network.name] = this.rpcUrls[network.name] || [];
             throw error;
         }
@@ -161,7 +166,7 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
             try {
                 listener.onRpcUrlsUpdated(networks);
             } catch (error) {
-                logger.error("[RpcManager]: Error in RPC update listener:", error);
+                this.logger.error("Error in RPC update listener:", error);
             }
         }
     }
@@ -172,7 +177,7 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
 
     public onNetworksUpdated(networks: ConceroNetwork[]): void {
         this.updateRpcsForNetworks(networks).catch(err =>
-            logger.error("[RpcManager]: Failed to update RPCs after network update:", err),
+            this.logger.error("Failed to update RPCs after network update:", err),
         );
     }
 }

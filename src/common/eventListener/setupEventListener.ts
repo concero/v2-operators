@@ -3,7 +3,7 @@ import { AbiEvent, type Address, Log } from "viem";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { LogResult } from "../../types/managers/ITxReader";
 import { TxManager } from "../managers/TxManager";
-import { logger } from "../utils/logger";
+import { Logger } from "../utils/logger";
 
 export interface EventListenerHandle {
     stop: () => void;
@@ -26,8 +26,9 @@ export async function setupEventListener<T>(
             try {
                 await onLogs(logs, network);
             } catch (error) {
-                logger.error(
-                    `[${network.name}] Error in onLogs callback for contract ${contractAddress}:`,
+                const eventLogger = Logger.getInstance().getLogger("EventListener");
+                eventLogger.error(
+                    `${network.name} Error in onLogs callback for contract ${contractAddress}:`,
                     error,
                 );
             }
@@ -38,8 +39,9 @@ export async function setupEventListener<T>(
     return {
         stop: () => {
             txManager.logWatcher.remove(watcherId);
-            logger.info(
-                `[${network.name}] Stopped monitoring contract ${contractAddress} for ${event.name}`,
+            const eventLogger = Logger.getInstance().getLogger("EventListener");
+            eventLogger.info(
+                `${network.name} Stopped monitoring contract ${contractAddress} for ${event.name}`,
             );
         },
     };

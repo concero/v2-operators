@@ -5,7 +5,8 @@ import {
     setupEventListener,
 } from "../../common/eventListener/setupEventListener";
 import { DeploymentManager, NetworkManager, ViemClientManager } from "../../common/managers";
-import { callContract, logger } from "../../common/utils";
+import { callContract } from "../../common/utils";
+import { Logger, LoggerInterface } from "../../common/utils/logger";
 
 import { globalConfig } from "../../constants";
 import { eventEmitter } from "../../constants/eventEmitter";
@@ -152,7 +153,8 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
     const registered = await isOperatorRegistered(publicClient, networkManager, deploymentManager);
 
     if (registered) {
-        logger.info("Operator already registered");
+        const registrationLogger = Logger.getInstance().getLogger("OperatorRegistration");
+        registrationLogger.info("Operator already registered");
         return;
     }
 
@@ -164,7 +166,8 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
         deploymentManager,
     );
 
-    logger.info(`Requested operator registration with txHash ${txHash}`);
+    const registrationLogger = Logger.getInstance().getLogger("OperatorRegistration");
+    registrationLogger.info(`Requested operator registration with txHash ${txHash}`);
 
     const transaction = await publicClient.getTransaction({ hash: txHash });
 
@@ -175,7 +178,7 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
         globalConfig.OPERATOR_ADDRESS,
     );
 
-    logger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
+    registrationLogger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
 
     eventEmitter.emit("operatorRegistered", { txHash: confirmedTxHash });
 }

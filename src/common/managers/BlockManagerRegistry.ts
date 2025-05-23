@@ -3,7 +3,7 @@ import { PublicClient } from "viem";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IBlockManagerRegistry } from "../../types/managers/IBlockManagerRegistry";
 import { NetworkUpdateListener } from "../../types/managers/NetworkUpdateListener";
-import { logger } from "../utils/logger";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { BlockCheckpointManager } from "./BlockCheckpointManager";
 import { BlockManager } from "./BlockManager";
@@ -22,6 +22,7 @@ export class BlockManagerRegistry
     private networkManager: NetworkManager;
     private viemClientManager: ViemClientManager;
     private rpcManager: RpcManager;
+    private logger: LoggerInterface;
 
     private constructor(
         blockCheckpointManager: BlockCheckpointManager,
@@ -34,17 +35,13 @@ export class BlockManagerRegistry
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
         this.rpcManager = rpcManager;
+        this.logger = Logger.getInstance().getLogger("BlockManagerRegistry");
     }
 
     public onNetworksUpdated(networks: ConceroNetwork[]): void {
-        logger.info(
-            `[BlockManagerService]: Networks updated, syncing BlockManagers for ${networks.length} networks`,
-        );
+        this.logger.info(`Networks updated, syncing BlockManagers for ${networks.length} networks`);
         this.updateBlockManagers(networks).catch(error => {
-            logger.error(
-                "[BlockManagerRegistry]: Failed to sync BlockManagers after network update",
-                error,
-            );
+            this.logger.error("Failed to sync BlockManagers after network update", error);
         });
     }
 
@@ -53,9 +50,7 @@ export class BlockManagerRegistry
     ): Promise<BlockManager | null> {
         // If we already have a BlockManager for this network, return it
         if (this.blockManagers.has(network.name)) {
-            logger.debug(
-                `[BlockManagerService]: Using existing BlockManager for network ${network.name}`,
-            );
+            this.logger.debug(`Using existing BlockManager for network ${network.name}`);
             return this.blockManagers.get(network.name)!;
         }
 
@@ -70,10 +65,7 @@ export class BlockManagerRegistry
             const blockManager = await this.createBlockManager(network, publicClient);
             return blockManager;
         } catch (error) {
-            logger.error(
-                `[BlockManagerService]: Failed to create BlockManager for network ${network.name}`,
-                error,
-            );
+            this.logger.error(`Failed to create BlockManager for network ${network.name}`, error);
             return null;
         }
     }
@@ -81,18 +73,14 @@ export class BlockManagerRegistry
     private async updateBlockManagers(networks: ConceroNetwork[]): Promise<void> {
         if (!this.initialized) return;
 
-        logger.info(
-            `[BlockManagerService]: Syncing BlockManagers for ${networks.length} active networks`,
-        );
+        this.logger.info(`Syncing BlockManagers for ${networks.length} active networks`);
         const currentNetworkNames = new Set(this.blockManagers.keys());
         const newNetworkNames = new Set(networks.map(network => network.name));
 
         // Remove BlockManagers for networks that are no longer active
         for (const networkName of currentNetworkNames) {
             if (!newNetworkNames.has(networkName)) {
-                logger.info(
-                    `[BlockManagerService]: Removing BlockManager for inactive network ${networkName}`,
-                );
+                this.logger.info(`Removing BlockManager for inactive network ${networkName}`);
                 const blockManager = this.blockManagers.get(networkName);
                 if (blockManager && "dispose" in blockManager) {
                     (blockManager as any).dispose();
@@ -104,24 +92,20 @@ export class BlockManagerRegistry
         // Create BlockManagers for new networks in parallel
         const newNetworks = networks.filter(network => !currentNetworkNames.has(network.name));
         if (newNetworks.length > 0) {
-            logger.info(
-                `[BlockManagerService]: Creating ${newNetworks.length} new BlockManagers in parallel`,
-            );
-            
+            this.logger.debug(`Creating ${newNetworks.length} new BlockManagers in parallel`);
+
             const results = await Promise.all(
-                newNetworks.map(network => this.ensureBlockManagerForNetwork(network))
+                newNetworks.map(network => this.ensureBlockManagerForNetwork(network)),
             );
-            
+
             // Log summary of results
             const successCount = results.filter(result => result !== null).length;
             if (successCount < newNetworks.length) {
-                logger.warn(
-                    `[BlockManagerService]: ${successCount}/${newNetworks.length} BlockManagers created successfully`,
+                this.logger.warn(
+                    `${successCount}/${newNetworks.length} BlockManagers created successfully`,
                 );
             } else if (successCount > 0) {
-                logger.info(
-                    `[BlockManagerService]: All ${successCount} BlockManagers created successfully`,
-                );
+                this.logger.info(`All ${successCount} BlockManagers created successfully`);
             }
         }
     }
@@ -159,16 +143,14 @@ export class BlockManagerRegistry
             this.networkManager.registerUpdateListener(this);
 
             await super.initialize();
-            logger.debug("[BlockManagerRegistry]: Initialized successfully");
+            this.logger.debug("Initialized successfully");
 
             // Perform the initial sync of BlockManagers with active networks
             const activeNetworks = this.networkManager.getActiveNetworks();
-            logger.debug(
-                `[BlockManagerService]: Starting initial sync for ${activeNetworks.length} networks`,
-            );
+            this.logger.debug(`Starting initial sync for ${activeNetworks.length} networks`);
             await this.updateBlockManagers(activeNetworks);
         } catch (error) {
-            logger.error("[BlockManagerRegistry]: Failed to initialize", error);
+            this.logger.error("Failed to initialize", error);
             throw error;
         }
     }
@@ -188,7 +170,7 @@ export class BlockManagerRegistry
         );
 
         this.blockManagers.set(network.name, blockManager);
-        logger.info(`[BlockManagerService]: Created BlockManager for network ${network.name}`);
+        this.logger.debug(`Created BlockManager for network ${network.name}`);
 
         return blockManager;
     }
@@ -198,7 +180,7 @@ export class BlockManagerRegistry
             return this.blockManagers.get(networkName)!;
         }
 
-        logger.warn(`[BlockManagerService]: BlockManager for ${networkName} not found`);
+        this.logger.warn(`BlockManager for ${networkName} not found`);
         return null;
     }
 
@@ -213,7 +195,7 @@ export class BlockManagerRegistry
     public async getLatestBlockForChain(networkName: string): Promise<bigint | null> {
         const blockManager = this.getBlockManager(networkName);
         if (!blockManager) {
-            logger.error(`[BlockManagerService]: BlockManager for ${networkName} not found`);
+            this.logger.error(`BlockManager for ${networkName} not found`);
             return null;
         }
 
@@ -229,12 +211,12 @@ export class BlockManagerRegistry
                 if ("dispose" in blockManager) {
                     (blockManager as any).dispose();
                 }
-                logger.debug(`[BlockManagerService]: Disposed BlockManager for ${networkName}`);
+                this.logger.debug(`Disposed BlockManager for ${networkName}`);
             }
 
             this.blockManagers.clear();
             super.dispose();
-            logger.debug("[BlockManagerRegistry]: Disposed");
+            this.logger.debug("Disposed");
         }
     }
 }

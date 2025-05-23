@@ -1,20 +1,61 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 import { AppErrorEnum, globalConfig } from "../../constants";
+import { ManagerBase } from "../managers";
 
 import { AppError } from "./AppError";
-import { logger } from "./logger";
+import { Logger, LoggerInterface } from "./logger";
 
 const { RETRY_DELAY, MAX_RETRIES, DEFAULT_TIMEOUT } = globalConfig.HTTPCLIENT;
 
-class HttpClient {
-    private axiosInstance: AxiosInstance;
+export class HttpClient extends ManagerBase {
+    private static defaultInstance?: HttpClient;
+    private static queueInstance?: HttpClient;
+
+    private axiosInstance?: AxiosInstance;
+    private logger: LoggerInterface;
     private requestQueue: Array<() => Promise<void>> = [];
     private activeRequests: number = 0;
     private maxConcurrentRequests?: number;
 
     constructor(maxConcurrentRequests?: number) {
+        super();
         this.maxConcurrentRequests = maxConcurrentRequests;
+        this.logger = Logger.getInstance().getLogger("HttpClient");
+    }
+
+    public static createInstance(maxConcurrentRequests?: number): HttpClient {
+        return new HttpClient(maxConcurrentRequests);
+    }
+
+    public static getInstance(): HttpClient {
+        if (!HttpClient.defaultInstance) {
+            HttpClient.defaultInstance = new HttpClient();
+        }
+        return HttpClient.defaultInstance;
+    }
+
+    public static getQueueInstance(): HttpClient {
+        if (!HttpClient.queueInstance) {
+            HttpClient.queueInstance = new HttpClient(2);
+        }
+        return HttpClient.queueInstance;
+    }
+
+    public async initialize(): Promise<void> {
+        if (this.initialized) {
+            return;
+        }
+
+        try {
+            await this.setupAxiosInstance();
+            await super.initialize();
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    private async setupAxiosInstance(): Promise<void> {
         this.axiosInstance = axios.create({
             timeout: DEFAULT_TIMEOUT,
         });
@@ -23,6 +64,7 @@ class HttpClient {
             response => response,
             async error => {
                 const config = error.config;
+                const logger = this.logger;
 
                 if (config && config.__retryCount < MAX_RETRIES) {
                     config.__retryCount = config.__retryCount || 0;
@@ -34,15 +76,34 @@ class HttpClient {
 
                     await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
 
-                    return this.axiosInstance(config);
+                    return this.axiosInstance!(config);
                 }
 
                 logger.error(
                     `Request to ${config?.url} failed after ${config?.__retryCount || 0} attempts. Error: ${error.message}`,
                 );
-                throw new AppError(AppErrorEnum.FailedHTTPRequest, error); // Ensure the error is logged and propagated
+                throw new AppError(AppErrorEnum.FailedHTTPRequest, error);
             },
         );
+    }
+
+    public dispose(): void {
+        // Clear the request queue
+        this.requestQueue = [];
+        this.activeRequests = 0;
+        this.axiosInstance = undefined;
+        super.dispose();
+    }
+
+    public static disposeInstances(): void {
+        if (HttpClient.defaultInstance) {
+            HttpClient.defaultInstance.dispose();
+            HttpClient.defaultInstance = undefined;
+        }
+        if (HttpClient.queueInstance) {
+            HttpClient.queueInstance.dispose();
+            HttpClient.queueInstance = undefined;
+        }
     }
 
     private async processQueue(): Promise<void> {
@@ -75,6 +136,13 @@ class HttpClient {
         config: AxiosRequestConfig = {},
         body?: any,
     ): Promise<T> {
+        if (!this.initialized || !this.axiosInstance) {
+            throw new AppError(
+                AppErrorEnum.FailedHTTPRequest,
+                new Error("HttpClient not initialized"),
+            );
+        }
+
         return new Promise<T>((resolve, reject) => {
             const executeRequest = async () => {
                 try {
@@ -84,7 +152,7 @@ class HttpClient {
                     //     }`,
                     // );
 
-                    const response: AxiosResponse<T> = await this.axiosInstance.request<T>({
+                    const response: AxiosResponse<T> = await this.axiosInstance!.request<T>({
                         method,
                         url,
                         data: body,
@@ -93,7 +161,7 @@ class HttpClient {
 
                     resolve(response.data);
                 } catch (error) {
-                    logger.error(`Request failed for ${url} with error:`, error);
+                    this.logger.error(`Request failed for ${url} with error:`, error);
                     reject(new AppError(AppErrorEnum.FailedHTTPRequest, error));
                 }
             };
@@ -110,8 +178,3 @@ class HttpClient {
         return this.request<T>("POST", url, config, body);
     }
 }
-
-const httpQueue = new HttpClient(2);
-const httpClient = new HttpClient();
-
-export { httpQueue, httpClient };

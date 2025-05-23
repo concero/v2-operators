@@ -6,6 +6,4 @@ export { decodeCLFReport } from "./decoders/decodeCLFReport";
 export { decodeMessageReportResult } from "./decoders/decodeMessageReportResult";
 export * as formatting from "./formatting";
 export { getEnvAddress, getEnvVar } from "./getEnvVar";
-export { httpClient } from "./httpClient";
 export { localhostViemChain } from "./localhostViemChain";
-export { logger } from "./logger";

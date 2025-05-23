@@ -3,7 +3,7 @@ import { PublicClient } from "viem";
 import { globalConfig } from "../../constants/globalConfig";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IBlockManager } from "../../types/managers/IBlockManager";
-import { logger } from "../utils/logger";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { BlockCheckpointManager } from "./BlockCheckpointManager";
 
@@ -32,6 +32,8 @@ export class BlockManager implements IBlockManager {
     private blockCheckpointManager: BlockCheckpointManager;
     private blockRangeHandlers: Map<string, BlockRangeHandler> = new Map();
 
+    protected logger: LoggerInterface;
+
     private isDisposed: boolean = false;
     private isPolling: boolean = false;
     private pollingIntervalMs: number = globalConfig.POLLING_INTERVAL_MS;
@@ -47,6 +49,7 @@ export class BlockManager implements IBlockManager {
         this.publicClient = publicClient;
         this.network = network;
         this.blockCheckpointManager = blockCheckpointManager;
+        this.logger = Logger.getInstance().getLogger("BlockManager");
     }
 
     static async create(
@@ -55,29 +58,30 @@ export class BlockManager implements IBlockManager {
         blockCheckpointManager: BlockCheckpointManager,
     ): Promise<BlockManager> {
         let initialBlock: bigint;
+        const staticLogger = Logger.getInstance().getLogger("BlockManager");
 
         if (!globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS) {
             initialBlock = await publicClient.getBlockNumber();
-            logger.info(
-                `[BlockManager] ${network.name}: Checkpoints disabled. Starting from current chain tip: ${initialBlock}`,
+            staticLogger.info(
+                `${network.name}: Checkpoints disabled. Starting from current chain tip: ${initialBlock}`,
             );
         } else {
             const savedBlock = await blockCheckpointManager.getCheckpoint(network);
             if (savedBlock !== undefined) {
-                logger.info(
-                    `[BlockManager] ${network.name}: Resuming from previously saved block ${savedBlock}`,
+                staticLogger.info(
+                    `${network.name}: Resuming from previously saved block ${savedBlock}`,
                 );
                 initialBlock = savedBlock;
             } else {
                 initialBlock = await publicClient.getBlockNumber();
-                logger.debug(
-                    `[BlockManager] ${network.name}: No checkpoint found. Starting from current chain tip: ${initialBlock}`,
+                staticLogger.debug(
+                    `${network.name}: No checkpoint found. Starting from current chain tip: ${initialBlock}`,
                 );
             }
         }
 
-        logger.debug(
-            `[BlockManager] ${network.name}: Creating new instance with initial block ${initialBlock}`,
+        staticLogger.debug(
+            `${network.name}: Creating new instance with initial block ${initialBlock}`,
         );
 
         const blockManager = new BlockManager(
@@ -92,15 +96,13 @@ export class BlockManager implements IBlockManager {
 
     public async startPolling(): Promise<void> {
         if (this.isPolling) {
-            logger.debug(
-                `[BlockManager] ${this.network.name}: Already polling, ignoring start request`,
-            );
+            this.logger.debug(`${this.network.name}: Already polling, ignoring start request`);
             return;
         }
 
         this.isPolling = true;
 
-        logger.debug(`[BlockManager] ${this.network.name}: Starting block polling`);
+        this.logger.debug(`${this.network.name}: Starting block polling`);
         await this.performCatchup();
         await this.poll();
     }
@@ -110,7 +112,7 @@ export class BlockManager implements IBlockManager {
             return;
         }
 
-        logger.info(`[BlockManager] ${this.network.name}: Stopping block polling`);
+        this.logger.info(`${this.network.name}: Stopping block polling`);
         this.isPolling = false;
 
         if (this.pollingTimeout) {
@@ -129,13 +131,13 @@ export class BlockManager implements IBlockManager {
 
             if (this.latestBlock > this.lastProcessedBlockNumber) {
                 const startBlock = this.lastProcessedBlockNumber + 1n;
-                logger.debug(
-                    `[BlockManager] ${this.network.name}: Processing ${this.latestBlock - startBlock + 1n} new blocks from ${startBlock} to ${this.latestBlock}`,
+                this.logger.debug(
+                    `${this.network.name}: Processing ${this.latestBlock - startBlock + 1n} new blocks from ${startBlock} to ${this.latestBlock}`,
                 );
                 await this.processBlockRange(startBlock, this.latestBlock);
             }
         } catch (error) {
-            logger.error(`[BlockManager] ${this.network.name}: Error in poll cycle:`, error);
+            this.logger.error(`${this.network.name}: Error in poll cycle:`, error);
         } finally {
             if (this.isPolling && !this.isDisposed) {
                 this.pollingTimeout = setTimeout(() => this.poll(), this.pollingIntervalMs);
@@ -155,16 +157,16 @@ export class BlockManager implements IBlockManager {
     private async processBlockRange(startBlock: bigint, endBlock: bigint): Promise<void> {
         // Notify all registered handlers about the new block range
         if (this.blockRangeHandlers.size > 0) {
-            // logger.debug(
-            //     `[BlockManager] ${this.network.name}: Notifying ${this.blockRangeHandlers.size} handlers about blocks ${startBlock} - ${endBlock}`,
+            // this.logger.debug(
+            //     `${this.network.name}: Notifying ${this.blockRangeHandlers.size} handlers about blocks ${startBlock} - ${endBlock}`,
             // );
 
             for (const handler of this.blockRangeHandlers.values()) {
                 try {
                     await handler.onBlockRange(startBlock, endBlock);
                 } catch (error) {
-                    logger.error(
-                        `[BlockManager] ${this.network.name}: Error in block range handler ${handler.id}:`,
+                    this.logger.error(
+                        `${this.network.name}: Error in block range handler ${handler.id}:`,
                         error,
                     );
                     if (handler.onError) {
@@ -180,8 +182,8 @@ export class BlockManager implements IBlockManager {
      * Update the last processed block checkpoint
      */
     private async updateLastProcessedBlock(blockNumber: bigint): Promise<void> {
-        // logger.debug(
-        //     `[BlockManager] ${this.network.name}: Updating last processed block to ${blockNumber} (previous: ${this.lastProcessedBlockNumber})`,
+        // this.logger.debug(
+        //     `${this.network.name}: Updating last processed block to ${blockNumber} (previous: ${this.lastProcessedBlockNumber})`,
         // );
         await this.blockCheckpointManager.updateLastProcessedBlock(this.network.name, blockNumber);
         this.lastProcessedBlockNumber = blockNumber;
@@ -193,7 +195,7 @@ export class BlockManager implements IBlockManager {
      */
     private async performCatchup(): Promise<void> {
         if (this.isDisposed) {
-            logger.debug(`[BlockManager] ${this.network.name}: Already disposed, skipping catchup`);
+            this.logger.debug(`${this.network.name}: Already disposed, skipping catchup`);
             return;
         }
 
@@ -201,8 +203,8 @@ export class BlockManager implements IBlockManager {
             this.latestBlock = await this.publicClient.getBlockNumber();
             let currentBlock: bigint = this.lastProcessedBlockNumber;
 
-            logger.info(
-                `[BlockManager] ${this.network.name}: Starting catchup from block ${currentBlock}, Chain tip: ${this.latestBlock}`,
+            this.logger.debug(
+                `${this.network.name}: Starting catchup from block ${currentBlock}, Chain tip: ${this.latestBlock}`,
             );
 
             while (currentBlock < this.latestBlock && !this.isDisposed) {
@@ -213,8 +215,8 @@ export class BlockManager implements IBlockManager {
                         ? this.latestBlock
                         : startBlock + globalConfig.BLOCK_MANAGER.CATCHUP_BATCH_SIZE - 1n;
 
-                logger.debug(
-                    `[BlockManager] ${this.network.name}: Processing ${endBlock - startBlock + 1n} blocks from ${startBlock} - ${endBlock}`,
+                this.logger.debug(
+                    `${this.network.name}: Processing ${endBlock - startBlock + 1n} blocks from ${startBlock} - ${endBlock}`,
                 );
 
                 // Process this block range (will notify handlers)
@@ -222,7 +224,7 @@ export class BlockManager implements IBlockManager {
                 currentBlock = endBlock;
             }
         } catch (err) {
-            logger.error(`[BlockManager] ${this.network.name}:`, err);
+            this.logger.error(`${this.network.name}:`, err);
         }
     }
 
@@ -234,8 +236,8 @@ export class BlockManager implements IBlockManager {
         const { onBlockRange, onError } = options;
         const handlerId = Math.random().toString(36).substring(2, 15);
 
-        // logger.debug(
-        //     `[BlockManager] ${this.network.name}: Registered block range handler ${handlerId}`,
+        // this.logger.debug(
+        //     `${this.network.name}: Registered block range handler ${handlerId}`,
         // );
 
         this.blockRangeHandlers.set(handlerId, {
@@ -245,9 +247,7 @@ export class BlockManager implements IBlockManager {
         });
 
         return () => {
-            logger.info(
-                `[BlockManager] ${this.network.name}: Unregistered block range handler ${handlerId}`,
-            );
+            this.logger.info(`${this.network.name}: Unregistered block range handler ${handlerId}`);
             this.blockRangeHandlers.delete(handlerId);
         };
     }
@@ -256,6 +256,6 @@ export class BlockManager implements IBlockManager {
         this.isDisposed = true;
         this.stopPolling();
         this.blockRangeHandlers.clear();
-        logger.debug(`[BlockManager] ${this.network.name}: Disposed`);
+        this.logger.debug(`${this.network.name}: Disposed`);
     }
 }

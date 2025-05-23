@@ -3,7 +3,7 @@ import { BlockCheckpoint } from "@prisma/client";
 import { globalConfig } from "../../constants/globalConfig";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IBlockCheckpointManager } from "../../types/managers/IBlockCheckpointManager";
-import { logger } from "../utils";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { DbManager } from "./DbManager";
 import { ManagerBase } from "./ManagerBase";
@@ -11,9 +11,11 @@ import { ManagerBase } from "./ManagerBase";
 export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpointManager {
     private static instance: BlockCheckpointManager;
     private prisma = DbManager.getClient();
+    private logger: LoggerInterface;
 
     private constructor() {
         super();
+        this.logger = Logger.getInstance().getLogger("BlockCheckpointManager");
     }
 
     public static createInstance(): BlockCheckpointManager {
@@ -35,14 +37,12 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
         });
 
         if (checkpoint) {
-            logger.debug(
-                `[BlockCheckpointManager]: Found checkpoint at block ${checkpoint} for network ${network.name}`,
+            this.logger.debug(
+                `Found checkpoint at block ${checkpoint} for network ${network.name}`,
             );
             return BigInt(checkpoint.blockNumber.toString());
         } else {
-            logger.debug(
-                `[BlockCheckpointManager]: No checkpoint found for network ${network.name}`,
-            );
+            this.logger.debug(`No checkpoint found for network ${network.name}`);
         }
     }
 
@@ -56,12 +56,12 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
                     blockNumber,
                 },
             });
-            // logger.debug(
-            //     `[BlockCheckpointManager] Upsert successful for network: ${networkName}, blockNumber: ${blockNumber.toString()}`,
+            // this.logger.debug(
+            //     `Upsert successful for network: ${networkName}, blockNumber: ${blockNumber.toString()}`,
             // );
         } catch (error) {
-            logger.error(
-                `[BlockCheckpointManager] Upsert failed for network: ${networkName}, blockNumber: ${blockNumber.toString()}`,
+            this.logger.error(
+                `Upsert failed for network: ${networkName}, blockNumber: ${blockNumber.toString()}`,
                 error,
             );
             throw error;
@@ -72,11 +72,11 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
         if (this.initialized) return;
 
         await super.initialize();
-        logger.debug("[BlockCheckpointManager]: Initialized successfully");
+        this.logger.debug("Initialized successfully");
     }
 
     public override dispose(): void {
         super.dispose();
-        logger.debug("[BlockCheckpointManager]: Disposed");
+        this.logger.debug("Disposed");
     }
 }

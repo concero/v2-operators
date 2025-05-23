@@ -16,8 +16,9 @@ import type { PrivateKeyAccount } from "viem/accounts/types";
 import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
-import { getEnvVar, logger } from "../utils";
+import { getEnvVar } from "../utils";
 import { createCustomHttpTransport } from "../utils/customHttpTransport";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { ManagerBase } from "./ManagerBase";
 
@@ -34,10 +35,12 @@ export class ViemClientManager
     private static instance: ViemClientManager;
     private clients: Map<string, ViemClients> = new Map();
     private rpcManager: IRpcManager;
+    private logger: LoggerInterface;
 
     private constructor(rpcManager: IRpcManager) {
         super();
         this.rpcManager = rpcManager;
+        this.logger = Logger.getInstance().getLogger("ViemClientManager");
     }
 
     public static createInstance(rpcManager: IRpcManager): ViemClientManager {
@@ -57,7 +60,7 @@ export class ViemClientManager
         // Register as RPC update listener
         this.rpcManager.registerRpcUpdateListener(this);
         await super.initialize();
-        logger.debug("[ViemClientManager]: Initialized successfully");
+        this.logger.debug("Initialized successfully");
     }
 
     private createTransport(chain: ConceroNetwork) {
@@ -136,18 +139,11 @@ export class ViemClientManager
             try {
                 this.clients.delete(network.name);
             } catch (error) {
-                logger.error(
-                    `[ViemClientManager]: Failed to update viem clients for ${network.name}:`,
-                    error,
-                );
+                this.logger.error(`Failed to update viem clients for ${network.name}:`, error);
             }
         }
 
-        if (networks.length > 0) {
-            logger.debug(
-                `[ViemClientManager]: Viem clients reset for ${networks.map(n => n.name).join(", ")}`,
-            );
-        }
+        this.logger.debug(`Viem clients reset for ${networks.map(n => n.name).join(", ")}`);
     }
 
     public onNetworksUpdated(networks: ConceroNetwork[]): void {
@@ -160,12 +156,9 @@ export class ViemClientManager
             try {
                 const newClients = this.initializeClients(network);
                 this.clients.set(network.name, newClients);
-                logger.debug(`[ViemClientManager]: Updated clients for chain ${network.name}`);
+                this.logger.debug(`Updated clients for chain ${network.name}`);
             } catch (error) {
-                logger.error(
-                    `[ViemClientManager]: Failed to update clients for chain ${network.name}`,
-                    error,
-                );
+                this.logger.error(`Failed to update clients for chain ${network.name}`, error);
             }
         }
     }
@@ -177,6 +170,6 @@ export class ViemClientManager
         this.clients.clear();
         super.dispose();
         ViemClientManager.instance = undefined as any;
-        logger.debug("[ViemClientManager]: Disposed");
+        this.logger.debug("Disposed");
     }
 }

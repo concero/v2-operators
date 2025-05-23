@@ -5,7 +5,7 @@ import { ITxManager } from "../../types/managers/ITxManager";
 import { ITxMonitor } from "../../types/managers/ITxMonitor";
 import { ITxReader, LogQuery, LogResult } from "../../types/managers/ITxReader";
 import { ITxWriter, ManagedTx, TxSubmissionParams } from "../../types/managers/ITxWriter";
-import { logger } from "../utils";
+import { Logger, LoggerInterface } from "../utils/logger";
 
 import { BlockManagerRegistry } from "./BlockManagerRegistry";
 import { ManagerBase } from "./ManagerBase";
@@ -24,6 +24,7 @@ export class TxManager extends ManagerBase implements ITxManager {
     private readonly networkManager: NetworkManager;
     private readonly viemClientManager: ViemClientManager;
     private readonly blockManagerRegistry: BlockManagerRegistry;
+    private logger: LoggerInterface;
 
     private constructor(
         networkManager: NetworkManager,
@@ -40,6 +41,7 @@ export class TxManager extends ManagerBase implements ITxManager {
         this.txWriter = txWriter;
         this.txReader = txReader;
         this.txMonitor = txMonitor;
+        this.logger = Logger.getInstance().getLogger("TxManager");
     }
 
     public static createInstance(
@@ -72,7 +74,7 @@ export class TxManager extends ManagerBase implements ITxManager {
 
     public async initialize(): Promise<void> {
         super.initialize();
-        logger.info("[TxManager]: initialized successfully");
+        this.logger.info("initialized successfully");
     }
 
     public async callContract(
@@ -128,6 +130,6 @@ export class TxManager extends ManagerBase implements ITxManager {
         this.txWriter.dispose();
         this.txReader.dispose();
         this.txMonitor.dispose();
-        logger.info("[TxManager]: disposed");
+        this.logger.info("disposed");
     }
 }

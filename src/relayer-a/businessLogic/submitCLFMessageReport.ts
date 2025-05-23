@@ -7,7 +7,8 @@ import {
     TxManager,
     ViemClientManager,
 } from "../../common/managers";
-import { decodeCLFReport, decodeMessageReportResult, logger } from "../../common/utils";
+import { decodeCLFReport, decodeMessageReportResult } from "../../common/utils";
+import { Logger, LoggerInterface } from "../../common/utils/logger";
 
 import { globalConfig } from "../../constants";
 import { DecodedLog } from "../../types/DecodedLog";
@@ -41,8 +42,9 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         const srcChain = networkManager.getNetworkBySelector(srcChainSelector.toString());
 
         if (!activeNetworkNames.includes(srcChain.name)) {
-            logger.warn(
-                `[submitCLFMessageReport]: ${srcChain.name} is not active. Skipping message with id ${messageId}`,
+            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
+            reportLogger.warn(
+                `${srcChain.name} is not active. Skipping message with id ${messageId}`,
             );
             return;
         }
@@ -68,12 +70,14 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         );
 
         if (decodedLogs.length === 0) {
-            logger.warn(
-                `[submitCLFMessageReport] ${srcChain.name}: No decodedLogs found for messageId ${messageId} in the last 100 blocks.`,
+            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
+            reportLogger.warn(
+                `${srcChain.name}: No decodedLogs found for messageId ${messageId} in the last 100 blocks.`,
             );
         } else {
-            logger.info(
-                `[submitCLFMessageReport] ${srcChain.name}: Found ${decodedLogs.length} decodedLogs for messageId ${messageId}`,
+            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
+            reportLogger.info(
+                `${srcChain.name}: Found ${decodedLogs.length} decodedLogs for messageId ${messageId}`,
             );
         }
 
@@ -94,15 +98,17 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         const dstChain = networkManager.getNetworkBySelector(dstChainSelector.toString());
 
         if (!activeNetworkNames.includes(dstChain.name)) {
-            logger.warn(
-                `[submitCLFMessageReport]: ${dstChain.name} is not active. Skipping message submission.`,
+            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
+            reportLogger.warn(
+                `${dstChain.name} is not active. Skipping message submission.`,
             );
             return;
         }
 
         const dstBlockManager = blockManagerRegistry.getBlockManager(dstChain.name);
         if (!dstBlockManager) {
-            logger.error(`[submitCLFMessageReport]: No BlockManager for ${dstChain.name}`);
+            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
+            reportLogger.error(`No BlockManager for ${dstChain.name}`);
             return;
         }
 
@@ -117,7 +123,8 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         };
 
         if (globalConfig.TX_MANAGER.DRY_RUN) {
-            logger.info(
+            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
+            reportLogger.info(
                 `[${dstChain.name}] CLF message report submitted with hash: dry-run-${Date.now()}`,
             );
             return;
@@ -134,11 +141,13 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         });
 
         if (managedTx && managedTx.txHash) {
-            logger.info(
+            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
+            reportLogger.info(
                 `[${dstChain.name}] CLF message report submitted with hash: ${managedTx.txHash}`,
             );
         } else {
-            logger.error(
+            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
+            reportLogger.error(
                 `[${dstChain.name}] Failed to submit CLF message report transaction for messageId ${messageId}`,
             );
         }
