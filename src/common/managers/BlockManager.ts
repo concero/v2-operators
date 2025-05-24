@@ -36,7 +36,7 @@ export class BlockManager implements IBlockManager {
 
     private isDisposed: boolean = false;
     private isPolling: boolean = false;
-    private pollingIntervalMs: number = globalConfig.POLLING_INTERVAL_MS;
+    private pollingIntervalMs: number = globalConfig.BLOCK_MANAGER.POLLING_INTERVAL_MS;
     private pollingTimeout: NodeJS.Timeout | null = null;
 
     private constructor(
@@ -62,7 +62,7 @@ export class BlockManager implements IBlockManager {
 
         if (!globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS) {
             initialBlock = await publicClient.getBlockNumber();
-            staticLogger.info(
+            staticLogger.debug(
                 `${network.name}: Checkpoints disabled. Starting from current chain tip: ${initialBlock}`,
             );
         } else {

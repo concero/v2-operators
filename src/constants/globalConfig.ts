@@ -24,8 +24,6 @@ const globalConfig: GlobalConfig = {
             /* 1 */
         ],
     },
-    POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
-    BLOCK_HISTORY_SIZE: parseInt(getEnvVar("BLOCK_HISTORY_SIZE")) || 400, // Number of blocks to store for reorg detection
     LOGGER: {
         LOG_LEVEL_DEFAULT: getOptionalEnvVar("LOG_LEVEL_DEFAULT", "info"),
         LOG_LEVELS_GRANULAR: getGranularLogLevels(),
@@ -85,6 +83,7 @@ const globalConfig: GlobalConfig = {
         NETWORK_UPDATE_INTERVAL_MS: 1000 * 60 * 60, // 1 hour
     },
     BLOCK_MANAGER: {
+        POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
         SEQUENTIAL_BATCH_SIZE: 100n,
         CATCHUP_BATCH_SIZE: 500n,
         MAX_BLOCKS_TO_PROCESS: 100n,

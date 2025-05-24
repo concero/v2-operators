@@ -14,8 +14,6 @@ type GlobalConfig = {
         testnet: number[];
         localhost: number[];
     };
-    POLLING_INTERVAL_MS: number;
-    BLOCK_HISTORY_SIZE: number; // Number of blocks to store for reorg detection
     LOGGER: {
         LOG_LEVEL_DEFAULT: string;
         LOG_LEVELS_GRANULAR: Record<string, string>;
@@ -60,6 +58,7 @@ type GlobalConfig = {
         NETWORK_UPDATE_INTERVAL_MS: number;
     };
     BLOCK_MANAGER: {
+        POLLING_INTERVAL_MS: number;
         SEQUENTIAL_BATCH_SIZE: bigint;
         CATCHUP_BATCH_SIZE: bigint;
         MAX_BLOCKS_TO_PROCESS: bigint;

@@ -96,8 +96,6 @@ export async function setupEventListeners() {
             messageReportEvent as AbiEvent,
         );
         eventListenerHandles.push(messageReportHandle);
-        logger.info("Created MessageReport watcher for verifier");
-        // logger.info('[setupEventListeners] Created MessageReport watcher for verifier');
     } catch (error) {
         logger.error("Failed to set up verifier event listeners:", error);
     }

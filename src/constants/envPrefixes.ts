@@ -9,7 +9,6 @@ export const envPrefixes: EnvPrefixes = {
     operatorAddress: "OPERATOR_ADDRESS",
     operatorPrivateKey: "OPERATOR_PRIVATE_KEY",
     pollingIntervalMs: "POLLING_INTERVAL_MS",
-    blockHistorySize: "BLOCK_HISTORY_SIZE",
     dryRun: "DRY_RUN",
     rpcServiceGitBranch: "RPC_SERVICE_GIT_BRANCH",
     deploymentsServiceGitBranch: "DEPLOYMENTS_SERVICE_GIT_BRANCH",

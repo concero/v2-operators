@@ -20,7 +20,6 @@ export interface env {
     // Config environment variables
     NETWORK_MODE: string;
     POLLING_INTERVAL_MS: string;
-    BLOCK_HISTORY_SIZE: string;
     LOG_LEVEL_DEFAULT: string;
     LOG_LEVELS_GRANULAR: string;
     SIMULATE_TX: string;

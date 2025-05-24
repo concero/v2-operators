@@ -74,8 +74,8 @@ export class TxMonitor implements ITxMonitor {
         };
 
         this.transactions.set(txHash, monitoredTx);
-        this.logger.info(
-            `Started monitoring transaction ${txHash} on ${managedTx.chainName}` +
+        this.logger.debug(
+            `Started monitoring tx ${txHash} on ${managedTx.chainName}` +
                 (managedTx.messageId ? ` for message ${managedTx.messageId}` : ""),
         );
     }
