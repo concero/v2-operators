@@ -1,5 +1,6 @@
 import {
     HttpRequestError,
+    MethodNotFoundRpcError,
     PublicClient,
     RpcRequestError,
     TransactionNotFoundError,
@@ -10,6 +11,8 @@ import {
     createWalletClient,
     fallback,
 } from "viem";
+import { InvalidInputRpcError } from "viem";
+import { ContractFunctionExecutionError } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
 
@@ -21,8 +24,6 @@ import { createCustomHttpTransport } from "../utils/customHttpTransport";
 import { Logger, LoggerInterface } from "../utils/logger";
 
 import { ManagerBase } from "./ManagerBase";
-import { InvalidInputRpcError } from "viem";
-import { ContractFunctionExecutionError } from "viem";
 
 export interface ViemClients {
     walletClient: WalletClient;
@@ -83,7 +84,8 @@ export class ViemClientManager
                         error instanceof TransactionNotFoundError ||
                         error instanceof UnknownRpcError ||
                         error instanceof UnknownNodeError ||
-                        error instanceof InvalidInputRpcError
+                        error instanceof InvalidInputRpcError ||
+                        error instanceof MethodNotFoundRpcError
                     ) {
                         return false;
                     } else if (error instanceof ContractFunctionExecutionError) {
