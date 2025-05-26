@@ -59,7 +59,7 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
 
 
         const managedTx = await TxManager.getInstance().callContract(walletClient, publicClient, verifierNetwork, {
-            contractAddress: verifierAddress,
+            address: verifierAddress,
             abi: globalConfig.ABI.CONCERO_VERIFIER,
             functionName: "requestMessageReport",
             args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],

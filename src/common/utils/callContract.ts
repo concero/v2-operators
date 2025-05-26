@@ -26,7 +26,6 @@ async function executeTransaction(
     const address = walletClient.account!.address;
 
     let txHash: string;
-console.log(params)
     if (globalConfig.VIEM.SIMULATE_TX) {
         const { request } = await publicClient.simulateContract(params);
         txHash = await walletClient.writeContract({ request } as any);

@@ -73,7 +73,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
                 `${srcChain.name}: No decodedLogs found for messageId ${messageId} in the last 100 blocks.`,
             );
         } else {
-            logger.info(
+            logger.debug(
                 `${srcChain.name}: Found ${decodedLogs.length} decodedLogs for messageId ${messageId}`,
             );
         }
@@ -130,7 +130,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         )[0];
 
         const managedTx = await txManager.callContract(walletClient, publicClient, dstChain, {
-            contractAddress: dstConceroRouter,
+            address: dstConceroRouter,
             abi: globalConfig.ABI.CONCERO_ROUTER,
             functionName: "submitMessageReport",
             args: [reportSubmission, message],

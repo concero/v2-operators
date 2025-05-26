@@ -22,7 +22,7 @@ export async function asyncRetry<T>(fn: () => Promise<T>, options: RetryOptions 
             if ((await isRetryableError(error)) && attempt < maxRetries) {
                 ++attempt;
 
-                logger.warn(`Retry attempt ${attempt} failed. Retrying in ${delayMs}ms...`);
+                logger.debug(`Retry attempt ${attempt} failed. Retrying in ${delayMs}ms...`);
                 // logger.error(error.cause);
 
                 await sleep(delayMs);
