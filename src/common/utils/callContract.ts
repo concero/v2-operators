@@ -10,7 +10,7 @@ import {
 import { NonceTooLowError } from "viem";
 
 import { AppErrorEnum } from "../../constants";
-import { globalConfig } from "../../constants/globalConfig";
+import { globalConfig } from "../../constants";
 import { NonceManager } from "../managers";
 
 import { AppError } from "./AppError";
@@ -32,7 +32,7 @@ async function executeTransaction(
         txHash = await walletClient.writeContract({ request } as any);
     } else {
         const paramsToSend = {
-            gas: globalConfig.VIEM.WRITE_CONTRACT.gas,
+            gas: globalConfig.TX_MANAGER.GAS_LIMIT.DEFAULT,
             ...contractParams,
             nonce: await nonceManager.consume({
                 address,

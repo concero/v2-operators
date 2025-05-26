@@ -8,8 +8,8 @@ import { ViemClientManager } from "../managers";
 
 import { Logger } from "./logger";
 
-const DEFAULT_GAS_LIMIT = 1_000_000n;
-const SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE = 10n;
+
+const SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE = 15n;
 
 async function notifyInSlack(message: string) {
     try {
@@ -37,7 +37,7 @@ async function notifyInSlack(message: string) {
 
 export async function getChainOperatorMinBalance(publicClient: PublicClient) {
     const currentGasPrice = await publicClient.getGasPrice();
-    const averageTxCostInWei = currentGasPrice * DEFAULT_GAS_LIMIT;
+    const averageTxCostInWei = currentGasPrice * globalConfig.VIEM.GAS_LIMIT.DEFAULT;
 
     return averageTxCostInWei * SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE;
 }

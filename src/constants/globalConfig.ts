@@ -46,19 +46,13 @@ const globalConfig: GlobalConfig = {
         },
     },
     VIEM: {
-        RECEIPT: {
-            timeout: 0,
-            confirmations: 2,
-            //todo: for localhost chain this needs to be set to 1. Mainnet chains need their per-chain confirmations found in conceroNetowrks.ts
-        },
-        WRITE_CONTRACT: {
-            gas: 3000000n,
-        },
+        RECEIPT: {},
+        WRITE_CONTRACT: {},
         FALLBACK_TRANSPORT_OPTIONS: {
             retryCount: 3,
             retryDelay: 2000,
         },
-        SIMULATE_TX: getEnvVar("SIMULATE_TX") === "true" ? true : false,
+        SIMULATE_TX: getEnvVar("SIMULATE_TX") === "true",
     },
     HTTPCLIENT: {
         DEFAULT_TIMEOUT: 5000,
@@ -91,12 +85,15 @@ const globalConfig: GlobalConfig = {
         EXTENSION: getRpcExtension(),
     },
     TX_MANAGER: {
-        DRY_RUN: getEnvVar("DRY_RUN") === "true" ? true : false,
+        DRY_RUN: getEnvVar("DRY_RUN") === "true",
         DEFAULT_CONFIRMATIONS: 3,
         DEFAULT_RECEIPT_TIMEOUT: 60_000,
+        GAS_LIMIT: {
+            DEFAULT: 2_000_000n,
+            SUBMIT_MESSAGE_REPORT_OVERHEAD: 1_000_000n,
+        },
     },
     NETWORK_MANAGER: {
-        DEFAULT_BLOCK_CONFIRMATIONS: 2,
         NETWORK_UPDATE_INTERVAL_MS: 1000 * 60 * 60, // 1 hour
     },
     BLOCK_MANAGER: {
@@ -104,7 +101,7 @@ const globalConfig: GlobalConfig = {
         SEQUENTIAL_BATCH_SIZE: 100n,
         CATCHUP_BATCH_SIZE: 500n,
         MAX_BLOCKS_TO_PROCESS: 100n,
-        USE_CHECKPOINTS: getEnvVar("USE_CHECKPOINTS") === "true" ? true : false,
+        USE_CHECKPOINTS: getEnvVar("USE_CHECKPOINTS") === "true",
     },
     NOTIFICATIONS: {
         SLACK: {

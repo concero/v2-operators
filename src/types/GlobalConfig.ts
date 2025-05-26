@@ -54,9 +54,12 @@ type GlobalConfig = {
         DRY_RUN: boolean;
         DEFAULT_CONFIRMATIONS: number;
         DEFAULT_RECEIPT_TIMEOUT: number;
+        GAS_LIMIT: {
+            DEFAULT: bigint;
+            SUBMIT_MESSAGE_REPORT_OVERHEAD: bigint;
+        };
     };
     NETWORK_MANAGER: {
-        DEFAULT_BLOCK_CONFIRMATIONS: number;
         NETWORK_UPDATE_INTERVAL_MS: number;
     };
     BLOCK_MANAGER: {
