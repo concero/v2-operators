@@ -2,6 +2,7 @@ import {
     createPublicClient,
     createWalletClient,
     fallback,
+    MethodNotFoundRpcError,
     nonceManager,
     PublicClient,
     TransactionNotFoundError,
@@ -75,7 +76,8 @@ export class ViemClientManager implements RpcUpdateListener {
                         error instanceof TransactionNotFoundError ||
                         error instanceof UnknownRpcError ||
                         error instanceof UnknownNodeError ||
-                        error instanceof InvalidInputRpcError
+                        error instanceof InvalidInputRpcError ||
+                        error instanceof MethodNotFoundRpcError
                     ) {
                         return false;
                     } else if (error instanceof ContractFunctionExecutionError) {
