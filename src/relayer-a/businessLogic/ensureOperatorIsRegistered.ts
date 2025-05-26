@@ -146,6 +146,7 @@ export async function waitForOperatorRegistration(
  * @returns {Promise<void>}
  */
 export async function ensureOperatorIsRegistered(): Promise<void> {
+    const logger = Logger.getInstance().getLogger("ensureOperatorIsRegistered");
     const viemClientManager = ViemClientManager.getInstance();
     const networkManager = NetworkManager.getInstance();
     const deploymentManager = DeploymentManager.getInstance();
@@ -156,8 +157,7 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
     const registered = await isOperatorRegistered(publicClient, networkManager, deploymentManager);
 
     if (registered) {
-        const registrationLogger = Logger.getInstance().getLogger("OperatorRegistration");
-        registrationLogger.info("Operator already registered");
+        logger.info("Operator already registered");
         return;
     }
 
@@ -169,8 +169,7 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
         deploymentManager,
     );
 
-    const registrationLogger = Logger.getInstance().getLogger("OperatorRegistration");
-    registrationLogger.info(`Requested operator registration with txHash ${txHash}`);
+    logger.info(`Requested operator registration with txHash ${txHash}`);
 
     const transaction = await publicClient.getTransaction({ hash: txHash });
 
@@ -181,7 +180,6 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
         globalConfig.OPERATOR_ADDRESS,
     );
 
-    registrationLogger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
-
+    logger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
     eventEmitter.emit("operatorRegistered", { txHash: confirmedTxHash });
 }

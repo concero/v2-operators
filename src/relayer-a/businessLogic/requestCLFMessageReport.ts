@@ -44,11 +44,11 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
 
     try {
         const verifierAddress = await DeploymentManager.getInstance().getConceroVerifier();
-        const reportLogger = Logger.getInstance().getLogger("MessageReporter");
+        const logger = Logger.getInstance().getLogger("requestCLFMessageReport");
 
         if (globalConfig.TX_MANAGER.DRY_RUN) {
             const dryRunTxHash = `dry-run-${Date.now()}`;
-            reportLogger.info(
+            logger.info(
                 `[DRY_RUN]:${network.name} CLF message report requested with hash: ${dryRunTxHash}`,
             );
             eventEmitter.emit("requestMessageReport", { txHash: dryRunTxHash });
@@ -72,13 +72,11 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
             eventEmitter.emit("requestMessageReport", {
                 txHash: managedTx.txHash,
             });
-            reportLogger.info(
+            logger.info(
                 `${network.name} CLF message report requested with hash: ${managedTx.txHash}`,
             );
         } else {
-            reportLogger.error(
-                `${network.name} Failed to submit CLF message report request transaction`,
-            );
+            logger.error(`${network.name} Failed to submit CLF message report request transaction`);
         }
     } catch (error) {
         // TODO: move this error handling to global error handler!

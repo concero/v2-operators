@@ -14,6 +14,8 @@ import { globalConfig } from "../../constants";
 import { DecodedLog } from "../../types/DecodedLog";
 
 export async function submitCLFMessageReport(log: DecodedLog) {
+    const logger = Logger.getInstance().getLogger("submitCLFMessageReport");
+
     const networkManager = NetworkManager.getInstance();
     const viemClientManager = ViemClientManager.getInstance();
     const deploymentManager = DeploymentManager.getInstance();
@@ -42,10 +44,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         const srcChain = networkManager.getNetworkBySelector(srcChainSelector.toString());
 
         if (!activeNetworkNames.includes(srcChain.name)) {
-            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
-            reportLogger.warn(
-                `${srcChain.name} is not active. Skipping message with id ${messageId}`,
-            );
+            logger.warn(`${srcChain.name} is not active. Skipping message with id ${messageId}`);
             return;
         }
 
@@ -70,13 +69,11 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         );
 
         if (decodedLogs.length === 0) {
-            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
-            reportLogger.warn(
+            logger.warn(
                 `${srcChain.name}: No decodedLogs found for messageId ${messageId} in the last 100 blocks.`,
             );
         } else {
-            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
-            reportLogger.info(
+            logger.info(
                 `${srcChain.name}: Found ${decodedLogs.length} decodedLogs for messageId ${messageId}`,
             );
         }
@@ -98,15 +95,13 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         const dstChain = networkManager.getNetworkBySelector(dstChainSelector.toString());
 
         if (!activeNetworkNames.includes(dstChain.name)) {
-            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
-            reportLogger.warn(`${dstChain.name} is not active. Skipping message submission.`);
+            logger.warn(`${dstChain.name} is not active. Skipping message submission.`);
             return;
         }
 
         const dstBlockManager = blockManagerRegistry.getBlockManager(dstChain.name);
         if (!dstBlockManager) {
-            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
-            reportLogger.error(`No BlockManager for ${dstChain.name}`);
+            logger.error(`No BlockManager for ${dstChain.name}`);
             return;
         }
 
@@ -121,8 +116,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         };
 
         if (globalConfig.TX_MANAGER.DRY_RUN) {
-            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
-            reportLogger.info(
+            logger.info(
                 `[${dstChain.name}] CLF message report submitted with hash: dry-run-${Date.now()}`,
             );
             return;
@@ -139,13 +133,11 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         });
 
         if (managedTx && managedTx.txHash) {
-            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
-            reportLogger.info(
+            logger.info(
                 `[${dstChain.name}] CLF message report submitted with hash: ${managedTx.txHash}`,
             );
         } else {
-            const reportLogger = Logger.getInstance().getLogger("MessageReporter");
-            reportLogger.error(
+            logger.error(
                 `[${dstChain.name}] Failed to submit CLF message report transaction for messageId ${messageId}`,
             );
         }

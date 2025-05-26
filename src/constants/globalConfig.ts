@@ -12,7 +12,7 @@ import { getRpcExtension, getRpcOverride } from "./localRpcLoaders";
 const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar("NETWORK_MODE"),
     OPERATOR_ADDRESS: getEnvVar("OPERATOR_ADDRESS"),
-    IGNORED_NETWORK_IDS: [44787],
+    IGNORED_NETWORK_IDS: [44787, 1114],
     WHITELISTED_NETWORK_IDS: {
         mainnet: [
             /* 1, 137 */

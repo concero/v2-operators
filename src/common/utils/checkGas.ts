@@ -46,13 +46,13 @@ async function checkAndNotifyInsufficientGas() {
     const operatorAddress = globalConfig.OPERATOR_ADDRESS;
     const viemClientManager = ViemClientManager.getInstance();
     const networkManager = NetworkManager.getInstance();
+    const logger = Logger.getInstance().getLogger("GasChecker");
 
     try {
         const activeNetworks = networkManager.getActiveNetworks();
 
         if (activeNetworks.length === 0) {
-            const gasLogger = Logger.getInstance().getLogger("GasChecker");
-            gasLogger.warn("No active networks found when checking gas balances");
+            logger.warn("No active networks found when checking gas balances");
             return;
         }
 
@@ -77,8 +77,7 @@ async function checkAndNotifyInsufficientGas() {
                 const message = `Insufficient gas on ${network.name} (chain ID: ${network.id}). Minimum required: ${formatUnits(operatorMinBalance, 18)}, actual: ${formatUnits(balance, 18)}`;
 
                 await notifyInSlack(message);
-                const gasLogger = Logger.getInstance().getLogger("GasChecker");
-                gasLogger.info(message);
+                logger.info(message);
             }
         }
 
@@ -95,8 +94,7 @@ async function checkAndNotifyInsufficientGas() {
 
         // logger.info(`All chains (${activeNetworks.length}) have sufficient gas.`);
     } catch (error) {
-        const gasLogger = Logger.getInstance().getLogger("GasChecker");
-        gasLogger.error("Error checking gas balances:", error);
+        logger.error("Error checking gas balances:", error);
         throw error;
     }
 }

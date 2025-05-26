@@ -66,7 +66,7 @@ export class BlockManagerRegistry
             return blockManager;
         } catch (error) {
             this.logger.error(`Failed to create BlockManager for network ${network.name}`, error);
-            return null;
+            throw error;
         }
     }
 
@@ -97,14 +97,6 @@ export class BlockManagerRegistry
             const results = await Promise.all(
                 newNetworks.map(network => this.ensureBlockManagerForNetwork(network)),
             );
-
-            // Log summary of results
-            const successCount = results.filter(result => result !== null).length;
-            if (successCount < newNetworks.length) {
-                this.logger.warn(`${successCount}/${newNetworks.length} BlockManagers created`);
-            } else if (successCount > 0) {
-                this.logger.info(`All ${successCount} BlockManagers created`);
-            }
         }
     }
 
