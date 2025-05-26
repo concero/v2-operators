@@ -136,7 +136,9 @@ export async function submitCLFMessageReport(log: DecodedLog) {
             args: [reportSubmission, message],
             chain: dstChain,
             messageId: messageId,
-            gas: decodedDstChainData.gasLimit,
+            gas:
+                decodedDstChainData.gasLimit +
+                globalConfig.TX_MANAGER.GAS_LIMIT.SUBMIT_MESSAGE_REPORT_OVERHEAD,
         });
 
         if (managedTx && managedTx.txHash) {
