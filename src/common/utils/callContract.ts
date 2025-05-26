@@ -23,28 +23,23 @@ async function executeTransaction(
 ) {
     const chainId = publicClient.chain!.id;
     const address = walletClient.account!.address;
-
     const nonceManager = NonceManager.getInstance();
-
-    let paramsToSend = {
-        ...contractParams,
-        nonce: await nonceManager.consume({
-            address,
-            chainId,
-            client: publicClient,
-        }),
-        gas: globalConfig.VIEM.WRITE_CONTRACT.gas,
-    };
 
     let txHash: string;
 
     if (globalConfig.VIEM.SIMULATE_TX) {
         const { request } = await publicClient.simulateContract(contractParams);
-        txHash = await walletClient.writeContract({
-            ...request,
-            gas: globalConfig.VIEM.WRITE_CONTRACT.gas,
-        } as any);
+        txHash = await walletClient.writeContract({ request } as any);
     } else {
+        const paramsToSend = {
+            gas: globalConfig.VIEM.WRITE_CONTRACT.gas,
+            ...contractParams,
+            nonce: await nonceManager.consume({
+                address,
+                chainId,
+                client: publicClient,
+            }),
+        };
         txHash = await walletClient.writeContract(paramsToSend as any);
     }
 

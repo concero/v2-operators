@@ -68,6 +68,23 @@ const globalConfig: GlobalConfig = {
     ABI: {
         CONCERO_VERIFIER: conceroVerifierAbi as Abi,
         CONCERO_ROUTER: conceroRouterAbi as Abi,
+        EVM_DST_CHAIN_DATA: {
+            components: [
+                {
+                    internalType: "address",
+                    name: "receiver",
+                    type: "address",
+                },
+                {
+                    internalType: "uint256",
+                    name: "gasLimit",
+                    type: "uint256",
+                },
+            ],
+            internalType: "struct ConceroTypes.EvmDstChainData",
+            name: "dstChainData",
+            type: "tuple",
+        },
     },
     RPC: {
         OVERRIDE: getRpcOverride(),

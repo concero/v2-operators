@@ -1,5 +1,6 @@
 import {
     Abi,
+    AbiParameter,
     Address,
     FallbackTransportConfig,
     WaitForTransactionReceiptParameters,
@@ -46,6 +47,7 @@ type GlobalConfig = {
     ABI: {
         CONCERO_VERIFIER: Abi;
         CONCERO_ROUTER: Abi;
+        EVM_DST_CHAIN_DATA: AbiParameter;
     };
     RPC: { OVERRIDE: any; EXTENSION: any };
     TX_MANAGER: {

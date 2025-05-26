@@ -1,4 +1,4 @@
-import { getAbiItem } from "viem";
+import { decodeAbiParameters, getAbiItem } from "viem";
 
 import {
     BlockManagerRegistry,
@@ -8,7 +8,7 @@ import {
     ViemClientManager,
 } from "../../common/managers";
 import { decodeCLFReport, decodeMessageReportResult } from "../../common/utils";
-import { Logger, LoggerInterface } from "../../common/utils/logger";
+import { Logger } from "../../common/utils/logger";
 
 import { globalConfig } from "../../constants";
 import { DecodedLog } from "../../types/DecodedLog";
@@ -123,6 +123,12 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         }
 
         const { walletClient, publicClient } = viemClientManager.getClients(dstChain);
+
+        const decodedDstChainData = decodeAbiParameters(
+            [globalConfig.ABI.EVM_DST_CHAIN_DATA],
+            conceroMessageSentLog.args.dstChainData,
+        )[0];
+
         const managedTx = await txManager.callContract(walletClient, publicClient, {
             contractAddress: dstConceroRouter,
             abi: globalConfig.ABI.CONCERO_ROUTER,
@@ -130,6 +136,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
             args: [reportSubmission, message],
             chain: dstChain,
             messageId: messageId,
+            gas: decodedDstChainData.gasLimit,
         });
 
         if (managedTx && managedTx.txHash) {
