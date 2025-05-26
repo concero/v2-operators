@@ -13,6 +13,7 @@ export interface ITxManager {
     callContract(
         walletClient: WalletClient,
         publicClient: PublicClient,
+        network: ConceroNetwork,
         params: SimulateContractParameters,
     ): Promise<ManagedTx>;
 

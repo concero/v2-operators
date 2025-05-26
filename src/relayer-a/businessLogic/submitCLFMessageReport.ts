@@ -129,7 +129,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
             conceroMessageSentLog.args.dstChainData,
         )[0];
 
-        const managedTx = await txManager.callContract(walletClient, publicClient, {
+        const managedTx = await txManager.callContract(walletClient, publicClient, dstChain, {
             contractAddress: dstConceroRouter,
             abi: globalConfig.ABI.CONCERO_ROUTER,
             functionName: "submitMessageReport",

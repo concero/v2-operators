@@ -19,27 +19,28 @@ import { asyncRetry } from "./asyncRetry";
 async function executeTransaction(
     publicClient: PublicClient,
     walletClient: WalletClient,
-    contractParams: SimulateContractParameters,
+    params: SimulateContractParameters,
+    nonceManager: NonceManager,
 ) {
     const chainId = publicClient.chain!.id;
     const address = walletClient.account!.address;
-    const nonceManager = NonceManager.getInstance();
 
     let txHash: string;
-
+console.log(params)
     if (globalConfig.VIEM.SIMULATE_TX) {
-        const { request } = await publicClient.simulateContract(contractParams);
+        const { request } = await publicClient.simulateContract(params);
         txHash = await walletClient.writeContract({ request } as any);
     } else {
         const paramsToSend = {
             gas: globalConfig.TX_MANAGER.GAS_LIMIT.DEFAULT,
-            ...contractParams,
+            ...params,
             nonce: await nonceManager.consume({
                 address,
                 chainId,
                 client: publicClient,
             }),
         };
+
         txHash = await walletClient.writeContract(paramsToSend as any);
     }
 
@@ -49,9 +50,11 @@ async function executeTransaction(
 export async function callContract(
     publicClient: PublicClient,
     walletClient: WalletClient,
-    simulateContractParams: SimulateContractParameters,
+    params: SimulateContractParameters,
 ): Promise<Hash> {
     try {
+        const nonceManager = NonceManager.getInstance();
+
         const isRetryableError = async (error: any) => {
             if (error instanceof ContractFunctionExecutionError) {
                 if (error.cause instanceof TransactionExecutionError) {
@@ -62,7 +65,7 @@ export async function callContract(
                         const chainId = publicClient.chain!.id;
                         const address = walletClient.account!.address;
 
-                        NonceManager.getInstance().reset({ chainId, address });
+                        nonceManager.reset({ chainId, address });
 
                         return true;
                     }
@@ -73,7 +76,7 @@ export async function callContract(
         };
 
         return asyncRetry(
-            () => executeTransaction(publicClient, walletClient, simulateContractParams),
+            () => executeTransaction(publicClient, walletClient, params, nonceManager),
             {
                 maxRetries: 100,
                 delayMs: 1000,

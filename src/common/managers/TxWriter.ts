@@ -77,6 +77,7 @@ export class TxWriter implements ITxWriter {
     public async callContract(
         walletClient: WalletClient,
         publicClient: PublicClient,
+        network: ConceroNetwork,
         params: SimulateContractParameters,
     ): Promise<ManagedTx> {
         const txType = await this.determineTxType(params);
@@ -84,26 +85,27 @@ export class TxWriter implements ITxWriter {
         try {
             if (globalConfig.TX_MANAGER.DRY_RUN) {
                 this.logger.info(
-                    `[DRY_RUN][${params.chain.name}] Contract call: ${params.functionName}`,
+                    `[DRY_RUN][${network.name}] Contract call: ${params.functionName}`,
                 );
                 const mockTxHash = `0xdry${Date.now().toString(16)}`;
-                const managedTx = this.createManagedTx(params, txType, mockTxHash);
+                const managedTx = this.createManagedTx(network, params, txType, mockTxHash);
                 return managedTx;
             }
 
             const txHash = await callContract(publicClient, walletClient, params);
 
-            this.logger.debug(`[${params.chain.name}] Contract call transaction hash: ${txHash}`);
-            const managedTx = this.createManagedTx(params, txType, txHash);
+            this.logger.debug(`[${network.name}] Contract call transaction hash: ${txHash}`);
+            const managedTx = this.createManagedTx(network, params, txType, txHash);
 
             return managedTx;
         } catch (error) {
-            this.logger.error(`[${params.chain.name}] Contract call failed: ${error}`);
+            this.logger.error(`[${network.name}] Contract call failed: ${error}`);
             throw error;
         }
     }
 
     private createManagedTx(
+        network: ConceroNetwork,
         params: SimulateContractParameters,
         txType: TxType,
         txHash: string,
@@ -111,8 +113,7 @@ export class TxWriter implements ITxWriter {
         const id = uuidv4();
         const managedTx: ManagedTx = {
             id,
-            chainName: params.chain.name,
-            messageId: (params as any).messageId, // Access messageId if available
+            chainName: network.name,
             txHash,
             submittedAt: Date.now(),
             submissionBlock: null,
@@ -133,9 +134,6 @@ export class TxWriter implements ITxWriter {
     }
 
     private async determineTxType(params: TxSubmissionParams): Promise<TxType> {
-        if (params.messageId) {
-            return TxType.MESSAGE;
-        }
 
         // Here you could implement more sophisticated logic to determine the tx type
         // based on contract addresses, function names, etc.
@@ -191,9 +189,6 @@ export class TxWriter implements ITxWriter {
         });
     }
 
-    public getTransactionsByMessageId(messageId: string): ManagedTx[] {
-        return Array.from(this.transactions.values()).filter(tx => tx.messageId === messageId);
-    }
 
     public dispose(): void {
         this.transactions.clear();

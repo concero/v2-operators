@@ -131,7 +131,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
         return network;
     }
 
-    public getVerifierNetwork(): ConceroNetwork | undefined {
+    public getVerifierNetwork(): ConceroNetwork {
         if (globalConfig.NETWORK_MODE === "mainnet") {
             return this.mainnetNetworks["arbitrum"];
         } else if (globalConfig.NETWORK_MODE === "testnet") {

@@ -35,6 +35,7 @@ export interface ITxWriter {
     callContract(
         walletClient: WalletClient,
         publicClient: PublicClient,
+        network: ConceroNetwork,
         params: SimulateContractParameters,
     ): Promise<ManagedTx>;
     getPendingTransactions(chainName?: string): ManagedTx[];

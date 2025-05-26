@@ -9,6 +9,7 @@ export interface RetryOptions {
 
 export async function asyncRetry<T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
     const { maxRetries = 3, delayMs = 2000, isRetryableError = () => false } = options;
+    const logger = Logger.getInstance().getLogger("AsyncRetry");
 
     let attempt = 0;
     let lastError;
@@ -20,8 +21,9 @@ export async function asyncRetry<T>(fn: () => Promise<T>, options: RetryOptions 
             lastError = error;
             if ((await isRetryableError(error)) && attempt < maxRetries) {
                 ++attempt;
-                const retryLogger = Logger.getInstance().getLogger("AsyncRetry");
-                retryLogger.warn(`Retry attempt ${attempt} failed. Retrying in ${delayMs}ms...`);
+
+                logger.warn(`Retry attempt ${attempt} failed. Retrying in ${delayMs}ms...`);
+                // logger.error(error.cause);
 
                 await sleep(delayMs);
             } else {

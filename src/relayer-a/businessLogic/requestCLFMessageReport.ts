@@ -13,8 +13,13 @@ import { eventEmitter } from "../../constants/eventEmitter";
 import { DecodedLog } from "../../types/DecodedLog";
 
 export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSelector: string) {
-    const network = NetworkManager.getInstance().getVerifierNetwork();
-    const { publicClient, walletClient } = ViemClientManager.getInstance().getClients(network);
+
+    const logger = Logger.getInstance().getLogger("requestCLFMessageReport");
+    const verifierNetwork = NetworkManager.getInstance().getVerifierNetwork();
+    const verifierAddress = await DeploymentManager.getInstance().getConceroVerifier();
+    const { publicClient, walletClient } = ViemClientManager.getInstance().getClients(verifierNetwork);
+
+    try {
 
     const { messageId, message } = decodedLog.args;
 
@@ -42,26 +47,23 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
         ],
     );
 
-    try {
-        const verifierAddress = await DeploymentManager.getInstance().getConceroVerifier();
-        const logger = Logger.getInstance().getLogger("requestCLFMessageReport");
 
         if (globalConfig.TX_MANAGER.DRY_RUN) {
             const dryRunTxHash = `dry-run-${Date.now()}`;
             logger.info(
-                `[DRY_RUN]:${network.name} CLF message report requested with hash: ${dryRunTxHash}`,
+                `[DRY_RUN]:${verifierNetwork.name} CLF message report requested with hash: ${dryRunTxHash}`,
             );
             eventEmitter.emit("requestMessageReport", { txHash: dryRunTxHash });
             return;
         }
 
-        const managedTx = await TxManager.getInstance().callContract(walletClient, publicClient, {
+
+        const managedTx = await TxManager.getInstance().callContract(walletClient, publicClient, verifierNetwork, {
             contractAddress: verifierAddress,
             abi: globalConfig.ABI.CONCERO_VERIFIER,
             functionName: "requestMessageReport",
             args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
-            chain: network,
-            messageId: messageId,
+            chain: verifierNetwork.viemChain,
             options: {
                 receiptConfirmations: 3,
                 receiptTimeout: 60_000,
@@ -73,13 +75,13 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
                 txHash: managedTx.txHash,
             });
             logger.info(
-                `${network.name} CLF message report requested with hash: ${managedTx.txHash}`,
+                `${verifierNetwork.name} CLF message report requested with hash: ${managedTx.txHash}`,
             );
         } else {
-            logger.error(`${network.name} Failed to submit CLF message report request transaction`);
+            logger.error(`${verifierNetwork.name} Failed to submit CLF message report request transaction`);
         }
     } catch (error) {
         // TODO: move this error handling to global error handler!
-        logger.error(`[${network.name}] Error requesting CLF message report:`, error);
+        logger.error(`[${verifierNetwork.name}] Error requesting CLF message report:`, error);
     }
 }

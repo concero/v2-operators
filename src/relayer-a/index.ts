@@ -36,9 +36,9 @@ process.on("uncaughtException", (error: Error) => {
 export async function main() {
     await initializeManagers();
 
-    await checkGas();
-    await ensureDeposit();
-    await ensureOperatorIsRegistered();
+    // await checkGas();
+    // await ensureDeposit();
+    // await ensureOperatorIsRegistered();
     await setupEventListeners();
 
     const blockManagerRegistry = BlockManagerRegistry.getInstance();

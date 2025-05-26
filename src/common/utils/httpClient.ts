@@ -146,11 +146,11 @@ export class HttpClient extends ManagerBase {
         return new Promise<T>((resolve, reject) => {
             const executeRequest = async () => {
                 try {
-                    // logger.debug(
-                    //     `${method} request to ${url} with config: ${JSON.stringify(config)} ${
-                    //         body ? `and body: ${JSON.stringify(body)}` : ""
-                    //     }`,
-                    // );
+                    this.logger.debug(
+                        `${method} request to ${url} with config: ${JSON.stringify(config)} ${
+                            body ? `and body: ${JSON.stringify(body)}` : ""
+                        }`,
+                    );
 
                     const response: AxiosResponse<T> = await this.axiosInstance!.request<T>({
                         method,
