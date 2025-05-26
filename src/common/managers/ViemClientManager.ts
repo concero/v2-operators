@@ -21,6 +21,8 @@ import { createCustomHttpTransport } from "../utils/customHttpTransport";
 import { Logger, LoggerInterface } from "../utils/logger";
 
 import { ManagerBase } from "./ManagerBase";
+import { InvalidInputRpcError } from "viem";
+import { ContractFunctionExecutionError } from "viem";
 
 export interface ViemClients {
     walletClient: WalletClient;
@@ -80,9 +82,18 @@ export class ViemClientManager
                         error instanceof RpcRequestError ||
                         error instanceof TransactionNotFoundError ||
                         error instanceof UnknownRpcError ||
-                        error instanceof UnknownNodeError
+                        error instanceof UnknownNodeError ||
+                        error instanceof InvalidInputRpcError
                     ) {
                         return false;
+                    } else if (error instanceof ContractFunctionExecutionError) {
+                        if (
+                            error.details.includes(
+                                "the method eth_sendRawTransaction does not exist",
+                            )
+                        ) {
+                            return false;
+                        }
                     }
 
                     return true;
