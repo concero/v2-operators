@@ -13,6 +13,8 @@ import { networkManager } from "../../common/managers/NetworkManager";
 import { viemClientManager } from "../../common/managers/ViemClientManager";
 
 export async function submitCLFMessageReport(log: DecodedLog) {
+    let dstChain;
+
     try {
         const { transactionHash } = log;
 
@@ -80,7 +82,7 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         const { message } = conceroMessageSentLog.args;
 
         // 3. Send report + message to dst chain router
-        const dstChain = networkManager.getNetworkBySelector(dstChainSelector.toString());
+        dstChain = networkManager.getNetworkBySelector(dstChainSelector.toString());
 
         const dstConceroRouter = await deploymentsManager.getRouterByChainName(dstChain.name);
         const { publicClient: dstPublicClient, walletClient: dstWalletClient } =
@@ -106,6 +108,6 @@ export async function submitCLFMessageReport(log: DecodedLog) {
         logger.info(`[${dstChain.name}] CLF message report submitted with hash: ${hash}`);
     } catch (e) {
         // TODO: move this error handling to global error handler!
-        logger.error(`Error when submitting clf report` + e);
+        logger.error(`Error when submitting clf report on chain: ${dstChain?.name}` + e);
     }
 }
