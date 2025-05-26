@@ -6,7 +6,7 @@ import { globalConfig } from "../../constants";
 import { NetworkManager } from "../managers";
 import { ViemClientManager } from "../managers";
 
-import { Logger, LoggerInterface } from "./logger";
+import { Logger } from "./logger";
 
 const DEFAULT_GAS_LIMIT = 1_000_000n;
 const SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE = 10n;
