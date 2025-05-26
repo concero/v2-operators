@@ -212,7 +212,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                         id: network.chainId,
                         accounts,
                         chainSelector: network.chainSelector || network.chainId.toString(),
-                        confirmations: globalConfig.NETWORK_MANAGER.DEFAULT_BLOCK_CONFIRMATIONS,
+                        confirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
                         viemChain: network.viemChain,
                     },
                 ];
@@ -228,7 +228,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                 id: 1,
                 accounts: [operatorPK],
                 chainSelector: "1",
-                confirmations: globalConfig.NETWORK_MANAGER.DEFAULT_BLOCK_CONFIRMATIONS,
+                confirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
                 viemChain: localhostViemChain,
             },
             localhostPolygon: {
@@ -237,7 +237,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                 id: 137,
                 accounts: [operatorPK],
                 chainSelector: "137",
-                confirmations: globalConfig.NETWORK_MANAGER.DEFAULT_BLOCK_CONFIRMATIONS,
+                confirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
                 viemChain: localhostViemChain,
             },
         };

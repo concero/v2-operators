@@ -71,7 +71,7 @@ async function requestOperatorRegistration(
     const operatorActions = [BigInt(OperatorRegistrationAction.Register)];
     const operatorAddresses = [globalConfig.OPERATOR_ADDRESS];
 
-    const { transactionHash } = await callContract(publicClient, walletClient, {
+    const transactionHash = await callContract(publicClient, walletClient, {
         chain: conceroVerifierNetwork.viemChain,
         address: await deploymentManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
