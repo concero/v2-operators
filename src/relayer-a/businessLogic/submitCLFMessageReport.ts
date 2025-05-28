@@ -117,7 +117,6 @@ async function fetchOriginalMessage(
         dstChainData,
     )[0];
 
-    console.log("fetched original message: ", message, decodedDstChainData.gasLimit);
     return { message, gasLimit: decodedDstChainData.gasLimit };
 }
 
@@ -142,9 +141,6 @@ async function submitBatchToDestination(
 
     const dstConceroRouter = await deploymentManager.getRouterByChainName(dstChain.name);
     const { walletClient, publicClient } = viemClientManager.getClients(dstChain);
-
-    logger.debug("calling with args");
-    logger.debug([reportSubmission, messages, indexes]);
 
     const managedTx = await txManager.callContract(walletClient, publicClient, dstChain, {
         address: dstConceroRouter,
