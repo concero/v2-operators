@@ -1,5 +1,4 @@
-import { Abi, AbiEvent, Address } from "viem";
-import { Log } from "viem";
+import { AbiEvent, Address, Log } from "viem";
 
 import { ConceroNetwork } from "../ConceroNetwork";
 

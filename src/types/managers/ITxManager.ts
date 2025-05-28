@@ -1,10 +1,16 @@
-import { AbiEvent, Address, PublicClient, SimulateContractParameters, WalletClient } from "viem";
-import { Log } from "viem";
+import {
+    AbiEvent,
+    Address,
+    Log,
+    PublicClient,
+    SimulateContractParameters,
+    WalletClient,
+} from "viem";
 
 import { ConceroNetwork } from "../ConceroNetwork";
 
 import { LogQuery } from "./ITxReader";
-import { ManagedTx, TxSubmissionParams } from "./ITxWriter";
+import { ManagedTx } from "./ITxWriter";
 
 export interface ITxManager {
     initialize(): Promise<void>;

@@ -13,7 +13,7 @@ import {
 } from "../managers";
 
 import { HttpClient } from "./httpClient";
-import { Logger, LoggerInterface } from "./logger";
+import { Logger } from "./logger";
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {

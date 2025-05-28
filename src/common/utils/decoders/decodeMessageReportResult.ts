@@ -1,5 +1,4 @@
-import { decodeAbiParameters, hexToBytes } from "viem";
-import { ByteArray } from "viem";
+import { ByteArray, decodeAbiParameters, hexToBytes } from "viem";
 
 import { DecodedMessageReportResult } from "./types";
 

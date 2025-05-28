@@ -1,6 +1,4 @@
-import { ByteArray } from "viem";
-import { Hash } from "viem";
-import { Address } from "viem";
+import { Address, ByteArray, Hash } from "viem";
 
 export interface ReportConfig {
     type: number;

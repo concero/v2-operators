@@ -1,7 +1,5 @@
 import process from "process";
 
-import { getOptionalEnvVar } from "./getOptionalEnvVar";
-
 /**
  * Gets all log levels from both legacy and new environment variable formats
  * Prioritizes the new LOG_LEVEL_* format over the legacy LOG_LEVELS_GRANULAR format

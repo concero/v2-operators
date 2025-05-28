@@ -1,6 +1,3 @@
-import { BlockCheckpoint } from "@prisma/client";
-
-import { globalConfig } from "../../constants/globalConfig";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IBlockCheckpointManager } from "../../types/managers/IBlockCheckpointManager";
 import { Logger, LoggerInterface } from "../utils/logger";

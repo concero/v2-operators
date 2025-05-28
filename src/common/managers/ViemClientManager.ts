@@ -1,5 +1,7 @@
 import {
+    ContractFunctionExecutionError,
     HttpRequestError,
+    InvalidInputRpcError,
     MethodNotFoundRpcError,
     PublicClient,
     RpcRequestError,
@@ -11,8 +13,6 @@ import {
     createWalletClient,
     fallback,
 } from "viem";
-import { InvalidInputRpcError } from "viem";
-import { ContractFunctionExecutionError } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
 

@@ -2,15 +2,14 @@ import {
     ContractFunctionExecutionError,
     Hash,
     NonceTooHighError,
+    NonceTooLowError,
     type PublicClient,
     type SimulateContractParameters,
     TransactionExecutionError,
     type WalletClient,
 } from "viem";
-import { NonceTooLowError } from "viem";
 
-import { AppErrorEnum } from "../../constants";
-import { globalConfig } from "../../constants";
+import { AppErrorEnum, globalConfig } from "../../constants";
 import { NonceManager } from "../managers";
 
 import { AppError } from "./AppError";

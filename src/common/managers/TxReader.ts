@@ -1,5 +1,4 @@
-import { AbiEvent, Address, Hash, decodeEventLog } from "viem";
-import { Log } from "viem";
+import { AbiEvent, Address, Log } from "viem";
 
 import { v4 as uuidv4 } from "uuid";
 
@@ -108,6 +107,7 @@ export class TxReader implements ITxReader {
         fromBlock: bigint,
         toBlock: bigint,
     ): Promise<void> {
+        this.logger.debug(`fetching logs for blocks ${fromBlock} - ${toBlock}`);
         const watchersForChain = Array.from(this.logWatchers.values()).filter(
             watcher => watcher.chainName === chainName,
         );

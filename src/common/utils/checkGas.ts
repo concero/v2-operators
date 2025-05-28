@@ -3,8 +3,7 @@ import { PublicClient, formatUnits } from "viem";
 import { WebClient } from "@slack/web-api";
 
 import { globalConfig } from "../../constants";
-import { NetworkManager } from "../managers";
-import { ViemClientManager } from "../managers";
+import { NetworkManager, ViemClientManager } from "../managers";
 
 import { Logger } from "./logger";
 

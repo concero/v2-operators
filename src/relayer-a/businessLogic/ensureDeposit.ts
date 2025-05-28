@@ -2,7 +2,7 @@ import { Hash, PublicClient } from "viem";
 
 import { DeploymentManager, NetworkManager, ViemClientManager } from "../../common/managers";
 import { callContract } from "../../common/utils";
-import { Logger, LoggerInterface } from "../../common/utils/logger";
+import { Logger } from "../../common/utils/logger";
 
 import { globalConfig } from "../../constants";
 

@@ -1,7 +1,5 @@
 import { AppErrorEnum, appErrors } from "../../constants";
 
-import { Logger } from "./logger";
-
 export class AppError extends Error {
     public readonly isOperational: boolean;
 
