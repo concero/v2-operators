@@ -83,7 +83,12 @@ export class TxManager extends ManagerBase implements ITxManager {
         network: ConceroNetwork,
         params: SimulateContractParameters,
     ): Promise<ManagedTx> {
-        const managedTx = await this.txWriter.callContract(walletClient, publicClient, network, params);
+        const managedTx = await this.txWriter.callContract(
+            walletClient,
+            publicClient,
+            network,
+            params,
+        );
 
         this.txMonitor.addTransaction(managedTx.txHash, managedTx);
 

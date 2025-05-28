@@ -11,13 +11,13 @@ export interface ReportConfig {
 export interface DecodedMessageReportResult {
     reportConfig: ReportConfig;
     messageId: Hash;
-    messageHash: Hash;
-    sender: Address;
+    messageHashSum: Hash;
+    sender: ByteArray;
     srcChainSelector: number;
     dstChainSelector: number;
     dstChainData: {
         receiver: Address;
-        data: ByteArray;
+        gasLimit: bigint;
     };
-    data: ByteArray;
+    allowedOperators: ByteArray[];
 }

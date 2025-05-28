@@ -13,40 +13,39 @@ import { eventEmitter } from "../../constants/eventEmitter";
 import { DecodedLog } from "../../types/DecodedLog";
 
 export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSelector: string) {
-
     const logger = Logger.getInstance().getLogger("requestCLFMessageReport");
-    const verifierNetwork = NetworkManager.getInstance().getVerifierNetwork();
+    const networkManager = NetworkManager.getInstance();
+    const verifierNetwork = networkManager.getVerifierNetwork();
     const verifierAddress = await DeploymentManager.getInstance().getConceroVerifier();
-    const { publicClient, walletClient } = ViemClientManager.getInstance().getClients(verifierNetwork);
+    const { publicClient, walletClient } =
+        ViemClientManager.getInstance().getClients(verifierNetwork);
 
     try {
+        const { messageId, message } = decodedLog.args;
 
-    const { messageId, message } = decodedLog.args;
+        const { publicClient: srcPublicClient } = ViemClientManager.getInstance().getClients(
+            networkManager.getNetworkBySelector(srcChainSelector),
+        );
 
-    const { publicClient: srcPublicClient } = ViemClientManager.getInstance().getClients(
-        NetworkManager.getInstance().getNetworkBySelector(srcChainSelector),
-    );
+        const routerTx = await srcPublicClient.getTransaction({ hash: decodedLog.transactionHash });
 
-    const routerTx = await srcPublicClient.getTransaction({ hash: decodedLog.transactionHash });
-
-    const encodedSrcChainData = encodeAbiParameters(
-        [
-            {
-                type: "tuple",
-                components: [
-                    { name: "blockNumber", type: "uint256" },
-                    { name: "sender", type: "address" },
-                ],
-            },
-        ],
-        [
-            {
-                blockNumber: decodedLog.blockNumber,
-                sender: routerTx.from,
-            },
-        ],
-    );
-
+        const encodedSrcChainData = encodeAbiParameters(
+            [
+                {
+                    type: "tuple",
+                    components: [
+                        { name: "blockNumber", type: "uint256" },
+                        { name: "sender", type: "address" },
+                    ],
+                },
+            ],
+            [
+                {
+                    blockNumber: decodedLog.blockNumber,
+                    sender: routerTx.from,
+                },
+            ],
+        );
 
         if (globalConfig.TX_MANAGER.DRY_RUN) {
             const dryRunTxHash = `dry-run-${Date.now()}`;
@@ -57,18 +56,22 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
             return;
         }
 
-
-        const managedTx = await TxManager.getInstance().callContract(walletClient, publicClient, verifierNetwork, {
-            address: verifierAddress,
-            abi: globalConfig.ABI.CONCERO_VERIFIER,
-            functionName: "requestMessageReport",
-            args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
-            chain: verifierNetwork.viemChain,
-            options: {
-                receiptConfirmations: 3,
-                receiptTimeout: 60_000,
+        const managedTx = await TxManager.getInstance().callContract(
+            walletClient,
+            publicClient,
+            verifierNetwork,
+            {
+                address: verifierAddress,
+                abi: globalConfig.ABI.CONCERO_VERIFIER,
+                functionName: "requestMessageReport",
+                args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
+                chain: verifierNetwork.viemChain,
+                options: {
+                    receiptConfirmations: 3,
+                    receiptTimeout: 60_000,
+                },
             },
-        });
+        );
 
         if (managedTx && managedTx.txHash) {
             eventEmitter.emit("requestMessageReport", {
@@ -78,7 +81,9 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
                 `${verifierNetwork.name} CLF message report requested with hash: ${managedTx.txHash}`,
             );
         } else {
-            logger.error(`${verifierNetwork.name} Failed to submit CLF message report request transaction`);
+            logger.error(
+                `${verifierNetwork.name} Failed to submit CLF message report request transaction`,
+            );
         }
     } catch (error) {
         // TODO: move this error handling to global error handler!

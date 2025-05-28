@@ -134,7 +134,6 @@ export class TxWriter implements ITxWriter {
     }
 
     private async determineTxType(params: TxSubmissionParams): Promise<TxType> {
-
         // Here you could implement more sophisticated logic to determine the tx type
         // based on contract addresses, function names, etc.
         return TxType.DEFAULT;
@@ -188,7 +187,6 @@ export class TxWriter implements ITxWriter {
             return tx.status !== TxStatus.FINALIZED;
         });
     }
-
 
     public dispose(): void {
         this.transactions.clear();

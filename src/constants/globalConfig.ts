@@ -17,9 +17,7 @@ const globalConfig: GlobalConfig = {
         mainnet: [
             /* 1, 137 */
         ],
-        testnet: [
-            /* 421614, 6342 */
-        ],
+        testnet: [421614, 80069],
         localhost: [
             /* 1 */
         ],
