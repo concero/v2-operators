@@ -1,5 +1,6 @@
-import { encodeAbiParameters, keccak256 } from "viem";
+import { Log, PublicClient, WalletClient, encodeAbiParameters, keccak256 } from "viem";
 
+import { decodeLogs } from "../../common/eventListener/decodeLogs";
 import {
     DeploymentManager,
     NetworkManager,
@@ -9,24 +10,66 @@ import {
 import { Logger } from "../../common/utils";
 
 import { eventEmitter, globalConfig } from "../../constants";
+import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { DecodedLog } from "../../types/DecodedLog";
 
-export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSelector: string) {
+export async function requestCLFMessageReport(logs: Log[], network: ConceroNetwork) {
+    if (logs.length === 0) return;
+
     const logger = Logger.getInstance().getLogger("requestCLFMessageReport");
+    logger.debug(
+        `Processing ${logs.length} logs for CLF message report requests from ${network.name}`,
+    );
+
     const networkManager = NetworkManager.getInstance();
     const verifierNetwork = networkManager.getVerifierNetwork();
     const verifierAddress = await DeploymentManager.getInstance().getConceroVerifier();
     const { publicClient, walletClient } =
         ViemClientManager.getInstance().getClients(verifierNetwork);
 
+    // Decode logs to access event data
     try {
-        const { messageId, message } = decodedLog.args;
+        const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_ROUTER);
+        const promises = [];
 
-        const { publicClient: srcPublicClient } = ViemClientManager.getInstance().getClients(
-            networkManager.getNetworkBySelector(srcChainSelector),
-        );
+        for (const decodedLog of decodedLogs) {
+            promises.push(
+                processMessageReportRequest(
+                    decodedLog,
+                    network.chainSelector,
+                    logger,
+                    networkManager,
+                    verifierNetwork,
+                    verifierAddress,
+                    publicClient,
+                    walletClient,
+                ),
+            );
+        }
 
-        const routerTx = await srcPublicClient.getTransaction({ hash: decodedLog.transactionHash });
+        await Promise.all(promises);
+    } catch (error) {
+        logger.error(`Error processing logs from ${network.name}:`, error);
+    }
+}
+
+async function processMessageReportRequest(
+    decodedLog: DecodedLog,
+    srcChainSelector: string,
+    logger: ReturnType<typeof Logger.prototype.getLogger>,
+    networkManager: ReturnType<typeof NetworkManager.getInstance>,
+    verifierNetwork: ConceroNetwork,
+    verifierAddress: string,
+    publicClient: PublicClient,
+    walletClient: WalletClient,
+) {
+    try {
+        const { messageId, message, sender } = decodedLog.args;
+
+        if (!messageId || !message || !sender) {
+            logger.warn(`Missing required data in log: ${JSON.stringify(decodedLog)}`);
+            return;
+        }
 
         const encodedSrcChainData = encodeAbiParameters(
             [
@@ -41,13 +84,13 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
             [
                 {
                     blockNumber: decodedLog.blockNumber,
-                    sender: routerTx.from,
+                    sender,
                 },
             ],
         );
 
         if (globalConfig.TX_MANAGER.DRY_RUN) {
-            const dryRunTxHash = `dry-run-${Date.now()}`;
+            const dryRunTxHash = `dry-run-${Date.now()}-${messageId}`;
             logger.info(
                 `[DRY_RUN]:${verifierNetwork.name} CLF message report requested with hash: ${dryRunTxHash}`,
             );
@@ -86,6 +129,16 @@ export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSe
         }
     } catch (error) {
         // TODO: move this error handling to global error handler!
-        logger.error(`[${verifierNetwork.name}] Error requesting CLF message report:`, error);
+        logger.error(
+            `[${verifierNetwork.name}] Error requesting CLF message report for messageId ${decodedLog.args?.messageId || "unknown"}:`,
+            error,
+        );
+
+        // Emit error event for monitoring
+        eventEmitter.emit("requestMessageReportError", {
+            messageId: decodedLog.args?.messageId,
+            error: error.message,
+            chainName: verifierNetwork.name,
+        });
     }
 }

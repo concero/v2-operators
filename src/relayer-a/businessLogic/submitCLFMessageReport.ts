@@ -14,25 +14,6 @@ import { DecodedMessageReportResult } from "../../common/utils/decoders/types";
 import { globalConfig } from "../../constants";
 import { DecodedLog } from "../../types/DecodedLog";
 
-async function fetchAndDecodeCLFReport(
-    log: DecodedLog,
-    networkManager: NetworkManager,
-    viemClientManager: ViemClientManager,
-    logger: any,
-) {
-    const verifierNetwork = networkManager.getVerifierNetwork();
-    const { publicClient: verifierPublicClient } = viemClientManager.getClients(verifierNetwork);
-
-    const messageReportTx = await verifierPublicClient.getTransaction({
-        hash: log.transactionHash,
-    });
-
-    const decodedCLFReport = decodeCLFReport(messageReportTx);
-    logger.debug(`Report contains ${decodedCLFReport.report.results.length} results`);
-
-    return decodedCLFReport;
-}
-
 async function parseMessageResults(decodedCLFReport: any, logger: any) {
     const messageResults: DecodedMessageReportResult[] = [];
 
@@ -191,7 +172,7 @@ async function submitBatchToDestination(
     }
 }
 
-export async function submitCLFMessageReport(log: DecodedLog) {
+export async function submitCLFMessageReport(logs: DecodedLog[]) {
     const logger = Logger.getInstance().getLogger("submitCLFMessageReport");
     const networkManager = NetworkManager.getInstance();
     const blockManagerRegistry = BlockManagerRegistry.getInstance();
@@ -203,91 +184,134 @@ export async function submitCLFMessageReport(log: DecodedLog) {
     const activeNetworkNames = activeNetworks.map(network => network.name);
 
     try {
-        // 1. Fetch and decode the CLF report
-        const decodedCLFReport = await fetchAndDecodeCLFReport(
-            log,
-            networkManager,
-            viemClientManager,
-            logger,
+        // Group logs by transaction hash
+        const txHashToLogs = new Map<string, DecodedLog[]>();
+
+        for (const log of logs) {
+            const txHash = log.transactionHash;
+            const existingLogs = txHashToLogs.get(txHash) || [];
+            existingLogs.push(log);
+            txHashToLogs.set(txHash, existingLogs);
+        }
+
+        // Process transactions in parallel
+        const txProcessPromises = Array.from(txHashToLogs.entries()).map(
+            async ([txHash, txLogs]) => {
+                logger.debug(`Processing transaction ${txHash} with ${txLogs.length} logs`);
+
+                try {
+                    // 1. Fetch and decode the CLF report
+                    const verifierNetwork = networkManager.getVerifierNetwork();
+                    const { publicClient: verifierPublicClient } =
+                        viemClientManager.getClients(verifierNetwork);
+
+                    const messageReportTx = await verifierPublicClient.getTransaction({
+                        hash: txHash,
+                    });
+
+                    const decodedCLFReport = decodeCLFReport(messageReportTx);
+                    logger.debug(
+                        `Report contains ${decodedCLFReport.report.results.length} results`,
+                    );
+
+                    // 2. Parse the message results
+                    const messageResults = await parseMessageResults(decodedCLFReport, logger);
+
+                    if (messageResults.length === 0) {
+                        logger.warn(
+                            `No valid message results found in the report for transaction ${txHash}`,
+                        );
+                        return;
+                    }
+
+                    // 3. Group messages by destination chain
+                    const messagesByDstChain = groupMessagesByDestination(messageResults);
+
+                    // 4. Create the report submission object
+                    const reportSubmission = {
+                        context: decodedCLFReport.reportContext,
+                        report: decodedCLFReport.reportBytes,
+                        rs: decodedCLFReport.rs,
+                        ss: decodedCLFReport.ss,
+                        rawVs: decodedCLFReport.rawVs,
+                    };
+
+                    // 5. Process each destination chain in parallel
+                    const dstChainProcessPromises = Array.from(messagesByDstChain.entries()).map(
+                        async ([dstChainSelector, { results, indexes }]) => {
+                            const dstChain = networkManager.getNetworkBySelector(dstChainSelector);
+
+                            if (!activeNetworkNames.includes(dstChain.name)) {
+                                logger.warn(
+                                    `${dstChain.name} is not active. Skipping message submission.`,
+                                );
+                                return;
+                            }
+
+                            const dstBlockManager = blockManagerRegistry.getBlockManager(
+                                dstChain.name,
+                            );
+                            if (!dstBlockManager) {
+                                logger.error(`No BlockManager for ${dstChain.name}`);
+                                return;
+                            }
+
+                            // 6. Fetch original messages from source chains in parallel
+                            const messagePromises = results.map(result =>
+                                fetchOriginalMessage(
+                                    result,
+                                    activeNetworkNames,
+                                    networkManager,
+                                    deploymentManager,
+                                    blockManagerRegistry,
+                                    txManager,
+                                    logger,
+                                ),
+                            );
+
+                            const resolvedMessages = await Promise.all(messagePromises);
+
+                            const messages: string[] = [];
+                            let totalGasLimit = BigInt(0);
+
+                            for (const { message, gasLimit } of resolvedMessages) {
+                                if (message) {
+                                    messages.push(message);
+                                    totalGasLimit += gasLimit;
+                                }
+                            }
+
+                            if (messages.length !== results.length) {
+                                logger.error(
+                                    `[${dstChain.name}] Could only find ${messages.length}/${results.length} messages. Skipping batch submission.`,
+                                );
+                                return;
+                            }
+
+                            // 7. Submit the batch to destination chain
+                            await submitBatchToDestination(
+                                dstChain,
+                                reportSubmission,
+                                messages,
+                                indexes,
+                                results,
+                                totalGasLimit,
+                                viemClientManager,
+                                deploymentManager,
+                                txManager,
+                                logger,
+                            );
+                        },
+                    );
+
+                    await Promise.all(dstChainProcessPromises);
+                } catch (error) {
+                    logger.error(`Error processing transaction ${txHash}: ${error}`);
+                }
+            },
         );
 
-        // 2. Parse the message results
-        const messageResults = await parseMessageResults(decodedCLFReport, logger);
-
-        if (messageResults.length === 0) {
-            logger.warn("No valid message results found in the report");
-            return;
-        }
-
-        // 3. Group messages by destination chain
-        const messagesByDstChain = groupMessagesByDestination(messageResults);
-
-        // 4. Create the report submission object
-        const reportSubmission = {
-            context: decodedCLFReport.reportContext,
-            report: decodedCLFReport.reportBytes,
-            rs: decodedCLFReport.rs,
-            ss: decodedCLFReport.ss,
-            rawVs: decodedCLFReport.rawVs,
-        };
-
-        // 5. Process each destination chain
-        for (const [dstChainSelector, { results, indexes }] of messagesByDstChain.entries()) {
-            const dstChain = networkManager.getNetworkBySelector(dstChainSelector);
-
-            if (!activeNetworkNames.includes(dstChain.name)) {
-                logger.warn(`${dstChain.name} is not active. Skipping message submission.`);
-                continue;
-            }
-
-            const dstBlockManager = blockManagerRegistry.getBlockManager(dstChain.name);
-            if (!dstBlockManager) {
-                logger.error(`No BlockManager for ${dstChain.name}`);
-                continue;
-            }
-
-            // 6. Fetch original messages from source chains
-            const messages: string[] = [];
-            let totalGasLimit = BigInt(0);
-
-            for (const result of results) {
-                const { message, gasLimit } = await fetchOriginalMessage(
-                    result,
-                    activeNetworkNames,
-                    networkManager,
-                    deploymentManager,
-                    blockManagerRegistry,
-                    txManager,
-                    logger,
-                );
-
-                if (message) {
-                    messages.push(message);
-                    totalGasLimit += gasLimit;
-                }
-            }
-
-            if (messages.length !== results.length) {
-                logger.warn(
-                    `[${dstChain.name}] Could only find ${messages.length}/${results.length} messages. Skipping batch submission.`,
-                );
-                continue;
-            }
-
-            // 7. Submit the batch to destination chain
-            await submitBatchToDestination(
-                dstChain,
-                reportSubmission,
-                messages,
-                indexes,
-                results,
-                totalGasLimit,
-                viemClientManager,
-                deploymentManager,
-                txManager,
-                logger,
-            );
-        }
+        await Promise.all(txProcessPromises);
     } catch (e) {
         logger.error(`Error when submitting clf report: ${e}`);
     }

@@ -10,13 +10,7 @@ export async function onRouterConceroSentLogs(logs: Log[], network: ConceroNetwo
     const eventLogger = Logger.getInstance().getLogger("EventListener");
     eventLogger.debug(`Processing ${logs.length} ConceroMessageSent logs from ${network.name}`);
 
-    const promises = [];
-
-    for (const log of logs) {
-        promises.push(requestCLFMessageReport(log, network.chainSelector));
-    }
-
-    await Promise.all(promises);
+    await requestCLFMessageReport(logs, network);
 }
 
 /**
@@ -27,13 +21,7 @@ export async function onVerifierMessageReportLogs(logs: Log[], network: ConceroN
     const eventLogger = Logger.getInstance().getLogger("EventListener");
     eventLogger.debug(`Processing ${logs.length} MessageReport logs`);
 
-    const promises = [];
-
-    for (const log of logs) {
-        promises.push(submitCLFMessageReport(log));
-    }
-
-    await Promise.all(promises);
+    await submitCLFMessageReport(logs);
 }
 
 /**

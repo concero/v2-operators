@@ -73,7 +73,7 @@ export class TxReader implements ITxReader {
         create: (
             contractAddress: Address,
             chainName: string,
-            onLogs: (logs: LogResult[], network: ConceroNetwork) => Promise<void>,
+            onLogs: (logs: Log[], network: ConceroNetwork) => Promise<void>,
             event: AbiEvent,
         ): string => {
             const id = uuidv4();
@@ -139,16 +139,26 @@ export class TxReader implements ITxReader {
                     network,
                 );
 
+                // Group logs by event name to process them in batches
+                const logsByEvent = new Map<string, Log[]>();
+
+                for (const log of logs) {
+                    const eventName = log.eventName || "";
+                    const logId = `${log.transactionHash}:${log.logIndex}`;
+
+                    // Skip logs we've already seen
+                    if (chainCache.has(logId)) continue;
+                    chainCache.set(logId, log);
+
+                    const existingLogs = logsByEvent.get(eventName) || [];
+                    existingLogs.push(log);
+                    logsByEvent.set(eventName, existingLogs);
+                }
+
+                // Process logs for each watcher
                 for (const watcher of contractWatchers) {
-                    const watcherLogs = logs.filter(log => {
-                        if (log.eventName !== watcher.event.name) return false;
-
-                        const logId = `${log.transactionHash}:${log.logIndex}`;
-                        if (chainCache.has(logId)) return false;
-
-                        chainCache.set(logId, log);
-                        return true;
-                    });
+                    const eventName = watcher.event?.name || "";
+                    const watcherLogs = logsByEvent.get(eventName) || [];
 
                     if (watcherLogs.length > 0) {
                         try {
