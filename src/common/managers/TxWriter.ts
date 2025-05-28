@@ -1,13 +1,4 @@
-import {
-    Abi,
-    AbiEvent,
-    Address,
-    PublicClient,
-    SimulateContractParameters,
-    TransactionReceipt,
-    WalletClient,
-    createWalletClient,
-} from "viem";
+import { PublicClient, SimulateContractParameters, WalletClient } from "viem";
 
 import { v4 as uuidv4 } from "uuid";
 
@@ -80,7 +71,7 @@ export class TxWriter implements ITxWriter {
         network: ConceroNetwork,
         params: SimulateContractParameters,
     ): Promise<ManagedTx> {
-        const txType = await this.determineTxType(params);
+        const txType = this.determineTxType(params);
 
         try {
             if (globalConfig.TX_MANAGER.DRY_RUN) {

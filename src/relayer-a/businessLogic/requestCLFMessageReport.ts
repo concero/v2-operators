@@ -6,7 +6,7 @@ import {
     TxManager,
     ViemClientManager,
 } from "../../common/managers";
-import { Logger, LoggerInterface } from "../../common/utils/logger";
+import { Logger } from "../../common/utils/logger";
 
 import { globalConfig } from "../../constants";
 import { eventEmitter } from "../../constants/eventEmitter";

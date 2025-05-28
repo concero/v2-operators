@@ -4,15 +4,12 @@ import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { ITxManager } from "../../types/managers/ITxManager";
 import { ITxMonitor } from "../../types/managers/ITxMonitor";
 import { ITxReader, LogQuery, LogResult } from "../../types/managers/ITxReader";
-import { ITxWriter, ManagedTx, TxSubmissionParams } from "../../types/managers/ITxWriter";
+import { ITxWriter, ManagedTx } from "../../types/managers/ITxWriter";
 import { Logger, LoggerInterface } from "../utils/logger";
 
 import { BlockManagerRegistry } from "./BlockManagerRegistry";
 import { ManagerBase } from "./ManagerBase";
 import { NetworkManager } from "./NetworkManager";
-import { TxMonitor } from "./TxMonitor";
-import { TxReader } from "./TxReader";
-import { TxWriter } from "./TxWriter";
 import { ViemClientManager } from "./ViemClientManager";
 
 export class TxManager extends ManagerBase implements ITxManager {
