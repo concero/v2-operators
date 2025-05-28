@@ -2,9 +2,7 @@ import { Abi } from "viem";
 
 import { abi as conceroRouterAbi } from "../abi/ConceroRouter.json";
 import { abi as conceroVerifierAbi } from "../abi/ConceroVerifier.json";
-import { getEnvVar } from "../common/utils/getEnvVar";
-import { getOptionalEnvVar } from "../common/utils/getOptionalEnvVar";
-import { getGranularLogLevels } from "../common/utils/parseGranularLogLevels";
+import { getEnvVar, getGranularLogLevels, getOptionalEnvVar } from "../common/utils";
 import { type GlobalConfig } from "../types/GlobalConfig";
 
 import { getRpcExtension, getRpcOverride } from "./localRpcLoaders";

@@ -1,4 +1,4 @@
-import { globalConfig } from "../../constants/globalConfig";
+import { globalConfig } from "../../constants/";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import {
     IDeploymentsManager,
@@ -6,10 +6,8 @@ import {
     IRpcManager,
     NetworkUpdateListener,
 } from "../../types/managers";
-import { fetchNetworkConfigs } from "../utils/fetchNetworkConfigs";
-import { getEnvVar } from "../utils/getEnvVar";
-import { localhostViemChain } from "../utils/localhostViemChain";
-import { Logger, LoggerInterface } from "../utils/logger";
+import { fetchNetworkConfigs } from "../utils";
+import { getEnvVar, localhostViemChain, Logger, LoggerInterface } from "../utils/";
 
 import { ManagerBase } from "./ManagerBase";
 

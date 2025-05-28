@@ -6,10 +6,9 @@ import {
     TxManager,
     ViemClientManager,
 } from "../../common/managers";
-import { Logger } from "../../common/utils/logger";
+import { Logger } from "../../common/utils";
 
-import { globalConfig } from "../../constants";
-import { eventEmitter } from "../../constants/eventEmitter";
+import { eventEmitter, globalConfig } from "../../constants";
 import { DecodedLog } from "../../types/DecodedLog";
 
 export async function requestCLFMessageReport(decodedLog: DecodedLog, srcChainSelector: string) {

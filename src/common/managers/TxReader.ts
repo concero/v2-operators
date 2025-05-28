@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { ITxReader, LogQuery, LogWatcher } from "../../types/managers/ITxReader";
-import { Logger, LoggerInterface } from "../utils/logger";
+import { Logger, LoggerInterface } from "../utils";
 
 import { BlockManagerRegistry } from "./BlockManagerRegistry";
 import { NetworkManager } from "./NetworkManager";

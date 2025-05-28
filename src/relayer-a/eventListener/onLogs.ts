@@ -1,6 +1,6 @@
 import { Log } from "viem";
 
-import { Logger } from "../../common/utils/logger";
+import { Logger } from "../../common/utils/";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { requestCLFMessageReport } from "../businessLogic/requestCLFMessageReport";

@@ -2,7 +2,7 @@ import { AbiEvent, getAbiItem } from "viem";
 
 import { setupEventListener } from "../../common/eventListener/setupEventListener";
 import { DeploymentManager, NetworkManager } from "../../common/managers";
-import { Logger } from "../../common/utils/logger";
+import { Logger } from "../../common/utils";
 
 import { globalConfig } from "../../constants";
 

@@ -1,9 +1,9 @@
 import { PublicClient } from "viem";
 
-import { globalConfig } from "../../constants/globalConfig";
+import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { IBlockManager } from "../../types/managers/IBlockManager";
-import { Logger, LoggerInterface } from "../utils/logger";
+import { IBlockManager } from "../../types/managers";
+import { Logger, LoggerInterface } from "../utils";
 
 import { BlockCheckpointManager } from "./BlockCheckpointManager";
 

@@ -1,11 +1,17 @@
-import { AbiEvent, Address, PublicClient, SimulateContractParameters, WalletClient } from "viem";
+import {
+    AbiEvent,
+    Address,
+    Log,
+    PublicClient,
+    SimulateContractParameters,
+    WalletClient,
+} from "viem";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { ITxManager } from "../../types/managers/ITxManager";
-import { ITxMonitor } from "../../types/managers/ITxMonitor";
-import { ITxReader, LogQuery, LogResult } from "../../types/managers/ITxReader";
+import { ITxManager, ITxMonitor } from "../../types/managers";
+import { ITxReader, LogQuery } from "../../types/managers/ITxReader";
 import { ITxWriter, ManagedTx } from "../../types/managers/ITxWriter";
-import { Logger, LoggerInterface } from "../utils/logger";
+import { Logger, LoggerInterface } from "../utils/";
 
 import { BlockManagerRegistry } from "./BlockManagerRegistry";
 import { ManagerBase } from "./ManagerBase";
@@ -102,7 +108,7 @@ export class TxManager extends ManagerBase implements ITxManager {
     }
 
     // Log Reading Methods
-    public async getLogs(query: LogQuery, network: ConceroNetwork): Promise<LogResult[]> {
+    public async getLogs(query: LogQuery, network: ConceroNetwork): Promise<Log[]> {
         return this.txReader.getLogs(query, network);
     }
 
@@ -110,7 +116,7 @@ export class TxManager extends ManagerBase implements ITxManager {
         create: (
             contractAddress: Address,
             chainName: string,
-            onLogs: (logs: LogResult[], network: ConceroNetwork) => Promise<void>,
+            onLogs: (logs: Log[], network: ConceroNetwork) => Promise<void>,
             event: AbiEvent,
         ): string => {
             return this.txReader.logWatcher.create(contractAddress, chainName, onLogs, event);

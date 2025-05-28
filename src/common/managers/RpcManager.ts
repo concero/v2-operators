@@ -1,8 +1,8 @@
-import { globalConfig } from "../../constants/globalConfig";
+import { globalConfig } from "../../constants/";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
+import { Logger, LoggerInterface } from "../utils/";
 import { HttpClient } from "../utils/httpClient";
-import { Logger, LoggerInterface } from "../utils/logger";
 
 import { ManagerBase } from "./ManagerBase";
 

@@ -1,9 +1,8 @@
 import { PublicClient } from "viem";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { IBlockManagerRegistry } from "../../types/managers/IBlockManagerRegistry";
-import { NetworkUpdateListener } from "../../types/managers/NetworkUpdateListener";
-import { Logger, LoggerInterface } from "../utils/logger";
+import { IBlockManagerRegistry, NetworkUpdateListener } from "../../types/managers/";
+import { Logger, LoggerInterface } from "../utils/";
 
 import { BlockCheckpointManager } from "./BlockCheckpointManager";
 import { BlockManager } from "./BlockManager";

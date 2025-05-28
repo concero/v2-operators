@@ -1,6 +1,6 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { IBlockCheckpointManager } from "../../types/managers/IBlockCheckpointManager";
-import { Logger, LoggerInterface } from "../utils/logger";
+import { IBlockCheckpointManager } from "../../types/managers/";
+import { Logger, LoggerInterface } from "../utils/";
 
 import { DbManager } from "./DbManager";
 import { ManagerBase } from "./ManagerBase";

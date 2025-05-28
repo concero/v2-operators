@@ -5,8 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { ITxWriter, ManagedTx, TxSubmissionParams } from "../../types/managers/ITxWriter";
-import { callContract } from "../utils/callContract";
-import { Logger, LoggerInterface } from "../utils/logger";
+import { callContract, Logger, LoggerInterface } from "../utils";
 
 import { NetworkManager } from "./NetworkManager";
 import { ViemClientManager } from "./ViemClientManager";

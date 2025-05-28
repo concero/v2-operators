@@ -8,8 +8,8 @@ import {
     ViemClientManager,
 } from "../../common/managers";
 import { decodeCLFReport, decodeMessageReportResult } from "../../common/utils";
+import { Logger } from "../../common/utils/";
 import { DecodedMessageReportResult } from "../../common/utils/decoders/types";
-import { Logger } from "../../common/utils/logger";
 
 import { globalConfig } from "../../constants";
 import { DecodedLog } from "../../types/DecodedLog";

@@ -1,7 +1,7 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { ITxMonitor, MonitoredTransaction } from "../../types/managers/ITxMonitor";
+import { ITxMonitor, MonitoredTransaction } from "../../types/managers";
 import { ManagedTx } from "../../types/managers/ITxWriter";
-import { Logger, LoggerInterface } from "../utils/logger";
+import { Logger, LoggerInterface } from "../utils";
 
 import { ViemClientManager } from "./ViemClientManager";
 

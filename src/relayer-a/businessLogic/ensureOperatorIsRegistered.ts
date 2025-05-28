@@ -5,11 +5,9 @@ import {
     setupEventListener,
 } from "../../common/eventListener/setupEventListener";
 import { DeploymentManager, NetworkManager, ViemClientManager } from "../../common/managers";
-import { callContract } from "../../common/utils";
-import { Logger } from "../../common/utils/logger";
+import { Logger, callContract } from "../../common/utils";
 
-import { globalConfig } from "../../constants";
-import { eventEmitter } from "../../constants/eventEmitter";
+import { eventEmitter, globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 
 const ChainType = {
