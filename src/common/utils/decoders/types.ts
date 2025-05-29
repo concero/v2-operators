@@ -13,6 +13,7 @@ export interface DecodedMessageReportResult {
     sender: ByteArray;
     srcChainSelector: number;
     dstChainSelector: number;
+    srcBlockNumber: bigint;
     dstChainData: {
         receiver: Address;
         gasLimit: bigint;
