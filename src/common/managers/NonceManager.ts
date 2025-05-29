@@ -1,3 +1,4 @@
+import { Mutex } from "async-mutex";
 import { Address, Client, createPublicClient } from "viem";
 
 import { ManagerBase } from "./ManagerBase";
@@ -7,13 +8,14 @@ interface INonceManagerParams {
     chainId: number;
 }
 
-interface IGetNonceManagerParams extends INonceManagerParams {
+interface IGetNonceParams extends INonceManagerParams {
     client: Client;
 }
 
 export class NonceManager extends ManagerBase {
     private static instance: NonceManager | null = null;
     private noncesMap: Record<number, number> = {};
+    private mutexMap: Record<number, Mutex> = {};
 
     protected constructor() {
         super();
@@ -39,35 +41,55 @@ export class NonceManager extends ManagerBase {
         NonceManager.instance = null;
     }
 
-    async get(parameters: IGetNonceManagerParams) {
-        if (!this.noncesMap[parameters.chainId]) {
-            const publicClient = createPublicClient({
-                transport: () => parameters.client.transport,
-                chain: parameters.client.chain,
-            });
+    async get(params: IGetNonceParams) {
+        const m = this.getMutex(params.chainId);
+        return m.runExclusive(async () => {
+            if (!this.noncesMap[params.chainId]) {
+                const actualNonce = await this.fetchNonce(params);
+                this.set(params, actualNonce);
+                return actualNonce;
+            }
+            return this.noncesMap[params.chainId];
+        });
+    }
 
-            const currentNonce = await publicClient.getTransactionCount({
-                address: parameters.address,
-            });
+    async consume(params: IGetNonceParams) {
+        const m = this.getMutex(params.chainId);
+        return m.runExclusive(async () => {
+            const incrementedNonce =
+                (this.noncesMap[params.chainId]
+                    ? this.noncesMap[params.chainId]
+                    : await this.fetchNonce(params)) + 1;
 
-            this.set(parameters, currentNonce);
-            return currentNonce;
+            this.set(params, incrementedNonce);
+            return incrementedNonce;
+        });
+    }
+
+    reset(params: INonceManagerParams) {
+        this.set(params, 0);
+    }
+
+    set(params: INonceManagerParams, nonce: number) {
+        this.noncesMap[params.chainId] = nonce;
+    }
+
+    private async fetchNonce(params: IGetNonceParams) {
+        const publicClient = this.createPublicCLientFromGetNonceParams(params);
+        return await publicClient.getTransactionCount({ address: params.address });
+    }
+
+    private getMutex(chainId: number): Mutex {
+        if (!this.mutexMap[chainId]) {
+            this.mutexMap[chainId] = new Mutex();
         }
-
-        return this.noncesMap[parameters.chainId];
+        return this.mutexMap[chainId];
     }
 
-    async consume(parameters: IGetNonceManagerParams) {
-        const nonce = await this.get(parameters);
-        this.set(parameters, nonce + 1);
-        return nonce;
-    }
-
-    reset(parameters: INonceManagerParams) {
-        this.set(parameters, 0);
-    }
-
-    set(parameters: INonceManagerParams, nonce: number) {
-        this.noncesMap[parameters.chainId] = nonce;
+    private createPublicCLientFromGetNonceParams(params: IGetNonceParams) {
+        return createPublicClient({
+            transport: () => params.client.transport,
+            chain: params.client.chain,
+        });
     }
 }

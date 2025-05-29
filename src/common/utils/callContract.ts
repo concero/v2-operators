@@ -29,14 +29,16 @@ async function executeTransaction(
         const { request } = await publicClient.simulateContract(params);
         txHash = await walletClient.writeContract({ request } as any);
     } else {
+        const nonce = await nonceManager.consume({
+            address,
+            chainId,
+            client: publicClient,
+        });
+
         const paramsToSend = {
             gas: globalConfig.TX_MANAGER.GAS_LIMIT.DEFAULT,
             ...params,
-            nonce: await nonceManager.consume({
-                address,
-                chainId,
-                client: publicClient,
-            }),
+            nonce,
         };
 
         txHash = await walletClient.writeContract(paramsToSend as any);
