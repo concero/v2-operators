@@ -34,5 +34,5 @@ rpcs.override.json
 rpcs.extension.json
 
 # Prisma/SQLite databases
-.db
+prisma/*.db
 prisma/migrations/*
