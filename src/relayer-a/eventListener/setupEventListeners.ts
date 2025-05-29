@@ -6,7 +6,8 @@ import { Logger } from "../../common/utils";
 
 import { globalConfig } from "../../constants";
 
-import { onRouterConceroSentLogs, onVerifierMessageReportLogs } from "./onLogs";
+import { requestCLFMessageReport } from "../businessLogic/requestCLFMessageReport";
+import { submitCLFMessageReport } from "../businessLogic/submitCLFMessageReport";
 
 /**
  * Sets up event listeners for all active networks and the verifier network.
@@ -37,7 +38,7 @@ export async function setupEventListeners() {
             const sentHandle = await setupEventListener(
                 network,
                 routerAddress,
-                onRouterConceroSentLogs,
+                requestCLFMessageReport,
                 sentEvent as AbiEvent,
             );
             eventListenerHandles.push(sentHandle);
@@ -92,7 +93,7 @@ export async function setupEventListeners() {
         const messageReportHandle = await setupEventListener(
             verifierNetwork,
             verifierAddress,
-            onVerifierMessageReportLogs,
+            submitCLFMessageReport,
             messageReportEvent as AbiEvent,
         );
         eventListenerHandles.push(messageReportHandle);

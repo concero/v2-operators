@@ -1,5 +1,6 @@
-import { decodeAbiParameters, getAbiItem } from "viem";
+import { Log, decodeAbiParameters, getAbiItem } from "viem";
 
+import { decodeLogs } from "../../common/eventListener/decodeLogs";
 import {
     BlockManagerRegistry,
     DeploymentManager,
@@ -12,6 +13,7 @@ import { Logger } from "../../common/utils/";
 import { DecodedMessageReportResult } from "../../common/utils/decoders/types";
 
 import { globalConfig } from "../../constants";
+import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { DecodedLog } from "../../types/DecodedLog";
 
 async function parseMessageResults(decodedCLFReport: any, logger: any) {
@@ -168,7 +170,29 @@ async function submitBatchToDestination(
     }
 }
 
-export async function submitCLFMessageReport(logs: DecodedLog[]) {
+/**
+ * Adapter function that takes viem Log objects and the network,
+ * decodes them and passes them to the main processMessageReports function
+ */
+export async function submitCLFMessageReport(logs: Log[], network?: ConceroNetwork) {
+    if (logs.length === 0) return;
+
+    const logger = Logger.getInstance().getLogger("processMessageReports");
+    logger.debug(`Processing ${logs.length} MessageReport logs`);
+
+    try {
+        // Decode the logs
+        const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_VERIFIER);
+        await processMessageReports(decodedLogs);
+    } catch (error) {
+        logger.error(`Error processing message report logs: ${error}`);
+    }
+}
+
+/**
+ * Main function that processes decoded message report logs
+ */
+async function processMessageReports(logs: DecodedLog[]) {
     const logger = Logger.getInstance().getLogger("submitCLFMessageReport");
     const networkManager = NetworkManager.getInstance();
     const blockManagerRegistry = BlockManagerRegistry.getInstance();
