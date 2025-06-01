@@ -28,7 +28,6 @@ node_modules
 *.log
 logs/
 
-/dist
 
 rpcs.override.json
 rpcs.extension.json
