@@ -2,7 +2,6 @@
   "name": "concero-v2-operators",
   "module": "index.ts",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "build": "swc src -d dist && bun run copy-assets",
     "copy-assets": "mkdir -p dist/abi && cp -r src/abi/* dist/abi/",
