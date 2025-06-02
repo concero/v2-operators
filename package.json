@@ -13,7 +13,8 @@
     "prisma:reset": "npx prisma migrate reset",
     "prisma:studio": "npx prisma studio --schema=prisma/schema.prisma",
     "prepare": "husky",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "npx prisma generate"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
