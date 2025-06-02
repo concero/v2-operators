@@ -2,6 +2,7 @@ import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IBlockCheckpointManager } from "../../types/managers/";
 import { Logger, LoggerInterface } from "../utils/";
 
+import { globalConfig } from "../../constants";
 import { DbManager } from "./DbManager";
 import { ManagerBase } from "./ManagerBase";
 
@@ -44,6 +45,8 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
     }
 
     async updateLastProcessedBlock(networkName: string, blockNumber: bigint): Promise<void> {
+        if (!globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS) return;
+
         try {
             await this.prisma.blockCheckpoint.upsert({
                 where: { network: networkName },
