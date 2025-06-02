@@ -26,6 +26,7 @@ import { ManagerBase } from "./ManagerBase";
 export interface ViemClients {
     walletClient: WalletClient;
     publicClient: PublicClient;
+    // TODO: do we really use this account? walletClient already has the account
     account: PrivateKeyAccount;
 }
 
