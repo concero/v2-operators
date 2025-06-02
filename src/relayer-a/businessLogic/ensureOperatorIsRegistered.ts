@@ -1,11 +1,11 @@
-import { type Address, Hash, PublicClient, WalletClient, decodeEventLog } from "viem";
+import { type Address, decodeEventLog, getAbiItem, Hash, PublicClient, WalletClient } from "viem";
 
 import {
     EventListenerHandle,
     setupEventListener,
 } from "../../common/eventListener/setupEventListener";
 import { DeploymentManager, NetworkManager, ViemClientManager } from "../../common/managers";
-import { Logger, callContract } from "../../common/utils";
+import { callContract, Logger } from "../../common/utils";
 
 import { eventEmitter, globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
@@ -130,7 +130,7 @@ export async function waitForOperatorRegistration(
             network,
             contractAddress,
             onLogs,
-            globalConfig.BLOCK_MANAGER.POLLING_INTERVAL_MS,
+            getAbiItem({ abi: globalConfig.ABI.CONCERO_VERIFIER, name: "OperatorRegistered" }),
         ).then(handle => {
             listenerHandle = handle;
         });
