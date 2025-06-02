@@ -130,12 +130,22 @@ export class ViemClientManager
         if (!this.initialized) {
             throw new Error("ViemClientManager not properly initialized");
         }
+        
+        if (!chain) {
+            throw new Error("Cannot get clients: chain parameter is undefined or null");
+        }
+        
+        if (!chain.name) {
+            this.logger.error(`Invalid chain object provided: ${JSON.stringify(chain)}`);
+            throw new Error("Cannot get clients: chain.name is missing");
+        }
 
         const cachedClients = this.clients.get(chain.name);
         if (cachedClients) {
             return cachedClients;
         }
 
+        this.logger.debug(`Creating new clients for chain: ${chain.name} (id: ${chain.id})`);
         const newClients = this.initializeClients(chain);
         this.clients.set(chain.name, newClients);
 
