@@ -56,13 +56,12 @@ export class NonceManager extends ManagerBase {
     async consume(params: IGetNonceParams) {
         const m = this.getMutex(params.chainId);
         return m.runExclusive(async () => {
-            const incrementedNonce =
-                (this.noncesMap[params.chainId]
-                    ? this.noncesMap[params.chainId]
-                    : await this.fetchNonce(params)) + 1;
+            const nonce = this.noncesMap[params.chainId]
+                ? this.noncesMap[params.chainId]
+                : await this.fetchNonce(params);
 
-            this.set(params, incrementedNonce);
-            return incrementedNonce;
+            this.set(params, nonce + 1);
+            return nonce;
         });
     }
 
