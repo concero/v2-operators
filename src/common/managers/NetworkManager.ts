@@ -136,13 +136,17 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             return this.testnetNetworks["arbitrumSepolia"];
         } else if (globalConfig.NETWORK_MODE === "localhost") {
             const localNetwork = this.testnetNetworks["localhost"];
-            
+
             if (!localNetwork) {
-                this.logger.error(`Available testnet networks: ${Object.keys(this.testnetNetworks).join(", ")}`);
+                this.logger.error(
+                    `Available testnet networks: ${Object.keys(this.testnetNetworks).join(", ")}`,
+                );
                 throw new Error("Localhost network not found in testnetNetworks");
             }
-            
-            this.logger.debug(`Using localhost network: ${localNetwork.name} (id: ${localNetwork.id})`);
+
+            this.logger.debug(
+                `Using localhost network: ${localNetwork.name} (id: ${localNetwork.id})`,
+            );
             return localNetwork;
         } else {
             throw new Error(`Unsupported network mode: ${globalConfig.NETWORK_MODE}`);
@@ -179,7 +183,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             this.testnetNetworks = {
                 ...this.createNetworkConfig(fetchedTestnet, "testnet", [operatorPK]),
             };
-            
+
             // Add localhost networks to testnetNetworks when in localhost mode
             if (globalConfig.NETWORK_MODE === "localhost") {
                 const localhostNetworks = this.getTestingNetworks(operatorPK);
@@ -187,15 +191,19 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                     ...this.testnetNetworks,
                     ...localhostNetworks,
                 };
-                this.logger.debug(`Added localhost networks: ${Object.keys(localhostNetworks).join(", ")}`);
+                this.logger.debug(
+                    `Added localhost networks: ${Object.keys(localhostNetworks).join(", ")}`,
+                );
             }
-            
+
             this.allNetworks = { ...this.testnetNetworks, ...this.mainnetNetworks };
             this.activeNetworks = this.filterNetworks(
                 globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
             );
 
-            this.logger.debug(`Networks updated - Active networks: ${this.activeNetworks.length} (${this.activeNetworks.map(n => n.name).join(", ")})`);
+            this.logger.debug(
+                `Networks updated - Active networks: ${this.activeNetworks.length} (${this.activeNetworks.map(n => n.name).join(", ")})`,
+            );
             this.notifyListeners();
         } catch (error) {
             this.logger.error("Failed to update networks:", error);
@@ -245,15 +253,6 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                 id: 1,
                 accounts: [operatorPK],
                 chainSelector: "1",
-                confirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
-                viemChain: localhostViemChain,
-            },
-            localhostPolygon: {
-                name: "localhostPolygon",
-                type: "localhost",
-                id: 137,
-                accounts: [operatorPK],
-                chainSelector: "137",
                 confirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
                 viemChain: localhostViemChain,
             },
