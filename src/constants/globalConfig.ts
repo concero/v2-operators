@@ -43,7 +43,7 @@ export const globalConfig: GlobalConfig = {
         RECEIPT: {
             timeout: 0,
             confirmations: 2,
-            //todo: for localhost chain this needs to be set to 1. Mainnet chains need their per-chain confirmations found in conceroNetowrks.ts
+            //todo: for localhost chain this needs to be set to 1. Mainnet chains need their per-chain confirmations found in conceroNetworks.ts
         },
         WRITE_CONTRACT: {
             gas: 3000000n,
