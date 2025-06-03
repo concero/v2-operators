@@ -202,6 +202,7 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
 
     if (registered) {
         logger.info("Operator already registered");
+        eventEmitter.emit("operatorRegistered", {});
         return;
     }
 
@@ -225,5 +226,5 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
     );
 
     logger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
-    eventEmitter.emit("operatorRegistered", { txHash: confirmedTxHash });
+    eventEmitter.emit("operatorRegistered", {});
 }
