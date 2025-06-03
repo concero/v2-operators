@@ -1,12 +1,8 @@
-import { type Address, decodeEventLog, getAbiItem, Hash, PublicClient, WalletClient } from "viem";
-
-import {
-    EventListenerHandle,
-    setupEventListener,
-} from "../../common/eventListener/setupEventListener";
+import { Hash, isHex, Log, PublicClient, WalletClient, type Address } from "viem";
 import { DeploymentManager, NetworkManager, ViemClientManager } from "../../common/managers";
 import { callContract, Logger } from "../../common/utils";
 
+import { getAbiItem } from "viem";
 import { eventEmitter, globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 
@@ -36,13 +32,12 @@ async function isOperatorRegistered(
 ): Promise<boolean> {
     const conceroVerifierNetwork = networkManager.getVerifierNetwork();
 
-    const isRegistered = await publicClient.readContract({
-        chain: conceroVerifierNetwork.viemChain,
+    const isRegistered = (await publicClient.readContract({
         address: await deploymentManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "isOperatorRegistered",
         args: [globalConfig.OPERATOR_ADDRESS],
-    });
+    })) as boolean;
 
     return isRegistered;
 }
@@ -70,7 +65,6 @@ async function requestOperatorRegistration(
     const operatorAddresses = [globalConfig.OPERATOR_ADDRESS];
 
     const transactionHash = await callContract(publicClient, walletClient, {
-        chain: conceroVerifierNetwork.viemChain,
         address: await deploymentManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "requestOperatorRegistration",
@@ -84,7 +78,9 @@ async function requestOperatorRegistration(
 }
 
 /**
- * Waits for the operator registration event on the ConceroVerifier contract.
+ * Waits for the operator registration event on the ConceroVerifier contract by polling blocks.
+ * This function continuously polls for new blocks and checks for OperatorRegistered events
+ * that match the specified operator address.
  *
  * @param network - The network instance to monitor.
  * @param contractAddress - The address of the ConceroVerifier contract.
@@ -98,43 +94,93 @@ export async function waitForOperatorRegistration(
     fromBlockNumber: bigint,
     operatorAddress: string,
 ): Promise<Hash> {
-    return new Promise((resolve, reject) => {
-        let listenerHandle: EventListenerHandle;
+    const logger = Logger.getInstance().getLogger("waitForOperatorRegistration");
+    const viemClientManager = ViemClientManager.getInstance();
+    const { publicClient } = viemClientManager.getClients(network);
 
-        const onLogs = (logs: any[]) => {
-            for (const log of logs) {
-                try {
-                    const decoded = decodeEventLog({
+    const POLL_INTERVAL_MS = 3 * 1000;
+    const MAX_RETRIES = 100;
+    const EVENT_NAME = "OperatorRegistered";
+    let retries = 0;
+
+    logger.info(
+        `Waiting for operator registration event for ${operatorAddress} from block ${fromBlockNumber}`,
+    );
+
+    return new Promise((resolve, reject) => {
+        const checkForRegistrationEvent = async () => {
+            if (retries >= MAX_RETRIES) {
+                reject(new Error("Max retries reached while waiting for operator registration"));
+                return;
+            }
+
+            retries++;
+
+            try {
+                const latestBlockNumber = await publicClient.getBlockNumber();
+
+                if (latestBlockNumber <= fromBlockNumber && retries > 1) {
+                    setTimeout(checkForRegistrationEvent, POLL_INTERVAL_MS);
+                    return;
+                }
+
+                const logs = await publicClient.getLogs({
+                    address: contractAddress,
+                    fromBlock: fromBlockNumber,
+                    toBlock: latestBlockNumber,
+                    event: getAbiItem({
                         abi: globalConfig.ABI.CONCERO_VERIFIER,
-                        eventName: "OperatorRegistered",
-                        data: log.data,
-                        topics: log.topics,
-                        strict: true,
-                    });
-                    if (
-                        decoded &&
-                        decoded.args &&
-                        decoded.args.operator &&
-                        decoded.args.operator.toLowerCase() === operatorAddress.toLowerCase() &&
-                        BigInt(log.blockNumber) >= fromBlockNumber
-                    ) {
-                        listenerHandle.stop();
-                        resolve(log.transactionHash);
-                        break;
-                    }
-                } catch (error) {}
+                        name: "OperatorRegistered",
+                    }),
+                });
+
+                const matchingLog = findOperatorRegistrationLog(logs, operatorAddress);
+                if (matchingLog && matchingLog.transactionHash) {
+                    resolve(matchingLog.transactionHash);
+                    return;
+                }
+
+                setTimeout(checkForRegistrationEvent, POLL_INTERVAL_MS);
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logger.error(`Error while polling for operator registration: ${errorMessage}`);
+
+                setTimeout(checkForRegistrationEvent, POLL_INTERVAL_MS);
             }
         };
 
-        setupEventListener(
-            network,
-            contractAddress,
-            onLogs,
-            getAbiItem({ abi: globalConfig.ABI.CONCERO_VERIFIER, name: "OperatorRegistered" }),
-        ).then(handle => {
-            listenerHandle = handle;
-        });
+        checkForRegistrationEvent();
     });
+}
+
+/**
+ * Helper function to find the operator registration log for a specific operator address
+ * within a collection of logs. It decodes each log and checks if it matches our operator.
+ *
+ * @param logs - Array of logs to search through
+ * @param operatorAddress - Address of the operator to find
+ * @returns The matching log or undefined if not found
+ */
+function findOperatorRegistrationLog(logs: Log[], operatorAddress: string): Log | undefined {
+    const EVENT_NAME = "OperatorRegistered";
+    const logger = Logger.getInstance().getLogger("findOperatorRegistrationLog");
+
+    for (const log of logs) {
+        try {
+            if (
+                log?.args?.operator.toLowerCase() === operatorAddress.toLowerCase() &&
+                isHex(log.transactionHash)
+            ) {
+                return log;
+            }
+        } catch (error) {
+            logger.debug(
+                `Error decoding log: ${error instanceof Error ? error.message : String(error)}`,
+            );
+        }
+    }
+
+    return undefined;
 }
 
 /**
