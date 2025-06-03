@@ -32,6 +32,7 @@ export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessag
                         { type: "bytes", name: "sender" },
                         { type: "uint24", name: "srcChainSelector" },
                         { type: "uint24", name: "dstChainSelector" },
+                        { type: "uint256", name: "srcBlockNumber" },
                         {
                             type: "tuple",
                             name: "dstChainData",

@@ -64,7 +64,7 @@ async function fetchOriginalMessage(
     txManager: TxManager,
     logger: any,
 ) {
-    const { srcChainSelector, messageId } = result;
+    const { srcChainSelector, messageId, srcBlockNumber } = result;
     const srcChain = networkManager.getNetworkBySelector(srcChainSelector.toString());
 
     if (!activeNetworkNames.includes(srcChain.name)) {
@@ -74,7 +74,6 @@ async function fetchOriginalMessage(
 
     const srcContractAddress = await deploymentManager.getRouterByChainName(srcChain.name);
     const srcBlockManager = blockManagerRegistry.getBlockManager(srcChain.name);
-    const currentBlock = await srcBlockManager.getLatestBlock();
 
     const decodedLogs = await txManager.getLogs(
         {
@@ -86,15 +85,15 @@ async function fetchOriginalMessage(
             args: {
                 messageId,
             },
-            fromBlock: currentBlock - BigInt(300), // TODO: report must include srcBlockNumber, 300 blocks is very unreliable
-            toBlock: currentBlock,
+            fromBlock: srcBlockNumber - BigInt(1),
+            toBlock: srcBlockNumber + BigInt(1),
         },
         srcChain,
     );
 
     if (decodedLogs.length === 0) {
         logger.warn(
-            `${srcChain.name}: No decodedLogs found for messageId ${messageId} in the last 300 blocks.`,
+            `${srcChain.name}: No decodedLogs found for messageId ${messageId} around block ${srcBlockNumber}.`,
         );
         return { message: null, gasLimit: BigInt(0) };
     }
