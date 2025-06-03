@@ -173,27 +173,27 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
 
     private async updateNetworks(): Promise<void> {
         try {
-            const { mainnetNetworks: fetchedMainnet, testnetNetworks: fetchedTestnet } =
-                await fetchNetworkConfigs();
             const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
 
-            this.mainnetNetworks = this.createNetworkConfig(fetchedMainnet, "mainnet", [
-                operatorPK,
-            ]);
-            this.testnetNetworks = {
-                ...this.createNetworkConfig(fetchedTestnet, "testnet", [operatorPK]),
-            };
-
-            // Add localhost networks to testnetNetworks when in localhost mode
             if (globalConfig.NETWORK_MODE === "localhost") {
+                // In localhost mode, skip fetching remote network configs
+                this.mainnetNetworks = {};
                 const localhostNetworks = this.getTestingNetworks(operatorPK);
-                this.testnetNetworks = {
-                    ...this.testnetNetworks,
-                    ...localhostNetworks,
-                };
+                this.testnetNetworks = localhostNetworks;
                 this.logger.debug(
-                    `Added localhost networks: ${Object.keys(localhostNetworks).join(", ")}`,
+                    `Using localhost networks only: ${Object.keys(localhostNetworks).join(", ")}`,
                 );
+            } else {
+                // For mainnet or testnet mode, fetch network configs from remote source
+                const { mainnetNetworks: fetchedMainnet, testnetNetworks: fetchedTestnet } =
+                    await fetchNetworkConfigs();
+
+                this.mainnetNetworks = this.createNetworkConfig(fetchedMainnet, "mainnet", [
+                    operatorPK,
+                ]);
+                this.testnetNetworks = {
+                    ...this.createNetworkConfig(fetchedTestnet, "testnet", [operatorPK]),
+                };
             }
 
             this.allNetworks = { ...this.testnetNetworks, ...this.mainnetNetworks };
