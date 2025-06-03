@@ -93,7 +93,7 @@ const globalConfig: GlobalConfig = {
         NETWORK_UPDATE_INTERVAL_MS: 1000 * 60 * 60, // 1 hour
     },
     BLOCK_MANAGER: {
-        POLLING_INTERVAL_MS: parseInt(getEnvVar("POLLING_INTERVAL_MS")) || 5000,
+        POLLING_INTERVAL_MS: parseInt(getEnvVar("BLOCK_MANAGER_POLLING_INTERVAL_MS")) || 5000,
         SEQUENTIAL_BATCH_SIZE: 100n,
         CATCHUP_BATCH_SIZE: 500n,
         MAX_BLOCKS_TO_PROCESS: 100n,
