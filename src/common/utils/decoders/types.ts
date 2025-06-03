@@ -10,7 +10,7 @@ export interface DecodedMessageReportResult {
     reportConfig: ReportConfig;
     messageId: Hash;
     messageHashSum: Hash;
-    sender: ByteArray;
+    messageSender: ByteArray;
     srcChainSelector: number;
     dstChainSelector: number;
     srcBlockNumber: bigint;
