@@ -6,12 +6,12 @@ import { abi as conceroRouterAbi } from "../abi/ConceroRouter.json";
 import { abi as conceroVerifierAbi } from "../abi/ConceroVerifier.json";
 import { getRpcServiceBranch } from "./getRpcServiceBranch";
 import { getDeploymentsServiceBranch } from "./getDeploymentsServiceBranch";
-import { getRpcOverride, getRpcExtension } from "./localRpcLoaders";
+import { getRpcExtension, getRpcOverride } from "./localRpcLoaders";
 
 export const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar("NETWORK_MODE"),
     OPERATOR_ADDRESS: getEnvVar("OPERATOR_ADDRESS"),
-    IGNORED_NETWORK_IDS: [44787, 80069],
+    IGNORED_NETWORK_IDS: [44787],
     // WHITELISTED_NETWORK_IDS: {
     //     mainnet: [1, 137],
     //     testnet: [
