@@ -12,10 +12,8 @@ const globalConfig: GlobalConfig = {
     OPERATOR_ADDRESS: getEnvVar("OPERATOR_ADDRESS"),
     IGNORED_NETWORK_IDS: [44787, 1114],
     WHITELISTED_NETWORK_IDS: {
-        mainnet: [
-            /* 1, 137 */
-        ],
-        testnet: [421614, 80069],
+        mainnet: [],
+        testnet: [],
         localhost: [
             /* 1 */
         ],
