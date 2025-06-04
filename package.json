@@ -14,7 +14,7 @@
     "prisma:studio": "npx prisma studio --schema=prisma/schema.prisma",
     "prepare": "husky",
     "test": "jest",
-    "postinstall": "npx prisma generate"
+    "postinstall": "npx prisma generate --schema=prisma/schema.prisma"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
