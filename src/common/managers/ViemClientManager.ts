@@ -1,5 +1,8 @@
 import {
     ContractFunctionExecutionError,
+    createPublicClient,
+    createWalletClient,
+    fallback,
     HttpRequestError,
     InvalidInputRpcError,
     MethodNotFoundRpcError,
@@ -9,9 +12,6 @@ import {
     UnknownNodeError,
     UnknownRpcError,
     WalletClient,
-    createPublicClient,
-    createWalletClient,
-    fallback,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
@@ -19,7 +19,7 @@ import type { PrivateKeyAccount } from "viem/accounts/types";
 import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
-import { Logger, LoggerInterface, createCustomHttpTransport, getEnvVar } from "../utils";
+import { createCustomHttpTransport, getEnvVar, Logger, LoggerInterface } from "../utils";
 
 import { ManagerBase } from "./ManagerBase";
 
@@ -130,11 +130,11 @@ export class ViemClientManager
         if (!this.initialized) {
             throw new Error("ViemClientManager not properly initialized");
         }
-        
+
         if (!chain) {
             throw new Error("Cannot get clients: chain parameter is undefined or null");
         }
-        
+
         if (!chain.name) {
             this.logger.error(`Invalid chain object provided: ${JSON.stringify(chain)}`);
             throw new Error("Cannot get clients: chain.name is missing");
