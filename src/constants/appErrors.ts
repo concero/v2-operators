@@ -28,7 +28,7 @@ const appErrors: Record<AppErrorEnum, AppErrorType> = {
     },
     [AppErrorEnum.UnknownError]: {
         message: "An unknown error occurred",
-        isOperational: false,
+        isOperational: true,
     },
     [AppErrorEnum.UnhandledRejection]: {
         message: "Unhandled promise rejection",
