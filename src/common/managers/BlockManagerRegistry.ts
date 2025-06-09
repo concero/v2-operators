@@ -65,7 +65,6 @@ export class BlockManagerRegistry
             return blockManager;
         } catch (error) {
             this.logger.error(`Failed to create BlockManager for network ${network.name}`, error);
-            throw error;
         }
     }
 
