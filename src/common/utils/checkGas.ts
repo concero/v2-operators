@@ -93,7 +93,6 @@ async function checkAndNotifyInsufficientGas() {
         // logger.info(`All chains (${activeNetworks.length}) have sufficient gas.`);
     } catch (error) {
         logger.error("Error checking gas balances:", error);
-        throw error;
     }
 }
 
