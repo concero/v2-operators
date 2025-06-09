@@ -59,6 +59,10 @@ export class TxReader implements ITxReader {
         for (const network of activeNetworks) {
             const blockManager = this.blockManagerRegistry.getBlockManager(network.name);
 
+            if (!blockManager) {
+                continue;
+            }
+
             const unwatcher = blockManager.watchBlocks({
                 onBlockRange: async (startBlock, endBlock) => {
                     await this.fetchLogsForWatchers(network.name, startBlock, endBlock);

@@ -64,7 +64,7 @@ export class BlockManagerRegistry
             const blockManager = await this.createBlockManager(network, publicClient);
             return blockManager;
         } catch (error) {
-            this.logger.error(`Failed to create BlockManager for network ${network.name}`, error);
+            this.logger.warn(`Failed to create BlockManager for network ${network.name}`, error);
         }
     }
 
