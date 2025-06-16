@@ -6,8 +6,10 @@ import {
     HttpRequestError,
     InvalidInputRpcError,
     MethodNotFoundRpcError,
+    MethodNotSupportedRpcError,
     PublicClient,
     RpcRequestError,
+    TimeoutError,
     TransactionNotFoundError,
     UnknownNodeError,
     UnknownRpcError,
@@ -84,7 +86,9 @@ export class ViemClientManager
                         error instanceof UnknownRpcError ||
                         error instanceof UnknownNodeError ||
                         error instanceof InvalidInputRpcError ||
-                        error instanceof MethodNotFoundRpcError
+                        error instanceof MethodNotFoundRpcError ||
+                        error instanceof TimeoutError ||
+                        error instanceof MethodNotSupportedRpcError
                     ) {
                         return false;
                     } else if (error instanceof ContractFunctionExecutionError) {
