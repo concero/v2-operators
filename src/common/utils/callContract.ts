@@ -6,6 +6,7 @@ import {
     type PublicClient,
     type SimulateContractParameters,
     TransactionExecutionError,
+    TransactionNotFoundError,
     type WalletClient,
 } from "viem";
 
@@ -44,7 +45,11 @@ async function executeTransaction(
         txHash = await walletClient.writeContract(paramsToSend as any);
     }
 
-    return txHash;
+    await publicClient.waitForTransactionReceipt({
+        hash: txHash as Hash,
+    });
+
+    return txHash as Hash;
 }
 
 export async function callContract(
@@ -56,29 +61,28 @@ export async function callContract(
         const nonceManager = NonceManager.getInstance();
 
         const isRetryableError = async (error: any) => {
-            if (error instanceof ContractFunctionExecutionError) {
-                if (error.cause instanceof TransactionExecutionError) {
-                    if (
-                        error.cause.cause instanceof NonceTooHighError ||
-                        error.cause.cause instanceof NonceTooLowError
-                    ) {
-                        const chainId = publicClient.chain!.id;
-                        const address = walletClient.account!.address;
+            if (
+                (error instanceof ContractFunctionExecutionError &&
+                    error.cause instanceof TransactionExecutionError &&
+                    (error.cause.cause instanceof NonceTooHighError ||
+                        error.cause.cause instanceof NonceTooLowError)) ||
+                error instanceof TransactionNotFoundError
+            ) {
+                const chainId = publicClient.chain!.id;
+                const address = walletClient.account!.address;
 
-                        nonceManager.reset({ chainId, address });
+                nonceManager.reset({ chainId, address });
 
-                        return true;
-                    }
-                }
+                return true;
             }
 
             return false;
         };
 
-        return asyncRetry(
+        return asyncRetry<Hash>(
             () => executeTransaction(publicClient, walletClient, params, nonceManager),
             {
-                maxRetries: 100,
+                maxRetries: 20,
                 delayMs: 1000,
                 isRetryableError,
             },

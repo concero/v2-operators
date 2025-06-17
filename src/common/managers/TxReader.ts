@@ -165,14 +165,22 @@ export class TxReader implements ITxReader {
                     const watcherLogs = logsByEvent.get(eventName) || [];
 
                     if (watcherLogs.length > 0) {
-                        try {
-                            await watcher.callback(watcherLogs, network);
-                        } catch (error) {
+                        // it's an experiment. roll it back if fails
+                        watcher.callback(watcherLogs, network).catch(error => {
                             this.logger.error(
                                 `Error in watcher callback (ID: ${watcher.id}):`,
                                 error,
                             );
-                        }
+                        });
+
+                        // try {
+                        //     await watcher.callback(watcherLogs, network);
+                        // } catch (error) {
+                        //     this.logger.error(
+                        //         `Error in watcher callback (ID: ${watcher.id}):`,
+                        //         error,
+                        //     );
+                        // }
                     }
                 }
             } catch (error) {
