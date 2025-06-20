@@ -7,6 +7,7 @@ import {
     type SimulateContractParameters,
     TransactionExecutionError,
     TransactionNotFoundError,
+    WaitForTransactionReceiptTimeoutError,
     type WalletClient,
 } from "viem";
 
@@ -66,7 +67,8 @@ export async function callContract(
                     error.cause instanceof TransactionExecutionError &&
                     (error.cause.cause instanceof NonceTooHighError ||
                         error.cause.cause instanceof NonceTooLowError)) ||
-                error instanceof TransactionNotFoundError
+                error instanceof TransactionNotFoundError ||
+                error instanceof WaitForTransactionReceiptTimeoutError
             ) {
                 const chainId = publicClient.chain!.id;
                 const address = walletClient.account!.address;

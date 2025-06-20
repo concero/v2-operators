@@ -43,7 +43,7 @@ const globalConfig: GlobalConfig = {
         RECEIPT: {},
         WRITE_CONTRACT: {},
         FALLBACK_TRANSPORT_OPTIONS: {
-            retryCount: 3,
+            retryCount: 5,
             retryDelay: 2000,
         },
         SIMULATE_TX: getEnvVar("SIMULATE_TX") === "true",

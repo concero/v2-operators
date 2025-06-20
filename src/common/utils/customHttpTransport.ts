@@ -7,16 +7,17 @@ export function createCustomHttpTransport(url: string): Transport {
 
     return config => {
         // Get the original transport
-        const transport = http(url, { batch: true })(config);
+        const transport = http(url, {
+            batch: true,
+        })(config);
 
         // Create a wrapper for the request method that logs requests
-        const originalRequest = transport.request;
-        transport.request = async args => {
-            logger.debug(`${args.method} - ${url}: ${JSON.stringify(args.params)}`);
+        // const originalRequest = transport.request;
+        // transport.request = async args => {
+        //     logger.debug(`${args.method} - ${url}: ${JSON.stringify(args.params)}`);
 
-            const result = await originalRequest(args);
-            return result;
-        };
+        //     return originalRequest(args);
+        // };
 
         return transport;
     };
