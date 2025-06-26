@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
+// Facilitates interactions with database through Prisma Client
 class DbManager {
     private static instance: PrismaClient | null = null;
 

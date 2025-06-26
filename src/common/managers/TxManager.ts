@@ -18,6 +18,7 @@ import { ManagerBase } from "./ManagerBase";
 import { NetworkManager } from "./NetworkManager";
 import { ViemClientManager } from "./ViemClientManager";
 
+// High-level interface for both reading & writing to the network
 export class TxManager extends ManagerBase implements ITxManager {
     private static instance: TxManager | undefined;
 
