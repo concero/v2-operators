@@ -8,6 +8,7 @@ import { Logger, LoggerInterface } from "../utils/logger";
 
 import { ManagerBase } from "./ManagerBase";
 
+// Keeps updatable lists of ConceroVerifier and ConceroRouter contracts.
 export class DeploymentManager
     extends ManagerBase
     implements IDeploymentsManager, NetworkUpdateListener
