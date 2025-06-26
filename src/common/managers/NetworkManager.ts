@@ -331,10 +331,6 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             networks = networks.filter(network => whitelistedIds.includes(network.id));
         }
 
-        this.logger.debug(
-            `${networkType} networks after filtering: ${networks.map(n => n.name).join(", ")}`,
-        );
-
         return networks;
     }
 
