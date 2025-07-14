@@ -13,6 +13,10 @@ export class AppError extends Error {
         this.stack = originalError?.stack;
 
         this.logError();
+
+        if (!this.isOperational) {
+            process.exit(1);
+        }
     }
 
     private logError() {
@@ -22,9 +26,5 @@ export class AppError extends Error {
             stack: this.stack,
             isOperational: this.isOperational,
         });
-
-        if (!this.isOperational) {
-            process.exit(1);
-        }
     }
 }

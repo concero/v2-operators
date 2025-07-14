@@ -14,6 +14,8 @@ import {
 import { AppErrorEnum, globalConfig } from "../../constants";
 import { NonceManager } from "../managers";
 
+import confirmations from "../../constants/confirmations.json";
+import { IConfirmations } from "../../types/Confirmations";
 import { AppError } from "./AppError";
 import { asyncRetry } from "./asyncRetry";
 
@@ -48,6 +50,7 @@ async function executeTransaction(
 
     await publicClient.waitForTransactionReceipt({
         hash: txHash as Hash,
+        confirmations: (confirmations as IConfirmations)[chainId.toString()] ?? undefined,
     });
 
     return txHash as Hash;
@@ -68,7 +71,9 @@ export async function callContract(
                     (error.cause.cause instanceof NonceTooHighError ||
                         error.cause.cause instanceof NonceTooLowError)) ||
                 error instanceof TransactionNotFoundError ||
-                error instanceof WaitForTransactionReceiptTimeoutError
+                error instanceof WaitForTransactionReceiptTimeoutError ||
+                error instanceof NonceTooLowError ||
+                error instanceof NonceTooHighError
             ) {
                 const chainId = publicClient.chain!.id;
                 const address = walletClient.account!.address;
