@@ -1,21 +1,13 @@
-import {
-    ContractFunctionExecutionError,
-    Hash,
-    NonceTooHighError,
-    NonceTooLowError,
-    type PublicClient,
-    type SimulateContractParameters,
-    TransactionExecutionError,
-    TransactionNotFoundError,
-    WaitForTransactionReceiptTimeoutError,
-    type WalletClient,
-} from "viem";
+import { Hash, type PublicClient, type SimulateContractParameters, type WalletClient } from "viem";
 
 import { AppErrorEnum, globalConfig } from "../../constants";
 import { NonceManager } from "../managers";
 
+import confirmations from "../../constants/confirmations.json";
+import { IConfirmations } from "../../types/Confirmations";
 import { AppError } from "./AppError";
 import { asyncRetry } from "./asyncRetry";
+import { isNonceError, isWaitingForReceiptError } from "./viemErrorParser";
 
 async function executeTransaction(
     publicClient: PublicClient,
@@ -48,6 +40,7 @@ async function executeTransaction(
 
     await publicClient.waitForTransactionReceipt({
         hash: txHash as Hash,
+        confirmations: (confirmations as IConfirmations)[chainId.toString()] ?? undefined,
     });
 
     return txHash as Hash;
@@ -62,14 +55,7 @@ export async function callContract(
         const nonceManager = NonceManager.getInstance();
 
         const isRetryableError = async (error: any) => {
-            if (
-                (error instanceof ContractFunctionExecutionError &&
-                    error.cause instanceof TransactionExecutionError &&
-                    (error.cause.cause instanceof NonceTooHighError ||
-                        error.cause.cause instanceof NonceTooLowError)) ||
-                error instanceof TransactionNotFoundError ||
-                error instanceof WaitForTransactionReceiptTimeoutError
-            ) {
+            if (isNonceError(error) || isWaitingForReceiptError(error)) {
                 const chainId = publicClient.chain!.id;
                 const address = walletClient.account!.address;
 
