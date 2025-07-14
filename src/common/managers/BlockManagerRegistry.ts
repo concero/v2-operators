@@ -5,7 +5,7 @@ import { BlockManagerRegistryConfig } from "../../types/ManagerConfigs";
 import { IBlockManagerRegistry, NetworkUpdateListener } from "../../types/managers/";
 import { LoggerInterface } from "../utils/";
 
-import { BlockCheckpointManager } from "./BlockCheckpointManager";
+import { IBlockCheckpointManager } from "../../types/managers";
 import { BlockManager } from "./BlockManager";
 import { ManagerBase } from "./ManagerBase";
 import { NetworkManager } from "./NetworkManager";
@@ -18,7 +18,7 @@ export class BlockManagerRegistry
 {
     private static instance: BlockManagerRegistry;
     private blockManagers: Map<string, BlockManager> = new Map();
-    private blockCheckpointManager: BlockCheckpointManager;
+    private blockCheckpointManager: IBlockCheckpointManager;
     private networkManager: NetworkManager;
     private viemClientManager: ViemClientManager;
     private rpcManager: RpcManager;
@@ -27,7 +27,7 @@ export class BlockManagerRegistry
 
     private constructor(
         logger: LoggerInterface,
-        blockCheckpointManager: BlockCheckpointManager,
+        blockCheckpointManager: IBlockCheckpointManager,
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
         rpcManager: RpcManager,
@@ -106,7 +106,7 @@ export class BlockManagerRegistry
     //TODO: attempt to refactor createInstance to a base class
     public static createInstance(
         logger: LoggerInterface,
-        blockCheckpointManager: BlockCheckpointManager,
+        blockCheckpointManager: IBlockCheckpointManager,
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
         rpcManager: RpcManager,

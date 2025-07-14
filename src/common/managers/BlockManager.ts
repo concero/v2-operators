@@ -5,7 +5,7 @@ import { BlockManagerConfig } from "../../types/ManagerConfigs";
 import { IBlockManager } from "../../types/managers";
 import { LoggerInterface } from "../utils";
 
-import { BlockCheckpointManager } from "./BlockCheckpointManager";
+import { IBlockCheckpointManager } from "../../types/managers";
 
 /**
  * BlockManager encapsulates block processing and canonical block emission for a single network.
@@ -29,7 +29,7 @@ export class BlockManager implements IBlockManager {
     private latestBlock: bigint | null = null;
     public readonly publicClient: PublicClient;
     private network: ConceroNetwork;
-    private blockCheckpointManager: BlockCheckpointManager;
+    private blockCheckpointManager: IBlockCheckpointManager;
     private blockRangeHandlers: Map<string, BlockRangeHandler> = new Map();
 
     protected logger: LoggerInterface;
@@ -44,7 +44,7 @@ export class BlockManager implements IBlockManager {
         initialBlock: bigint,
         network: ConceroNetwork,
         publicClient: PublicClient,
-        blockCheckpointManager: BlockCheckpointManager,
+        blockCheckpointManager: IBlockCheckpointManager,
         logger: LoggerInterface,
         config: BlockManagerConfig,
     ) {
@@ -60,7 +60,7 @@ export class BlockManager implements IBlockManager {
     static async create(
         network: ConceroNetwork,
         publicClient: PublicClient,
-        blockCheckpointManager: BlockCheckpointManager,
+        blockCheckpointManager: IBlockCheckpointManager,
         logger: LoggerInterface,
         config: BlockManagerConfig,
     ): Promise<BlockManager> {
