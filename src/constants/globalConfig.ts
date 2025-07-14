@@ -14,7 +14,7 @@ const globalConfig: GlobalConfig = {
     WHITELISTED_NETWORK_IDS: {
         mainnet: [],
         testnet: [
-            /* 421614, 11155420 */
+            /* 421614, 84532 */
         ],
         localhost: [
             /* 1 */

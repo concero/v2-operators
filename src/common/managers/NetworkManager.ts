@@ -181,6 +181,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
     }
 
     private async updateNetworks(): Promise<void> {
+        let networksFetched = false;
         try {
             const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
 
@@ -192,29 +193,65 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                 this.logger.debug(
                     `Using localhost networks only: ${Object.keys(localhostNetworks).join(", ")}`,
                 );
+                networksFetched = true;
             } else {
-                // For mainnet or testnet mode, fetch network configs from remote source
-                const { mainnetNetworks: fetchedMainnet, testnetNetworks: fetchedTestnet } =
-                    await fetchNetworkConfigs();
+                try {
+                    const { mainnetNetworks: fetchedMainnet, testnetNetworks: fetchedTestnet } =
+                        await fetchNetworkConfigs();
 
-                this.mainnetNetworks = this.createNetworkConfig(fetchedMainnet, "mainnet", [
-                    operatorPK,
-                ]);
-                this.testnetNetworks = {
-                    ...this.createNetworkConfig(fetchedTestnet, "testnet", [operatorPK]),
-                };
+                    const hasMainnetNetworks = Object.keys(fetchedMainnet).length > 0;
+                    const hasTestnetNetworks = Object.keys(fetchedTestnet).length > 0;
+
+                    if (hasMainnetNetworks) {
+                        this.mainnetNetworks = this.createNetworkConfig(fetchedMainnet, "mainnet", [
+                            operatorPK,
+                        ]);
+                    } else {
+                        this.logger.warn(
+                            "No mainnet networks fetched, keeping existing mainnet networks",
+                        );
+                    }
+
+                    if (hasTestnetNetworks) {
+                        this.testnetNetworks = this.createNetworkConfig(fetchedTestnet, "testnet", [
+                            operatorPK,
+                        ]);
+                    } else {
+                        this.logger.warn(
+                            "No testnet networks fetched, keeping existing testnet networks",
+                        );
+                    }
+
+                    networksFetched = true;
+                } catch (error) {
+                    this.logger.warn(
+                        "Failed to fetch network configurations. Will retry on next update cycle:",
+                        error,
+                    );
+                    if (Object.keys(this.allNetworks).length === 0) {
+                        this.logger.error(
+                            "No network configurations available. Unable to initialize services.",
+                        );
+                    }
+                }
             }
 
             this.allNetworks = { ...this.testnetNetworks, ...this.mainnetNetworks };
-            this.activeNetworks = this.filterNetworks(this.config.networkMode);
 
-            this.logger.debug(
-                `Networks updated - Active networks: ${this.activeNetworks.length} (${this.activeNetworks.map(n => n.name).join(", ")})`,
-            );
-            this.notifyListeners();
+            const filteredNetworks = this.filterNetworks(this.config.networkMode);
+
+            if (networksFetched) {
+                this.activeNetworks = filteredNetworks;
+                this.logger.debug(
+                    `Networks updated - Active networks: ${this.activeNetworks.length} (${this.activeNetworks.map(n => n.name).join(", ")})`,
+                );
+            }
+
+            if (networksFetched) {
+                this.notifyListeners();
+            }
         } catch (error) {
             this.logger.error("Failed to update networks:", error);
-            throw error;
         }
     }
 
