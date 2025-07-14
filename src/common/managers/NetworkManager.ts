@@ -171,7 +171,14 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
         );
     }
 
+    /**
+     * Updates network configurations from external sources or local configuration.
+     * Sets allNetworks with all available networks, while activeNetworks contains
+     * only the networks that pass through filterNetworks (whitelist/blacklist).
+     * Notifies listeners only when networks are successfully fetched.
+     */
     private async updateNetworks(): Promise<void> {
+        let networksFetched = false;
         try {
             const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
 
@@ -183,31 +190,67 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                 this.logger.debug(
                     `Using localhost networks only: ${Object.keys(localhostNetworks).join(", ")}`,
                 );
+                networksFetched = true;
             } else {
-                // For mainnet or testnet mode, fetch network configs from remote source
-                const { mainnetNetworks: fetchedMainnet, testnetNetworks: fetchedTestnet } =
-                    await fetchNetworkConfigs();
+                try {
+                    const { mainnetNetworks: fetchedMainnet, testnetNetworks: fetchedTestnet } =
+                        await fetchNetworkConfigs();
 
-                this.mainnetNetworks = this.createNetworkConfig(fetchedMainnet, "mainnet", [
-                    operatorPK,
-                ]);
-                this.testnetNetworks = {
-                    ...this.createNetworkConfig(fetchedTestnet, "testnet", [operatorPK]),
-                };
+                    const hasMainnetNetworks = Object.keys(fetchedMainnet).length > 0;
+                    const hasTestnetNetworks = Object.keys(fetchedTestnet).length > 0;
+
+                    if (hasMainnetNetworks) {
+                        this.mainnetNetworks = this.createNetworkConfig(fetchedMainnet, "mainnet", [
+                            operatorPK,
+                        ]);
+                    } else {
+                        this.logger.warn(
+                            "No mainnet networks fetched, keeping existing mainnet networks",
+                        );
+                    }
+
+                    if (hasTestnetNetworks) {
+                        this.testnetNetworks = this.createNetworkConfig(fetchedTestnet, "testnet", [
+                            operatorPK,
+                        ]);
+                    } else {
+                        this.logger.warn(
+                            "No testnet networks fetched, keeping existing testnet networks",
+                        );
+                    }
+
+                    networksFetched = true;
+                } catch (error) {
+                    this.logger.warn(
+                        "Failed to fetch network configurations. Will retry on next update cycle:",
+                        error,
+                    );
+                    if (Object.keys(this.allNetworks).length === 0) {
+                        this.logger.error(
+                            "No network configurations available. Unable to initialize services.",
+                        );
+                    }
+                }
             }
 
             this.allNetworks = { ...this.testnetNetworks, ...this.mainnetNetworks };
-            this.activeNetworks = this.filterNetworks(
+
+            const filteredNetworks = this.filterNetworks(
                 globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
             );
 
-            this.logger.debug(
-                `Networks updated - Active networks: ${this.activeNetworks.length} (${this.activeNetworks.map(n => n.name).join(", ")})`,
-            );
-            this.notifyListeners();
+            if (networksFetched) {
+                this.activeNetworks = filteredNetworks;
+                this.logger.debug(
+                    `Networks updated - Active networks: ${this.activeNetworks.length} (${this.activeNetworks.map(n => n.name).join(", ")})`,
+                );
+            }
+
+            if (networksFetched) {
+                this.notifyListeners();
+            }
         } catch (error) {
             this.logger.error("Failed to update networks:", error);
-            throw error;
         }
     }
 
@@ -259,6 +302,10 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
         };
     }
 
+    /**
+     * Filters networks based on whitelist and blacklist configurations.
+     * This determines which networks are considered "active" for the application.
+     */
     private filterNetworks(networkType: "mainnet" | "testnet" | "localhost"): ConceroNetwork[] {
         let networks: ConceroNetwork[] = [];
         const ignoredIds = globalConfig.IGNORED_NETWORK_IDS || [];

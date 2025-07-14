@@ -6,6 +6,7 @@ import { HttpClient } from "../utils/httpClient";
 
 import { ManagerBase } from "./ManagerBase";
 
+// Watches @concero/rpcs and keeps an updatable list of RPC endpoints for networks
 export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdateListener {
     private static instance: RpcManager;
     private httpClient: HttpClient;

@@ -10,6 +10,7 @@ import { BlockManagerRegistry } from "./BlockManagerRegistry";
 import { NetworkManager } from "./NetworkManager";
 import { ViemClientManager } from "./ViemClientManager";
 
+// Handles all log-reading operations for all networks
 export class TxReader implements ITxReader {
     private static instance: TxReader | undefined;
     public logWatchers: Map<string, LogWatcher> = new Map();

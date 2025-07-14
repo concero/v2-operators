@@ -31,7 +31,7 @@ export interface ViemClients {
     // TODO: do we really use this account? walletClient already has the account
     account: PrivateKeyAccount;
 }
-
+// Creates & updates Viem Fallback Clients for each network
 export class ViemClientManager
     extends ManagerBase
     implements RpcUpdateListener, NetworkUpdateListener
