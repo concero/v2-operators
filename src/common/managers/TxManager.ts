@@ -8,7 +8,7 @@ import {
 } from "viem";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { TxManagerConfig } from "../../types/config/ManagerConfigs";
+import { TxManagerConfig } from "../../types/ManagerConfigs";
 import { ITxManager, ITxMonitor } from "../../types/managers";
 import { ITxReader, LogQuery } from "../../types/managers/ITxReader";
 import { ITxWriter, ManagedTx } from "../../types/managers/ITxWriter";

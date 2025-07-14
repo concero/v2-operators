@@ -3,7 +3,7 @@ import { PublicClient, SimulateContractParameters, WalletClient } from "viem";
 import { v4 as uuidv4 } from "uuid";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { TxWriterConfig } from "../../types/config/ManagerConfigs";
+import { TxWriterConfig } from "../../types/ManagerConfigs";
 import { ITxWriter, ManagedTx, TxSubmissionParams } from "../../types/managers/ITxWriter";
 import { callContract, LoggerInterface } from "../utils";
 

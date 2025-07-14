@@ -1,7 +1,7 @@
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-import { LoggerConfig } from "../../types/config/ManagerConfigs";
+import { LoggerConfig } from "../../types/ManagerConfigs";
 import { ManagerBase } from "../managers/ManagerBase";
 
 export interface LoggerInterface {

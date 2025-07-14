@@ -1,7 +1,7 @@
 import { PublicClient } from "viem";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { BlockManagerConfig } from "../../types/config/ManagerConfigs";
+import { BlockManagerConfig } from "../../types/ManagerConfigs";
 import { IBlockManager } from "../../types/managers";
 import { LoggerInterface } from "../utils";
 

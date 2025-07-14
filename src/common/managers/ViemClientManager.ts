@@ -19,7 +19,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { ViemClientManagerConfig } from "../../types/config/ManagerConfigs";
+import { ViemClientManagerConfig } from "../../types/ManagerConfigs";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
 import { createCustomHttpTransport, getEnvVar, LoggerInterface } from "../utils";
 

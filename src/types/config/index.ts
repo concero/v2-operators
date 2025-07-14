@@ -1,1 +1,1 @@
-export * from "./ManagerConfigs";
+export * from "../ManagerConfigs";

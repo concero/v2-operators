@@ -28,7 +28,7 @@ import {
     TxReaderConfig,
     TxWriterConfig,
     ViemClientManagerConfig,
-} from "../../types/config/ManagerConfigs";
+} from "../../types/ManagerConfigs";
 import { HttpClient } from "./HttpClient";
 import { Logger } from "./Logger";
 

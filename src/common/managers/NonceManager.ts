@@ -1,7 +1,7 @@
 import { Mutex } from "async-mutex";
 import { Address, Client, createPublicClient } from "viem";
 
-import { NonceManagerConfig } from "../../types/config/ManagerConfigs";
+import { NonceManagerConfig } from "../../types/ManagerConfigs";
 import { LoggerInterface } from "../utils/Logger";
 import { ManagerBase } from "./ManagerBase";
 

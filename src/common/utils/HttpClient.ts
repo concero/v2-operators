@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 import { AppErrorEnum } from "../../constants";
-import { HttpClientConfig } from "../../types/config/ManagerConfigs";
+import { HttpClientConfig } from "../../types/ManagerConfigs";
 import { ManagerBase } from "../managers";
 
 import { AppError } from "./AppError";

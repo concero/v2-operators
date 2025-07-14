@@ -1,5 +1,5 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { TxMonitorConfig } from "../../types/config/ManagerConfigs";
+import { TxMonitorConfig } from "../../types/ManagerConfigs";
 import { ITxMonitor, MonitoredTransaction } from "../../types/managers";
 import { ManagedTx } from "../../types/managers/ITxWriter";
 import { LoggerInterface } from "../utils";

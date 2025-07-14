@@ -3,7 +3,7 @@ import { AbiEvent, Address, Log } from "viem";
 import { v4 as uuidv4 } from "uuid";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { TxReaderConfig } from "../../types/config/ManagerConfigs";
+import { TxReaderConfig } from "../../types/ManagerConfigs";
 import { ITxReader, LogQuery, LogWatcher } from "../../types/managers/ITxReader";
 import { LoggerInterface } from "../utils";
 

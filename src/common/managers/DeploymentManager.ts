@@ -1,6 +1,6 @@
 import { Address } from "viem";
 
-import { DeploymentManagerConfig } from "../../types/config/ManagerConfigs";
+import { DeploymentManagerConfig } from "../../types/ManagerConfigs";
 import { IDeploymentsManager, NetworkUpdateListener } from "../../types/managers";
 import { getEnvVar } from "../utils/getEnvVar";
 import { HttpClient } from "../utils/HttpClient";

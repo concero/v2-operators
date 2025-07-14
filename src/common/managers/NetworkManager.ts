@@ -1,5 +1,5 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { NetworkManagerConfig } from "../../types/config/ManagerConfigs";
+import { NetworkManagerConfig } from "../../types/ManagerConfigs";
 import {
     IDeploymentsManager,
     INetworkManager,
