@@ -2,7 +2,7 @@ import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { RpcManagerConfig } from "../../types/config/ManagerConfigs";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
 import { LoggerInterface } from "../utils/";
-import { HttpClient } from "../utils/httpClient";
+import { HttpClient } from "../utils/HttpClient";
 
 import { ManagerBase } from "./ManagerBase";
 

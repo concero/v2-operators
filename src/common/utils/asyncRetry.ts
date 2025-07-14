@@ -1,4 +1,4 @@
-import { Logger } from "./logger";
+import { Logger } from "./Logger";
 import { sleep } from "./sleep";
 
 export interface RetryOptions {

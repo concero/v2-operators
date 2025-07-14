@@ -1,7 +1,7 @@
 import { globalConfig } from "../../constants";
 import { ChainDefinition, createViemChain } from "./createViemChain";
-import { HttpClient } from "./httpClient";
-import { Logger } from "./logger";
+import { HttpClient } from "./HttpClient";
+import { Logger } from "./Logger";
 
 export interface NetworkDetail {
     name: string;

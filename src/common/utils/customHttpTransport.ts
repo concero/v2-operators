@@ -1,6 +1,6 @@
 import { Transport, http } from "viem";
 
-import { Logger } from "./logger";
+import { Logger } from "./Logger";
 
 export function createCustomHttpTransport(url: string): Transport {
     const logger = Logger.getInstance().getLogger("ViemTransport");

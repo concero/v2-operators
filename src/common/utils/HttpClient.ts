@@ -5,7 +5,7 @@ import { HttpClientConfig } from "../../types/config/ManagerConfigs";
 import { ManagerBase } from "../managers";
 
 import { AppError } from "./AppError";
-import { LoggerInterface } from "./logger";
+import { LoggerInterface } from "./Logger";
 
 export class HttpClient extends ManagerBase {
     private static defaultInstance?: HttpClient;

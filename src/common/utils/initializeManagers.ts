@@ -29,8 +29,8 @@ import {
     TxWriterConfig,
     ViemClientManagerConfig,
 } from "../../types/config/ManagerConfigs";
-import { HttpClient } from "./httpClient";
-import { Logger } from "./logger";
+import { HttpClient } from "./HttpClient";
+import { Logger } from "./Logger";
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {

@@ -13,4 +13,4 @@ export { getEnvAddress, getEnvVar } from "./getEnvVar";
 export { getGranularLogLevels } from "./getGranularLogLevels";
 export { getOptionalEnvVar } from "./getOptionalEnvVar";
 export { localhostViemChain } from "./localhostViemChain";
-export { Logger, type LoggerInterface } from "./logger";
+export { Logger, type LoggerInterface } from "./Logger";

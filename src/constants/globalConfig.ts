@@ -13,9 +13,7 @@ const globalConfig: GlobalConfig = {
     IGNORED_NETWORK_IDS: [],
     WHITELISTED_NETWORK_IDS: {
         mainnet: [],
-        testnet: [
-            /* 421614, 84532 */
-        ],
+        testnet: [421614, 84532],
         localhost: [
             /* 1 */
         ],

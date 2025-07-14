@@ -3,8 +3,8 @@ import { Address } from "viem";
 import { DeploymentManagerConfig } from "../../types/config/ManagerConfigs";
 import { IDeploymentsManager, NetworkUpdateListener } from "../../types/managers";
 import { getEnvVar } from "../utils/getEnvVar";
-import { HttpClient } from "../utils/httpClient";
-import { LoggerInterface } from "../utils/logger";
+import { HttpClient } from "../utils/HttpClient";
+import { LoggerInterface } from "../utils/Logger";
 
 import { ManagerBase } from "./ManagerBase";
 
