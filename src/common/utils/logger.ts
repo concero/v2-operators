@@ -1,7 +1,7 @@
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-import { globalConfig } from "../../constants/globalConfig";
+import { LoggerConfig } from "../../types/config/ManagerConfigs";
 import { ManagerBase } from "../managers/ManagerBase";
 
 export interface LoggerInterface {
@@ -15,15 +15,17 @@ export class Logger extends ManagerBase {
     private static instance: Logger;
     private baseLogger: winston.Logger;
     private consumerLoggers: Map<string, LoggerInterface> = new Map();
+    private config: LoggerConfig;
 
-    private constructor() {
+    private constructor(config: LoggerConfig) {
         super();
+        this.config = config;
         this.baseLogger = this.createBaseLogger();
     }
 
-    public static createInstance(): Logger {
+    public static createInstance(config: LoggerConfig): Logger {
         if (!Logger.instance) {
-            Logger.instance = new Logger();
+            Logger.instance = new Logger(config);
         }
         return Logger.instance;
     }
@@ -58,19 +60,19 @@ export class Logger extends ManagerBase {
             transports: [
                 new DailyRotateFile({
                     level: "debug",
-                    dirname: globalConfig.LOGGER.LOG_DIR,
+                    dirname: this.config.logDir,
                     filename: "log-%DATE%.log",
                     datePattern: "YYYY-MM-DD",
-                    maxSize: globalConfig.LOGGER.LOG_MAX_SIZE,
-                    maxFiles: globalConfig.LOGGER.LOG_MAX_FILES,
+                    maxSize: this.config.logMaxSize,
+                    maxFiles: this.config.logMaxFiles,
                 }),
                 new DailyRotateFile({
                     level: "error",
-                    dirname: globalConfig.LOGGER.LOG_DIR,
+                    dirname: this.config.logDir,
                     filename: "error-%DATE%.log",
                     datePattern: "YYYY-MM-DD",
-                    maxSize: globalConfig.LOGGER.LOG_MAX_SIZE,
-                    maxFiles: globalConfig.LOGGER.LOG_MAX_FILES,
+                    maxSize: this.config.logMaxSize,
+                    maxFiles: this.config.logMaxFiles,
                 }),
             ],
         });
@@ -108,13 +110,10 @@ export class Logger extends ManagerBase {
     private createConsumerLogger(consumerName?: string): LoggerInterface {
         const getLogLevel = (): string => {
             if (!consumerName) {
-                return globalConfig.LOGGER.LOG_LEVEL_DEFAULT;
+                return this.config.logLevelDefault;
             }
 
-            return (
-                globalConfig.LOGGER.LOG_LEVELS_GRANULAR[consumerName] ||
-                globalConfig.LOGGER.LOG_LEVEL_DEFAULT
-            );
+            return this.config.logLevelsGranular[consumerName] || this.config.logLevelDefault;
         };
 
         // Map log levels to numeric values for comparison

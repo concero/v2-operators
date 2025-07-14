@@ -2,10 +2,10 @@ import { PublicClient, SimulateContractParameters, WalletClient } from "viem";
 
 import { v4 as uuidv4 } from "uuid";
 
-import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { TxWriterConfig } from "../../types/config/ManagerConfigs";
 import { ITxWriter, ManagedTx, TxSubmissionParams } from "../../types/managers/ITxWriter";
-import { callContract, Logger, LoggerInterface } from "../utils";
+import { callContract, LoggerInterface } from "../utils";
 
 import { NetworkManager } from "./NetworkManager";
 import { ViemClientManager } from "./ViemClientManager";
@@ -38,18 +38,27 @@ export class TxWriter implements ITxWriter {
     private networkManager: NetworkManager;
     private viemClientManager: ViemClientManager;
     private logger: LoggerInterface;
+    private config: TxWriterConfig;
 
-    private constructor(networkManager: NetworkManager, viemClientManager: ViemClientManager) {
+    private constructor(
+        logger: LoggerInterface,
+        networkManager: NetworkManager,
+        viemClientManager: ViemClientManager,
+        config: TxWriterConfig,
+    ) {
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
-        this.logger = Logger.getInstance().getLogger("TxWriter");
+        this.logger = logger;
+        this.config = config;
     }
 
     public static createInstance(
+        logger: LoggerInterface,
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
+        config: TxWriterConfig,
     ): TxWriter {
-        TxWriter.instance = new TxWriter(networkManager, viemClientManager);
+        TxWriter.instance = new TxWriter(logger, networkManager, viemClientManager, config);
         return TxWriter.instance;
     }
 
@@ -70,22 +79,22 @@ export class TxWriter implements ITxWriter {
         network: ConceroNetwork,
         params: SimulateContractParameters,
     ): Promise<ManagedTx> {
-        const txType = this.determineTxType(params);
+        const txType = await this.determineTxType(params);
 
         try {
-            if (globalConfig.TX_MANAGER.DRY_RUN) {
+            if (this.config.dryRun) {
                 this.logger.info(
                     `[DRY_RUN][${network.name}] Contract call: ${params.functionName}`,
                 );
                 const mockTxHash = `0xdry${Date.now().toString(16)}`;
-                const managedTx = this.createManagedTx(network, params, txType, mockTxHash);
+                const managedTx = this.createManagedTx(network, params as any, txType, mockTxHash);
                 return managedTx;
             }
 
             const txHash = await callContract(publicClient, walletClient, params);
 
             this.logger.debug(`[${network.name}] Contract call transaction hash: ${txHash}`);
-            const managedTx = this.createManagedTx(network, params, txType, txHash);
+            const managedTx = this.createManagedTx(network, params as any, txType, txHash);
 
             return managedTx;
         } catch (error) {
@@ -123,7 +132,9 @@ export class TxWriter implements ITxWriter {
         }
     }
 
-    private async determineTxType(params: TxSubmissionParams): Promise<TxType> {
+    private async determineTxType(
+        params: SimulateContractParameters | TxSubmissionParams,
+    ): Promise<TxType> {
         // Here you could implement more sophisticated logic to determine the tx type
         // based on contract addresses, function names, etc.
         return TxType.DEFAULT;
@@ -176,6 +187,11 @@ export class TxWriter implements ITxWriter {
             if (chainName && tx.chainName !== chainName) return false;
             return tx.status !== TxStatus.FINALIZED;
         });
+    }
+
+    public getTransactionsByMessageId(messageId: string): ManagedTx[] {
+        const allTxs = Array.from(this.transactions.values());
+        return allTxs.filter(tx => tx.messageId === messageId);
     }
 
     public dispose(): void {

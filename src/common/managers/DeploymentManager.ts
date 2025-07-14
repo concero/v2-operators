@@ -1,10 +1,10 @@
 import { Address } from "viem";
 
-import { globalConfig } from "../../constants";
+import { DeploymentManagerConfig } from "../../types/config/ManagerConfigs";
 import { IDeploymentsManager, NetworkUpdateListener } from "../../types/managers";
 import { getEnvVar } from "../utils/getEnvVar";
 import { HttpClient } from "../utils/httpClient";
-import { Logger, LoggerInterface } from "../utils/logger";
+import { LoggerInterface } from "../utils/logger";
 
 import { ManagerBase } from "./ManagerBase";
 
@@ -18,15 +18,20 @@ export class DeploymentManager
     private conceroVerifier: Address | undefined;
     private httpClient: HttpClient;
     private logger: LoggerInterface;
+    private config: DeploymentManagerConfig;
 
-    private constructor() {
+    private constructor(logger: LoggerInterface, config: DeploymentManagerConfig) {
         super();
         this.httpClient = HttpClient.getQueueInstance();
-        this.logger = Logger.getInstance().getLogger("DeploymentManager");
+        this.logger = logger;
+        this.config = config;
     }
 
-    public static createInstance(): DeploymentManager {
-        DeploymentManager.instance = new DeploymentManager();
+    public static createInstance(
+        logger: LoggerInterface,
+        config: DeploymentManagerConfig,
+    ): DeploymentManager {
+        DeploymentManager.instance = new DeploymentManager(logger, config);
         return DeploymentManager.instance;
     }
 
@@ -99,7 +104,7 @@ export class DeploymentManager
         const now = Date.now();
 
         try {
-            const deployments = await this.httpClient.get(globalConfig.URLS.CONCERO_DEPLOYMENTS, {
+            const deployments = await this.httpClient.get(this.config.conceroDeploymentsUrl, {
                 responseType: "text", // Ensure Axios returns raw text
             });
 
@@ -125,7 +130,7 @@ export class DeploymentManager
 
             const verifierEntry = deploymentsEnvArr.find((d: string) => {
                 const networkSuffix =
-                    globalConfig.NETWORK_MODE === "testnet" ? "ARBITRUM_SEPOLIA" : "ARBITRUM";
+                    this.config.networkMode === "testnet" ? "ARBITRUM_SEPOLIA" : "ARBITRUM";
                 return d.startsWith(`CONCERO_VERIFIER_PROXY_${networkSuffix}`);
             });
 
@@ -164,7 +169,7 @@ export class DeploymentManager
     }
 
     private isLocalhostEnv(): boolean {
-        return globalConfig.NETWORK_MODE === "localhost";
+        return this.config.networkMode === "localhost";
     }
 
     public override dispose(): void {

@@ -1,12 +1,11 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
-import { AppErrorEnum, globalConfig } from "../../constants";
+import { AppErrorEnum } from "../../constants";
+import { HttpClientConfig } from "../../types/config/ManagerConfigs";
 import { ManagerBase } from "../managers";
 
 import { AppError } from "./AppError";
-import { Logger, LoggerInterface } from "./logger";
-
-const { RETRY_DELAY, MAX_RETRIES, DEFAULT_TIMEOUT } = globalConfig.HTTPCLIENT;
+import { LoggerInterface } from "./logger";
 
 export class HttpClient extends ManagerBase {
     private static defaultInstance?: HttpClient;
@@ -17,27 +16,33 @@ export class HttpClient extends ManagerBase {
     private requestQueue: Array<() => Promise<void>> = [];
     private activeRequests: number = 0;
     private maxConcurrentRequests?: number;
+    private config: HttpClientConfig;
 
-    constructor(maxConcurrentRequests?: number) {
+    constructor(logger: LoggerInterface, config: HttpClientConfig, maxConcurrentRequests?: number) {
         super();
         this.maxConcurrentRequests = maxConcurrentRequests;
-        this.logger = Logger.getInstance().getLogger("HttpClient");
+        this.logger = logger;
+        this.config = config;
     }
 
-    public static createInstance(maxConcurrentRequests?: number): HttpClient {
-        return new HttpClient(maxConcurrentRequests);
+    public static createInstance(
+        logger: LoggerInterface,
+        config: HttpClientConfig,
+        maxConcurrentRequests?: number,
+    ): HttpClient {
+        return new HttpClient(logger, config, maxConcurrentRequests);
     }
 
-    public static getInstance(): HttpClient {
+    public static getInstance(logger: LoggerInterface, config: HttpClientConfig): HttpClient {
         if (!HttpClient.defaultInstance) {
-            HttpClient.defaultInstance = new HttpClient();
+            HttpClient.defaultInstance = new HttpClient(logger, config);
         }
         return HttpClient.defaultInstance;
     }
 
-    public static getQueueInstance(): HttpClient {
+    public static getQueueInstance(logger: LoggerInterface, config: HttpClientConfig): HttpClient {
         if (!HttpClient.queueInstance) {
-            HttpClient.queueInstance = new HttpClient(2);
+            HttpClient.queueInstance = new HttpClient(logger, config, 2);
         }
         return HttpClient.queueInstance;
     }
@@ -57,7 +62,7 @@ export class HttpClient extends ManagerBase {
 
     private async setupAxiosInstance(): Promise<void> {
         this.axiosInstance = axios.create({
-            timeout: DEFAULT_TIMEOUT,
+            timeout: this.config.defaultTimeout,
         });
 
         this.axiosInstance.interceptors.response.use(
@@ -66,15 +71,15 @@ export class HttpClient extends ManagerBase {
                 const config = error.config;
                 const logger = this.logger;
 
-                if (config && config.__retryCount < MAX_RETRIES) {
+                if (config && config.__retryCount < this.config.maxRetries) {
                     config.__retryCount = config.__retryCount || 0;
                     config.__retryCount += 1;
 
                     logger.warn(
-                        `Retrying request to ${config.url}. Attempt ${config.__retryCount} of ${MAX_RETRIES}. Error: ${error.message}`,
+                        `Retrying request to ${config.url}. Attempt ${config.__retryCount} of ${this.config.maxRetries}. Error: ${error.message}`,
                     );
 
-                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                    await new Promise(resolve => setTimeout(resolve, this.config.retryDelay));
 
                     return this.axiosInstance!(config);
                 }

@@ -1,9 +1,9 @@
 import { PublicClient } from "viem";
 
-import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { BlockManagerConfig } from "../../types/config/ManagerConfigs";
 import { IBlockManager } from "../../types/managers";
-import { Logger, LoggerInterface } from "../utils";
+import { LoggerInterface } from "../utils";
 
 import { BlockCheckpointManager } from "./BlockCheckpointManager";
 
@@ -33,10 +33,11 @@ export class BlockManager implements IBlockManager {
     private blockRangeHandlers: Map<string, BlockRangeHandler> = new Map();
 
     protected logger: LoggerInterface;
+    private config: BlockManagerConfig;
 
     private isDisposed: boolean = false;
     private isPolling: boolean = false;
-    private pollingIntervalMs: number = globalConfig.BLOCK_MANAGER.POLLING_INTERVAL_MS;
+    private pollingIntervalMs: number;
     private pollingTimeout: NodeJS.Timeout | null = null;
 
     private constructor(
@@ -44,23 +45,29 @@ export class BlockManager implements IBlockManager {
         network: ConceroNetwork,
         publicClient: PublicClient,
         blockCheckpointManager: BlockCheckpointManager,
+        logger: LoggerInterface,
+        config: BlockManagerConfig,
     ) {
         this.lastProcessedBlockNumber = initialBlock;
         this.publicClient = publicClient;
         this.network = network;
         this.blockCheckpointManager = blockCheckpointManager;
-        this.logger = Logger.getInstance().getLogger("BlockManager");
+        this.logger = logger;
+        this.config = config;
+        this.pollingIntervalMs = config.pollingIntervalMs;
     }
 
     static async create(
         network: ConceroNetwork,
         publicClient: PublicClient,
         blockCheckpointManager: BlockCheckpointManager,
+        logger: LoggerInterface,
+        config: BlockManagerConfig,
     ): Promise<BlockManager> {
         let initialBlock: bigint;
-        const staticLogger = Logger.getInstance().getLogger("BlockManager");
+        const staticLogger = logger;
 
-        if (!globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS) {
+        if (!config.useCheckpoints) {
             initialBlock = await publicClient.getBlockNumber();
             staticLogger.debug(
                 `${network.name}: Checkpoints disabled. Starting from current chain tip: ${initialBlock}`,
@@ -89,6 +96,8 @@ export class BlockManager implements IBlockManager {
             network,
             publicClient,
             blockCheckpointManager,
+            logger,
+            config,
         );
 
         return blockManager;
@@ -210,10 +219,9 @@ export class BlockManager implements IBlockManager {
             while (currentBlock < this.latestBlock && !this.isDisposed) {
                 const startBlock = currentBlock + 1n;
                 const endBlock =
-                    startBlock + globalConfig.BLOCK_MANAGER.CATCHUP_BATCH_SIZE - 1n >
-                    this.latestBlock
+                    startBlock + this.config.catchupBatchSize - 1n > this.latestBlock
                         ? this.latestBlock
-                        : startBlock + globalConfig.BLOCK_MANAGER.CATCHUP_BATCH_SIZE - 1n;
+                        : startBlock + this.config.catchupBatchSize - 1n;
 
                 // Process this block range (will notify handlers)
                 await this.processBlockRange(startBlock, endBlock);

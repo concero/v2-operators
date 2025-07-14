@@ -1,6 +1,8 @@
 import { Mutex } from "async-mutex";
 import { Address, Client, createPublicClient } from "viem";
 
+import { NonceManagerConfig } from "../../types/config/ManagerConfigs";
+import { LoggerInterface } from "../utils/logger";
 import { ManagerBase } from "./ManagerBase";
 
 interface INonceManagerParams {
@@ -16,14 +18,18 @@ export class NonceManager extends ManagerBase {
     private static instance: NonceManager | null = null;
     private noncesMap: Record<number, number> = {};
     private mutexMap: Record<number, Mutex> = {};
+    private logger: LoggerInterface;
+    private config: NonceManagerConfig;
 
-    protected constructor() {
+    protected constructor(logger: LoggerInterface, config: NonceManagerConfig) {
         super();
+        this.logger = logger;
+        this.config = config;
     }
 
-    static createInstance(): NonceManager {
+    static createInstance(logger: LoggerInterface, config: NonceManagerConfig): NonceManager {
         if (!NonceManager.instance) {
-            NonceManager.instance = new NonceManager();
+            NonceManager.instance = new NonceManager(logger, config);
         }
         return NonceManager.instance;
     }

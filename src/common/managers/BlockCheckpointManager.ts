@@ -1,8 +1,8 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { BlockCheckpointManagerConfig } from "../../types/config/ManagerConfigs";
 import { IBlockCheckpointManager } from "../../types/managers/";
-import { Logger, LoggerInterface } from "../utils/";
+import { LoggerInterface } from "../utils/";
 
-import { globalConfig } from "../../constants";
 import { DbManager } from "./DbManager";
 import { ManagerBase } from "./ManagerBase";
 
@@ -10,14 +10,19 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
     private static instance: BlockCheckpointManager;
     private prisma = DbManager.getClient();
     private logger: LoggerInterface;
+    private config: BlockCheckpointManagerConfig;
 
-    private constructor() {
+    private constructor(logger: LoggerInterface, config: BlockCheckpointManagerConfig) {
         super();
-        this.logger = Logger.getInstance().getLogger("BlockCheckpointManager");
+        this.logger = logger;
+        this.config = config;
     }
 
-    public static createInstance(): BlockCheckpointManager {
-        BlockCheckpointManager.instance = new BlockCheckpointManager();
+    public static createInstance(
+        logger: LoggerInterface,
+        config: BlockCheckpointManagerConfig,
+    ): BlockCheckpointManager {
+        BlockCheckpointManager.instance = new BlockCheckpointManager(logger, config);
         return BlockCheckpointManager.instance;
     }
     public static getInstance(): BlockCheckpointManager {
@@ -45,7 +50,7 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
     }
 
     async updateLastProcessedBlock(networkName: string, blockNumber: bigint): Promise<void> {
-        if (!globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS) return;
+        if (!this.config.useCheckpoints) return;
 
         try {
             await this.prisma.blockCheckpoint.upsert({

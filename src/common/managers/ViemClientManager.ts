@@ -18,10 +18,10 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
 
-import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { ViemClientManagerConfig } from "../../types/config/ManagerConfigs";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
-import { createCustomHttpTransport, getEnvVar, Logger, LoggerInterface } from "../utils";
+import { createCustomHttpTransport, getEnvVar, LoggerInterface } from "../utils";
 
 import { ManagerBase } from "./ManagerBase";
 
@@ -41,14 +41,25 @@ export class ViemClientManager
     private rpcManager: IRpcManager;
     private logger: LoggerInterface;
 
-    private constructor(rpcManager: IRpcManager) {
+    private config: ViemClientManagerConfig;
+
+    private constructor(
+        logger: LoggerInterface,
+        rpcManager: IRpcManager,
+        config: ViemClientManagerConfig,
+    ) {
         super();
         this.rpcManager = rpcManager;
-        this.logger = Logger.getInstance().getLogger("ViemClientManager");
+        this.logger = logger;
+        this.config = config;
     }
 
-    public static createInstance(rpcManager: IRpcManager): ViemClientManager {
-        ViemClientManager.instance = new ViemClientManager(rpcManager);
+    public static createInstance(
+        logger: LoggerInterface,
+        rpcManager: IRpcManager,
+        config: ViemClientManagerConfig,
+    ): ViemClientManager {
+        ViemClientManager.instance = new ViemClientManager(logger, rpcManager, config);
         return ViemClientManager.instance;
     }
     public static getInstance(): ViemClientManager {
@@ -77,7 +88,7 @@ export class ViemClientManager
         return fallback(
             rpcUrls.map(url => createCustomHttpTransport(url)),
             {
-                ...globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
+                ...this.config.fallbackTransportOptions,
                 shouldThrow: (error: Error) => {
                     if (
                         error instanceof HttpRequestError ||

@@ -1,7 +1,7 @@
-import { globalConfig } from "../../constants/";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { RpcManagerConfig } from "../../types/config/ManagerConfigs";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
-import { Logger, LoggerInterface } from "../utils/";
+import { LoggerInterface } from "../utils/";
 import { HttpClient } from "../utils/httpClient";
 
 import { ManagerBase } from "./ManagerBase";
@@ -10,15 +10,17 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
     private static instance: RpcManager;
     private httpClient: HttpClient;
     private logger: LoggerInterface;
+    private config: RpcManagerConfig;
 
-    constructor() {
+    constructor(logger: LoggerInterface, config: RpcManagerConfig) {
         super();
         this.httpClient = HttpClient.getQueueInstance();
-        this.logger = Logger.getInstance().getLogger("RpcManager");
+        this.logger = logger;
+        this.config = config;
     }
 
-    public static createInstance(): RpcManager {
-        RpcManager.instance = new RpcManager();
+    public static createInstance(logger: LoggerInterface, config: RpcManagerConfig): RpcManager {
+        RpcManager.instance = new RpcManager(logger, config);
         return RpcManager.instance;
     }
 
@@ -68,7 +70,7 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
         chainType: "mainnet" | "testnet" | "localhost",
     ): Promise<string[]> {
         try {
-            const rpcOverride = globalConfig.RPC.OVERRIDE[chainId.toString()];
+            const rpcOverride = this.config.rpcOverrides[chainId.toString()];
             if (rpcOverride && rpcOverride.length) return rpcOverride;
 
             if (chainType === "localhost") {
@@ -79,7 +81,7 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
                 return [localhostUrl];
             }
 
-            const url = `${globalConfig.URLS.CONCERO_RPCS}${chainType}/${chainId}-${chainName}.json`;
+            const url = `${this.config.conceroRpcsUrl}${chainType}/${chainId}-${chainName}.json`;
             // this.logger.debug(`Fetching RPC URLs for ${chainName} from ${url}`);
 
             const chainConfig = await this.httpClient.get(url);
@@ -87,7 +89,7 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
 
             const urls = response.urls;
 
-            const rpcsExtension = globalConfig.RPC.EXTENSION[chainId.toString()];
+            const rpcsExtension = this.config.rpcExtensions[chainId.toString()];
 
             if (rpcsExtension) {
                 rpcsExtension.forEach((url: string) => {

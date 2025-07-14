@@ -1,7 +1,8 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { TxMonitorConfig } from "../../types/config/ManagerConfigs";
 import { ITxMonitor, MonitoredTransaction } from "../../types/managers";
 import { ManagedTx } from "../../types/managers/ITxWriter";
-import { Logger, LoggerInterface } from "../utils";
+import { LoggerInterface } from "../utils";
 
 import { ViemClientManager } from "./ViemClientManager";
 
@@ -24,23 +25,33 @@ export class TxMonitor implements ITxMonitor {
     private logger: LoggerInterface;
 
     constructor(
+        logger: LoggerInterface,
         viemClientManager: ViemClientManager,
         txFinalityCallback: (txHash: string, chainName: string) => void,
         txReorgCallback: (txHash: string, chainName: string) => Promise<string | null>,
+        config: TxMonitorConfig,
     ) {
         this.viemClientManager = viemClientManager;
         this.txFinalityCallback = txFinalityCallback;
         this.txReorgCallback = txReorgCallback;
-        this.logger = Logger.getInstance().getLogger("TxMonitor");
+        this.logger = logger;
         this.logger.info("initialized");
     }
 
     public static createInstance(
+        logger: LoggerInterface,
         viemClientManager: ViemClientManager,
         txFinalityCallback: (txHash: string, chainName: string) => void,
         txReorgCallback: (txHash: string, chainName: string) => Promise<string | null>,
+        config: TxMonitorConfig,
     ): TxMonitor {
-        TxMonitor.instance = new TxMonitor(viemClientManager, txFinalityCallback, txReorgCallback);
+        TxMonitor.instance = new TxMonitor(
+            logger,
+            viemClientManager,
+            txFinalityCallback,
+            txReorgCallback,
+            config,
+        );
         return TxMonitor.instance;
     }
 

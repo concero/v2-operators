@@ -1,8 +1,9 @@
 import { PublicClient } from "viem";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { BlockManagerRegistryConfig } from "../../types/config/ManagerConfigs";
 import { IBlockManagerRegistry, NetworkUpdateListener } from "../../types/managers/";
-import { Logger, LoggerInterface } from "../utils/";
+import { LoggerInterface } from "../utils/";
 
 import { BlockCheckpointManager } from "./BlockCheckpointManager";
 import { BlockManager } from "./BlockManager";
@@ -22,19 +23,23 @@ export class BlockManagerRegistry
     private viemClientManager: ViemClientManager;
     private rpcManager: RpcManager;
     private logger: LoggerInterface;
+    private config: BlockManagerRegistryConfig;
 
     private constructor(
+        logger: LoggerInterface,
         blockCheckpointManager: BlockCheckpointManager,
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
         rpcManager: RpcManager,
+        config: BlockManagerRegistryConfig,
     ) {
         super();
+        this.logger = logger;
         this.blockCheckpointManager = blockCheckpointManager;
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
         this.rpcManager = rpcManager;
-        this.logger = Logger.getInstance().getLogger("BlockManagerRegistry");
+        this.config = config;
     }
 
     public onNetworksUpdated(networks: ConceroNetwork[]): void {
@@ -100,16 +105,20 @@ export class BlockManagerRegistry
 
     //TODO: attempt to refactor createInstance to a base class
     public static createInstance(
+        logger: LoggerInterface,
         blockCheckpointManager: BlockCheckpointManager,
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
         rpcManager: RpcManager,
+        config: BlockManagerRegistryConfig,
     ): BlockManagerRegistry {
         BlockManagerRegistry.instance = new BlockManagerRegistry(
+            logger,
             blockCheckpointManager,
             networkManager,
             viemClientManager,
             rpcManager,
+            config,
         );
         return BlockManagerRegistry.instance;
     }
@@ -155,6 +164,12 @@ export class BlockManagerRegistry
             network,
             publicClient,
             this.blockCheckpointManager,
+            this.logger,
+            {
+                pollingIntervalMs: this.config.blockManagerConfig.pollingIntervalMs,
+                catchupBatchSize: this.config.blockManagerConfig.catchupBatchSize,
+                useCheckpoints: this.config.blockManagerConfig.useCheckpoints,
+            },
         );
 
         this.blockManagers.set(network.name, blockManager);

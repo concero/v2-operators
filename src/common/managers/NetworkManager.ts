@@ -1,5 +1,5 @@
-import { globalConfig } from "../../constants/";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { NetworkManagerConfig } from "../../types/config/ManagerConfigs";
 import {
     IDeploymentsManager,
     INetworkManager,
@@ -7,7 +7,7 @@ import {
     NetworkUpdateListener,
 } from "../../types/managers";
 import { fetchNetworkConfigs } from "../utils";
-import { getEnvVar, localhostViemChain, Logger, LoggerInterface } from "../utils/";
+import { getEnvVar, localhostViemChain, LoggerInterface } from "../utils/";
 
 import { ManagerBase } from "./ManagerBase";
 
@@ -23,12 +23,19 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
     private deploymentsManager: IDeploymentsManager | null = null;
     private updateListeners: NetworkUpdateListener[] = [];
     private logger: LoggerInterface;
+    private config: NetworkManagerConfig;
 
-    private constructor(rpcManager?: IRpcManager, deploymentsManager?: IDeploymentsManager) {
+    private constructor(
+        logger: LoggerInterface,
+        config: NetworkManagerConfig,
+        rpcManager?: IRpcManager,
+        deploymentsManager?: IDeploymentsManager,
+    ) {
         super();
+        this.config = config;
         this.rpcManager = rpcManager || null;
         this.deploymentsManager = deploymentsManager || null;
-        this.logger = Logger.getInstance().getLogger("NetworkManager");
+        this.logger = logger;
 
         if (this.rpcManager && "onNetworksUpdated" in this.rpcManager) {
             this.registerUpdateListener(this.rpcManager as unknown as NetworkUpdateListener);
@@ -44,10 +51,12 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
     }
 
     public static createInstance(
+        logger: LoggerInterface,
+        config: NetworkManagerConfig,
         rpcManager?: IRpcManager,
         deploymentsManager?: IDeploymentsManager,
     ): NetworkManager {
-        this.instance = new NetworkManager(rpcManager, deploymentsManager);
+        this.instance = new NetworkManager(logger, config, rpcManager, deploymentsManager);
         return this.instance;
     }
 
@@ -130,11 +139,11 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
     }
 
     public getVerifierNetwork(): ConceroNetwork {
-        if (globalConfig.NETWORK_MODE === "mainnet") {
+        if (this.config.networkMode === "mainnet") {
             return this.mainnetNetworks["arbitrum"];
-        } else if (globalConfig.NETWORK_MODE === "testnet") {
+        } else if (this.config.networkMode === "testnet") {
             return this.testnetNetworks["arbitrumSepolia"];
-        } else if (globalConfig.NETWORK_MODE === "localhost") {
+        } else if (this.config.networkMode === "localhost") {
             const localNetwork = this.testnetNetworks["localhost"];
 
             if (!localNetwork) {
@@ -149,7 +158,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             );
             return localNetwork;
         } else {
-            throw new Error(`Unsupported network mode: ${globalConfig.NETWORK_MODE}`);
+            throw new Error(`Unsupported network mode: ${this.config.networkMode}`);
         }
     }
 
@@ -167,7 +176,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                 this.updateNetworks().catch(err =>
                     this.logger.error("Network update failed:", err),
                 ),
-            globalConfig.NETWORK_MANAGER.NETWORK_UPDATE_INTERVAL_MS,
+            this.config.networkUpdateIntervalMs,
         );
     }
 
@@ -175,7 +184,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
         try {
             const operatorPK = getEnvVar("OPERATOR_PRIVATE_KEY");
 
-            if (globalConfig.NETWORK_MODE === "localhost") {
+            if (this.config.networkMode === "localhost") {
                 // In localhost mode, skip fetching remote network configs
                 this.mainnetNetworks = {};
                 const localhostNetworks = this.getTestingNetworks(operatorPK);
@@ -197,9 +206,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             }
 
             this.allNetworks = { ...this.testnetNetworks, ...this.mainnetNetworks };
-            this.activeNetworks = this.filterNetworks(
-                globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
-            );
+            this.activeNetworks = this.filterNetworks(this.config.networkMode);
 
             this.logger.debug(
                 `Networks updated - Active networks: ${this.activeNetworks.length} (${this.activeNetworks.map(n => n.name).join(", ")})`,
@@ -237,7 +244,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                         id: network.chainId,
                         accounts,
                         chainSelector: network.chainSelector || network.chainId.toString(),
-                        confirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
+                        confirmations: this.config.defaultConfirmations,
                         viemChain: network.viemChain,
                     },
                 ];
@@ -253,7 +260,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
                 id: 1,
                 accounts: [operatorPK],
                 chainSelector: "1",
-                confirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
+                confirmations: this.config.defaultConfirmations,
                 viemChain: localhostViemChain,
             },
         };
@@ -261,8 +268,8 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
 
     private filterNetworks(networkType: "mainnet" | "testnet" | "localhost"): ConceroNetwork[] {
         let networks: ConceroNetwork[] = [];
-        const ignoredIds = globalConfig.IGNORED_NETWORK_IDS || [];
-        const whitelistedIds = globalConfig.WHITELISTED_NETWORK_IDS[networkType] || [];
+        const ignoredIds = this.config.ignoredNetworkIds || [];
+        const whitelistedIds = this.config.whitelistedNetworkIds[networkType] || [];
 
         switch (networkType) {
             case "localhost":

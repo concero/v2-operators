@@ -3,8 +3,9 @@ import { AbiEvent, Address, Log } from "viem";
 import { v4 as uuidv4 } from "uuid";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { TxReaderConfig } from "../../types/config/ManagerConfigs";
 import { ITxReader, LogQuery, LogWatcher } from "../../types/managers/ITxReader";
-import { Logger, LoggerInterface } from "../utils";
+import { LoggerInterface } from "../utils";
 
 import { BlockManagerRegistry } from "./BlockManagerRegistry";
 import { NetworkManager } from "./NetworkManager";
@@ -16,28 +17,40 @@ export class TxReader implements ITxReader {
     private cachedLogs: Map<string, Map<string, Log>> = new Map();
     private blockManagerUnwatchers: Map<string, () => void> = new Map();
     private logger: LoggerInterface;
+    private config: TxReaderConfig;
 
     private networkManager: NetworkManager;
     private viemClientManager: ViemClientManager;
     private blockManagerRegistry: BlockManagerRegistry;
 
     private constructor(
+        logger: LoggerInterface,
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
         blockManagerRegistry: BlockManagerRegistry,
+        config: TxReaderConfig,
     ) {
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
         this.blockManagerRegistry = blockManagerRegistry;
-        this.logger = Logger.getInstance().getLogger("TxReader");
+        this.logger = logger;
+        this.config = config;
     }
 
     public static createInstance(
+        logger: LoggerInterface,
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
         blockManagerRegistry: BlockManagerRegistry,
+        config: TxReaderConfig,
     ): TxReader {
-        TxReader.instance = new TxReader(networkManager, viemClientManager, blockManagerRegistry);
+        TxReader.instance = new TxReader(
+            logger,
+            networkManager,
+            viemClientManager,
+            blockManagerRegistry,
+            config,
+        );
         return TxReader.instance;
     }
 

@@ -8,10 +8,11 @@ import {
 } from "viem";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { TxManagerConfig } from "../../types/config/ManagerConfigs";
 import { ITxManager, ITxMonitor } from "../../types/managers";
 import { ITxReader, LogQuery } from "../../types/managers/ITxReader";
 import { ITxWriter, ManagedTx } from "../../types/managers/ITxWriter";
-import { Logger, LoggerInterface } from "../utils/";
+import { LoggerInterface } from "../utils/";
 
 import { BlockManagerRegistry } from "./BlockManagerRegistry";
 import { ManagerBase } from "./ManagerBase";
@@ -28,41 +29,49 @@ export class TxManager extends ManagerBase implements ITxManager {
     private readonly viemClientManager: ViemClientManager;
     private readonly blockManagerRegistry: BlockManagerRegistry;
     private logger: LoggerInterface;
+    private config: TxManagerConfig;
 
     private constructor(
+        logger: LoggerInterface,
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
         blockManagerRegistry: BlockManagerRegistry,
         txWriter: ITxWriter,
         txReader: ITxReader,
         txMonitor: ITxMonitor,
+        config: TxManagerConfig,
     ) {
         super();
+        this.logger = logger;
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
         this.blockManagerRegistry = blockManagerRegistry;
         this.txWriter = txWriter;
         this.txReader = txReader;
         this.txMonitor = txMonitor;
-        this.logger = Logger.getInstance().getLogger("TxManager");
+        this.config = config;
     }
 
     public static createInstance(
+        logger: LoggerInterface,
         networkManager: NetworkManager,
         viemClientManager: ViemClientManager,
         blockManagerRegistry: BlockManagerRegistry,
         txWriter: ITxWriter,
         txReader: ITxReader,
         txMonitor: ITxMonitor,
+        config: TxManagerConfig,
     ): TxManager {
         if (!TxManager.instance) {
             TxManager.instance = new TxManager(
+                logger,
                 networkManager,
                 viemClientManager,
                 blockManagerRegistry,
                 txWriter,
                 txReader,
                 txMonitor,
+                config,
             );
         }
         return TxManager.instance;
