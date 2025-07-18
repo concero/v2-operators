@@ -15,7 +15,7 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
 
     constructor(logger: LoggerInterface, config: RpcManagerConfig) {
         super();
-        this.httpClient = HttpClient.getQueueInstance();
+        this.httpClient = HttpClient.getInstance();
         this.logger = logger;
         this.config = config;
     }
@@ -82,24 +82,24 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
                 return [localhostUrl];
             }
 
-            const url = `${this.config.conceroRpcsUrl}${chainType}/${chainId}-${chainName}.json`;
-            // this.logger.debug(`Fetching RPC URLs for ${chainName} from ${url}`);
+            const url = `${this.config.conceroRpcsUrl}${chainType}.json`;
+            const rpcData = await this.httpClient.get(url);
 
-            const chainConfig = await this.httpClient.get(url);
-            const response = await chainConfig;
+            let networkData = rpcData[chainName];
 
-            const urls = response.urls;
-
-            const rpcsExtension = this.config.rpcExtensions[chainId.toString()];
-
-            if (rpcsExtension) {
-                rpcsExtension.forEach((url: string) => {
-                    urls.push(url);
-                });
+            if (!networkData) {
+                throw new Error(`No RPC data found for chain ${chainName} (chainId: ${chainId})`);
             }
 
-            if (!urls) {
-                throw new Error(`Invalid RPC URL response format for chain ${chainName}`);
+            let urls = [...networkData.rpcUrls];
+
+            const rpcsExtension = this.config.rpcExtensions[chainId.toString()];
+            if (rpcsExtension) {
+                urls.push(...rpcsExtension);
+            }
+
+            if (urls.length === 0) {
+                throw new Error(`No RPC URLs available for chain ${chainName}`);
             }
 
             return urls;

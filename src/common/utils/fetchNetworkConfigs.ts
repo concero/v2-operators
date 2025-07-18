@@ -7,12 +7,18 @@ export interface NetworkDetail {
     name: string;
     chainId: number;
     chainSelector: number;
-    rpcs: string[];
+    rpcUrls: string[];
     blockExplorers: {
         name: string;
         url: string;
         apiUrl: string;
     }[];
+    faucets?: string[];
+    nativeCurrency?: {
+        name: string;
+        symbol: string;
+        decimals: number;
+    };
 }
 
 export interface ProcessedNetwork {
@@ -28,25 +34,27 @@ export interface NetworkConfigs {
 }
 
 export async function fetchNetworkConfigs(): Promise<NetworkConfigs> {
-    const httpClient = HttpClient.getQueueInstance();
     const logger = Logger.getInstance().getLogger("NetworkConfig");
+    const httpClient = HttpClient.getInstance(logger, {
+        retryDelay: 1000,
+        maxRetries: 3,
+        defaultTimeout: 5000,
+    });
 
     try {
-        const [mainnetSummary, testnetSummary] = await Promise.all([
-            httpClient.get(globalConfig.URLS.V2_NETWORKS.MAINNET_SUMMARY),
-            httpClient.get(globalConfig.URLS.V2_NETWORKS.TESTNET_SUMMARY),
+        const [mainnetData, testnetData] = await Promise.all([
+            httpClient.get(globalConfig.URLS.V2_NETWORKS.MAINNET),
+            httpClient.get(globalConfig.URLS.V2_NETWORKS.TESTNET),
         ]);
 
-        const mainnetNetworks = await fetchNetworkDetails(
-            mainnetSummary as Record<string, unknown>,
-            globalConfig.URLS.V2_NETWORKS.MAINNET_DETAIL_BASE,
+        const mainnetNetworks = processNetworkData(
+            mainnetData as Record<string, NetworkDetail>,
             false,
             logger,
         );
 
-        const testnetNetworks = await fetchNetworkDetails(
-            testnetSummary as Record<string, unknown>,
-            globalConfig.URLS.V2_NETWORKS.TESTNET_DETAIL_BASE,
+        const testnetNetworks = processNetworkData(
+            testnetData as Record<string, NetworkDetail>,
             true,
             logger,
         );
@@ -56,55 +64,24 @@ export async function fetchNetworkConfigs(): Promise<NetworkConfigs> {
             testnetNetworks,
         };
     } catch (error: unknown) {
-        logger.error("Failed to fetch network summaries:", error);
+        logger.error("Failed to fetch network configurations:", error);
         throw error;
     }
 }
 
-async function fetchNetworkDetails(
-    networkSummary: Record<string, unknown>,
-    detailBaseUrl: string,
+function processNetworkData(
+    networkData: Record<string, NetworkDetail>,
     isTestnet: boolean,
     logger: ReturnType<typeof Logger.prototype.getLogger>,
-): Promise<Record<string, ProcessedNetwork>> {
-    const httpClient = HttpClient.getQueueInstance();
-    const networkNames = Object.keys(networkSummary);
-
-    const detailPromises = networkNames.map(async networkName => {
-        try {
-            const url = `${detailBaseUrl}/${networkName}.json`;
-            const response = await httpClient.get(url);
-            const details = response as NetworkDetail;
-            return { networkName, details, success: true as const };
-        } catch (error: unknown) {
-            const networkType = isTestnet ? "testnet" : "mainnet";
-            logger.warn(
-                `Failed to fetch ${networkType} network details for ${networkName}: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            return { networkName, success: false as const };
-        }
-    });
-
-    const detailsResults = await Promise.all(detailPromises);
-
-    const successfulResults = detailsResults.filter(
-        (result): result is { networkName: string; details: NetworkDetail; success: true } =>
-            result.success,
-    );
-
-    return processNetworkDetails(successfulResults, isTestnet);
-}
-
-function processNetworkDetails(
-    networkDetails: Array<{ networkName: string; details: NetworkDetail; success: true }>,
-    isTestnet: boolean,
 ): Record<string, ProcessedNetwork> {
-    return networkDetails.reduce(
-        (acc: Record<string, ProcessedNetwork>, { networkName, details }) => {
+    const processedNetworks: Record<string, ProcessedNetwork> = {};
+
+    for (const [networkName, details] of Object.entries(networkData)) {
+        try {
             const chainDefinition: ChainDefinition = {
                 id: details.chainId,
                 name: details.name,
-                rpcUrls: details.rpcs,
+                rpcUrls: details.rpcUrls,
                 blockExplorer: details.blockExplorers[0]
                     ? {
                           name: details.blockExplorers[0].name,
@@ -114,14 +91,19 @@ function processNetworkDetails(
                 isTestnet,
             };
 
-            acc[networkName] = {
+            processedNetworks[networkName] = {
                 name: details.name,
                 chainId: details.chainId,
                 chainSelector: details.chainSelector.toString(),
                 viemChain: createViemChain(chainDefinition),
             };
-            return acc;
-        },
-        {},
-    );
+        } catch (error: unknown) {
+            const networkType = isTestnet ? "testnet" : "mainnet";
+            logger.warn(
+                `Failed to process ${networkType} network ${networkName}: ${error instanceof Error ? error.message : String(error)}`,
+            );
+        }
+    }
+
+    return processedNetworks;
 }

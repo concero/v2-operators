@@ -26,10 +26,8 @@ type GlobalConfig = {
         CONCERO_RPCS: string;
         CONCERO_DEPLOYMENTS: string;
         V2_NETWORKS: {
-            MAINNET_SUMMARY: string;
-            TESTNET_SUMMARY: string;
-            MAINNET_DETAIL_BASE: string;
-            TESTNET_DETAIL_BASE: string;
+            MAINNET: string;
+            TESTNET: string;
         };
     };
     HTTPCLIENT: {

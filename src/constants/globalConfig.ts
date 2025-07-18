@@ -13,7 +13,7 @@ const globalConfig: GlobalConfig = {
     IGNORED_NETWORK_IDS: [],
     WHITELISTED_NETWORK_IDS: {
         mainnet: [],
-        testnet: [421614, 84532],
+        testnet: [],
         localhost: [
             /* 1 */
         ],
@@ -29,14 +29,10 @@ const globalConfig: GlobalConfig = {
         CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${process.env.RPC_SERVICE_GIT_BRANCH ?? "master"}/output/`,
         CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${process.env.DEPLOYMENTS_SERVICE_GIT_BRANCH ?? "master"}/.env.deployments.${getEnvVar("NETWORK_MODE") === "localhost" || getEnvVar("NETWORK_MODE") === "testnet" ? "testnet" : "mainnet"}`,
         V2_NETWORKS: {
-            MAINNET_SUMMARY:
+            MAINNET:
                 "https://github.com/concero/v2-networks/raw/refs/heads/master/networks/mainnet.json",
-            TESTNET_SUMMARY:
+            TESTNET:
                 "https://github.com/concero/v2-networks/raw/refs/heads/master/networks/testnet.json",
-            MAINNET_DETAIL_BASE:
-                "https://github.com/concero/v2-networks/raw/refs/heads/master/networks/mainnet",
-            TESTNET_DETAIL_BASE:
-                "https://github.com/concero/v2-networks/raw/refs/heads/master/networks/testnet",
         },
     },
     VIEM: {
