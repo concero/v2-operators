@@ -222,21 +222,41 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             }
 
             if (networksFetched) {
-                this.notifyListeners();
+                await this.notifyListeners();
             }
         } catch (error) {
             this.logger.error("Failed to update networks:", error);
         }
     }
 
-    private notifyListeners(): void {
+    private async notifyListeners(): Promise<void> {
         for (const listener of this.updateListeners) {
             try {
-                listener.onNetworksUpdated(this.activeNetworks);
+                await listener.onNetworksUpdated(this.activeNetworks);
             } catch (error) {
                 this.logger.error("Error in network update listener:", error);
             }
         }
+    }
+
+    public async triggerInitialUpdates(): Promise<void> {
+        this.logger.debug("Triggering initial updates for all listeners sequentially");
+
+        for (const listener of this.updateListeners) {
+            try {
+                this.logger.debug(`Triggering initial update for ${listener.constructor.name}`);
+                await listener.onNetworksUpdated(this.activeNetworks);
+                this.logger.debug(`Completed initial update for ${listener.constructor.name}`);
+            } catch (error) {
+                this.logger.error(
+                    `Error in initial update for ${listener.constructor.name}:`,
+                    error,
+                );
+                throw error; // Fail fast if initial updates fail
+            }
+        }
+
+        this.logger.debug("Completed all initial updates");
     }
 
     private createNetworkConfig<T extends string>(

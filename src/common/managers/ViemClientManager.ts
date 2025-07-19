@@ -20,7 +20,7 @@ import type { PrivateKeyAccount } from "viem/accounts/types";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { ViemClientManagerConfig } from "../../types/ManagerConfigs";
-import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
+import { IRpcManager, NetworkUpdateListener } from "../../types/managers";
 import { createCustomHttpTransport, getEnvVar, LoggerInterface } from "../utils";
 
 import { ManagerBase } from "./ManagerBase";
@@ -32,10 +32,7 @@ export interface ViemClients {
     account: PrivateKeyAccount;
 }
 // Creates & updates Viem Fallback Clients for each network
-export class ViemClientManager
-    extends ManagerBase
-    implements RpcUpdateListener, NetworkUpdateListener
-{
+export class ViemClientManager extends ManagerBase implements NetworkUpdateListener {
     private static instance: ViemClientManager;
     private clients: Map<string, ViemClients> = new Map();
     private rpcManager: IRpcManager;
@@ -72,8 +69,6 @@ export class ViemClientManager
     public async initialize(): Promise<void> {
         if (this.initialized) return;
 
-        // Register as RPC update listener
-        this.rpcManager.registerRpcUpdateListener(this);
         await super.initialize();
         this.logger.debug("Initialized");
     }
@@ -167,14 +162,10 @@ export class ViemClientManager
         return newClients;
     }
 
-    // hook from RPCManager
-    public onRpcUrlsUpdated(networks: ConceroNetwork[]): void {
-        this.resetClientsForNetworks(networks);
-    }
-
     // hook from NetworkManager
     public onNetworksUpdated(networks: ConceroNetwork[]): void {
-        // Networks updated, no action needed as clients are created on demand
+        // Reset clients as RPC URLs may have changed
+        this.resetClientsForNetworks(networks);
     }
 
     private resetClientsForNetworks(networks: ConceroNetwork[]): void {
@@ -202,9 +193,6 @@ export class ViemClientManager
     }
 
     public override dispose(): void {
-        if (this.rpcManager) {
-            this.rpcManager.unregisterRpcUpdateListener(this);
-        }
         this.clients.clear();
         super.dispose();
         ViemClientManager.instance = undefined as any;

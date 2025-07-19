@@ -1,6 +1,6 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { RpcManagerConfig } from "../../types/ManagerConfigs";
-import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
+import { IRpcManager, NetworkUpdateListener } from "../../types/managers";
 import { LoggerInterface } from "../utils/";
 import { HttpClient } from "../utils/HttpClient";
 import { ManagerBase } from "./ManagerBase";
@@ -29,7 +29,6 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
     }
 
     private rpcUrls: Record<string, string[]> = {};
-    private rpcUpdateListeners: RpcUpdateListener[] = [];
 
     public static getInstance(): RpcManager {
         if (!RpcManager.instance) {
@@ -43,19 +42,6 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
 
         await super.initialize();
         this.logger.debug("Initialized");
-    }
-
-    public registerRpcUpdateListener(listener: RpcUpdateListener): void {
-        if (!this.rpcUpdateListeners.includes(listener)) {
-            this.rpcUpdateListeners.push(listener);
-        }
-    }
-
-    public unregisterRpcUpdateListener(listener: RpcUpdateListener): void {
-        const index = this.rpcUpdateListeners.indexOf(listener);
-        if (index !== -1) {
-            this.rpcUpdateListeners.splice(index, 1);
-        }
     }
 
     public async ensureRpcsForNetwork(network: ConceroNetwork): Promise<void> {
@@ -72,24 +58,22 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
         try {
             const url = `${this.config.conceroRpcsUrl}/${this.config.networkMode}.json`;
 
-            const response = await this.httpClient.get<Record<string, string[]>>(url);
+            const response =
+                await this.httpClient.get<
+                    Record<string, { rpcUrls: string[]; chainSelector: string | number }>
+                >(url);
 
             if (!response) {
                 throw new Error("Failed to fetch RPC data");
             }
 
-            this.rpcUrls = response;
-
-            // Get list of networks that were updated
-            const updatedNetworks: ConceroNetwork[] = Object.keys(response).map(
-                networkName =>
-                    ({
-                        name: networkName,
-                    }) as ConceroNetwork,
+            // Extract just the rpcUrls from each network's data
+            this.rpcUrls = Object.fromEntries(
+                Object.entries(response).map(([networkName, data]) => [
+                    networkName,
+                    data.rpcUrls || [],
+                ]),
             );
-
-            // Notify listeners
-            this.notifyRpcUpdateListeners(updatedNetworks);
 
             this.logger.debug(`Updated RPCs for ${Object.keys(response).length} networks`);
         } catch (error) {
@@ -98,23 +82,16 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
         }
     }
 
-    private notifyRpcUpdateListeners(networks: ConceroNetwork[]): void {
-        for (const listener of this.rpcUpdateListeners) {
-            try {
-                listener.onRpcUrlsUpdated(networks);
-            } catch (error) {
-                this.logger.error("Error in RPC update listener:", error);
-            }
-        }
-    }
-
     public getRpcsForNetwork(networkName: string): string[] {
         return this.rpcUrls[networkName] || [];
     }
 
-    public onNetworksUpdated(networks: ConceroNetwork[]): void {
-        this.updateRpcs(networks).catch(err =>
-            this.logger.error("Failed to update RPCs after network update:", err),
-        );
+    public async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {
+        try {
+            await this.updateRpcs(networks);
+        } catch (err) {
+            this.logger.error("Failed to update RPCs after network update:", err);
+            throw err;
+        }
     }
 }

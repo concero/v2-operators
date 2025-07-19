@@ -1,5 +1,6 @@
 import { Address } from "viem";
 
+import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { DeploymentManagerConfig } from "../../types/ManagerConfigs";
 import { IDeploymentsManager, NetworkUpdateListener } from "../../types/managers";
 import { getEnvVar } from "../utils/getEnvVar";
@@ -149,11 +150,14 @@ export class DeploymentManager
         }
     }
 
-    onNetworksUpdated() {
+    async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {
         // this.logger.debug("Received onNetworksUpdated");
-        this.updateDeployments().catch(err =>
-            this.logger.error("Failed to update deployments after network update:", err),
-        );
+        try {
+            await this.updateDeployments();
+        } catch (err) {
+            this.logger.error("Failed to update deployments after network update:", err);
+            throw err;
+        }
     }
 
     private extractNetworkName(key: string): string | null {
