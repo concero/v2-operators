@@ -1,5 +1,6 @@
 import { Address } from "viem";
 
+import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { DeploymentManagerConfig } from "../../types/ManagerConfigs";
 import { IDeploymentsManager, NetworkUpdateListener } from "../../types/managers";
 import { getEnvVar } from "../utils/getEnvVar";
@@ -23,7 +24,7 @@ export class DeploymentManager
 
     private constructor(logger: LoggerInterface, config: DeploymentManagerConfig) {
         super();
-        this.httpClient = HttpClient.getQueueInstance();
+        this.httpClient = HttpClient.getInstance();
         this.logger = logger;
         this.config = config;
     }
@@ -60,16 +61,12 @@ export class DeploymentManager
         }
 
         const router = this.conceroRoutersMapByChainName[chainName];
-        if (router !== undefined) return router;
 
-        await this.updateDeployments();
-
-        const updatedRouter = this.conceroRoutersMapByChainName[chainName];
-        if (!updatedRouter) {
+        if (!router) {
             throw new Error(`Router not found for chain: ${chainName}`);
         }
 
-        return updatedRouter;
+        return router;
     }
 
     async getConceroRouters(): Promise<Record<string, Address>> {
@@ -101,7 +98,7 @@ export class DeploymentManager
         return this.conceroVerifier;
     }
 
-    async updateDeployments(): Promise<void> {
+    async updateDeployments(networks?: ConceroNetwork[]): Promise<void> {
         const now = Date.now();
 
         try {
@@ -119,15 +116,35 @@ export class DeploymentManager
 
             const routerMap: Record<string, Address> = {} as Record<string, Address>;
 
+            // If networks are provided, create a set for efficient lookup
+            const activeNetworkNames = networks ? new Set(networks.map(n => n.name)) : null;
+
+            // Remove deployments for networks that are no longer active
+            if (activeNetworkNames) {
+                const currentNetworkNames = Object.keys(this.conceroRoutersMapByChainName);
+                for (const networkName of currentNetworkNames) {
+                    if (!activeNetworkNames.has(networkName)) {
+                        delete this.conceroRoutersMapByChainName[networkName];
+                        this.logger.debug(
+                            `Removed deployment for inactive network: ${networkName}`,
+                        );
+                    }
+                }
+            }
+
             for (const deploymentEnv of conceroRouterDeploymentsEnv) {
                 const [name, address] = deploymentEnv.split("=");
                 const networkName = this.extractNetworkName(name);
                 if (networkName) {
-                    routerMap[networkName as string] = address as Address;
+                    // If networks are provided, only store deployments for active networks
+                    if (!activeNetworkNames || activeNetworkNames.has(networkName)) {
+                        routerMap[networkName as string] = address as Address;
+                    }
                 }
             }
 
-            this.conceroRoutersMapByChainName = routerMap;
+            // Update the deployments
+            Object.assign(this.conceroRoutersMapByChainName, routerMap);
 
             const verifierEntry = deploymentsEnvArr.find((d: string) => {
                 const networkSuffix =
@@ -149,11 +166,14 @@ export class DeploymentManager
         }
     }
 
-    onNetworksUpdated() {
+    async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {
         // this.logger.debug("Received onNetworksUpdated");
-        this.updateDeployments().catch(err =>
-            this.logger.error("Failed to update deployments after network update:", err),
-        );
+        try {
+            await this.updateDeployments(networks);
+        } catch (err) {
+            this.logger.error("Failed to update deployments after network update:", err);
+            throw err;
+        }
     }
 
     private extractNetworkName(key: string): string | null {

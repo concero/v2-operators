@@ -1,3 +1,3 @@
 export interface NetworkUpdateListener {
-    onNetworksUpdated(networks: any[]): void;
+    onNetworksUpdated(networks: any[]): Promise<void> | void;
 }

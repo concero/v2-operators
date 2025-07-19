@@ -4,7 +4,7 @@ import type { PrivateKeyAccount } from "viem/accounts/types";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { ViemClientManagerConfig } from "../../types/ManagerConfigs";
-import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
+import { IRpcManager, NetworkUpdateListener } from "../../types/managers";
 import { createCustomHttpTransport, getEnvVar, LoggerInterface } from "../utils";
 
 import { ManagerBase } from "./ManagerBase";
@@ -16,10 +16,7 @@ export interface ViemClients {
     account: PrivateKeyAccount;
 }
 // Creates & updates Viem Fallback Clients for each network
-export class ViemClientManager
-    extends ManagerBase
-    implements RpcUpdateListener, NetworkUpdateListener
-{
+export class ViemClientManager extends ManagerBase implements NetworkUpdateListener {
     private static instance: ViemClientManager;
     private clients: Map<string, ViemClients> = new Map();
     private rpcManager: IRpcManager;
@@ -56,8 +53,6 @@ export class ViemClientManager
     public async initialize(): Promise<void> {
         if (this.initialized) return;
 
-        // Register as RPC update listener
-        this.rpcManager.registerRpcUpdateListener(this);
         await super.initialize();
         this.logger.debug("Initialized");
     }
@@ -124,32 +119,29 @@ export class ViemClientManager
         return newClients;
     }
 
-    public onRpcUrlsUpdated(networks: ConceroNetwork[]): void {
-        this.resetClientsForNetworks(networks);
-    }
+    // hook from NetworkManager
+    public async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {
+        // Create a set of active network names for efficient lookup
+        const activeNetworkNames = new Set(networks.map(n => n.name));
 
-    private resetClientsForNetworks(networks: ConceroNetwork[]): void {
-        for (const network of networks) {
-            try {
-                this.clients.delete(network.name);
-            } catch (error) {
-                this.logger.error(`Failed to update viem clients for ${network.name}:`, error);
+        // Remove clients for networks that are no longer active
+        const currentNetworkNames = Array.from(this.clients.keys());
+        for (const networkName of currentNetworkNames) {
+            if (!activeNetworkNames.has(networkName)) {
+                this.clients.delete(networkName);
+                this.logger.debug(`Removed clients for inactive network: ${networkName}`);
             }
         }
 
-        this.logger.debug(`Viem clients reset for ${networks.map(n => n.name).join(", ")}`);
-    }
-
-    public onNetworksUpdated(networks: ConceroNetwork[]): void {
-        // We don't need to reset clients here as RpcManager will trigger onRpcUrlsUpdated
-        // which will handle the client resets
+        // Update clients for active networks
+        await this.updateClientsForNetworks(networks);
     }
 
     public async updateClientsForNetworks(networks: ConceroNetwork[]): Promise<void> {
         for (const network of networks) {
             try {
-                const newClients = this.initializeClients(network);
-                this.clients.set(network.name, newClients);
+                const newClient = this.initializeClients(network);
+                this.clients.set(network.name, newClient);
                 this.logger.debug(`Updated clients for chain ${network.name}`);
             } catch (error) {
                 this.logger.error(`Failed to update clients for chain ${network.name}`, error);
@@ -158,9 +150,6 @@ export class ViemClientManager
     }
 
     public override dispose(): void {
-        if (this.rpcManager) {
-            this.rpcManager.unregisterRpcUpdateListener(this);
-        }
         this.clients.clear();
         super.dispose();
         ViemClientManager.instance = undefined as any;

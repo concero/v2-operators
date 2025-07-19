@@ -42,11 +42,14 @@ export class BlockManagerRegistry
         this.config = config;
     }
 
-    public onNetworksUpdated(networks: ConceroNetwork[]): void {
+    public async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {
         this.logger.info(`Networks updated, syncing BlockManagers for ${networks.length} networks`);
-        this.updateBlockManagers(networks).catch(error => {
+        try {
+            await this.updateBlockManagers(networks);
+        } catch (error) {
             this.logger.error("Failed to sync BlockManagers after network update", error);
-        });
+            throw error;
+        }
     }
 
     private async ensureBlockManagerForNetwork(
@@ -59,10 +62,6 @@ export class BlockManagerRegistry
         }
 
         try {
-            // Ensure RPC URLs are available for this network
-            await this.rpcManager.ensureRpcsForNetwork(network);
-
-            // Get the client with the now-available RPC URLs
             const { publicClient } = this.viemClientManager.getClients(network);
 
             // Create the BlockManager
@@ -70,6 +69,7 @@ export class BlockManagerRegistry
             return blockManager;
         } catch (error) {
             this.logger.warn(`Failed to create BlockManager for network ${network.name}`, error);
+            return null;
         }
     }
 
@@ -92,10 +92,10 @@ export class BlockManagerRegistry
             }
         }
 
-        // Create BlockManagers for new networks in parallel
+        // Create BlockManagers for new networks
         const newNetworks = networks.filter(network => !currentNetworkNames.has(network.name));
         if (newNetworks.length > 0) {
-            this.logger.debug(`Creating ${newNetworks.length} new BlockManagers in parallel`);
+            this.logger.debug(`Creating ${newNetworks.length} new BlockManagers`);
 
             const results = await Promise.all(
                 newNetworks.map(network => this.ensureBlockManagerForNetwork(network)),
@@ -136,16 +136,8 @@ export class BlockManagerRegistry
         if (this.initialized) return;
 
         try {
-            // Register as a network update listener
-            this.networkManager.registerUpdateListener(this);
-
             await super.initialize();
             this.logger.debug("Initialized");
-
-            // Perform the initial sync of BlockManagers with active networks
-            const activeNetworks = this.networkManager.getActiveNetworks();
-            this.logger.debug(`Starting initial sync for ${activeNetworks.length} networks`);
-            await this.updateBlockManagers(activeNetworks);
         } catch (error) {
             this.logger.error("Failed to initialize", error);
             throw error;

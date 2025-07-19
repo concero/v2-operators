@@ -26,7 +26,7 @@ const globalConfig: GlobalConfig = {
         LOG_MAX_SIZE: "20m",
     },
     URLS: {
-        CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${process.env.RPC_SERVICE_GIT_BRANCH ?? "master"}/output/`,
+        CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${process.env.RPC_SERVICE_GIT_BRANCH ?? "master"}/output`,
         CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${process.env.DEPLOYMENTS_SERVICE_GIT_BRANCH ?? "master"}/.env.deployments.${getEnvVar("NETWORK_MODE") === "localhost" || getEnvVar("NETWORK_MODE") === "testnet" ? "testnet" : "mainnet"}`,
         V2_NETWORKS: {
             MAINNET:
@@ -40,14 +40,14 @@ const globalConfig: GlobalConfig = {
         WRITE_CONTRACT: {},
         FALLBACK_TRANSPORT_OPTIONS: {
             retryCount: 5,
-            retryDelay: 2000,
+            retryDelay: 150,
         },
         SIMULATE_TX: getEnvVar("SIMULATE_TX") === "true",
     },
     HTTPCLIENT: {
         DEFAULT_TIMEOUT: 5000,
         MAX_RETRIES: 3,
-        RETRY_DELAY: 1000,
+        RETRY_DELAY: 100,
     },
     ABI: {
         CONCERO_VERIFIER: conceroVerifierAbi as Abi,

@@ -33,38 +33,43 @@ export interface NetworkConfigs {
     testnetNetworks: Record<string, ProcessedNetwork>;
 }
 
-export async function fetchNetworkConfigs(): Promise<NetworkConfigs> {
+export async function fetchNetworkConfigs(
+    networkMode: "mainnet" | "testnet" | "localhost" = "testnet",
+): Promise<NetworkConfigs> {
     const logger = Logger.getInstance().getLogger("NetworkConfig");
-    const httpClient = HttpClient.getInstance(logger, {
-        retryDelay: 1000,
-        maxRetries: 3,
-        defaultTimeout: 5000,
-    });
+    const httpClient = HttpClient.getInstance();
 
     try {
-        const [mainnetData, testnetData] = await Promise.all([
-            httpClient.get(globalConfig.URLS.V2_NETWORKS.MAINNET),
-            httpClient.get(globalConfig.URLS.V2_NETWORKS.TESTNET),
-        ]);
+        let mainnetNetworks: Record<string, ProcessedNetwork> = {};
+        let testnetNetworks: Record<string, ProcessedNetwork> = {};
 
-        const mainnetNetworks = processNetworkData(
-            mainnetData as Record<string, NetworkDetail>,
-            false,
-            logger,
-        );
+        if (networkMode === "localhost") {
+            // For localhost mode, return empty networks as they are handled separately
+            return { mainnetNetworks, testnetNetworks };
+        }
 
-        const testnetNetworks = processNetworkData(
-            testnetData as Record<string, NetworkDetail>,
-            true,
-            logger,
-        );
+        if (networkMode === "mainnet") {
+            const mainnetData = await httpClient.get(globalConfig.URLS.V2_NETWORKS.MAINNET);
+            mainnetNetworks = processNetworkData(
+                mainnetData as Record<string, NetworkDetail>,
+                false,
+                logger,
+            );
+        } else if (networkMode === "testnet") {
+            const testnetData = await httpClient.get(globalConfig.URLS.V2_NETWORKS.TESTNET);
+            testnetNetworks = processNetworkData(
+                testnetData as Record<string, NetworkDetail>,
+                true,
+                logger,
+            );
+        }
 
         return {
             mainnetNetworks,
             testnetNetworks,
         };
     } catch (error: unknown) {
-        logger.error("Failed to fetch network configurations:", error);
+        logger.error(`Failed to fetch ${networkMode} network configurations:`, error);
         throw error;
     }
 }
