@@ -8,4 +8,3 @@ export { ITxManager } from "./ITxManager";
 export { ITxMonitor, MonitoredTransaction } from "./ITxMonitor";
 export { IViemClientManager } from "./IViemClientManager";
 export { NetworkUpdateListener } from "./NetworkUpdateListener";
-export { RpcUpdateListener } from "./RpcUpdateListener";

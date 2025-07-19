@@ -134,6 +134,8 @@ export async function initializeManagers(): Promise<void> {
     await rpcManager.initialize();
     await viemClientManager.initialize();
     await deploymentManager.initialize();
+    await blockCheckpointManager.initialize();
+    await blockManagerRegistry.initialize();
 
     // Register network update listeners after all managers are initialized
     networkManager.registerUpdateListener(rpcManager);
@@ -141,8 +143,10 @@ export async function initializeManagers(): Promise<void> {
     networkManager.registerUpdateListener(viemClientManager);
     networkManager.registerUpdateListener(blockManagerRegistry);
 
-    await blockCheckpointManager.initialize();
-    await blockManagerRegistry.initialize();
+    // Trigger initial updates sequentially for all registered listeners
+    // This ensures each manager has the data it needs before the next one initializes
+    await networkManager.triggerInitialUpdates();
+
     const txWriter = TxWriter.createInstance(
         logger.getLogger("TxWriter"),
         networkManager,

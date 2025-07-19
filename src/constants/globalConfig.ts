@@ -47,7 +47,7 @@ const globalConfig: GlobalConfig = {
     HTTPCLIENT: {
         DEFAULT_TIMEOUT: 5000,
         MAX_RETRIES: 3,
-        RETRY_DELAY: 1000,
+        RETRY_DELAY: 100,
     },
     ABI: {
         CONCERO_VERIFIER: conceroVerifierAbi as Abi,

@@ -14,6 +14,7 @@ export interface INetworkManager {
     getNetworkBySelector(selector: string): ConceroNetwork;
     getVerifierNetwork(): ConceroNetwork | undefined;
     forceUpdate(): Promise<void>;
+    triggerInitialUpdates(): Promise<void>;
     registerUpdateListener(listener: NetworkUpdateListener): void;
     unregisterUpdateListener(listener: NetworkUpdateListener): void;
 }
