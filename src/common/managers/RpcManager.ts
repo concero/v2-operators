@@ -11,14 +11,11 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
     private httpClient: HttpClient;
     private logger: LoggerInterface;
     private config: RpcManagerConfig;
+    private rpcUrls: Record<string, string[]> = {};
 
     constructor(logger: LoggerInterface, config: RpcManagerConfig) {
         super();
-        this.httpClient = HttpClient.getInstance(logger, {
-            retryDelay: 1000,
-            maxRetries: 3,
-            defaultTimeout: 10000,
-        });
+        this.httpClient = HttpClient.getInstance();
         this.logger = logger;
         this.config = config;
     }
@@ -27,8 +24,6 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
         RpcManager.instance = new RpcManager(logger, config);
         return RpcManager.instance;
     }
-
-    private rpcUrls: Record<string, string[]> = {};
 
     public static getInstance(): RpcManager {
         if (!RpcManager.instance) {
@@ -67,15 +62,29 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
                 throw new Error("Failed to fetch RPC data");
             }
 
-            // Extract just the rpcUrls from each network's data
-            this.rpcUrls = Object.fromEntries(
-                Object.entries(response).map(([networkName, data]) => [
-                    networkName,
-                    data.rpcUrls || [],
-                ]),
-            );
+            // Create a set of active network names for efficient lookup
+            const activeNetworkNames = new Set(networks.map(n => n.name));
 
-            this.logger.debug(`Updated RPCs for ${Object.keys(response).length} networks`);
+            // Remove RPCs for networks that are no longer active
+            const currentNetworkNames = Object.keys(this.rpcUrls);
+            for (const networkName of currentNetworkNames) {
+                if (!activeNetworkNames.has(networkName)) {
+                    delete this.rpcUrls[networkName];
+                    this.logger.debug(`Removed RPCs for inactive network: ${networkName}`);
+                }
+            }
+
+            // Only store RPCs for active networks
+            const activeNetworkRpcs = Object.entries(response)
+                .filter(([networkName]) => activeNetworkNames.has(networkName))
+                .map(([networkName, data]) => [networkName, data.rpcUrls || []]);
+
+            // Update RPCs for active networks
+            for (const [networkName, rpcUrls] of activeNetworkRpcs) {
+                this.rpcUrls[networkName] = rpcUrls as string[];
+            }
+
+            this.logger.debug(`Updated RPCs for ${activeNetworkRpcs.length} active networks`);
         } catch (error) {
             this.logger.error("Failed to update RPCs:", error);
             throw error;

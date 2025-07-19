@@ -163,28 +163,28 @@ export class ViemClientManager extends ManagerBase implements NetworkUpdateListe
     }
 
     // hook from NetworkManager
-    public onNetworksUpdated(networks: ConceroNetwork[]): void {
-        // Reset clients as RPC URLs may have changed
-        this.resetClientsForNetworks(networks);
-    }
+    public async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {
+        // Create a set of active network names for efficient lookup
+        const activeNetworkNames = new Set(networks.map(n => n.name));
 
-    private resetClientsForNetworks(networks: ConceroNetwork[]): void {
-        for (const network of networks) {
-            try {
-                this.clients.delete(network.name);
-            } catch (error) {
-                this.logger.error(`Failed to update viem clients for ${network.name}:`, error);
+        // Remove clients for networks that are no longer active
+        const currentNetworkNames = Array.from(this.clients.keys());
+        for (const networkName of currentNetworkNames) {
+            if (!activeNetworkNames.has(networkName)) {
+                this.clients.delete(networkName);
+                this.logger.debug(`Removed clients for inactive network: ${networkName}`);
             }
         }
 
-        this.logger.debug(`Viem clients reset for ${networks.map(n => n.name).join(", ")}`);
+        // Update clients for active networks
+        await this.updateClientsForNetworks(networks);
     }
 
     public async updateClientsForNetworks(networks: ConceroNetwork[]): Promise<void> {
         for (const network of networks) {
             try {
-                const newClients = this.initializeClients(network);
-                this.clients.set(network.name, newClients);
+                const newClient = this.initializeClients(network);
+                this.clients.set(network.name, newClient);
                 this.logger.debug(`Updated clients for chain ${network.name}`);
             } catch (error) {
                 this.logger.error(`Failed to update clients for chain ${network.name}`, error);
