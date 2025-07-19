@@ -1,11 +1,6 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { NetworkManagerConfig } from "../../types/ManagerConfigs";
-import {
-    IDeploymentsManager,
-    INetworkManager,
-    IRpcManager,
-    NetworkUpdateListener,
-} from "../../types/managers";
+import { INetworkManager, NetworkUpdateListener } from "../../types/managers";
 import { fetchNetworkConfigs } from "../utils";
 import { getEnvVar, localhostViemChain, LoggerInterface } from "../utils/";
 
@@ -19,31 +14,15 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
     private allNetworks: Record<string, ConceroNetwork> = {};
     private activeNetworks: ConceroNetwork[] = [];
     private updateIntervalId: NodeJS.Timeout | null = null;
-    private rpcManager: IRpcManager | null = null;
-    private deploymentsManager: IDeploymentsManager | null = null;
+
     private updateListeners: NetworkUpdateListener[] = [];
     private logger: LoggerInterface;
     private config: NetworkManagerConfig;
 
-    private constructor(
-        logger: LoggerInterface,
-        config: NetworkManagerConfig,
-        rpcManager?: IRpcManager,
-        deploymentsManager?: IDeploymentsManager,
-    ) {
+    private constructor(logger: LoggerInterface, config: NetworkManagerConfig) {
         super();
         this.config = config;
-        this.rpcManager = rpcManager || null;
-        this.deploymentsManager = deploymentsManager || null;
         this.logger = logger;
-
-        if (this.rpcManager && "onNetworksUpdated" in this.rpcManager) {
-            this.registerUpdateListener(this.rpcManager as unknown as NetworkUpdateListener);
-        }
-
-        if (this.deploymentsManager && "onNetworksUpdated" in this.deploymentsManager) {
-            this.registerUpdateListener(this.deploymentsManager as NetworkUpdateListener);
-        }
     }
 
     public static getInstance(): NetworkManager {
@@ -53,10 +32,8 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
     public static createInstance(
         logger: LoggerInterface,
         config: NetworkManagerConfig,
-        rpcManager?: IRpcManager,
-        deploymentsManager?: IDeploymentsManager,
     ): NetworkManager {
-        this.instance = new NetworkManager(logger, config, rpcManager, deploymentsManager);
+        this.instance = new NetworkManager(logger, config);
         return this.instance;
     }
 
@@ -81,9 +58,6 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
 
         if (existingIndex === -1) {
             this.updateListeners.push(listener);
-            // this.logger.debug(
-            //     `Registered update listener: ${listener.constructor.name}`,
-            // );
         } else {
             this.logger.warn(`Update listener already registered: ${listener.constructor.name}`);
         }
@@ -197,7 +171,7 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             } else {
                 try {
                     const { mainnetNetworks: fetchedMainnet, testnetNetworks: fetchedTestnet } =
-                        await fetchNetworkConfigs();
+                        await fetchNetworkConfigs(this.config.networkMode);
 
                     const hasMainnetNetworks = Object.keys(fetchedMainnet).length > 0;
                     const hasTestnetNetworks = Object.keys(fetchedTestnet).length > 0;

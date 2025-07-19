@@ -3,7 +3,6 @@ import { RpcManagerConfig } from "../../types/ManagerConfigs";
 import { IRpcManager, NetworkUpdateListener, RpcUpdateListener } from "../../types/managers";
 import { LoggerInterface } from "../utils/";
 import { HttpClient } from "../utils/HttpClient";
-
 import { ManagerBase } from "./ManagerBase";
 
 // Watches @concero/rpcs and keeps an updatable list of RPC endpoints for networks
@@ -15,7 +14,11 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
 
     constructor(logger: LoggerInterface, config: RpcManagerConfig) {
         super();
-        this.httpClient = HttpClient.getInstance();
+        this.httpClient = HttpClient.getInstance(logger, {
+            retryDelay: 1000,
+            maxRetries: 3,
+            defaultTimeout: 10000,
+        });
         this.logger = logger;
         this.config = config;
     }
@@ -26,7 +29,6 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
     }
 
     private rpcUrls: Record<string, string[]> = {};
-    private lastUpdateTime: Record<string, number> = {};
     private rpcUpdateListeners: RpcUpdateListener[] = [];
 
     public static getInstance(): RpcManager {
@@ -57,109 +59,41 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
     }
 
     public async ensureRpcsForNetwork(network: ConceroNetwork): Promise<void> {
-        const now = Date.now();
-        const lastUpdate = this.lastUpdateTime[network.name] || 0;
-
         if (!this.rpcUrls[network.name] || this.rpcUrls[network.name].length === 0) {
-            await this.updateRpcsForNetwork(network);
-        }
-    }
-
-    public async fetchRpcUrls(
-        chainId: number,
-        chainName: string,
-        chainType: "mainnet" | "testnet" | "localhost",
-    ): Promise<string[]> {
-        try {
-            const rpcOverride = this.config.rpcOverrides[chainId.toString()];
-            if (rpcOverride && rpcOverride.length) return rpcOverride;
-
-            if (chainType === "localhost") {
-                const localhostUrl = process.env.LOCALHOST_RPC_URL;
-                if (!localhostUrl) {
-                    throw new Error("LOCALHOST_RPC_URL environment variable is not set");
-                }
-                return [localhostUrl];
-            }
-
-            const url = `${this.config.conceroRpcsUrl}${chainType}.json`;
-            const rpcData = await this.httpClient.get(url);
-
-            let networkData = rpcData[chainName];
-
-            if (!networkData) {
-                throw new Error(`No RPC data found for chain ${chainName} (chainId: ${chainId})`);
-            }
-
-            let urls = [...networkData.rpcUrls];
-
-            const rpcsExtension = this.config.rpcExtensions[chainId.toString()];
-            if (rpcsExtension) {
-                urls.push(...rpcsExtension);
-            }
-
-            if (urls.length === 0) {
-                throw new Error(`No RPC URLs available for chain ${chainName}`);
-            }
-
-            return urls;
-        } catch (error) {
-            this.logger.error(`Error fetching RPC URLs for ${chainName}:`, error);
-            throw error;
+            await this.updateRpcs([network]);
         }
     }
 
     public async updateRpcsForNetworks(networks: ConceroNetwork[]): Promise<void> {
-        const updatePromises: Promise<void>[] = [];
-        const updatedNetworks: ConceroNetwork[] = [];
-
-        for (const network of networks) {
-            updatePromises.push(
-                this.updateRpcsForNetwork(network)
-                    .then(() => {
-                        updatedNetworks.push(network);
-                    })
-                    .catch(error => {
-                        this.logger.error(
-                            `Failed to update RPC for network ${network.name}:`,
-                            error,
-                        );
-                    }),
-            );
-        }
-
-        await Promise.allSettled(updatePromises);
-
-        if (updatedNetworks.length > 0) {
-            this.notifyRpcUpdateListeners(updatedNetworks);
-        }
-        this.logger.debug(
-            `Updated RPC URLs for ${updatedNetworks.map(network => network.name).join(", ")}: ${updatedNetworks.length} networks updated`,
-        );
+        await this.updateRpcs(networks);
     }
 
-    public async updateRpcsForNetwork(network: ConceroNetwork): Promise<void> {
+    public async updateRpcs(networks: ConceroNetwork[]): Promise<void> {
         try {
-            const urls = await this.fetchRpcUrls(network.id, network.name, network.type);
+            const url = `${this.config.conceroRpcsUrl}/${this.config.networkMode}.json`;
 
-            if (urls.length > 0) {
-                const previousUrls = this.rpcUrls[network.name] || [];
-                this.rpcUrls[network.name] = urls;
-                this.lastUpdateTime[network.name] = Date.now();
-                // this.logger.debug(
-                //     `Updated RPC URLs for ${network.name}: ${urls.length} URLs available`,
-                // );
+            const response = await this.httpClient.get<Record<string, string[]>>(url);
 
-                if (JSON.stringify(previousUrls) !== JSON.stringify(urls)) {
-                    this.notifyRpcUpdateListeners([network]);
-                }
-            } else {
-                this.logger.warn(`No RPC URLs found for chain ${network.name}`);
-                this.rpcUrls[network.name] = [];
+            if (!response) {
+                throw new Error("Failed to fetch RPC data");
             }
+
+            this.rpcUrls = response;
+
+            // Get list of networks that were updated
+            const updatedNetworks: ConceroNetwork[] = Object.keys(response).map(
+                networkName =>
+                    ({
+                        name: networkName,
+                    }) as ConceroNetwork,
+            );
+
+            // Notify listeners
+            this.notifyRpcUpdateListeners(updatedNetworks);
+
+            this.logger.debug(`Updated RPCs for ${Object.keys(response).length} networks`);
         } catch (error) {
-            this.logger.error(`Failed to update RPC URLs for chain ${network.name}:`, error);
-            this.rpcUrls[network.name] = this.rpcUrls[network.name] || [];
+            this.logger.error("Failed to update RPCs:", error);
             throw error;
         }
     }
@@ -179,7 +113,7 @@ export class RpcManager extends ManagerBase implements IRpcManager, NetworkUpdat
     }
 
     public onNetworksUpdated(networks: ConceroNetwork[]): void {
-        this.updateRpcsForNetworks(networks).catch(err =>
+        this.updateRpcs(networks).catch(err =>
             this.logger.error("Failed to update RPCs after network update:", err),
         );
     }

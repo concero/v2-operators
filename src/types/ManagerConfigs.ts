@@ -31,6 +31,7 @@ export interface RpcManagerConfig extends BaseManagerConfig {
     rpcOverrides: Record<string, string[]>;
     rpcExtensions: Record<string, string[]>;
     conceroRpcsUrl: string;
+    networkMode: "mainnet" | "testnet" | "localhost";
 }
 
 /** Configuration for DeploymentManager */
