@@ -35,10 +35,12 @@ async function notifyInSlack(message: string) {
 }
 
 export async function getChainOperatorMinBalance(publicClient: PublicClient) {
-    const currentGasPrice = await publicClient.getGasPrice();
-    const averageTxCostInWei = currentGasPrice * globalConfig.TX_MANAGER.GAS_LIMIT.DEFAULT;
+    try {
+        const currentGasPrice = await publicClient.getGasPrice();
+        const averageTxCostInWei = currentGasPrice * globalConfig.TX_MANAGER.GAS_LIMIT.DEFAULT;
 
-    return averageTxCostInWei * SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE;
+        return averageTxCostInWei * SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE;
+    } catch {}
 }
 
 async function checkAndNotifyInsufficientGas() {
@@ -76,7 +78,7 @@ async function checkAndNotifyInsufficientGas() {
         for (const chainInfo of chainsInfo) {
             const { balance, operatorMinBalance, network } = chainInfo;
 
-            if (balance === undefined) {
+            if (balance === undefined || operatorMinBalance === undefined) {
                 logger.info(`Failed to check balance. Chain ${network.name} is down.`);
                 continue;
             }
