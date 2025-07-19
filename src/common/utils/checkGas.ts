@@ -1,10 +1,11 @@
-import { PublicClient, formatUnits } from "viem";
+import { Address, formatUnits, PublicClient } from "viem";
 
 import { WebClient } from "@slack/web-api";
 
 import { globalConfig } from "../../constants";
 import { NetworkManager, ViemClientManager } from "../managers";
 
+import { HttpClient } from "./HttpClient";
 import { Logger } from "./logger";
 
 const SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE = 15n;
@@ -54,12 +55,16 @@ async function checkAndNotifyInsufficientGas() {
             return;
         }
 
+        const getNativeBalance = (publicClient: HttpClient, operatorAddress: Address) => {
+            try {
+                return publicClient.getBalance({ address: operatorAddress });
+            } catch {}
+        };
+
         const balancePromises = activeNetworks.map(async network => {
             const { publicClient } = viemClientManager.getClients(network);
             const [balance, operatorMinBalance] = await Promise.all([
-                publicClient.getBalance({
-                    address: operatorAddress,
-                }),
+                getNativeBalance(publicClient, operatorAddress),
                 getChainOperatorMinBalance(publicClient),
             ]);
 
@@ -70,6 +75,11 @@ async function checkAndNotifyInsufficientGas() {
 
         for (const chainInfo of chainsInfo) {
             const { balance, operatorMinBalance, network } = chainInfo;
+
+            if (balance === undefined) {
+                logger.info(`Failed to check balance. Chain ${network.name} is down.`);
+                continue;
+            }
 
             if (balance < operatorMinBalance) {
                 const message = `Insufficient gas on ${network.name} (chain ID: ${network.id}). Minimum required: ${formatUnits(operatorMinBalance, 18)}, actual: ${formatUnits(balance, 18)}`;
