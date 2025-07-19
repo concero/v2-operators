@@ -55,9 +55,9 @@ async function checkAndNotifyInsufficientGas() {
             return;
         }
 
-        const getNativeBalance = (publicClient: HttpClient, operatorAddress: Address) => {
+        const getNativeBalance = async (publicClient: HttpClient, operatorAddress: Address) => {
             try {
-                return publicClient.getBalance({ address: operatorAddress });
+                return await publicClient.getBalance({ address: operatorAddress });
             } catch {}
         };
 
