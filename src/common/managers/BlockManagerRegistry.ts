@@ -59,10 +59,6 @@ export class BlockManagerRegistry
         }
 
         try {
-            // Ensure RPC URLs are available for this network
-            await this.rpcManager.ensureRpcsForNetwork(network);
-
-            // Get the client with the now-available RPC URLs
             const { publicClient } = this.viemClientManager.getClients(network);
 
             // Create the BlockManager
@@ -92,10 +88,10 @@ export class BlockManagerRegistry
             }
         }
 
-        // Create BlockManagers for new networks in parallel
+        // Create BlockManagers for new networks
         const newNetworks = networks.filter(network => !currentNetworkNames.has(network.name));
         if (newNetworks.length > 0) {
-            this.logger.debug(`Creating ${newNetworks.length} new BlockManagers in parallel`);
+            this.logger.debug(`Creating ${newNetworks.length} new BlockManagers`);
 
             const results = await Promise.all(
                 newNetworks.map(network => this.ensureBlockManagerForNetwork(network)),

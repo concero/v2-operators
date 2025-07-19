@@ -124,8 +124,14 @@ export class ViemClientManager
         return newClients;
     }
 
+    // hook from RPCManager
     public onRpcUrlsUpdated(networks: ConceroNetwork[]): void {
         this.resetClientsForNetworks(networks);
+    }
+
+    // hook from NetworkManager
+    public onNetworksUpdated(networks: ConceroNetwork[]): void {
+        // Networks updated, no action needed as clients are created on demand
     }
 
     private resetClientsForNetworks(networks: ConceroNetwork[]): void {
@@ -138,11 +144,6 @@ export class ViemClientManager
         }
 
         this.logger.debug(`Viem clients reset for ${networks.map(n => n.name).join(", ")}`);
-    }
-
-    public onNetworksUpdated(networks: ConceroNetwork[]): void {
-        // We don't need to reset clients here as RpcManager will trigger onRpcUrlsUpdated
-        // which will handle the client resets
     }
 
     public async updateClientsForNetworks(networks: ConceroNetwork[]): Promise<void> {

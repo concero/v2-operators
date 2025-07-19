@@ -23,7 +23,7 @@ export class DeploymentManager
 
     private constructor(logger: LoggerInterface, config: DeploymentManagerConfig) {
         super();
-        this.httpClient = HttpClient.getQueueInstance();
+        this.httpClient = HttpClient.getInstance();
         this.logger = logger;
         this.config = config;
     }

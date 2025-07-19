@@ -18,8 +18,6 @@ import {
     BlockManagerConfig,
     BlockManagerRegistryConfig,
     DeploymentManagerConfig,
-    HttpClientConfig,
-    LoggerConfig,
     NetworkManagerConfig,
     NonceManagerConfig,
     RpcManagerConfig,
@@ -34,28 +32,23 @@ import { Logger } from "./Logger";
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
-    const loggerConfig: LoggerConfig = {
+    const logger = Logger.createInstance({
         logDir: globalConfig.LOGGER.LOG_DIR,
         logMaxSize: globalConfig.LOGGER.LOG_MAX_SIZE,
         logMaxFiles: globalConfig.LOGGER.LOG_MAX_FILES,
         logLevelDefault: globalConfig.LOGGER.LOG_LEVEL_DEFAULT,
         logLevelsGranular: globalConfig.LOGGER.LOG_LEVELS_GRANULAR,
-    };
-
-    const logger = Logger.createInstance(loggerConfig);
+    });
     await logger.initialize();
 
-    const httpClientConfig: HttpClientConfig = {
+    const httpLoggerInstance = logger.getLogger("HttpClient");
+    const httpClient = HttpClient.createInstance(httpLoggerInstance, {
         retryDelay: globalConfig.HTTPCLIENT.RETRY_DELAY,
         maxRetries: globalConfig.HTTPCLIENT.MAX_RETRIES,
         defaultTimeout: globalConfig.HTTPCLIENT.DEFAULT_TIMEOUT,
-    };
+    });
 
-    const httpLoggerInstance = logger.getLogger("HttpClient");
-    const httpClient = HttpClient.getInstance(httpLoggerInstance, httpClientConfig);
-    const httpQueue = HttpClient.getQueueInstance(httpLoggerInstance, httpClientConfig);
-    httpClient.initialize();
-    httpQueue.initialize();
+    await httpClient.initialize();
 
     const blockCheckpointManagerConfig: BlockCheckpointManagerConfig = {
         useCheckpoints: globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS,
@@ -75,6 +68,7 @@ export async function initializeManagers(): Promise<void> {
         rpcOverrides: globalConfig.RPC.OVERRIDE,
         rpcExtensions: globalConfig.RPC.EXTENSION,
         conceroRpcsUrl: globalConfig.URLS.CONCERO_RPCS,
+        networkMode: globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
     };
 
     const viemClientManagerConfig: ViemClientManagerConfig = {
@@ -121,8 +115,6 @@ export async function initializeManagers(): Promise<void> {
     const networkManager = NetworkManager.createInstance(
         logger.getLogger("NetworkManager"),
         networkManagerConfig,
-        rpcManager,
-        deploymentManager,
     );
     const blockCheckpointManager = BlockCheckpointManager.createInstance(
         logger.getLogger("BlockCheckpointManager"),
@@ -138,13 +130,19 @@ export async function initializeManagers(): Promise<void> {
         blockManagerRegistryConfig,
     );
 
+    await networkManager.initialize();
     await rpcManager.initialize();
     await viemClientManager.initialize();
     await deploymentManager.initialize();
-    await networkManager.initialize();
+
+    // Register network update listeners after all managers are initialized
+    networkManager.registerUpdateListener(rpcManager);
+    networkManager.registerUpdateListener(deploymentManager);
+    networkManager.registerUpdateListener(viemClientManager);
+    networkManager.registerUpdateListener(blockManagerRegistry);
+
     await blockCheckpointManager.initialize();
     await blockManagerRegistry.initialize();
-
     const txWriter = TxWriter.createInstance(
         logger.getLogger("TxWriter"),
         networkManager,

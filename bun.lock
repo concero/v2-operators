@@ -5,7 +5,6 @@
       "name": "concero-v2-operators",
       "dependencies": {
         "@concero/contract-utils": "github:concero/contract-utils",
-        "@concero/v2-networks": "github:concero/v2-networks",
         "@prisma/client": "^5.12.0",
         "@slack/web-api": "^7.9.1",
         "@types/jest": "^29.5.14",
@@ -114,8 +113,6 @@
     "@colors/colors": ["@colors/colors@1.6.0", "", {}, "sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA=="],
 
     "@concero/contract-utils": ["@concero/contract-utils@github:concero/contract-utils#c10d675", { "dependencies": { "viem": "2.26.2" } }, "concero-contract-utils-c10d675"],
-
-    "@concero/v2-networks": ["@concero/v2-networks@github:concero/v2-networks#631fb75", {}, "concero-v2-networks-631fb75"],
 
     "@dabh/diagnostics": ["@dabh/diagnostics@2.0.3", "", { "dependencies": { "colorspace": "1.1.x", "enabled": "2.0.x", "kuler": "^2.0.0" } }, "sha512-hrlQOIi7hAfzsMqlGSFyVucrx38O+j6wiGOf//H2ecvIEqYN4ADBSS2iLMh5UFyDunCNniUIPk/q3riFv45xRA=="],
 
