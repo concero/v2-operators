@@ -1,20 +1,4 @@
-import {
-    ContractFunctionExecutionError,
-    createPublicClient,
-    createWalletClient,
-    fallback,
-    HttpRequestError,
-    InvalidInputRpcError,
-    MethodNotFoundRpcError,
-    MethodNotSupportedRpcError,
-    PublicClient,
-    RpcRequestError,
-    TimeoutError,
-    TransactionNotFoundError,
-    UnknownNodeError,
-    UnknownRpcError,
-    WalletClient,
-} from "viem";
+import { createPublicClient, createWalletClient, fallback, PublicClient, WalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { PrivateKeyAccount } from "viem/accounts/types";
 
@@ -87,34 +71,7 @@ export class ViemClientManager
 
         return fallback(
             rpcUrls.map(url => createCustomHttpTransport(url)),
-            {
-                ...this.config.fallbackTransportOptions,
-                shouldThrow: (error: Error) => {
-                    if (
-                        error instanceof HttpRequestError ||
-                        error instanceof RpcRequestError ||
-                        error instanceof TransactionNotFoundError ||
-                        error instanceof UnknownRpcError ||
-                        error instanceof UnknownNodeError ||
-                        error instanceof InvalidInputRpcError ||
-                        error instanceof MethodNotFoundRpcError ||
-                        error instanceof TimeoutError ||
-                        error instanceof MethodNotSupportedRpcError
-                    ) {
-                        return false;
-                    } else if (error instanceof ContractFunctionExecutionError) {
-                        if (
-                            error.details.includes(
-                                "the method eth_sendRawTransaction does not exist",
-                            )
-                        ) {
-                            return false;
-                        }
-                    }
-
-                    return true;
-                },
-            },
+            this.config.fallbackTransportOptions,
         );
     }
 
