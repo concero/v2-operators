@@ -1,4 +1,5 @@
-import { Logger } from "./Logger";
+import { Logger } from "@concero/operator-utils";
+
 import { sleep } from "./sleep";
 
 export interface RetryOptions {

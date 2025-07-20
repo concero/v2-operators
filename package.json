@@ -7,6 +7,7 @@
     "build": "esbuild src/relayer-a/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm",
     "lint": "eslint --config .eslint.config.mjs",
     "format": "prettier --config .prettierrc.json --write **/*.{ts,json}",
+    "start": "bun ./src/relayer-a/index.ts",
     "start:relayerA": "bun ./src/relayer-a/index.ts",
     "check-updates": "npx npm-check-updates",
     "prisma:reset": "npx prisma migrate reset",
@@ -32,6 +33,7 @@
   },
   "dependencies": {
     "@concero/contract-utils": "github:concero/contract-utils",
+    "@concero/operator-utils": "github:concero/operator-utils",
     "@prisma/client": "^5.12.0",
     "@slack/web-api": "^7.9.1",
     "@types/jest": "^29.5.14",
@@ -43,7 +45,7 @@
     "prisma": "^5.12.0",
     "ts-jest": "^29.3.2",
     "uuid": "^11.1.0",
-    "viem": "2.24.1",
+    "viem": "2.33.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
   }

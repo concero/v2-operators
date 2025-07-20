@@ -1,8 +1,8 @@
 import { AbiEvent, type Address, Log } from "viem";
 
+import { Logger } from "@concero/operator-utils";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxManager } from "../managers";
-import { Logger } from "../utils";
 
 export interface EventListenerHandle {
     stop: () => void;

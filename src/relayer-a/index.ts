@@ -1,6 +1,6 @@
 import "../common/utils/configureDotEnv";
 
-import { BlockManagerRegistry } from "../common/managers";
+import { BlockManagerRegistry } from "@concero/operator-utils";
 import { AppError, checkGas } from "../common/utils";
 import { initializeManagers } from "../common/utils/initializeManagers";
 import { AppErrorEnum } from "../constants";
