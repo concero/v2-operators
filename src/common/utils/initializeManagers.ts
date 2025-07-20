@@ -24,6 +24,7 @@ export async function initializeManagers(): Promise<void> {
         logMaxFiles: globalConfig.LOGGER.LOG_MAX_FILES,
         logLevelDefault: globalConfig.LOGGER.LOG_LEVEL_DEFAULT,
         logLevelsGranular: globalConfig.LOGGER.LOG_LEVELS_GRANULAR,
+        enableConsoleTransport: process.env.NODE_ENV !== "production",
     });
     await logger.initialize();
 

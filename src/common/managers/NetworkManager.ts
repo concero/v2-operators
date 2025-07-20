@@ -1,3 +1,4 @@
+import { globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { NetworkManagerConfig } from "../../types/ManagerConfigs";
 import { INetworkManager, NetworkUpdateListener } from "../../types/managers";
@@ -171,7 +172,10 @@ export class NetworkManager extends ManagerBase implements INetworkManager {
             } else {
                 try {
                     const { mainnetNetworks: fetchedMainnet, testnetNetworks: fetchedTestnet } =
-                        await fetchNetworkConfigs(this.config.networkMode);
+                        await fetchNetworkConfigs(this.config.networkMode, {
+                            mainnet: globalConfig.URLS.V2_NETWORKS.MAINNET,
+                            testnet: globalConfig.URLS.V2_NETWORKS.TESTNET,
+                        });
 
                     const hasMainnetNetworks = Object.keys(fetchedMainnet).length > 0;
                     const hasTestnetNetworks = Object.keys(fetchedTestnet).length > 0;

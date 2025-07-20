@@ -77,7 +77,7 @@ export class Logger extends ManagerBase {
             ],
         });
 
-        if (process.env.NODE_ENV !== "production") {
+        if (this.config.enableConsoleTransport) {
             logger.add(
                 new winston.transports.Console({
                     level: "debug",

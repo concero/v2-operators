@@ -84,6 +84,7 @@ export interface LoggerConfig extends BaseManagerConfig {
     logMaxFiles: string | number;
     logLevelDefault: string;
     logLevelsGranular: Record<string, string>;
+    enableConsoleTransport?: boolean;
 }
 
 /** Configuration for HttpClient */
