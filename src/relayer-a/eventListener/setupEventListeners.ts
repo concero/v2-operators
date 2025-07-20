@@ -1,8 +1,7 @@
 import { AbiEvent, getAbiItem } from "viem";
 
+import { DeploymentManager, Logger, NetworkManager } from "@concero/operator-utils";
 import { setupEventListener } from "../../common/eventListener/setupEventListener";
-import { DeploymentManager, NetworkManager } from "../../common/managers";
-import { Logger } from "../../common/utils";
 
 import { globalConfig } from "../../constants";
 

@@ -1,6 +1,6 @@
 import { Transport, http } from "viem";
 
-import { Logger } from "./Logger";
+import { Logger } from "@concero/operator-utils";
 
 export function createCustomHttpTransport(url: string): Transport {
     const logger = Logger.getInstance().getLogger("ViemTransport");

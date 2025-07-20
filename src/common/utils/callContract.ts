@@ -1,7 +1,7 @@
 import { Hash, type PublicClient, type SimulateContractParameters, type WalletClient } from "viem";
 
+import { NonceManager } from "@concero/operator-utils";
 import { AppErrorEnum, globalConfig } from "../../constants";
-import { NonceManager } from "../managers";
 
 import confirmations from "../../constants/confirmations.json";
 import { IConfirmations } from "../../types/Confirmations";

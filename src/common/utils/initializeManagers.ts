@@ -1,20 +1,15 @@
 import {
-    BlockCheckpointManager,
     BlockManagerRegistry,
     DeploymentManager,
+    HttpClient,
+    Logger,
     NetworkManager,
     NonceManager,
     RpcManager,
-    TxManager,
-    TxMonitor,
-    TxReader,
-    TxWriter,
     ViemClientManager,
-} from "../managers";
-
+} from "@concero/operator-utils";
 import { globalConfig } from "../../constants";
-import { HttpClient } from "./HttpClient";
-import { Logger } from "./Logger";
+import { BlockCheckpointManager, TxManager, TxMonitor, TxReader, TxWriter } from "../managers";
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
@@ -58,13 +53,19 @@ export async function initializeManagers(): Promise<void> {
             networkMode: globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
         },
     );
-    const networkManager = NetworkManager.createInstance(logger.getLogger("NetworkManager"), {
-        networkUpdateIntervalMs: globalConfig.NETWORK_MANAGER.NETWORK_UPDATE_INTERVAL_MS,
-        networkMode: globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
-        ignoredNetworkIds: globalConfig.IGNORED_NETWORK_IDS,
-        whitelistedNetworkIds: globalConfig.WHITELISTED_NETWORK_IDS,
-        defaultConfirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
-    });
+    const networkManager = NetworkManager.createInstance(
+        logger.getLogger("NetworkManager"),
+        httpClient,
+        {
+            networkUpdateIntervalMs: globalConfig.NETWORK_MANAGER.NETWORK_UPDATE_INTERVAL_MS,
+            networkMode: globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
+            ignoredNetworkIds: globalConfig.IGNORED_NETWORK_IDS,
+            whitelistedNetworkIds: globalConfig.WHITELISTED_NETWORK_IDS,
+            defaultConfirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
+            mainnetUrl: globalConfig.URLS.V2_NETWORKS.MAINNET,
+            testnetUrl: globalConfig.URLS.V2_NETWORKS.TESTNET,
+        },
+    );
     const blockCheckpointManager = BlockCheckpointManager.createInstance(
         logger.getLogger("BlockCheckpointManager"),
         {
