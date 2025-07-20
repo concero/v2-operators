@@ -4,12 +4,9 @@ import { v4 as uuidv4 } from "uuid";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxReaderConfig } from "../../types/ManagerConfigs";
+import { IBlockManagerRegistry, INetworkManager, IViemClientManager } from "../../types/managers";
 import { ITxReader, LogQuery, LogWatcher } from "../../types/managers/ITxReader";
 import { LoggerInterface } from "../utils";
-
-import { BlockManagerRegistry } from "./BlockManagerRegistry";
-import { NetworkManager } from "./NetworkManager";
-import { ViemClientManager } from "./ViemClientManager";
 
 // Handles all log-reading operations for all networks
 export class TxReader implements ITxReader {
@@ -20,15 +17,15 @@ export class TxReader implements ITxReader {
     private logger: LoggerInterface;
     private config: TxReaderConfig;
 
-    private networkManager: NetworkManager;
-    private viemClientManager: ViemClientManager;
-    private blockManagerRegistry: BlockManagerRegistry;
+    private networkManager: INetworkManager;
+    private viemClientManager: IViemClientManager;
+    private blockManagerRegistry: IBlockManagerRegistry;
 
     private constructor(
         logger: LoggerInterface,
-        networkManager: NetworkManager,
-        viemClientManager: ViemClientManager,
-        blockManagerRegistry: BlockManagerRegistry,
+        networkManager: INetworkManager,
+        viemClientManager: IViemClientManager,
+        blockManagerRegistry: IBlockManagerRegistry,
         config: TxReaderConfig,
     ) {
         this.networkManager = networkManager;
@@ -40,9 +37,9 @@ export class TxReader implements ITxReader {
 
     public static createInstance(
         logger: LoggerInterface,
-        networkManager: NetworkManager,
-        viemClientManager: ViemClientManager,
-        blockManagerRegistry: BlockManagerRegistry,
+        networkManager: INetworkManager,
+        viemClientManager: IViemClientManager,
+        blockManagerRegistry: IBlockManagerRegistry,
         config: TxReaderConfig,
     ): TxReader {
         TxReader.instance = new TxReader(
@@ -78,7 +75,7 @@ export class TxReader implements ITxReader {
             }
 
             const unwatcher = blockManager.watchBlocks({
-                onBlockRange: async (startBlock, endBlock) => {
+                onBlockRange: async (startBlock: bigint, endBlock: bigint) => {
                     await this.fetchLogsForWatchers(network.name, startBlock, endBlock);
                 },
             });
@@ -148,7 +145,9 @@ export class TxReader implements ITxReader {
 
         for (const [contractAddress, contractWatchers] of watchersByContract) {
             try {
-                const events = contractWatchers.map(w => w.event);
+                const events = contractWatchers
+                    .map(w => w.event)
+                    .filter((event): event is AbiEvent => event !== undefined);
                 const logs = await this.getContractLogs(
                     contractAddress,
                     fromBlock,
@@ -161,7 +160,7 @@ export class TxReader implements ITxReader {
                 const logsByEvent = new Map<string, Log[]>();
 
                 for (const log of logs) {
-                    const eventName = log.eventName || "";
+                    const eventName = (log as any).eventName || "";
                     const logId = `${log.transactionHash}:${log.logIndex}`;
 
                     // Skip logs we've already seen
@@ -253,11 +252,8 @@ export class TxReader implements ITxReader {
                 fromBlock: query.fromBlock,
                 toBlock: query.toBlock,
                 event: query.event,
+                ...(query.args && { args: query.args }),
             };
-
-            if (query.args) {
-                filter.args = query.args;
-            }
 
             const logs = await publicClient.getLogs(filter);
 

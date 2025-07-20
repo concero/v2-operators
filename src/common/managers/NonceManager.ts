@@ -1,20 +1,11 @@
 import { Mutex } from "async-mutex";
-import { Address, Client, createPublicClient } from "viem";
 
 import { NonceManagerConfig } from "../../types/ManagerConfigs";
+import { IGetNonceParams, INonceManager, INonceManagerParams } from "../../types/managers";
 import { LoggerInterface } from "../utils/Logger";
 import { ManagerBase } from "./ManagerBase";
 
-interface INonceManagerParams {
-    address: Address;
-    chainId: number;
-}
-
-interface IGetNonceParams extends INonceManagerParams {
-    client: Client;
-}
-
-export class NonceManager extends ManagerBase {
+export class NonceManager extends ManagerBase implements INonceManager {
     private static instance: NonceManager | null = null;
     private noncesMap: Record<number, number> = {};
     private mutexMap: Record<number, Mutex> = {};
@@ -80,8 +71,7 @@ export class NonceManager extends ManagerBase {
     }
 
     private async fetchNonce(params: IGetNonceParams) {
-        const publicClient = this.createPublicCLientFromGetNonceParams(params);
-        return await publicClient.getTransactionCount({ address: params.address });
+        return await params.client.getTransactionCount({ address: params.address });
     }
 
     private getMutex(chainId: number): Mutex {
@@ -89,12 +79,5 @@ export class NonceManager extends ManagerBase {
             this.mutexMap[chainId] = new Mutex();
         }
         return this.mutexMap[chainId];
-    }
-
-    private createPublicCLientFromGetNonceParams(params: IGetNonceParams) {
-        return createPublicClient({
-            transport: () => params.client.transport,
-            chain: params.client.chain,
-        });
     }
 }

@@ -9,15 +9,18 @@ import {
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxManagerConfig } from "../../types/ManagerConfigs";
-import { ITxManager, ITxMonitor } from "../../types/managers";
+import {
+    IBlockManagerRegistry,
+    INetworkManager,
+    ITxManager,
+    ITxMonitor,
+    IViemClientManager,
+} from "../../types/managers";
 import { ITxReader, LogQuery } from "../../types/managers/ITxReader";
 import { ITxWriter, ManagedTx } from "../../types/managers/ITxWriter";
 import { LoggerInterface } from "../utils/";
 
-import { BlockManagerRegistry } from "./BlockManagerRegistry";
 import { ManagerBase } from "./ManagerBase";
-import { NetworkManager } from "./NetworkManager";
-import { ViemClientManager } from "./ViemClientManager";
 
 // High-level interface for both reading & writing to the network
 export class TxManager extends ManagerBase implements ITxManager {
@@ -26,17 +29,17 @@ export class TxManager extends ManagerBase implements ITxManager {
     private readonly txWriter: ITxWriter;
     private readonly txReader: ITxReader;
     private readonly txMonitor: ITxMonitor;
-    private readonly networkManager: NetworkManager;
-    private readonly viemClientManager: ViemClientManager;
-    private readonly blockManagerRegistry: BlockManagerRegistry;
+    private readonly networkManager: INetworkManager;
+    private readonly viemClientManager: IViemClientManager;
+    private readonly blockManagerRegistry: IBlockManagerRegistry;
     private logger: LoggerInterface;
     private config: TxManagerConfig;
 
     private constructor(
         logger: LoggerInterface,
-        networkManager: NetworkManager,
-        viemClientManager: ViemClientManager,
-        blockManagerRegistry: BlockManagerRegistry,
+        networkManager: INetworkManager,
+        viemClientManager: IViemClientManager,
+        blockManagerRegistry: IBlockManagerRegistry,
         txWriter: ITxWriter,
         txReader: ITxReader,
         txMonitor: ITxMonitor,
@@ -55,9 +58,9 @@ export class TxManager extends ManagerBase implements ITxManager {
 
     public static createInstance(
         logger: LoggerInterface,
-        networkManager: NetworkManager,
-        viemClientManager: ViemClientManager,
-        blockManagerRegistry: BlockManagerRegistry,
+        networkManager: INetworkManager,
+        viemClientManager: IViemClientManager,
+        blockManagerRegistry: IBlockManagerRegistry,
         txWriter: ITxWriter,
         txReader: ITxReader,
         txMonitor: ITxMonitor,
