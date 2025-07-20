@@ -8,7 +8,6 @@ export { ManagerBase } from "./ManagerBase";
 export { NetworkManager } from "./NetworkManager";
 export { NonceManager } from "./NonceManager";
 export { RpcManager } from "./RpcManager";
-export { Singleton } from "./Singleton";
 export { TxManager } from "./TxManager";
 export { TxMonitor } from "./TxMonitor";
 export { TxReader } from "./TxReader";

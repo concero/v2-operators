@@ -1,9 +1,8 @@
-import { globalConfig } from "../../constants";
 import { ChainDefinition, createViemChain } from "./createViemChain";
 import { HttpClient } from "./HttpClient";
 import { Logger } from "./Logger";
 
-export interface NetworkDetail {
+export interface V2Network {
     name: string;
     chainId: number;
     chainSelector: number;
@@ -35,6 +34,7 @@ export interface NetworkConfigs {
 
 export async function fetchNetworkConfigs(
     networkMode: "mainnet" | "testnet" | "localhost" = "testnet",
+    urls?: { mainnet: string; testnet: string },
 ): Promise<NetworkConfigs> {
     const logger = Logger.getInstance().getLogger("NetworkConfig");
     const httpClient = HttpClient.getInstance();
@@ -49,16 +49,18 @@ export async function fetchNetworkConfigs(
         }
 
         if (networkMode === "mainnet") {
-            const mainnetData = await httpClient.get(globalConfig.URLS.V2_NETWORKS.MAINNET);
+            if (!urls?.mainnet) throw new Error("Mainnet URL is required");
+            const mainnetData = await httpClient.get(urls.mainnet);
             mainnetNetworks = processNetworkData(
-                mainnetData as Record<string, NetworkDetail>,
+                mainnetData as Record<string, V2Network>,
                 false,
                 logger,
             );
         } else if (networkMode === "testnet") {
-            const testnetData = await httpClient.get(globalConfig.URLS.V2_NETWORKS.TESTNET);
+            if (!urls?.testnet) throw new Error("Testnet URL is required");
+            const testnetData = await httpClient.get(urls.testnet);
             testnetNetworks = processNetworkData(
-                testnetData as Record<string, NetworkDetail>,
+                testnetData as Record<string, V2Network>,
                 true,
                 logger,
             );
@@ -75,7 +77,7 @@ export async function fetchNetworkConfigs(
 }
 
 function processNetworkData(
-    networkData: Record<string, NetworkDetail>,
+    networkData: Record<string, V2Network>,
     isTestnet: boolean,
     logger: ReturnType<typeof Logger.prototype.getLogger>,
 ): Record<string, ProcessedNetwork> {
