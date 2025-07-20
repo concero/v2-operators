@@ -4,11 +4,9 @@ import { v4 as uuidv4 } from "uuid";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxWriterConfig } from "../../types/ManagerConfigs";
+import { INetworkManager, IViemClientManager } from "../../types/managers";
 import { ITxWriter, ManagedTx, TxSubmissionParams } from "../../types/managers/ITxWriter";
 import { callContract, LoggerInterface } from "../utils";
-
-import { NetworkManager } from "./NetworkManager";
-import { ViemClientManager } from "./ViemClientManager";
 
 enum TxType {
     DEFAULT = "default",
@@ -35,15 +33,15 @@ export class TxWriter implements ITxWriter {
         [TxType.ADMIN, new Set()],
     ]);
 
-    private networkManager: NetworkManager;
-    private viemClientManager: ViemClientManager;
+    private networkManager: INetworkManager;
+    private viemClientManager: IViemClientManager;
     private logger: LoggerInterface;
     private config: TxWriterConfig;
 
     private constructor(
         logger: LoggerInterface,
-        networkManager: NetworkManager,
-        viemClientManager: ViemClientManager,
+        networkManager: INetworkManager,
+        viemClientManager: IViemClientManager,
         config: TxWriterConfig,
     ) {
         this.networkManager = networkManager;
@@ -54,8 +52,8 @@ export class TxWriter implements ITxWriter {
 
     public static createInstance(
         logger: LoggerInterface,
-        networkManager: NetworkManager,
-        viemClientManager: ViemClientManager,
+        networkManager: INetworkManager,
+        viemClientManager: IViemClientManager,
         config: TxWriterConfig,
     ): TxWriter {
         TxWriter.instance = new TxWriter(logger, networkManager, viemClientManager, config);

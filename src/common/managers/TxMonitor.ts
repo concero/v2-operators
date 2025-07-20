@@ -1,10 +1,8 @@
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxMonitorConfig } from "../../types/ManagerConfigs";
-import { ITxMonitor, MonitoredTransaction } from "../../types/managers";
+import { ITxMonitor, IViemClientManager, MonitoredTransaction } from "../../types/managers";
 import { ManagedTx } from "../../types/managers/ITxWriter";
 import { LoggerInterface } from "../utils";
-
-import { ViemClientManager } from "./ViemClientManager";
 
 enum TransactionStatus {
     Pending = "pending",
@@ -18,7 +16,7 @@ enum TransactionStatus {
 export class TxMonitor implements ITxMonitor {
     private static instance: TxMonitor | undefined;
     private transactions: Map<string, MonitoredTransaction> = new Map();
-    private viemClientManager: ViemClientManager;
+    private viemClientManager: IViemClientManager;
     private disposed: boolean = false;
     private txFinalityCallback: (txHash: string, chainName: string) => void;
     private txReorgCallback: (txHash: string, chainName: string) => Promise<string | null>;
@@ -26,7 +24,7 @@ export class TxMonitor implements ITxMonitor {
 
     constructor(
         logger: LoggerInterface,
-        viemClientManager: ViemClientManager,
+        viemClientManager: IViemClientManager,
         txFinalityCallback: (txHash: string, chainName: string) => void,
         txReorgCallback: (txHash: string, chainName: string) => Promise<string | null>,
         config: TxMonitorConfig,
@@ -40,7 +38,7 @@ export class TxMonitor implements ITxMonitor {
 
     public static createInstance(
         logger: LoggerInterface,
-        viemClientManager: ViemClientManager,
+        viemClientManager: IViemClientManager,
         txFinalityCallback: (txHash: string, chainName: string) => void,
         txReorgCallback: (txHash: string, chainName: string) => Promise<string | null>,
         config: TxMonitorConfig,

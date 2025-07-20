@@ -2,15 +2,18 @@ import { PublicClient } from "viem";
 
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { BlockManagerRegistryConfig } from "../../types/ManagerConfigs";
-import { IBlockManagerRegistry, NetworkUpdateListener } from "../../types/managers/";
+import {
+    IBlockCheckpointManager,
+    IBlockManagerRegistry,
+    INetworkManager,
+    IRpcManager,
+    IViemClientManager,
+    NetworkUpdateListener,
+} from "../../types/managers/";
 import { LoggerInterface } from "../utils/";
 
-import { IBlockCheckpointManager } from "../../types/managers";
 import { BlockManager } from "./BlockManager";
 import { ManagerBase } from "./ManagerBase";
-import { NetworkManager } from "./NetworkManager";
-import { RpcManager } from "./RpcManager";
-import { ViemClientManager } from "./ViemClientManager";
 
 export class BlockManagerRegistry
     extends ManagerBase
@@ -19,18 +22,18 @@ export class BlockManagerRegistry
     private static instance: BlockManagerRegistry;
     private blockManagers: Map<string, BlockManager> = new Map();
     private blockCheckpointManager: IBlockCheckpointManager;
-    private networkManager: NetworkManager;
-    private viemClientManager: ViemClientManager;
-    private rpcManager: RpcManager;
+    private networkManager: INetworkManager;
+    private viemClientManager: IViemClientManager;
+    private rpcManager: IRpcManager;
     private logger: LoggerInterface;
     private config: BlockManagerRegistryConfig;
 
     private constructor(
         logger: LoggerInterface,
         blockCheckpointManager: IBlockCheckpointManager,
-        networkManager: NetworkManager,
-        viemClientManager: ViemClientManager,
-        rpcManager: RpcManager,
+        networkManager: INetworkManager,
+        viemClientManager: IViemClientManager,
+        rpcManager: IRpcManager,
         config: BlockManagerRegistryConfig,
     ) {
         super();
@@ -107,9 +110,9 @@ export class BlockManagerRegistry
     public static createInstance(
         logger: LoggerInterface,
         blockCheckpointManager: IBlockCheckpointManager,
-        networkManager: NetworkManager,
-        viemClientManager: ViemClientManager,
-        rpcManager: RpcManager,
+        networkManager: INetworkManager,
+        viemClientManager: IViemClientManager,
+        rpcManager: IRpcManager,
         config: BlockManagerRegistryConfig,
     ): BlockManagerRegistry {
         BlockManagerRegistry.instance = new BlockManagerRegistry(
@@ -176,7 +179,7 @@ export class BlockManagerRegistry
         }
 
         this.logger.warn(`BlockManager for ${networkName} not found`);
-        return null;
+        return undefined;
     }
 
     public getAllBlockManagers(): BlockManager[] {
