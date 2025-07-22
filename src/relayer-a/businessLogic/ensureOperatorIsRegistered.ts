@@ -1,10 +1,6 @@
-import {
-    DeploymentManager,
-    Logger,
-    NetworkManager,
-    ViemClientManager,
-} from "@concero/operator-utils";
+import { Logger, NetworkManager, ViemClientManager } from "@concero/operator-utils";
 import { Hash, isHex, Log, PublicClient, WalletClient, type Address } from "viem";
+import { MessagingDeploymentManager } from "../../common/managers";
 import { callContract } from "../../common/utils";
 
 import { getAbiItem } from "viem";
@@ -33,7 +29,7 @@ const OperatorRegistrationAction = {
 async function isOperatorRegistered(
     publicClient: PublicClient,
     networkManager: NetworkManager,
-    deploymentManager: DeploymentManager,
+    deploymentManager: MessagingDeploymentManager,
 ): Promise<boolean> {
     const conceroVerifierNetwork = networkManager.getVerifierNetwork();
 
@@ -62,7 +58,7 @@ async function requestOperatorRegistration(
     walletClient: WalletClient,
     account: any,
     networkManager: NetworkManager,
-    deploymentManager: DeploymentManager,
+    deploymentManager: MessagingDeploymentManager,
 ): Promise<`0x${string}`> {
     const conceroVerifierNetwork = networkManager.getVerifierNetwork();
     const chainTypes = [BigInt(ChainType.EVM)];
@@ -198,7 +194,7 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
     const logger = Logger.getInstance().getLogger("ensureOperatorIsRegistered");
     const viemClientManager = ViemClientManager.getInstance();
     const networkManager = NetworkManager.getInstance();
-    const deploymentManager = DeploymentManager.getInstance();
+    const deploymentManager = MessagingDeploymentManager.getInstance();
 
     const verifierNetwork = networkManager.getVerifierNetwork();
     const { publicClient, walletClient, account } = viemClientManager.getClients(verifierNetwork);

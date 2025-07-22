@@ -1,6 +1,5 @@
 import {
     BlockManagerRegistry,
-    DeploymentManager,
     HttpClient,
     Logger,
     NetworkManager,
@@ -9,7 +8,14 @@ import {
     ViemClientManager,
 } from "@concero/operator-utils";
 import { globalConfig } from "../../constants";
-import { BlockCheckpointManager, TxManager, TxMonitor, TxReader, TxWriter } from "../managers";
+import {
+    BlockCheckpointManager,
+    MessagingDeploymentManager,
+    TxManager,
+    TxMonitor,
+    TxReader,
+    TxWriter,
+} from "../managers";
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
@@ -46,13 +52,7 @@ export async function initializeManagers(): Promise<void> {
             fallbackTransportOptions: globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
         },
     );
-    const deploymentManager = DeploymentManager.createInstance(
-        logger.getLogger("DeploymentManager"),
-        {
-            conceroDeploymentsUrl: globalConfig.URLS.CONCERO_DEPLOYMENTS,
-            networkMode: globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
-        },
-    );
+
     const networkManager = NetworkManager.createInstance(
         logger.getLogger("NetworkManager"),
         httpClient,
@@ -88,16 +88,26 @@ export async function initializeManagers(): Promise<void> {
         },
     );
 
+    const messagingDeploymentManager = MessagingDeploymentManager.createInstance(
+        logger.getLogger("MessagingDeploymentManager"),
+        {
+            conceroDeploymentsUrl: globalConfig.URLS.CONCERO_DEPLOYMENTS,
+            networkMode: globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
+        },
+    );
+
     await networkManager.initialize();
     await rpcManager.initialize();
     await viemClientManager.initialize();
-    await deploymentManager.initialize();
+
+    await messagingDeploymentManager.initialize();
     await blockCheckpointManager.initialize();
     await blockManagerRegistry.initialize();
 
     // Register network update listeners after all managers are initialized
     networkManager.registerUpdateListener(rpcManager);
-    networkManager.registerUpdateListener(deploymentManager);
+
+    networkManager.registerUpdateListener(messagingDeploymentManager);
     networkManager.registerUpdateListener(viemClientManager);
     networkManager.registerUpdateListener(blockManagerRegistry);
 
@@ -117,7 +127,6 @@ export async function initializeManagers(): Promise<void> {
         logger.getLogger("TxReader"),
         networkManager,
         viemClientManager,
-        blockManagerRegistry,
         {},
     );
 
@@ -136,7 +145,6 @@ export async function initializeManagers(): Promise<void> {
         logger.getLogger("TxManager"),
         networkManager,
         viemClientManager,
-        blockManagerRegistry,
         txWriter,
         txReader,
         txMonitor,

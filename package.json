@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@concero/contract-utils": "github:concero/contract-utils",
-    "@concero/operator-utils": "github:concero/operator-utils",
+    "@concero/operator-utils": "github:concero/operator-utils#feature/new-managers",
     "@prisma/client": "5.12.0",
     "@slack/web-api": "7.9.1",
     "@types/jest": "29.5.14",

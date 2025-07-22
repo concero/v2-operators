@@ -1,11 +1,7 @@
 import { Hash, PublicClient } from "viem";
 
-import {
-    DeploymentManager,
-    Logger,
-    NetworkManager,
-    ViemClientManager,
-} from "@concero/operator-utils";
+import { Logger, NetworkManager, ViemClientManager } from "@concero/operator-utils";
+import { MessagingDeploymentManager } from "../../common/managers";
 import { callContract } from "../../common/utils";
 
 import { globalConfig } from "../../constants";
@@ -49,7 +45,7 @@ async function fetchDepositAndDepositIfNeeded() {
 
     const networkManager = NetworkManager.getInstance();
     const viemClientManager = ViemClientManager.getInstance();
-    const deploymentManager = DeploymentManager.getInstance();
+    const deploymentManager = MessagingDeploymentManager.getInstance();
 
     const verifierNetwork = networkManager.getVerifierNetwork();
     const verifierAddress = await deploymentManager.getConceroVerifier();

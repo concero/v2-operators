@@ -2,13 +2,12 @@ import { Log, decodeAbiParameters, getAbiItem } from "viem";
 
 import {
     BlockManagerRegistry,
-    DeploymentManager,
     Logger,
     NetworkManager,
     ViemClientManager,
 } from "@concero/operator-utils";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
-import { TxManager } from "../../common/managers";
+import { MessagingDeploymentManager, TxManager } from "../../common/managers";
 import { decodeCLFReport, decodeMessageReportResult } from "../../common/utils";
 import { DecodedMessageReportResult } from "../../common/utils/decoders/types";
 
@@ -59,7 +58,7 @@ async function fetchOriginalMessage(
     result: DecodedMessageReportResult,
     activeNetworkNames: string[],
     networkManager: NetworkManager,
-    deploymentManager: DeploymentManager,
+    deploymentManager: MessagingDeploymentManager,
     blockManagerRegistry: BlockManagerRegistry,
     txManager: TxManager,
     logger: any,
@@ -129,7 +128,7 @@ async function submitBatchToDestination(
     results: DecodedMessageReportResult[],
     totalGasLimit: bigint,
     viemClientManager: ViemClientManager,
-    deploymentManager: DeploymentManager,
+    deploymentManager: MessagingDeploymentManager,
     txManager: TxManager,
     logger: any,
 ) {
@@ -196,7 +195,7 @@ async function processMessageReports(logs: DecodedLog[]) {
     const networkManager = NetworkManager.getInstance();
     const blockManagerRegistry = BlockManagerRegistry.getInstance();
     const viemClientManager = ViemClientManager.getInstance();
-    const deploymentManager = DeploymentManager.getInstance();
+    const deploymentManager = MessagingDeploymentManager.getInstance();
     const txManager = TxManager.getInstance();
 
     const activeNetworks = networkManager.getActiveNetworks();

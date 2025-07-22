@@ -1,4 +1,5 @@
 import {
+    Abi,
     AbiEvent,
     Address,
     Log,
@@ -32,9 +33,23 @@ export interface ITxManager {
     logWatcher: {
         create(
             contractAddress: Address,
-            chainName: string,
+            network: ConceroNetwork,
             onLogs: (logs: Log[], network: ConceroNetwork) => Promise<void>,
-            event?: AbiEvent,
+            event: AbiEvent,
+            blockManager: any,
+        ): string;
+        remove(watcherId: string): boolean;
+    };
+
+    readContractWatcher: {
+        create(
+            contractAddress: Address,
+            network: ConceroNetwork,
+            functionName: string,
+            abi: Abi,
+            callback: (result: any, network: ConceroNetwork) => Promise<void>,
+            intervalMs?: number,
+            args?: any[],
         ): string;
         remove(watcherId: string): boolean;
     };

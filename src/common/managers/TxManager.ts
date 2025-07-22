@@ -1,4 +1,5 @@
 import {
+    Abi,
     AbiEvent,
     Address,
     Log,
@@ -7,18 +8,12 @@ import {
     WalletClient,
 } from "viem";
 
+import { LoggerInterface } from "@concero/operator-utils";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxManagerConfig } from "../../types/ManagerConfigs";
-import {
-    IBlockManagerRegistry,
-    INetworkManager,
-    ITxManager,
-    ITxMonitor,
-    IViemClientManager,
-} from "../../types/managers";
+import { INetworkManager, ITxManager, ITxMonitor, IViemClientManager } from "../../types/managers";
 import { ITxReader, LogQuery } from "../../types/managers/ITxReader";
 import { ITxWriter, ManagedTx } from "../../types/managers/ITxWriter";
-import { LoggerInterface } from "../utils/";
 
 import { ManagerBase } from "./ManagerBase";
 
@@ -31,7 +26,6 @@ export class TxManager extends ManagerBase implements ITxManager {
     private readonly txMonitor: ITxMonitor;
     private readonly networkManager: INetworkManager;
     private readonly viemClientManager: IViemClientManager;
-    private readonly blockManagerRegistry: IBlockManagerRegistry;
     private logger: LoggerInterface;
     private config: TxManagerConfig;
 
@@ -39,7 +33,6 @@ export class TxManager extends ManagerBase implements ITxManager {
         logger: LoggerInterface,
         networkManager: INetworkManager,
         viemClientManager: IViemClientManager,
-        blockManagerRegistry: IBlockManagerRegistry,
         txWriter: ITxWriter,
         txReader: ITxReader,
         txMonitor: ITxMonitor,
@@ -49,7 +42,6 @@ export class TxManager extends ManagerBase implements ITxManager {
         this.logger = logger;
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
-        this.blockManagerRegistry = blockManagerRegistry;
         this.txWriter = txWriter;
         this.txReader = txReader;
         this.txMonitor = txMonitor;
@@ -60,7 +52,6 @@ export class TxManager extends ManagerBase implements ITxManager {
         logger: LoggerInterface,
         networkManager: INetworkManager,
         viemClientManager: IViemClientManager,
-        blockManagerRegistry: IBlockManagerRegistry,
         txWriter: ITxWriter,
         txReader: ITxReader,
         txMonitor: ITxMonitor,
@@ -71,7 +62,6 @@ export class TxManager extends ManagerBase implements ITxManager {
                 logger,
                 networkManager,
                 viemClientManager,
-                blockManagerRegistry,
                 txWriter,
                 txReader,
                 txMonitor,
@@ -128,14 +118,46 @@ export class TxManager extends ManagerBase implements ITxManager {
     public logWatcher = {
         create: (
             contractAddress: Address,
-            chainName: string,
+            network: ConceroNetwork,
             onLogs: (logs: Log[], network: ConceroNetwork) => Promise<void>,
             event: AbiEvent,
+            blockManager: any,
         ): string => {
-            return this.txReader.logWatcher.create(contractAddress, chainName, onLogs, event);
+            return this.txReader.logWatcher.create(
+                contractAddress,
+                network,
+                onLogs,
+                event,
+                blockManager,
+            );
         },
         remove: (watcherId: string): boolean => {
             return this.txReader.logWatcher.remove(watcherId);
+        },
+    };
+
+    public readContractWatcher = {
+        create: (
+            contractAddress: Address,
+            network: ConceroNetwork,
+            functionName: string,
+            abi: Abi,
+            callback: (result: any, network: ConceroNetwork) => Promise<void>,
+            intervalMs?: number,
+            args?: any[],
+        ): string => {
+            return this.txReader.readContractWatcher.create(
+                contractAddress,
+                network,
+                functionName,
+                abi,
+                callback,
+                intervalMs,
+                args,
+            );
+        },
+        remove: (watcherId: string): boolean => {
+            return this.txReader.readContractWatcher.remove(watcherId);
         },
     };
 

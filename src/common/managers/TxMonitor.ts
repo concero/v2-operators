@@ -1,8 +1,8 @@
+import { LoggerInterface } from "@concero/operator-utils";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxMonitorConfig } from "../../types/ManagerConfigs";
 import { ITxMonitor, IViemClientManager, MonitoredTransaction } from "../../types/managers";
 import { ManagedTx } from "../../types/managers/ITxWriter";
-import { LoggerInterface } from "../utils";
 
 enum TransactionStatus {
     Pending = "pending",

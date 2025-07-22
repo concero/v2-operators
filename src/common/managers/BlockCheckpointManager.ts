@@ -1,7 +1,7 @@
+import { LoggerInterface } from "@concero/operator-utils";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { BlockCheckpointManagerConfig } from "../../types/ManagerConfigs";
 import { IBlockCheckpointManager } from "../../types/managers/";
-import { LoggerInterface } from "../utils/";
 
 import { DbManager } from "./DbManager";
 import { ManagerBase } from "./ManagerBase";

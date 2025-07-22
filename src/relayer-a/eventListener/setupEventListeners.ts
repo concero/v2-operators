@@ -1,7 +1,8 @@
 import { AbiEvent, getAbiItem } from "viem";
 
-import { DeploymentManager, Logger, NetworkManager } from "@concero/operator-utils";
+import { BlockManagerRegistry, Logger, NetworkManager } from "@concero/operator-utils";
 import { setupEventListener } from "../../common/eventListener/setupEventListener";
+import { MessagingDeploymentManager } from "../../common/managers";
 
 import { globalConfig } from "../../constants";
 
@@ -17,7 +18,8 @@ import { submitCLFMessageReport } from "../businessLogic/submitCLFMessageReport"
 export async function setupEventListeners() {
     const logger = Logger.getInstance().getLogger("setupEventListeners");
     const networkManager = NetworkManager.getInstance();
-    const deploymentManager = DeploymentManager.getInstance();
+    const deploymentManager = MessagingDeploymentManager.getInstance();
+    const blockManagerRegistry = BlockManagerRegistry.getInstance();
 
     const activeNetworks = networkManager.getActiveNetworks();
 
@@ -26,6 +28,12 @@ export async function setupEventListeners() {
     // Set up Router event listeners for each active network
     for (const network of activeNetworks) {
         const routerAddress = await deploymentManager.getRouterByChainName(network.name);
+        const blockManager = blockManagerRegistry.getBlockManager(network.name);
+
+        if (!blockManager) {
+            logger.warn(`No block manager available for ${network.name}, skipping event setup`);
+            continue;
+        }
 
         try {
             // Create event watchers for ConceroMessageSent event
@@ -39,6 +47,7 @@ export async function setupEventListeners() {
                 routerAddress,
                 requestCLFMessageReport,
                 sentEvent as AbiEvent,
+                blockManager,
             );
             eventListenerHandles.push(sentHandle);
             // logger.info(`[setupEventListeners] Created ConceroMessageSent watcher for ${network.name}`);
@@ -64,6 +73,12 @@ export async function setupEventListeners() {
 
     // Set up Verifier event listeners
     const verifierNetwork = networkManager.getVerifierNetwork();
+    const verifierBlockManager = blockManagerRegistry.getBlockManager(verifierNetwork.name);
+
+    if (!verifierBlockManager) {
+        logger.error(`No block manager available for verifier network ${verifierNetwork.name}`);
+        return;
+    }
 
     const verifierAddress = await deploymentManager.getConceroVerifier();
 
@@ -94,6 +109,7 @@ export async function setupEventListeners() {
             verifierAddress,
             submitCLFMessageReport,
             messageReportEvent as AbiEvent,
+            verifierBlockManager,
         );
         eventListenerHandles.push(messageReportHandle);
     } catch (error) {

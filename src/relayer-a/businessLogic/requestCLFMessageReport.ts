@@ -1,13 +1,8 @@
 import { Log, PublicClient, WalletClient, encodeAbiParameters, keccak256 } from "viem";
 
-import {
-    DeploymentManager,
-    Logger,
-    NetworkManager,
-    ViemClientManager,
-} from "@concero/operator-utils";
+import { Logger, NetworkManager, ViemClientManager } from "@concero/operator-utils";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
-import { TxManager } from "../../common/managers";
+import { MessagingDeploymentManager, TxManager } from "../../common/managers";
 
 import { eventEmitter, globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
@@ -23,7 +18,7 @@ export async function requestCLFMessageReport(logs: Log[], network: ConceroNetwo
 
     const networkManager = NetworkManager.getInstance();
     const verifierNetwork = networkManager.getVerifierNetwork();
-    const verifierAddress = await DeploymentManager.getInstance().getConceroVerifier();
+    const verifierAddress = await MessagingDeploymentManager.getInstance().getConceroVerifier();
     const { publicClient, walletClient } =
         ViemClientManager.getInstance().getClients(verifierNetwork);
 

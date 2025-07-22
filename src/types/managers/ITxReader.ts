@@ -1,4 +1,4 @@
-import { AbiEvent, Address, Log } from "viem";
+import { Abi, AbiEvent, Address, Log } from "viem";
 
 import { ConceroNetwork } from "../ConceroNetwork";
 
@@ -12,10 +12,23 @@ export interface LogQuery {
 
 export interface LogWatcher {
     id: string;
-    chainName: string;
+    network: ConceroNetwork;
     contractAddress: Address;
     event?: AbiEvent;
     callback: (logs: Log[], network: ConceroNetwork) => Promise<void>;
+    blockManager: any;
+    unwatch: () => void;
+}
+
+export interface ReadContractWatcher {
+    id: string;
+    network: ConceroNetwork;
+    contractAddress: Address;
+    functionName: string;
+    abi: Abi;
+    args?: any[];
+    intervalMs: number;
+    callback: (result: any, network: ConceroNetwork) => Promise<void>;
 }
 
 export interface ITxReader {
@@ -24,14 +37,26 @@ export interface ITxReader {
     logWatcher: {
         create(
             contractAddress: Address,
-            chainName: string,
+            network: ConceroNetwork,
             onLogs: (logs: Log[], network: ConceroNetwork) => Promise<void>,
             event: AbiEvent,
+            blockManager: any,
         ): string;
         remove(watcherId: string): boolean;
     };
 
-    fetchLogsForWatchers(chainName: string, fromBlock: bigint, toBlock: bigint): Promise<void>;
+    readContractWatcher: {
+        create(
+            contractAddress: Address,
+            network: ConceroNetwork,
+            functionName: string,
+            abi: Abi,
+            callback: (result: any, network: ConceroNetwork) => Promise<void>,
+            intervalMs?: number,
+            args?: any[],
+        ): string;
+        remove(watcherId: string): boolean;
+    };
 
     initialize(): Promise<void>;
     dispose(): void;

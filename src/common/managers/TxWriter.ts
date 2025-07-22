@@ -123,13 +123,6 @@ export class TxWriter implements ITxWriter {
         return managedTx;
     }
 
-    private updateTxStatus(managedTx: ManagedTx, status: string, blockNumber?: bigint): void {
-        managedTx.status = status;
-        if (blockNumber) {
-            managedTx.submissionBlock = blockNumber;
-        }
-    }
-
     private async determineTxType(
         params: SimulateContractParameters | TxSubmissionParams,
     ): Promise<TxType> {

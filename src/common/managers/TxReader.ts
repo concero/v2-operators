@@ -1,54 +1,44 @@
-import { AbiEvent, Address, Log } from "viem";
-
 import { v4 as uuidv4 } from "uuid";
+import { Abi, AbiEvent, Address, Log } from "viem";
 
+import { LoggerInterface } from "@concero/operator-utils";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxReaderConfig } from "../../types/ManagerConfigs";
-import { IBlockManagerRegistry, INetworkManager, IViemClientManager } from "../../types/managers";
-import { ITxReader, LogQuery, LogWatcher } from "../../types/managers/ITxReader";
-import { LoggerInterface } from "../utils";
+import { INetworkManager, IViemClientManager } from "../../types/managers";
+import {
+    ITxReader,
+    LogQuery,
+    LogWatcher,
+    ReadContractWatcher,
+} from "../../types/managers/ITxReader";
 
-// Handles all log-reading operations for all networks
 export class TxReader implements ITxReader {
     private static instance: TxReader | undefined;
-    public logWatchers: Map<string, LogWatcher> = new Map();
-    private cachedLogs: Map<string, Map<string, Log>> = new Map();
-    private blockManagerUnwatchers: Map<string, () => void> = new Map();
+    private logWatchers: Map<string, LogWatcher> = new Map();
+    private readContractWatchers: Map<string, ReadContractWatcher> = new Map();
+    private readContractIntervals: Map<string, NodeJS.Timeout> = new Map();
     private logger: LoggerInterface;
-    private config: TxReaderConfig;
-
     private networkManager: INetworkManager;
     private viemClientManager: IViemClientManager;
-    private blockManagerRegistry: IBlockManagerRegistry;
 
     private constructor(
         logger: LoggerInterface,
         networkManager: INetworkManager,
         viemClientManager: IViemClientManager,
-        blockManagerRegistry: IBlockManagerRegistry,
         config: TxReaderConfig,
     ) {
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
-        this.blockManagerRegistry = blockManagerRegistry;
         this.logger = logger;
-        this.config = config;
     }
 
     public static createInstance(
         logger: LoggerInterface,
         networkManager: INetworkManager,
         viemClientManager: IViemClientManager,
-        blockManagerRegistry: IBlockManagerRegistry,
         config: TxReaderConfig,
     ): TxReader {
-        TxReader.instance = new TxReader(
-            logger,
-            networkManager,
-            viemClientManager,
-            blockManagerRegistry,
-            config,
-        );
+        TxReader.instance = new TxReader(logger, networkManager, viemClientManager, config);
         return TxReader.instance;
     }
 
@@ -60,188 +50,163 @@ export class TxReader implements ITxReader {
     }
 
     public async initialize(): Promise<void> {
-        await this.subscribeToBlockUpdates();
         this.logger.info("Initialized");
-    }
-
-    private async subscribeToBlockUpdates(): Promise<void> {
-        const activeNetworks = this.networkManager.getActiveNetworks();
-
-        for (const network of activeNetworks) {
-            const blockManager = this.blockManagerRegistry.getBlockManager(network.name);
-
-            if (!blockManager) {
-                continue;
-            }
-
-            const unwatcher = blockManager.watchBlocks({
-                onBlockRange: async (startBlock: bigint, endBlock: bigint) => {
-                    await this.fetchLogsForWatchers(network.name, startBlock, endBlock);
-                },
-            });
-
-            this.blockManagerUnwatchers.set(network.name, unwatcher);
-        }
     }
 
     public logWatcher = {
         create: (
             contractAddress: Address,
-            chainName: string,
+            network: ConceroNetwork,
             onLogs: (logs: Log[], network: ConceroNetwork) => Promise<void>,
             event: AbiEvent,
+            blockManager: any,
         ): string => {
             const id = uuidv4();
-            const watcher = {
+
+            // Set up block watching for this specific watcher
+            const unwatcher = blockManager.watchBlocks({
+                onBlockRange: async (startBlock: bigint, endBlock: bigint) => {
+                    await this.fetchLogsForWatcher(id, startBlock, endBlock);
+                },
+            });
+
+            const watcher: LogWatcher = {
                 id,
-                chainName,
+                network,
                 contractAddress,
                 event,
                 callback: onLogs,
+                blockManager,
+                unwatch: unwatcher,
             };
 
             this.logWatchers.set(id, watcher);
             this.logger.debug(
-                `Created log watcher for ${chainName}:${contractAddress} (${event.name})`,
+                `Created log watcher for ${network.name}:${contractAddress} (${event.name})`,
             );
             return id;
         },
         remove: (watcherId: string): boolean => {
-            const result = this.logWatchers.delete(watcherId);
-            if (result) {
-                this.logger.info(`Removed log watcher ${watcherId}`);
-            } else {
+            const watcher = this.logWatchers.get(watcherId);
+            if (!watcher) {
                 this.logger.warn(`Failed to remove log watcher ${watcherId} (not found)`);
+                return false;
             }
-            return result;
+
+            watcher.unwatch();
+            this.logWatchers.delete(watcherId);
+            this.logger.info(`Removed log watcher ${watcherId}`);
+            return true;
         },
     };
 
-    public async fetchLogsForWatchers(
-        chainName: string,
+    public readContractWatcher = {
+        create: (
+            contractAddress: Address,
+            network: ConceroNetwork,
+            functionName: string,
+            abi: Abi,
+            callback: (result: any, network: ConceroNetwork) => Promise<void>,
+            intervalMs: number = 10000,
+            args?: any[],
+        ): string => {
+            const id = uuidv4();
+            const watcher: ReadContractWatcher = {
+                id,
+                network,
+                contractAddress,
+                functionName,
+                abi,
+                args,
+                intervalMs,
+                callback,
+            };
+
+            this.readContractWatchers.set(id, watcher);
+
+            // Start the interval
+            const interval = setInterval(async () => {
+                await this.executeReadContract(watcher);
+            }, intervalMs);
+
+            this.readContractIntervals.set(id, interval);
+
+            // Execute immediately
+            this.executeReadContract(watcher).catch(error => {
+                this.logger.error(`Error in initial read contract execution (ID: ${id}):`, error);
+            });
+
+            this.logger.debug(
+                `Created read contract watcher for ${network.name}:${contractAddress}.${functionName}`,
+            );
+            return id;
+        },
+        remove: (watcherId: string): boolean => {
+            const watcher = this.readContractWatchers.get(watcherId);
+            if (!watcher) {
+                this.logger.warn(`Failed to remove read contract watcher ${watcherId} (not found)`);
+                return false;
+            }
+
+            const interval = this.readContractIntervals.get(watcherId);
+            if (interval) {
+                clearInterval(interval);
+                this.readContractIntervals.delete(watcherId);
+            }
+
+            this.readContractWatchers.delete(watcherId);
+            this.logger.info(`Removed read contract watcher ${watcherId}`);
+            return true;
+        },
+    };
+
+    private async fetchLogsForWatcher(
+        watcherId: string,
         fromBlock: bigint,
         toBlock: bigint,
     ): Promise<void> {
-        this.logger.debug(`fetching logs for blocks ${fromBlock} - ${toBlock}`);
-        const watchersForChain = Array.from(this.logWatchers.values()).filter(
-            watcher => watcher.chainName === chainName,
-        );
+        const watcher = this.logWatchers.get(watcherId);
+        if (!watcher) return;
 
-        if (watchersForChain.length === 0) return;
-
-        const network = this.networkManager.getNetworkByName(chainName);
-        if (!network) {
-            this.logger.warn(`Unknown network: ${chainName}`);
-            return;
-        }
-
-        // Initialize cache for this chain if it doesn't exist
-        if (!this.cachedLogs.has(chainName)) {
-            this.cachedLogs.set(chainName, new Map<string, Log>());
-        }
-        const chainCache = this.cachedLogs.get(chainName)!;
-
-        const watchersByContract = this.groupWatchersByContract(watchersForChain);
-
-        for (const [contractAddress, contractWatchers] of watchersByContract) {
-            try {
-                const events = contractWatchers
-                    .map(w => w.event)
-                    .filter((event): event is AbiEvent => event !== undefined);
-                const logs = await this.getContractLogs(
-                    contractAddress,
-                    fromBlock,
-                    toBlock,
-                    events,
-                    network,
-                );
-
-                // Group logs by event name to process them in batches
-                const logsByEvent = new Map<string, Log[]>();
-
-                for (const log of logs) {
-                    const eventName = (log as any).eventName || "";
-                    const logId = `${log.transactionHash}:${log.logIndex}`;
-
-                    // Skip logs we've already seen
-                    if (chainCache.has(logId)) continue;
-                    chainCache.set(logId, log);
-
-                    const existingLogs = logsByEvent.get(eventName) || [];
-                    existingLogs.push(log);
-                    logsByEvent.set(eventName, existingLogs);
-                }
-
-                // Process logs for each watcher
-                for (const watcher of contractWatchers) {
-                    const eventName = watcher.event?.name || "";
-                    const watcherLogs = logsByEvent.get(eventName) || [];
-
-                    if (watcherLogs.length > 0) {
-                        // it's an experiment. roll it back if fails
-                        watcher.callback(watcherLogs, network).catch(error => {
-                            this.logger.error(
-                                `Error in watcher callback (ID: ${watcher.id}):`,
-                                error,
-                            );
-                        });
-
-                        // try {
-                        //     await watcher.callback(watcherLogs, network);
-                        // } catch (error) {
-                        //     this.logger.error(
-                        //         `Error in watcher callback (ID: ${watcher.id}):`,
-                        //         error,
-                        //     );
-                        // }
-                    }
-                }
-            } catch (error) {
-                this.logger.error(
-                    `Error fetching logs for ${contractAddress} on ${chainName}:`,
-                    error,
-                );
-            }
-        }
-    }
-
-    private groupWatchersByContract(watchers: LogWatcher[]): Map<Address, LogWatcher[]> {
-        const result = new Map<Address, LogWatcher[]>();
-
-        for (const watcher of watchers) {
-            const existing = result.get(watcher.contractAddress) || [];
-            existing.push(watcher);
-            result.set(watcher.contractAddress, existing);
-        }
-
-        return result;
-    }
-
-    private async getContractLogs(
-        contractAddress: Address,
-        fromBlock: bigint,
-        toBlock: bigint,
-        events: AbiEvent[],
-        network: ConceroNetwork,
-    ): Promise<Log[]> {
-        if (events.length === 0) return [];
-
-        const allLogs: Log[] = [];
-        for (const event of events) {
-            const eventLogs = await this.getLogs(
+        try {
+            const logs = await this.getLogs(
                 {
-                    address: contractAddress,
-                    event,
+                    address: watcher.contractAddress,
+                    event: watcher.event!,
                     fromBlock,
                     toBlock,
                 },
-                network,
+                watcher.network,
             );
 
-            allLogs.push(...eventLogs);
+            if (logs.length > 0) {
+                watcher.callback(logs, watcher.network).catch(error => {
+                    this.logger.error(`Error in watcher callback (ID: ${watcher.id}):`, error);
+                });
+            }
+        } catch (error) {
+            this.logger.error(
+                `Error fetching logs for ${watcher.contractAddress} on ${watcher.network.name}:`,
+                error,
+            );
         }
+    }
 
-        return allLogs;
+    private async executeReadContract(watcher: ReadContractWatcher): Promise<void> {
+        try {
+            const { publicClient } = this.viemClientManager.getClients(watcher.network);
+
+            const result = await publicClient.readContract({
+                address: watcher.contractAddress,
+                abi: watcher.abi,
+                functionName: watcher.functionName,
+                args: watcher.args,
+            });
+
+            await watcher.callback(result, watcher.network);
+        } catch (error) {
+            this.logger.error(`Error executing read contract (ID: ${watcher.id}):`, error);
+        }
     }
 
     public async getLogs(query: LogQuery, network: ConceroNetwork): Promise<Log[]> {
@@ -256,8 +221,6 @@ export class TxReader implements ITxReader {
             };
 
             const logs = await publicClient.getLogs(filter);
-
-            // console.log(query, logs);
             return logs;
         } catch (error) {
             this.logger.error(`Error fetching logs on ${network.name}:`, error);
@@ -266,14 +229,19 @@ export class TxReader implements ITxReader {
     }
 
     public dispose(): void {
-        for (const [networkName, unwatcher] of this.blockManagerUnwatchers.entries()) {
-            unwatcher();
-            this.logger.info(`Unsubscribed from block updates for ${networkName}`);
+        // Clean up all log watchers
+        for (const [watcherId, watcher] of this.logWatchers.entries()) {
+            watcher.unwatch();
         }
 
-        this.blockManagerUnwatchers.clear();
+        // Clean up all read contract intervals
+        for (const [watcherId, interval] of this.readContractIntervals.entries()) {
+            clearInterval(interval);
+        }
+
         this.logWatchers.clear();
-        this.cachedLogs.clear();
+        this.readContractWatchers.clear();
+        this.readContractIntervals.clear();
 
         this.logger.info("Disposed");
     }
