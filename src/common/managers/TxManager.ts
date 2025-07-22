@@ -13,7 +13,7 @@ import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxManagerConfig } from "../../types/ManagerConfigs";
 import { INetworkManager, ITxManager, ITxMonitor, IViemClientManager } from "../../types/managers";
 import { ITxReader, LogQuery } from "../../types/managers/ITxReader";
-import { ITxWriter, ManagedTx } from "../../types/managers/ITxWriter";
+import { ITxWriter } from "../../types/managers/ITxWriter";
 
 import { ManagerBase } from "./ManagerBase";
 
@@ -88,26 +88,27 @@ export class TxManager extends ManagerBase implements ITxManager {
         publicClient: PublicClient,
         network: ConceroNetwork,
         params: SimulateContractParameters,
-    ): Promise<ManagedTx> {
-        const managedTx = await this.txWriter.callContract(
+    ): Promise<string> {
+        const txHash = await this.txWriter.callContract(
             walletClient,
             publicClient,
             network,
             params,
         );
 
-        this.txMonitor.addTransaction(managedTx.txHash, managedTx);
+        // Transaction monitoring is now handled internally by TxWriter
 
-        return managedTx;
+        return txHash;
     }
 
-    // Transaction Monitoring Methods
+    // Transaction Monitoring Methods (Deprecated - handled internally by TxWriter/TxMonitor)
     public async onTxReorg(txHash: string, chainName: string): Promise<string | null> {
-        return this.txWriter.onTxReorg(txHash, chainName);
+        this.logger.warn("onTxReorg is deprecated - transactions are monitored automatically");
+        return null;
     }
 
     public onTxFinality(txHash: string, chainName: string): void {
-        this.txWriter.onTxFinality(txHash, chainName);
+        this.logger.warn("onTxFinality is deprecated - transactions are monitored automatically");
     }
 
     // Log Reading Methods
@@ -162,12 +163,18 @@ export class TxManager extends ManagerBase implements ITxManager {
     };
 
     // Transaction status methods
-    public getPendingTransactions(chainName?: string): ManagedTx[] {
-        return this.txWriter.getPendingTransactions(chainName);
+    public getPendingTransactions(chainName?: string): any[] {
+        // This method is no longer supported - use TxMonitor for transaction tracking
+        this.logger.warn(
+            "getPendingTransactions is deprecated - use TxMonitor for transaction tracking",
+        );
+        return [];
     }
 
-    public getTransactionsByMessageId(messageId: string): ManagedTx[] {
-        return this.txWriter.getTransactionsByMessageId(messageId);
+    public getTransactionsByMessageId(messageId: string): any[] {
+        // This method is no longer relevant for generic transaction management
+        this.logger.warn("getTransactionsByMessageId is deprecated in generic TxManager");
+        return [];
     }
 
     public dispose(): void {

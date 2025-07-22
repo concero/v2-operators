@@ -1,11 +1,22 @@
 import { ConceroNetwork } from "../ConceroNetwork";
 
-import { ManagedTx } from "./ITxWriter";
+export interface TransactionInfo {
+    id: string;
+    txHash: string;
+    chainName: string;
+    submittedAt: number;
+    submissionBlock: bigint | null;
+    status: string;
+    metadata?: {
+        functionName?: string;
+        contractAddress?: string;
+        [key: string]: any;
+    };
+}
 
 export interface MonitoredTransaction {
     txHash: string;
     chainName: string;
-    messageId?: string;
     blockNumber: bigint | null;
     firstSeen: number;
     lastChecked: number;
@@ -14,13 +25,16 @@ export interface MonitoredTransaction {
 }
 
 export interface ITxMonitor {
-    addTransaction(txHash: string, managedTx: ManagedTx): void;
+    watchTxFinality(
+        txInfo: TransactionInfo,
+        retryCallback: (failedTx: TransactionInfo) => Promise<TransactionInfo | null>,
+        finalityCallback: (finalizedTx: TransactionInfo) => void,
+    ): void;
     checkTransactionsInRange(
         network: ConceroNetwork,
         startBlock: bigint,
         endBlock: bigint,
     ): Promise<void>;
     getMonitoredTransactions(chainName?: string): MonitoredTransaction[];
-    getTransactionsByMessageId(): Map<string, MonitoredTransaction[]>;
     dispose(): void;
 }

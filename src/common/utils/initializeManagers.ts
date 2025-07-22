@@ -115,14 +115,11 @@ export async function initializeManagers(): Promise<void> {
     // This ensures each manager has the data it needs before the next one initializes
     await networkManager.triggerInitialUpdates();
 
-    const txWriter = TxWriter.createInstance(
-        logger.getLogger("TxWriter"),
-        networkManager,
-        viemClientManager,
-        {
-            dryRun: globalConfig.TX_MANAGER.DRY_RUN,
-        },
-    );
+    const txMonitor = TxMonitor.createInstance(logger.getLogger("TxMonitor"), viemClientManager, {
+        checkIntervalMs: 5000,
+        dropTimeoutMs: 60000,
+        retryDelayMs: 30000,
+    });
     const txReader = TxReader.createInstance(
         logger.getLogger("TxReader"),
         networkManager,
@@ -130,16 +127,12 @@ export async function initializeManagers(): Promise<void> {
         {},
     );
 
+    const txWriter = TxWriter.createInstance(logger.getLogger("TxWriter"), txMonitor, {
+        dryRun: globalConfig.TX_MANAGER.DRY_RUN,
+    });
+
     await txWriter.initialize();
     await txReader.initialize();
-
-    const txMonitor = TxMonitor.createInstance(
-        logger.getLogger("TxMonitor"),
-        viemClientManager,
-        (txHash, chainName) => txWriter.onTxFinality(txHash, chainName),
-        (txHash, chainName) => txWriter.onTxReorg(txHash, chainName),
-        {},
-    );
 
     const txManager = TxManager.createInstance(
         logger.getLogger("TxManager"),

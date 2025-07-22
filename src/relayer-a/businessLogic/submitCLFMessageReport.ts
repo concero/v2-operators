@@ -7,7 +7,7 @@ import {
     ViemClientManager,
 } from "@concero/operator-utils";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
-import { MessagingDeploymentManager, TxManager } from "../../common/managers";
+import { MessagingDeploymentManager, TxManager, TxWriter } from "../../common/managers";
 import { decodeCLFReport, decodeMessageReportResult } from "../../common/utils";
 import { DecodedMessageReportResult } from "../../common/utils/decoders/types";
 
@@ -129,7 +129,7 @@ async function submitBatchToDestination(
     totalGasLimit: bigint,
     viemClientManager: ViemClientManager,
     deploymentManager: MessagingDeploymentManager,
-    txManager: TxManager,
+    txWriter: TxWriter,
     logger: any,
 ) {
     if (globalConfig.TX_MANAGER.DRY_RUN) {
@@ -142,7 +142,7 @@ async function submitBatchToDestination(
     const dstConceroRouter = await deploymentManager.getRouterByChainName(dstChain.name);
     const { walletClient, publicClient } = viemClientManager.getClients(dstChain);
 
-    const managedTx = await txManager.callContract(walletClient, publicClient, dstChain, {
+    const txHash = await txWriter.callContract(walletClient, publicClient, dstChain, {
         address: dstConceroRouter,
         abi: globalConfig.ABI.CONCERO_ROUTER,
         functionName: "submitMessageReport",
@@ -156,9 +156,9 @@ async function submitBatchToDestination(
 
     const messageIds = results.map(result => result.messageId).join(", ");
 
-    if (managedTx && managedTx.txHash) {
+    if (txHash) {
         logger.info(
-            `[${dstChain.name}] CLF Report with ${messages.length} results submitted with hash: ${managedTx.txHash}`,
+            `[${dstChain.name}] CLF Report with ${messages.length} results submitted with hash: ${txHash}`,
         );
         logger.debug(`[${dstChain.name}] Message IDs in batch: ${messageIds}`);
     } else {
@@ -197,6 +197,7 @@ async function processMessageReports(logs: DecodedLog[]) {
     const viemClientManager = ViemClientManager.getInstance();
     const deploymentManager = MessagingDeploymentManager.getInstance();
     const txManager = TxManager.getInstance();
+    const txWriter = TxWriter.getInstance();
 
     const activeNetworks = networkManager.getActiveNetworks();
     const activeNetworkNames = activeNetworks.map(network => network.name);
@@ -316,7 +317,7 @@ async function processMessageReports(logs: DecodedLog[]) {
                                 totalGasLimit,
                                 viemClientManager,
                                 deploymentManager,
-                                txManager,
+                                txWriter,
                                 logger,
                             );
                         },

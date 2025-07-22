@@ -2,7 +2,7 @@ import { Log, PublicClient, WalletClient, encodeAbiParameters, keccak256 } from 
 
 import { Logger, NetworkManager, ViemClientManager } from "@concero/operator-utils";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
-import { MessagingDeploymentManager, TxManager } from "../../common/managers";
+import { MessagingDeploymentManager, TxWriter } from "../../common/managers";
 
 import { eventEmitter, globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
@@ -93,7 +93,7 @@ async function processMessageReportRequest(
             return;
         }
 
-        const managedTx = await TxManager.getInstance().callContract(
+        const txHash = await TxWriter.getInstance().callContract(
             walletClient,
             publicClient,
             verifierNetwork,
@@ -110,12 +110,12 @@ async function processMessageReportRequest(
             },
         );
 
-        if (managedTx && managedTx.txHash) {
+        if (txHash) {
             eventEmitter.emit("requestMessageReport", {
-                txHash: managedTx.txHash,
+                txHash: txHash,
             });
             logger.info(
-                `${verifierNetwork.name} CLF message report requested with hash: ${managedTx.txHash}`,
+                `${verifierNetwork.name} CLF message report requested with hash: ${txHash}`,
             );
         } else {
             logger.error(

@@ -11,7 +11,6 @@ import {
 import { ConceroNetwork } from "../ConceroNetwork";
 
 import { LogQuery } from "./ITxReader";
-import { ManagedTx } from "./ITxWriter";
 
 export interface ITxManager {
     initialize(): Promise<void>;
@@ -22,10 +21,12 @@ export interface ITxManager {
         publicClient: PublicClient,
         network: ConceroNetwork,
         params: SimulateContractParameters,
-    ): Promise<ManagedTx>;
+    ): Promise<string>;
 
-    // Transaction monitoring methods
+    // Transaction monitoring methods (deprecated - handled internally by TxMonitor)
+    /** @deprecated Transaction monitoring is now handled automatically by TxMonitor */
     onTxReorg(txHash: string, chainName: string): Promise<string | null>;
+    /** @deprecated Transaction monitoring is now handled automatically by TxMonitor */
     onTxFinality(txHash: string, chainName: string): void;
 
     // Log reading methods
@@ -55,8 +56,7 @@ export interface ITxManager {
     };
 
     // Transaction status methods
-    getPendingTransactions(chainName?: string): ManagedTx[];
-    getTransactionsByMessageId(messageId: string): ManagedTx[];
+    getPendingTransactions(chainName?: string): any[];
 
     dispose(): void;
 }
