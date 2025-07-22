@@ -13,3 +13,16 @@ model BlockCheckpoint {
   blockNumber BigInt
   timestamp   DateTime @default(now())
 }
+
+model FailedLogFetch {
+  id              Int      @id @default(autoincrement())
+  network         String
+  contractAddress String
+  fromBlock       BigInt
+  toBlock         BigInt
+  errorMessage    String
+  retryCount      Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  @@unique([network, contractAddress, fromBlock, toBlock])
+}

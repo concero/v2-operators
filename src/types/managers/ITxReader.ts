@@ -18,6 +18,12 @@ export interface LogWatcher {
     callback: (logs: Log[], network: ConceroNetwork) => Promise<void>;
 }
 
+export interface FailedBlockRange {
+    fromBlock: bigint;
+    toBlock: bigint;
+    contracts: Set<Address>;
+}
+
 export interface ITxReader {
     getLogs(query: LogQuery, network: ConceroNetwork): Promise<Log[]>;
 
