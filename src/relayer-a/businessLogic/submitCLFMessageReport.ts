@@ -4,10 +4,11 @@ import {
     BlockManagerRegistry,
     Logger,
     NetworkManager,
+    TxWriter,
     ViemClientManager,
 } from "@concero/operator-utils";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
-import { MessagingDeploymentManager, TxManager, TxWriter } from "../../common/managers";
+import { MessagingDeploymentManager, TxManager } from "../../common/managers";
 import { decodeCLFReport, decodeMessageReportResult } from "../../common/utils";
 import { DecodedMessageReportResult } from "../../common/utils/decoders/types";
 

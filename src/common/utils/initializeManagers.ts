@@ -5,17 +5,13 @@ import {
     NetworkManager,
     NonceManager,
     RpcManager,
-    ViemClientManager,
-} from "@concero/operator-utils";
-import { globalConfig } from "../../constants";
-import {
-    BlockCheckpointManager,
-    MessagingDeploymentManager,
-    TxManager,
     TxMonitor,
     TxReader,
     TxWriter,
-} from "../managers";
+    ViemClientManager,
+} from "@concero/operator-utils";
+import { globalConfig } from "../../constants";
+import { BlockCheckpointManager, MessagingDeploymentManager, TxManager } from "../managers";
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
@@ -127,12 +123,18 @@ export async function initializeManagers(): Promise<void> {
         {},
     );
 
+    const nonceManager = NonceManager.createInstance(logger.getLogger("NonceManager"), {});
+    await nonceManager.initialize();
+
     const txWriter = TxWriter.createInstance(
         logger.getLogger("TxWriter"),
         viemClientManager,
         txMonitor,
+        nonceManager,
         {
             dryRun: globalConfig.TX_MANAGER.DRY_RUN,
+            simulateTx: globalConfig.VIEM.SIMULATE_TX,
+            defaultGasLimit: globalConfig.TX_MANAGER.GAS_LIMIT.DEFAULT,
         },
     );
 
@@ -152,7 +154,4 @@ export async function initializeManagers(): Promise<void> {
     );
 
     await txManager.initialize();
-
-    const nonceManager = NonceManager.createInstance(logger.getLogger("NonceManager"), {});
-    await nonceManager.initialize();
 }

@@ -43,6 +43,8 @@ export interface DeploymentManagerConfig extends BaseManagerConfig {
 /** Configuration for TxWriter */
 export interface TxWriterConfig extends BaseManagerConfig {
     dryRun: boolean;
+    simulateTx: boolean;
+    defaultGasLimit?: bigint;
 }
 
 /** Configuration for TxMonitor */

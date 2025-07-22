@@ -1,11 +1,15 @@
 import { Abi, AbiEvent, Address, Log, SimulateContractParameters } from "viem";
 
-import { LoggerInterface } from "@concero/operator-utils";
+import {
+    ITxMonitor,
+    ITxReader,
+    ITxWriter,
+    LogQuery,
+    LoggerInterface,
+} from "@concero/operator-utils";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxManagerConfig } from "../../types/ManagerConfigs";
-import { INetworkManager, ITxManager, ITxMonitor, IViemClientManager } from "../../types/managers";
-import { ITxReader, LogQuery } from "../../types/managers/ITxReader";
-import { ITxWriter } from "../../types/managers/ITxWriter";
+import { INetworkManager, ITxManager, IViemClientManager } from "../../types/managers";
 
 import { ManagerBase } from "./ManagerBase";
 

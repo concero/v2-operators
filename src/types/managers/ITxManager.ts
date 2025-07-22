@@ -1,8 +1,7 @@
 import { Abi, AbiEvent, Address, Log, SimulateContractParameters } from "viem";
 
+import { LogQuery } from "@concero/operator-utils";
 import { ConceroNetwork } from "../ConceroNetwork";
-
-import { LogQuery } from "./ITxReader";
 
 export interface ITxManager {
     initialize(): Promise<void>;

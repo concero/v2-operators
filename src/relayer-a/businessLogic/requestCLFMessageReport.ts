@@ -1,8 +1,8 @@
 import { Log, encodeAbiParameters, keccak256 } from "viem";
 
-import { Logger, NetworkManager } from "@concero/operator-utils";
+import { Logger, NetworkManager, TxWriter } from "@concero/operator-utils";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
-import { MessagingDeploymentManager, TxWriter } from "../../common/managers";
+import { MessagingDeploymentManager } from "../../common/managers";
 
 import { eventEmitter, globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";

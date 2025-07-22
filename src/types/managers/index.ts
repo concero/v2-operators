@@ -7,8 +7,6 @@ export { INetworkManager } from "./INetworkManager";
 export { IGetNonceParams, INonceManager, INonceManagerParams } from "./INonceManager";
 export { IRpcManager } from "./IRpcManager";
 export { ITxManager } from "./ITxManager";
-export { ITxMonitor, MonitoredTransaction, TransactionInfo } from "./ITxMonitor";
-export { ITxReader, LogQuery, LogWatcher } from "./ITxReader";
-export { ITxWriter } from "./ITxWriter";
+
 export { IViemClientManager } from "./IViemClientManager";
 export { NetworkUpdateListener } from "./NetworkUpdateListener";
