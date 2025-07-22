@@ -1,25 +1,27 @@
 import { v4 as uuidv4 } from "uuid";
-import { PublicClient, SimulateContractParameters, WalletClient } from "viem";
+import { SimulateContractParameters } from "viem";
 
 import { LoggerInterface } from "@concero/operator-utils";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxWriterConfig } from "../../types/ManagerConfigs";
-import { ITxMonitor } from "../../types/managers";
+import { ITxMonitor, IViemClientManager } from "../../types/managers";
 import { ITxWriter } from "../../types/managers/ITxWriter";
 import { callContract } from "../utils";
 
 export class TxWriter implements ITxWriter {
     private static instance: TxWriter | undefined;
+    private viemClientManager: IViemClientManager;
     private txMonitor: ITxMonitor;
     private logger: LoggerInterface;
     private config: TxWriterConfig;
 
     private constructor(
         logger: LoggerInterface,
-
+        viemClientManager: IViemClientManager,
         txMonitor: ITxMonitor,
         config: TxWriterConfig,
     ) {
+        this.viemClientManager = viemClientManager;
         this.txMonitor = txMonitor;
         this.logger = logger;
         this.config = config;
@@ -27,10 +29,11 @@ export class TxWriter implements ITxWriter {
 
     public static createInstance(
         logger: LoggerInterface,
+        viemClientManager: IViemClientManager,
         txMonitor: ITxMonitor,
         config: TxWriterConfig,
     ): TxWriter {
-        TxWriter.instance = new TxWriter(logger, txMonitor, config);
+        TxWriter.instance = new TxWriter(logger, viemClientManager, txMonitor, config);
         return TxWriter.instance;
     }
 
@@ -46,12 +49,12 @@ export class TxWriter implements ITxWriter {
     }
 
     public async callContract(
-        walletClient: WalletClient,
-        publicClient: PublicClient,
         network: ConceroNetwork,
         params: SimulateContractParameters,
     ): Promise<string> {
         try {
+            const { walletClient, publicClient } = this.viemClientManager.getClients(network);
+
             if (this.config.dryRun) {
                 this.logger.info(
                     `[DRY_RUN][${network.name}] Contract call: ${params.functionName}`,
@@ -83,7 +86,7 @@ export class TxWriter implements ITxWriter {
             // Watch this transaction for finality
             this.txMonitor.watchTxFinality(
                 txInfo,
-                this.createRetryCallback(walletClient, publicClient, network, params),
+                this.createRetryCallback(network, params),
                 this.createFinalityCallback(network),
             );
 
@@ -95,8 +98,6 @@ export class TxWriter implements ITxWriter {
     }
 
     private createRetryCallback(
-        walletClient: WalletClient,
-        publicClient: PublicClient,
         network: ConceroNetwork,
         params: SimulateContractParameters,
     ): (failedTx: any) => Promise<any | null> {
@@ -106,6 +107,8 @@ export class TxWriter implements ITxWriter {
             );
 
             try {
+                const { walletClient, publicClient } = this.viemClientManager.getClients(network);
+
                 // Retry the transaction
                 const newTxHash = await callContract(publicClient, walletClient, params);
                 this.logger.info(`[${network.name}] Retry successful. New tx hash: ${newTxHash}`);

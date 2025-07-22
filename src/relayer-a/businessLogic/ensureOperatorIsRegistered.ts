@@ -1,7 +1,6 @@
 import { Logger, NetworkManager, ViemClientManager } from "@concero/operator-utils";
-import { Hash, isHex, Log, PublicClient, WalletClient, type Address } from "viem";
-import { MessagingDeploymentManager } from "../../common/managers";
-import { callContract } from "../../common/utils";
+import { Hash, isHex, Log, PublicClient, type Address } from "viem";
+import { MessagingDeploymentManager, TxWriter } from "../../common/managers";
 
 import { getAbiItem } from "viem";
 import { eventEmitter, globalConfig } from "../../constants";
@@ -44,19 +43,13 @@ async function isOperatorRegistered(
 }
 
 /**
- * Requests operator registration from the ConceroVerifier contract.
+ * Requests the registration of an operator.
  *
- * @param publicClient - The public client to use for reading the contract.
- * @param walletClient - The wallet client to use for writing to the contract.
- * @param account - The account to use for the transaction.
  * @param networkManager - The network manager instance.
  * @param deploymentManager - The deployment manager instance.
  * @returns {Promise<`0x${string}`>} The transaction hash of the registration request.
  */
 async function requestOperatorRegistration(
-    publicClient: PublicClient,
-    walletClient: WalletClient,
-    account: any,
     networkManager: NetworkManager,
     deploymentManager: MessagingDeploymentManager,
 ): Promise<`0x${string}`> {
@@ -65,12 +58,11 @@ async function requestOperatorRegistration(
     const operatorActions = [BigInt(OperatorRegistrationAction.Register)];
     const operatorAddresses = [globalConfig.OPERATOR_ADDRESS];
 
-    const transactionHash = await callContract(publicClient, walletClient, {
+    const transactionHash = await TxWriter.getInstance().callContract(conceroVerifierNetwork, {
         address: await deploymentManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "requestOperatorRegistration",
         args: [chainTypes, operatorActions, operatorAddresses],
-        account,
     });
 
     eventEmitter.emit("requestOperatorRegistration", { txHash: transactionHash });
@@ -197,7 +189,7 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
     const deploymentManager = MessagingDeploymentManager.getInstance();
 
     const verifierNetwork = networkManager.getVerifierNetwork();
-    const { publicClient, walletClient, account } = viemClientManager.getClients(verifierNetwork);
+    const { publicClient } = viemClientManager.getClients(verifierNetwork);
 
     const registered = await isOperatorRegistered(publicClient, networkManager, deploymentManager);
 
@@ -207,13 +199,7 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
         return;
     }
 
-    const txHash = await requestOperatorRegistration(
-        publicClient,
-        walletClient,
-        account,
-        networkManager,
-        deploymentManager,
-    );
+    const txHash = await requestOperatorRegistration(networkManager, deploymentManager);
 
     logger.info(`Requested operator registration with txHash ${txHash}`);
 

@@ -127,7 +127,6 @@ async function submitBatchToDestination(
     indexes: number[],
     results: DecodedMessageReportResult[],
     totalGasLimit: bigint,
-    viemClientManager: ViemClientManager,
     deploymentManager: MessagingDeploymentManager,
     txWriter: TxWriter,
     logger: any,
@@ -140,9 +139,8 @@ async function submitBatchToDestination(
     }
 
     const dstConceroRouter = await deploymentManager.getRouterByChainName(dstChain.name);
-    const { walletClient, publicClient } = viemClientManager.getClients(dstChain);
 
-    const txHash = await txWriter.callContract(walletClient, publicClient, dstChain, {
+    const txHash = await txWriter.callContract(dstChain, {
         address: dstConceroRouter,
         abi: globalConfig.ABI.CONCERO_ROUTER,
         functionName: "submitMessageReport",
@@ -315,7 +313,6 @@ async function processMessageReports(logs: DecodedLog[]) {
                                 indexes,
                                 results,
                                 totalGasLimit,
-                                viemClientManager,
                                 deploymentManager,
                                 txWriter,
                                 logger,

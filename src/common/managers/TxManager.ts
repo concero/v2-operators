@@ -1,12 +1,4 @@
-import {
-    Abi,
-    AbiEvent,
-    Address,
-    Log,
-    PublicClient,
-    SimulateContractParameters,
-    WalletClient,
-} from "viem";
+import { Abi, AbiEvent, Address, Log, SimulateContractParameters } from "viem";
 
 import { LoggerInterface } from "@concero/operator-utils";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
@@ -84,17 +76,10 @@ export class TxManager extends ManagerBase implements ITxManager {
     }
 
     public async callContract(
-        walletClient: WalletClient,
-        publicClient: PublicClient,
         network: ConceroNetwork,
         params: SimulateContractParameters,
     ): Promise<string> {
-        const txHash = await this.txWriter.callContract(
-            walletClient,
-            publicClient,
-            network,
-            params,
-        );
+        const txHash = await this.txWriter.callContract(network, params);
 
         // Transaction monitoring is now handled internally by TxWriter
 

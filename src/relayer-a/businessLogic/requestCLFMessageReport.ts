@@ -1,6 +1,6 @@
-import { Log, PublicClient, WalletClient, encodeAbiParameters, keccak256 } from "viem";
+import { Log, encodeAbiParameters, keccak256 } from "viem";
 
-import { Logger, NetworkManager, ViemClientManager } from "@concero/operator-utils";
+import { Logger, NetworkManager } from "@concero/operator-utils";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
 import { MessagingDeploymentManager, TxWriter } from "../../common/managers";
 
@@ -19,8 +19,6 @@ export async function requestCLFMessageReport(logs: Log[], network: ConceroNetwo
     const networkManager = NetworkManager.getInstance();
     const verifierNetwork = networkManager.getVerifierNetwork();
     const verifierAddress = await MessagingDeploymentManager.getInstance().getConceroVerifier();
-    const { publicClient, walletClient } =
-        ViemClientManager.getInstance().getClients(verifierNetwork);
 
     // Decode logs to access event data
     try {
@@ -36,8 +34,6 @@ export async function requestCLFMessageReport(logs: Log[], network: ConceroNetwo
                     networkManager,
                     verifierNetwork,
                     verifierAddress,
-                    publicClient,
-                    walletClient,
                 ),
             );
         }
@@ -55,8 +51,6 @@ async function processMessageReportRequest(
     networkManager: ReturnType<typeof NetworkManager.getInstance>,
     verifierNetwork: ConceroNetwork,
     verifierAddress: string,
-    publicClient: PublicClient,
-    walletClient: WalletClient,
 ) {
     try {
         const { messageId, message, sender } = decodedLog.args;
@@ -93,22 +87,17 @@ async function processMessageReportRequest(
             return;
         }
 
-        const txHash = await TxWriter.getInstance().callContract(
-            walletClient,
-            publicClient,
-            verifierNetwork,
-            {
-                address: verifierAddress,
-                abi: globalConfig.ABI.CONCERO_VERIFIER,
-                functionName: "requestMessageReport",
-                args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
-                chain: verifierNetwork.viemChain,
-                options: {
-                    receiptConfirmations: 3,
-                    receiptTimeout: 60_000,
-                },
+        const txHash = await TxWriter.getInstance().callContract(verifierNetwork, {
+            address: verifierAddress,
+            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            functionName: "requestMessageReport",
+            args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
+            chain: verifierNetwork.viemChain,
+            options: {
+                receiptConfirmations: 3,
+                receiptTimeout: 60_000,
             },
-        );
+        });
 
         if (txHash) {
             eventEmitter.emit("requestMessageReport", {

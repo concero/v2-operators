@@ -1,12 +1,4 @@
-import {
-    Abi,
-    AbiEvent,
-    Address,
-    Log,
-    PublicClient,
-    SimulateContractParameters,
-    WalletClient,
-} from "viem";
+import { Abi, AbiEvent, Address, Log, SimulateContractParameters } from "viem";
 
 import { ConceroNetwork } from "../ConceroNetwork";
 
@@ -16,18 +8,7 @@ export interface ITxManager {
     initialize(): Promise<void>;
 
     // Contract interaction methods
-    callContract(
-        walletClient: WalletClient,
-        publicClient: PublicClient,
-        network: ConceroNetwork,
-        params: SimulateContractParameters,
-    ): Promise<string>;
-
-    // Transaction monitoring methods (deprecated - handled internally by TxMonitor)
-    /** @deprecated Transaction monitoring is now handled automatically by TxMonitor */
-    onTxReorg(txHash: string, chainName: string): Promise<string | null>;
-    /** @deprecated Transaction monitoring is now handled automatically by TxMonitor */
-    onTxFinality(txHash: string, chainName: string): void;
+    callContract(network: ConceroNetwork, params: SimulateContractParameters): Promise<string>;
 
     // Log reading methods
     getLogs(query: LogQuery, network: ConceroNetwork): Promise<Log[]>;

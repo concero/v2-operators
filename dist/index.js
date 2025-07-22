@@ -77772,6 +77772,48 @@ var localhostViemChain = defineChain({
   testnet: true
 });
 
+// src/common/utils/safeStringify.ts
+function safeStringify(value) {
+  if (value === null || value === void 0) {
+    return String(value);
+  }
+  if (value instanceof Error) {
+    const errorInfo = {
+      name: value.name,
+      message: value.message,
+      stack: value.stack
+    };
+    Object.keys(value).forEach((key) => {
+      if (!(key in errorInfo)) {
+        errorInfo[key] = value[key];
+      }
+    });
+    return JSON.stringify(errorInfo, replaceBigInt, 2);
+  }
+  if (typeof value !== "object") {
+    return String(value);
+  }
+  try {
+    return JSON.stringify(value, replaceBigInt, 2);
+  } catch (error) {
+    try {
+      return `[Stringify Error: ${error instanceof Error ? error.message : "Unknown error"}] ${Object.prototype.toString.call(value)}`;
+    } catch {
+      return "[Unable to stringify value]";
+    }
+  }
+}
+function replaceBigInt(key, value) {
+  if (typeof value === "bigint") {
+    return value.toString() + "n";
+  }
+  return value;
+}
+function formatError(error, context) {
+  const errorString = safeStringify(error);
+  return context ? `${context}: ${errorString}` : errorString;
+}
+
 // src/common/utils/initializeManagers.ts
 var import_operator_utils6 = __toESM(require_dist(), 1);
 
@@ -78038,21 +78080,21 @@ var TxManager = class _TxManager extends ManagerBase {
     this.logger.info("initialized");
   }
   async callContract(walletClient, publicClient, network, params) {
-    const managedTx = await this.txWriter.callContract(
+    const txHash = await this.txWriter.callContract(
       walletClient,
       publicClient,
       network,
       params
     );
-    this.txMonitor.addTransaction(managedTx.txHash, managedTx);
-    return managedTx;
+    return txHash;
   }
-  // Transaction Monitoring Methods
+  // Transaction Monitoring Methods (Deprecated - handled internally by TxWriter/TxMonitor)
   async onTxReorg(txHash, chainName) {
-    return this.txWriter.onTxReorg(txHash, chainName);
+    this.logger.warn("onTxReorg is deprecated - transactions are monitored automatically");
+    return null;
   }
   onTxFinality(txHash, chainName) {
-    this.txWriter.onTxFinality(txHash, chainName);
+    this.logger.warn("onTxFinality is deprecated - transactions are monitored automatically");
   }
   // Log Reading Methods
   async getLogs(query, network) {
@@ -78090,10 +78132,14 @@ var TxManager = class _TxManager extends ManagerBase {
   };
   // Transaction status methods
   getPendingTransactions(chainName) {
-    return this.txWriter.getPendingTransactions(chainName);
+    this.logger.warn(
+      "getPendingTransactions is deprecated - use TxMonitor for transaction tracking"
+    );
+    return [];
   }
   getTransactionsByMessageId(messageId) {
-    return this.txWriter.getTransactionsByMessageId(messageId);
+    this.logger.warn("getTransactionsByMessageId is deprecated in generic TxManager");
+    return [];
   }
   dispose() {
     this.txWriter.dispose();
@@ -78106,27 +78152,23 @@ var TxManager = class _TxManager extends ManagerBase {
 // src/common/managers/TxMonitor.ts
 var TxMonitor = class _TxMonitor {
   static instance;
-  transactions = /* @__PURE__ */ new Map();
+  monitors = /* @__PURE__ */ new Map();
   viemClientManager;
   disposed = false;
-  txFinalityCallback;
-  txReorgCallback;
   logger;
-  constructor(logger, viemClientManager, txFinalityCallback, txReorgCallback, config3) {
+  config;
+  checkInterval = null;
+  constructor(logger, viemClientManager, config3) {
     this.viemClientManager = viemClientManager;
-    this.txFinalityCallback = txFinalityCallback;
-    this.txReorgCallback = txReorgCallback;
     this.logger = logger;
+    this.config = config3;
+    this.startMonitoring();
     this.logger.info("initialized");
   }
-  static createInstance(logger, viemClientManager, txFinalityCallback, txReorgCallback, config3) {
-    _TxMonitor.instance = new _TxMonitor(
-      logger,
-      viemClientManager,
-      txFinalityCallback,
-      txReorgCallback,
-      config3
-    );
+  static createInstance(logger, viemClientManager, config3) {
+    if (!_TxMonitor.instance) {
+      _TxMonitor.instance = new _TxMonitor(logger, viemClientManager, config3);
+    }
     return _TxMonitor.instance;
   }
   static getInstance() {
@@ -78135,127 +78177,200 @@ var TxMonitor = class _TxMonitor {
     }
     return _TxMonitor.instance;
   }
-  addTransaction(txHash, managedTx) {
-    if (this.transactions.has(txHash)) {
-      this.logger.debug(`Transaction ${txHash} is already being monitored`);
-      return;
-    }
-    if (managedTx.txHash !== txHash) {
-      this.logger.error(`Transaction hash mismatch: ${txHash} vs ${managedTx.txHash}`);
+  startMonitoring() {
+    const intervalMs = this.config.checkIntervalMs || 5e3;
+    this.checkInterval = setInterval(() => {
+      this.checkAllTransactions().catch((error) => {
+        this.logger.error("Error in transaction monitoring cycle:", error);
+      });
+    }, intervalMs);
+  }
+  watchTxFinality(txInfo, retryCallback, finalityCallback) {
+    if (this.monitors.has(txInfo.txHash)) {
+      this.logger.debug(`Transaction ${txInfo.txHash} is already being monitored`);
       return;
     }
     const monitoredTx = {
-      txHash,
-      chainName: managedTx.chainName,
-      messageId: managedTx.messageId,
-      blockNumber: managedTx.submissionBlock,
+      txHash: txInfo.txHash,
+      chainName: txInfo.chainName,
+      blockNumber: txInfo.submissionBlock,
       firstSeen: Date.now(),
       lastChecked: Date.now(),
       status: "pending" /* Pending */,
-      managedTxId: managedTx.id
+      managedTxId: txInfo.id
     };
-    this.transactions.set(txHash, monitoredTx);
-    this.logger.debug(
-      `Started monitoring tx ${txHash} on ${managedTx.chainName}` + (managedTx.messageId ? ` for message ${managedTx.messageId}` : "")
-    );
+    const monitor = {
+      transaction: monitoredTx,
+      retryCallback,
+      finalityCallback,
+      retryCount: 0
+    };
+    this.monitors.set(txInfo.txHash, monitor);
+    this.logger.debug(`Started monitoring tx ${txInfo.txHash} on ${txInfo.chainName}`);
   }
-  async checkTransactionsInRange(network, startBlock, endBlock) {
+  addTransaction(txHash, txInfo) {
+    this.logger.warn(`addTransaction called directly - use watchTxFinality instead`);
+    const defaultRetryCallback = async (failedTx) => {
+      this.logger.warn(
+        `Transaction ${failedTx.txHash} failed but no retry callback provided`
+      );
+      return null;
+    };
+    const defaultFinalityCallback = (finalizedTx) => {
+      this.logger.info(
+        `Transaction ${finalizedTx.txHash} finalized (using legacy addTransaction)`
+      );
+    };
+    this.watchTxFinality(txInfo, defaultRetryCallback, defaultFinalityCallback);
+  }
+  async checkAllTransactions() {
     if (this.disposed) return;
-    const finalityConfirmations = network.finalityConfirmations ?? 12;
-    const finalityBlockNumber = endBlock - BigInt(finalityConfirmations);
-    const txsToCheck = Array.from(this.transactions.values()).filter(
-      (tx) => tx.chainName === network.name && tx.status === "pending" /* Pending */ && tx.blockNumber !== null && tx.blockNumber <= finalityBlockNumber
-    );
-    if (txsToCheck.length === 0) return;
-    this.logger.debug(
-      `Checking ${txsToCheck.length} transactions for finality on ${network.name} at block ${endBlock}`
-    );
-    for (const tx of txsToCheck) {
-      await this.checkTransaction(tx, finalityBlockNumber, network);
+    const networksToCheck = /* @__PURE__ */ new Map();
+    for (const monitor of this.monitors.values()) {
+      const chainName = monitor.transaction.chainName;
+      if (!networksToCheck.has(chainName)) {
+        networksToCheck.set(chainName, []);
+      }
+      networksToCheck.get(chainName).push(monitor);
+    }
+    for (const [chainName, monitors] of networksToCheck) {
+      const network = this.getNetwork(chainName);
+      if (!network) continue;
+      await this.checkNetworkTransactions(network, monitors);
     }
   }
-  async checkTransaction(tx, finalityBlockNumber, network) {
-    if (!tx.blockNumber) return;
-    if (tx.blockNumber > finalityBlockNumber) {
-      return;
+  async checkNetworkTransactions(network, monitors) {
+    const { publicClient } = this.viemClientManager.getClients(network);
+    const currentBlock = await publicClient.getBlockNumber();
+    const finalityConfirmations = BigInt(network.finalityConfirmations ?? 12);
+    const finalityBlockNumber = currentBlock - finalityConfirmations;
+    for (const monitor of monitors) {
+      await this.checkTransaction(monitor, currentBlock, finalityBlockNumber, network);
     }
+  }
+  async checkTransaction(monitor, currentBlock, finalityBlockNumber, network) {
+    const tx = monitor.transaction;
+    tx.lastChecked = Date.now();
     try {
       const { publicClient } = this.viemClientManager.getClients(network);
-      const txInfo = await publicClient.getTransaction({ hash: tx.txHash });
+      const txInfo = await publicClient.getTransaction({
+        hash: tx.txHash
+      });
       if (!txInfo) {
-        await this.handleMissingTransaction(tx, network);
+        await this.handleMissingTransaction(monitor, network);
         return;
       }
-      if (txInfo.blockNumber && tx.blockNumber !== txInfo.blockNumber) {
-        this.logger.info(
-          `Transaction ${tx.txHash} block number changed from ${tx.blockNumber} to ${txInfo.blockNumber} (potential reorg)`
+      if (!tx.blockNumber && txInfo.blockNumber) {
+        tx.blockNumber = txInfo.blockNumber;
+        this.logger.debug(
+          `Transaction ${tx.txHash} included in block ${txInfo.blockNumber}`
+        );
+      }
+      if (tx.blockNumber && txInfo.blockNumber && tx.blockNumber !== txInfo.blockNumber) {
+        this.logger.warn(
+          `Transaction ${tx.txHash} block changed from ${tx.blockNumber} to ${txInfo.blockNumber} (reorg detected)`
         );
         tx.blockNumber = txInfo.blockNumber;
-        if (txInfo.blockNumber > finalityBlockNumber) {
-          tx.lastChecked = Date.now();
-          return;
-        }
       }
-      tx.status = "finalized" /* Finalized */;
-      this.txFinalityCallback(tx.txHash, tx.chainName);
-      if (tx.messageId) {
-        await this.finalizeMessageTransactions(tx.messageId);
+      if (txInfo.blockNumber && txInfo.blockNumber <= finalityBlockNumber) {
+        await this.handleFinalizedTransaction(monitor);
+      } else if (txInfo.blockNumber) {
+        const confirmations = currentBlock - txInfo.blockNumber + 1n;
+        const requiredConfirmations = BigInt(network.finalityConfirmations ?? 12);
+        this.logger.debug(
+          `Transaction ${tx.txHash} has ${confirmations} confirmations (needs ${requiredConfirmations})`
+        );
       }
-      this.transactions.delete(tx.txHash);
-      this.logger.info(`Transaction ${tx.txHash} has reached finality on ${network.name}`);
-      tx.lastChecked = Date.now();
     } catch (error) {
       this.logger.error(`Error checking transaction ${tx.txHash}:`, error);
-    }
-  }
-  async handleMissingTransaction(tx, network) {
-    tx.status = "reorged" /* Reorged */;
-    this.logger.info(
-      `Transaction ${tx.txHash} not found on chain ${network.name}, potential reorg`
-    );
-    const newTxHash = await this.txReorgCallback(tx.txHash, tx.chainName);
-    if (newTxHash) {
-      this.transactions.delete(tx.txHash);
-      this.logger.info(`Transaction ${tx.txHash} replaced with ${newTxHash}`);
-    } else {
-      tx.status = "dropped" /* Dropped */;
-      this.logger.warn(`Failed to resubmit transaction ${tx.txHash} after reorg`);
-    }
-  }
-  async finalizeMessageTransactions(messageId) {
-    const relatedTxs = Array.from(this.transactions.values()).filter(
-      (tx) => tx.messageId === messageId
-    );
-    for (const tx of relatedTxs) {
-      if (tx.status === "pending" /* Pending */) {
-        this.logger.info(
-          `Finalizing related transaction ${tx.txHash} for message ${messageId}`
-        );
-        tx.status = "finalized" /* Finalized */;
-        this.txFinalityCallback(tx.txHash, tx.chainName);
-        this.transactions.delete(tx.txHash);
+      const timeSinceLastRetry = tx.lastChecked - (monitor.lastRetryAt || 0);
+      const retryDelayMs = this.config.retryDelayMs || 3e4;
+      if (timeSinceLastRetry > retryDelayMs) {
+        await this.retryTransaction(monitor, network);
       }
     }
   }
-  getMonitoredTransactions(chainName) {
-    if (chainName) {
-      return Array.from(this.transactions.values()).filter((tx) => tx.chainName === chainName);
+  async handleMissingTransaction(monitor, network) {
+    const tx = monitor.transaction;
+    const timeSinceSubmission = Date.now() - tx.firstSeen;
+    const dropTimeoutMs = this.config.dropTimeoutMs || 6e4;
+    if (timeSinceSubmission < dropTimeoutMs) {
+      this.logger.debug(
+        `Transaction ${tx.txHash} not found yet (${timeSinceSubmission}ms since submission)`
+      );
+      return;
     }
-    return Array.from(this.transactions.values());
+    tx.status = "dropped" /* Dropped */;
+    this.logger.warn(
+      `Transaction ${tx.txHash} not found on chain ${network.name} after ${timeSinceSubmission}ms`
+    );
+    await this.retryTransaction(monitor, network);
+  }
+  async retryTransaction(monitor, network) {
+    const tx = monitor.transaction;
+    monitor.retryCount++;
+    monitor.lastRetryAt = Date.now();
+    this.logger.info(
+      `Retrying transaction ${tx.txHash} on ${network.name} (attempt ${monitor.retryCount})`
+    );
+    const failedTx = {
+      id: tx.managedTxId,
+      txHash: tx.txHash,
+      chainName: tx.chainName,
+      submittedAt: tx.firstSeen,
+      submissionBlock: tx.blockNumber,
+      status: "failed"
+    };
+    const newTxInfo = await monitor.retryCallback(failedTx);
+    if (newTxInfo) {
+      this.monitors.delete(tx.txHash);
+      this.watchTxFinality(newTxInfo, monitor.retryCallback, monitor.finalityCallback);
+      this.logger.info(`Transaction ${tx.txHash} replaced with ${newTxInfo.txHash}`);
+    } else {
+      this.logger.error(`Failed to retry transaction ${tx.txHash} - will try again later`);
+    }
+  }
+  async handleFinalizedTransaction(monitor) {
+    const tx = monitor.transaction;
+    tx.status = "finalized" /* Finalized */;
+    this.logger.info(`Transaction ${tx.txHash} has reached finality on ${tx.chainName}`);
+    const finalizedTx = {
+      id: tx.managedTxId,
+      txHash: tx.txHash,
+      chainName: tx.chainName,
+      submittedAt: tx.firstSeen,
+      submissionBlock: tx.blockNumber,
+      status: "finalized"
+    };
+    monitor.finalityCallback(finalizedTx);
+    this.monitors.delete(tx.txHash);
+  }
+  getNetwork(chainName) {
+    return void 0;
+  }
+  async checkTransactionsInRange(network, startBlock, endBlock) {
+    this.logger.debug(`Batch checking not implemented - using continuous monitoring instead`);
+  }
+  getMonitoredTransactions(chainName) {
+    const transactions = [];
+    for (const monitor of this.monitors.values()) {
+      if (!chainName || monitor.transaction.chainName === chainName) {
+        transactions.push(monitor.transaction);
+      }
+    }
+    return transactions;
   }
   getTransactionsByMessageId() {
-    const result = /* @__PURE__ */ new Map();
-    for (const tx of this.transactions.values()) {
-      if (!tx.messageId) continue;
-      const existing = result.get(tx.messageId) || [];
-      existing.push(tx);
-      result.set(tx.messageId, existing);
-    }
-    return result;
+    this.logger.warn("getTransactionsByMessageId called on generic TxMonitor");
+    return /* @__PURE__ */ new Map();
   }
   dispose() {
     this.disposed = true;
-    this.transactions.clear();
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+    this.monitors.clear();
     this.logger.info("Disposed");
   }
 };
@@ -78488,25 +78603,16 @@ var TxReader = class _TxReader {
 // src/common/managers/TxWriter.ts
 var TxWriter = class _TxWriter {
   static instance;
-  transactions = /* @__PURE__ */ new Map();
-  txByType = /* @__PURE__ */ new Map([
-    ["default" /* DEFAULT */, /* @__PURE__ */ new Set()],
-    ["message" /* MESSAGE */, /* @__PURE__ */ new Set()],
-    ["fee" /* FEE */, /* @__PURE__ */ new Set()],
-    ["admin" /* ADMIN */, /* @__PURE__ */ new Set()]
-  ]);
-  networkManager;
-  viemClientManager;
+  txMonitor;
   logger;
   config;
-  constructor(logger, networkManager, viemClientManager, config3) {
-    this.networkManager = networkManager;
-    this.viemClientManager = viemClientManager;
+  constructor(logger, txMonitor, config3) {
+    this.txMonitor = txMonitor;
     this.logger = logger;
     this.config = config3;
   }
-  static createInstance(logger, networkManager, viemClientManager, config3) {
-    _TxWriter.instance = new _TxWriter(logger, networkManager, viemClientManager, config3);
+  static createInstance(logger, txMonitor, config3) {
+    _TxWriter.instance = new _TxWriter(logger, txMonitor, config3);
     return _TxWriter.instance;
   }
   static getInstance() {
@@ -78519,85 +78625,78 @@ var TxWriter = class _TxWriter {
     this.logger.info("Initialized");
   }
   async callContract(walletClient, publicClient, network, params) {
-    const txType = await this.determineTxType(params);
     try {
       if (this.config.dryRun) {
         this.logger.info(
           `[DRY_RUN][${network.name}] Contract call: ${params.functionName}`
         );
         const mockTxHash = `0xdry${Date.now().toString(16)}`;
-        const managedTx2 = this.createManagedTx(network, params, txType, mockTxHash);
-        return managedTx2;
+        return mockTxHash;
       }
       const txHash = await callContract(publicClient, walletClient, params);
       this.logger.debug(`[${network.name}] Contract call transaction hash: ${txHash}`);
-      const managedTx = this.createManagedTx(network, params, txType, txHash);
-      return managedTx;
+      const currentBlock = await publicClient.getBlockNumber();
+      const txInfo = {
+        id: v4_default(),
+        txHash,
+        chainName: network.name,
+        submittedAt: Date.now(),
+        submissionBlock: currentBlock,
+        status: "submitted",
+        metadata: {
+          functionName: params.functionName,
+          contractAddress: params.address
+        }
+      };
+      this.txMonitor.watchTxFinality(
+        txInfo,
+        this.createRetryCallback(walletClient, publicClient, network, params),
+        this.createFinalityCallback(network)
+      );
+      return txHash;
     } catch (error) {
-      this.logger.error(`[${network.name}] Contract call failed: ${error}`);
+      this.logger.error(`[${network.name}] Contract call failed:`, error);
       throw error;
     }
   }
-  createManagedTx(network, params, txType, txHash) {
-    const id2 = v4_default();
-    const managedTx = {
-      id: id2,
-      chainName: network.name,
-      txHash,
-      submittedAt: Date.now(),
-      submissionBlock: null,
-      status: "submitted" /* SUBMITTED */
-    };
-    this.transactions.set(id2, managedTx);
-    this.txByType.get(txType)?.add(id2);
-    return managedTx;
-  }
-  async determineTxType(params) {
-    return "default" /* DEFAULT */;
-  }
-  findTransactionByHash(txHash) {
-    for (const tx of this.transactions.values()) {
-      if (tx.txHash === txHash) {
-        return tx;
-      }
-    }
-    return null;
-  }
-  async onTxReorg(txHash, chainName) {
-    const tx = this.findTransactionByHash(txHash);
-    if (!tx) {
-      this.logger.warn(`[${chainName}] Cannot find transaction ${txHash} for reorg handling`);
-      return null;
-    }
-    this.logger.info(`[${chainName}] Handling reorg for transaction ${txHash}`);
-    tx.status = "failed" /* FAILED */;
-    return null;
-  }
-  onTxFinality(txHash, chainName) {
-    const tx = this.findTransactionByHash(txHash);
-    if (!tx) {
-      this.logger.warn(
-        `[${chainName}] Cannot find transaction ${txHash} for finality handling`
+  createRetryCallback(walletClient, publicClient, network, params) {
+    return async (failedTx) => {
+      this.logger.info(
+        `[${network.name}] Retrying transaction ${failedTx.txHash} (${failedTx.id})`
       );
-      return;
-    }
-    this.logger.info(`[${chainName}] Transaction ${txHash} is now final`);
-    tx.status = "finalized" /* FINALIZED */;
+      try {
+        const newTxHash = await callContract(publicClient, walletClient, params);
+        this.logger.info(`[${network.name}] Retry successful. New tx hash: ${newTxHash}`);
+        const currentBlock = await publicClient.getBlockNumber();
+        return {
+          id: v4_default(),
+          txHash: newTxHash,
+          chainName: network.name,
+          submittedAt: Date.now(),
+          submissionBlock: currentBlock,
+          status: "submitted",
+          metadata: {
+            functionName: params.functionName,
+            contractAddress: params.address
+          }
+        };
+      } catch (error) {
+        this.logger.error(
+          `[${network.name}] Failed to retry transaction ${failedTx.txHash}:`,
+          error
+        );
+        return null;
+      }
+    };
   }
-  getPendingTransactions(chainName) {
-    const allTxs = Array.from(this.transactions.values());
-    return allTxs.filter((tx) => {
-      if (chainName && tx.chainName !== chainName) return false;
-      return tx.status !== "finalized" /* FINALIZED */;
-    });
-  }
-  getTransactionsByMessageId(messageId) {
-    const allTxs = Array.from(this.transactions.values());
-    return allTxs.filter((tx) => tx.messageId === messageId);
+  createFinalityCallback(network) {
+    return (finalizedTx) => {
+      this.logger.info(
+        `[${network.name}] Transaction ${finalizedTx.txHash} (${finalizedTx.id}) is now final`
+      );
+    };
   }
   dispose() {
-    this.transactions.clear();
-    this.txByType.clear();
     this.logger.info("Disposed");
   }
 };
@@ -78684,29 +78783,22 @@ async function initializeManagers() {
   networkManager.registerUpdateListener(viemClientManager);
   networkManager.registerUpdateListener(blockManagerRegistry);
   await networkManager.triggerInitialUpdates();
-  const txWriter = TxWriter.createInstance(
-    logger.getLogger("TxWriter"),
-    networkManager,
-    viemClientManager,
-    {
-      dryRun: globalConfig.TX_MANAGER.DRY_RUN
-    }
-  );
+  const txMonitor = TxMonitor.createInstance(logger.getLogger("TxMonitor"), viemClientManager, {
+    checkIntervalMs: 5e3,
+    dropTimeoutMs: 6e4,
+    retryDelayMs: 3e4
+  });
   const txReader = TxReader.createInstance(
     logger.getLogger("TxReader"),
     networkManager,
     viemClientManager,
     {}
   );
+  const txWriter = TxWriter.createInstance(logger.getLogger("TxWriter"), txMonitor, {
+    dryRun: globalConfig.TX_MANAGER.DRY_RUN
+  });
   await txWriter.initialize();
   await txReader.initialize();
-  const txMonitor = TxMonitor.createInstance(
-    logger.getLogger("TxMonitor"),
-    viemClientManager,
-    (txHash, chainName) => txWriter.onTxFinality(txHash, chainName),
-    (txHash, chainName) => txWriter.onTxReorg(txHash, chainName),
-    {}
-  );
   const txManager = TxManager.createInstance(
     logger.getLogger("TxManager"),
     networkManager,
@@ -79032,7 +79124,7 @@ async function processMessageReportRequest(decodedLog, srcChainSelector, logger,
       eventEmitter.emit("requestMessageReport", { txHash: dryRunTxHash });
       return;
     }
-    const managedTx = await TxManager.getInstance().callContract(
+    const txHash = await TxWriter.getInstance().callContract(
       walletClient,
       publicClient,
       verifierNetwork,
@@ -79048,12 +79140,12 @@ async function processMessageReportRequest(decodedLog, srcChainSelector, logger,
         }
       }
     );
-    if (managedTx && managedTx.txHash) {
+    if (txHash) {
       eventEmitter.emit("requestMessageReport", {
-        txHash: managedTx.txHash
+        txHash
       });
       logger.info(
-        `${verifierNetwork.name} CLF message report requested with hash: ${managedTx.txHash}`
+        `${verifierNetwork.name} CLF message report requested with hash: ${txHash}`
       );
     } else {
       logger.error(
@@ -79083,7 +79175,7 @@ async function parseMessageResults(decodedCLFReport, logger) {
       messageResults.push(decodedResult);
       logger.debug(`Successfully decoded result ${i}: messageId ${decodedResult.messageId}`);
     } catch (error) {
-      logger.error(`Failed to decode result ${i}: ${error}`);
+      logger.error(`Failed to decode result ${i}: ${formatError(error)}`);
     }
   }
   return messageResults;
@@ -79126,7 +79218,7 @@ async function fetchOriginalMessage(result, activeNetworkNames, networkManager, 
   );
   if (decodedLogs.length === 0) {
     logger.warn(
-      `${srcChain.name}: No decodedLogs found for messageId ${messageId} around block ${srcBlockNumber}.`
+      `${srcChain.name}: No decodedLogs found for messageId ${messageId} around block ${srcBlockNumber.toString()}.`
     );
     return { message: null, gasLimit: BigInt(0) };
   }
@@ -79144,7 +79236,7 @@ async function fetchOriginalMessage(result, activeNetworkNames, networkManager, 
   )[0];
   return { message, gasLimit: decodedDstChainData.gasLimit };
 }
-async function submitBatchToDestination(dstChain, reportSubmission, messages, indexes, results, totalGasLimit, viemClientManager, deploymentManager, txManager, logger) {
+async function submitBatchToDestination(dstChain, reportSubmission, messages, indexes, results, totalGasLimit, viemClientManager, deploymentManager, txWriter, logger) {
   if (globalConfig.TX_MANAGER.DRY_RUN) {
     logger.info(
       `[${dstChain.name}] Dry run: CLF message report with ${messages.length} messages would be submitted`
@@ -79153,7 +79245,7 @@ async function submitBatchToDestination(dstChain, reportSubmission, messages, in
   }
   const dstConceroRouter = await deploymentManager.getRouterByChainName(dstChain.name);
   const { walletClient, publicClient } = viemClientManager.getClients(dstChain);
-  const managedTx = await txManager.callContract(walletClient, publicClient, dstChain, {
+  const txHash = await txWriter.callContract(walletClient, publicClient, dstChain, {
     address: dstConceroRouter,
     abi: globalConfig.ABI.CONCERO_ROUTER,
     functionName: "submitMessageReport",
@@ -79162,9 +79254,9 @@ async function submitBatchToDestination(dstChain, reportSubmission, messages, in
     gas: totalGasLimit + BigInt(messages.length) * globalConfig.TX_MANAGER.GAS_LIMIT.SUBMIT_MESSAGE_REPORT_OVERHEAD
   });
   const messageIds = results.map((result) => result.messageId).join(", ");
-  if (managedTx && managedTx.txHash) {
+  if (txHash) {
     logger.info(
-      `[${dstChain.name}] CLF Report with ${messages.length} results submitted with hash: ${managedTx.txHash}`
+      `[${dstChain.name}] CLF Report with ${messages.length} results submitted with hash: ${txHash}`
     );
     logger.debug(`[${dstChain.name}] Message IDs in batch: ${messageIds}`);
   } else {
@@ -79181,7 +79273,7 @@ async function submitCLFMessageReport(logs, network) {
     const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_VERIFIER);
     await processMessageReports(decodedLogs);
   } catch (error) {
-    logger.error(`Error processing message report logs: ${error}`);
+    logger.error(`Error processing message report logs: ${formatError(error)}`);
   }
 }
 async function processMessageReports(logs) {
@@ -79191,6 +79283,7 @@ async function processMessageReports(logs) {
   const viemClientManager = import_operator_utils11.ViemClientManager.getInstance();
   const deploymentManager = MessagingDeploymentManager.getInstance();
   const txManager = TxManager.getInstance();
+  const txWriter = TxWriter.getInstance();
   const activeNetworks = networkManager.getActiveNetworks();
   const activeNetworkNames = activeNetworks.map((network) => network.name);
   try {
@@ -79207,10 +79300,24 @@ async function processMessageReports(logs) {
         try {
           const verifierNetwork = networkManager.getVerifierNetwork();
           const { publicClient: verifierPublicClient } = viemClientManager.getClients(verifierNetwork);
-          const messageReportTx = await verifierPublicClient.getTransaction({
-            hash: txHash
-          });
-          const decodedCLFReport = decodeCLFReport(messageReportTx);
+          let messageReportTx;
+          let decodedCLFReport;
+          try {
+            messageReportTx = await verifierPublicClient.getTransaction({
+              hash: txHash
+            });
+          } catch (error) {
+            logger.error(`Failed to get transaction ${txHash}: ${formatError(error)}`);
+            return;
+          }
+          try {
+            decodedCLFReport = decodeCLFReport(messageReportTx);
+          } catch (error) {
+            logger.error(
+              `Failed to decode CLF report for transaction ${txHash}: ${formatError(error)}`
+            );
+            return;
+          }
           logger.debug(
             `Report contains ${decodedCLFReport.report.results.length} results`
           );
@@ -79280,20 +79387,20 @@ async function processMessageReports(logs) {
                 totalGasLimit,
                 viemClientManager,
                 deploymentManager,
-                txManager,
+                txWriter,
                 logger
               );
             }
           );
           await Promise.all(dstChainProcessPromises);
         } catch (error) {
-          logger.error(`Error processing transaction ${txHash}: ${error}`);
+          logger.error(`Error processing transaction ${txHash}: ${formatError(error)}`);
         }
       }
     );
     await Promise.all(txProcessPromises);
   } catch (e) {
-    logger.error(`Error when submitting clf report: ${e}`);
+    logger.error(`Error when submitting clf report: ${formatError(e)}`);
   }
 }
 

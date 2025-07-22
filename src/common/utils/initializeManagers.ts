@@ -127,9 +127,14 @@ export async function initializeManagers(): Promise<void> {
         {},
     );
 
-    const txWriter = TxWriter.createInstance(logger.getLogger("TxWriter"), txMonitor, {
-        dryRun: globalConfig.TX_MANAGER.DRY_RUN,
-    });
+    const txWriter = TxWriter.createInstance(
+        logger.getLogger("TxWriter"),
+        viemClientManager,
+        txMonitor,
+        {
+            dryRun: globalConfig.TX_MANAGER.DRY_RUN,
+        },
+    );
 
     await txWriter.initialize();
     await txReader.initialize();

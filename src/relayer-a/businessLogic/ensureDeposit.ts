@@ -1,8 +1,7 @@
 import { Hash, PublicClient } from "viem";
 
 import { Logger, NetworkManager, ViemClientManager } from "@concero/operator-utils";
-import { MessagingDeploymentManager } from "../../common/managers";
-import { callContract } from "../../common/utils";
+import { MessagingDeploymentManager, TxWriter } from "../../common/managers";
 
 import { globalConfig } from "../../constants";
 
@@ -49,7 +48,7 @@ async function fetchDepositAndDepositIfNeeded() {
 
     const verifierNetwork = networkManager.getVerifierNetwork();
     const verifierAddress = await deploymentManager.getConceroVerifier();
-    const { publicClient, walletClient, account } = viemClientManager.getClients(verifierNetwork);
+    const { publicClient } = viemClientManager.getClients(verifierNetwork);
 
     const requiredDeposit = (await getMinimumDeposit(publicClient, verifierAddress)) * 200n;
     const currentDeposit = await getCurrentOperatorDeposit(publicClient, verifierAddress);
@@ -59,14 +58,13 @@ async function fetchDepositAndDepositIfNeeded() {
         return undefined;
     }
 
-    const txHash = await callContract(publicClient, walletClient, {
+    const txHash = await TxWriter.getInstance().callContract(verifierNetwork, {
         chain: verifierNetwork.viemChain,
         address: verifierAddress,
         abi: globalConfig.ABI.CONCERO_VERIFIER,
         functionName: "operatorDeposit",
         args: [globalConfig.OPERATOR_ADDRESS],
         value: requiredDeposit,
-        account,
     });
     logger.info(`Deposited ${requiredDeposit} to ConceroVerifier with hash ${txHash}`);
 }
