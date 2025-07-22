@@ -1,5 +1,4 @@
 export { AppError } from "./AppError";
-export { asyncRetry } from "./asyncRetry";
 export { checkGas } from "./checkGas";
 export { configureDotEnv } from "./configureDotEnv";
 export { createViemChain } from "./createViemChain";

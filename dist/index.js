@@ -36585,7 +36585,7 @@ ${originalIndentation}`;
       BlockManagerRegistry: () => BlockManagerRegistry5,
       DeploymentFetcher: () => DeploymentFetcher2,
       HttpClient: () => HttpClient3,
-      Logger: () => Logger11,
+      Logger: () => Logger10,
       ManagerBase: () => ManagerBase2,
       NetworkManager: () => NetworkManager8,
       NonceManager: () => NonceManager2,
@@ -46924,7 +46924,7 @@ ${originalIndentation}`;
     });
     var import_winston = __toESM2(require_winston());
     var import_winston_daily_rotate_file = __toESM2(require_winston_daily_rotate_file());
-    var Logger11 = class _Logger extends ManagerBase2 {
+    var Logger10 = class _Logger extends ManagerBase2 {
       constructor(config3) {
         super();
         this.consumerLoggers = /* @__PURE__ */ new Map();
@@ -47074,7 +47074,7 @@ ${originalIndentation}`;
       }
     };
     function createCustomHttpTransport2(url2) {
-      const logger = Logger11.getInstance().getLogger("ViemTransport");
+      const logger = Logger10.getInstance().getLogger("ViemTransport");
       return (config3) => {
         const transport = http2(url2, {
           batch: true
@@ -47168,12 +47168,12 @@ ${originalIndentation}`;
     var confirmations_default = {
       "1270": 3
     };
-    async function sleep2(ms2) {
+    async function sleep(ms2) {
       return new Promise((resolve) => setTimeout(resolve, ms2));
     }
-    async function asyncRetry2(fn2, options = {}) {
+    async function asyncRetry(fn2, options = {}) {
       const { maxRetries = 3, delayMs = 2e3, isRetryableError = () => false } = options;
-      const logger = Logger11.getInstance().getLogger("AsyncRetry");
+      const logger = Logger10.getInstance().getLogger("AsyncRetry");
       let attempt = 0;
       let lastError;
       while (attempt <= maxRetries) {
@@ -47184,7 +47184,7 @@ ${originalIndentation}`;
           if (await isRetryableError(error) && attempt < maxRetries) {
             ++attempt;
             logger.debug(`Retry attempt ${attempt} failed. Retrying in ${delayMs}ms...`);
-            await sleep2(delayMs);
+            await sleep(delayMs);
           } else {
             throw error;
           }
@@ -47235,7 +47235,7 @@ ${originalIndentation}`;
           }
           return false;
         };
-        return asyncRetry2(
+        return asyncRetry(
           () => executeTransaction(publicClient, walletClient, params, nonceManager, config3),
           {
             maxRetries: 20,
@@ -75823,7 +75823,7 @@ function configureDotEnv(basePath = "./") {
 configureDotEnv();
 
 // src/relayer-a/index.ts
-var import_operator_utils12 = __toESM(require_dist(), 1);
+var import_operator_utils11 = __toESM(require_dist(), 1);
 
 // src/constants/appErrors.ts
 var appErrors = {
@@ -77591,9 +77591,6 @@ var AppError = class extends Error {
   }
 };
 
-// src/common/utils/asyncRetry.ts
-var import_operator_utils = __toESM(require_dist(), 1);
-
 // node_modules/viem/_esm/index.js
 init_exports();
 
@@ -77699,7 +77696,7 @@ init_keccak256();
 
 // src/common/utils/checkGas.ts
 var import_web_api = __toESM(require_dist5(), 1);
-var import_operator_utils2 = __toESM(require_dist(), 1);
+var import_operator_utils = __toESM(require_dist(), 1);
 var SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE = 15n;
 async function notifyInSlack(message) {
   try {
@@ -77728,9 +77725,9 @@ async function getChainOperatorMinBalance(publicClient) {
 }
 async function checkAndNotifyInsufficientGas() {
   const operatorAddress = globalConfig.OPERATOR_ADDRESS;
-  const viemClientManager = import_operator_utils2.ViemClientManager.getInstance();
-  const networkManager = import_operator_utils2.NetworkManager.getInstance();
-  const logger = import_operator_utils2.Logger.getInstance().getLogger("GasChecker");
+  const viemClientManager = import_operator_utils.ViemClientManager.getInstance();
+  const networkManager = import_operator_utils.NetworkManager.getInstance();
+  const logger = import_operator_utils.Logger.getInstance().getLogger("GasChecker");
   try {
     const activeNetworks = networkManager.getActiveNetworks();
     if (activeNetworks.length === 0) {
@@ -77776,7 +77773,7 @@ async function checkGas() {
 }
 
 // src/common/utils/customHttpTransport.ts
-var import_operator_utils3 = __toESM(require_dist(), 1);
+var import_operator_utils2 = __toESM(require_dist(), 1);
 
 // src/common/utils/decoders/decodeCLFReport.ts
 var clfReportSubmissionAbi = parseAbiParameters([
@@ -77924,7 +77921,7 @@ var localhostViemChain = defineChain({
 });
 
 // src/common/utils/initializeManagers.ts
-var import_operator_utils5 = __toESM(require_dist(), 1);
+var import_operator_utils4 = __toESM(require_dist(), 1);
 
 // src/common/managers/DbManager.ts
 var import_client = __toESM(require_default2(), 1);
@@ -78031,7 +78028,7 @@ var BlockCheckpointManager = class _BlockCheckpointManager extends ManagerBase {
 };
 
 // src/common/managers/MessagingDeploymentManager.ts
-var import_operator_utils4 = __toESM(require_dist(), 1);
+var import_operator_utils3 = __toESM(require_dist(), 1);
 var MessagingDeploymentManager = class _MessagingDeploymentManager extends ManagerBase {
   static instance;
   conceroRoutersMapByChainName = {};
@@ -78045,7 +78042,7 @@ var MessagingDeploymentManager = class _MessagingDeploymentManager extends Manag
     super();
     this.logger = logger;
     this.config = config3;
-    this.deploymentFetcher = new import_operator_utils4.DeploymentFetcher(logger);
+    this.deploymentFetcher = new import_operator_utils3.DeploymentFetcher(logger);
   }
   static createInstance(logger, config3) {
     _MessagingDeploymentManager.instance = new _MessagingDeploymentManager(logger, config3);
@@ -78255,7 +78252,7 @@ var TxManager = class _TxManager extends ManagerBase {
 
 // src/common/utils/initializeManagers.ts
 async function initializeManagers() {
-  const logger = import_operator_utils5.Logger.createInstance({
+  const logger = import_operator_utils4.Logger.createInstance({
     logDir: globalConfig.LOGGER.LOG_DIR,
     logMaxSize: globalConfig.LOGGER.LOG_MAX_SIZE,
     logMaxFiles: globalConfig.LOGGER.LOG_MAX_FILES,
@@ -78265,26 +78262,26 @@ async function initializeManagers() {
   });
   await logger.initialize();
   const httpLoggerInstance = logger.getLogger("HttpClient");
-  const httpClient = import_operator_utils5.HttpClient.createInstance(httpLoggerInstance, {
+  const httpClient = import_operator_utils4.HttpClient.createInstance(httpLoggerInstance, {
     retryDelay: globalConfig.HTTPCLIENT.RETRY_DELAY,
     maxRetries: globalConfig.HTTPCLIENT.MAX_RETRIES,
     defaultTimeout: globalConfig.HTTPCLIENT.DEFAULT_TIMEOUT
   });
   await httpClient.initialize();
-  const rpcManager = import_operator_utils5.RpcManager.createInstance(logger.getLogger("RpcManager"), {
+  const rpcManager = import_operator_utils4.RpcManager.createInstance(logger.getLogger("RpcManager"), {
     rpcOverrides: globalConfig.RPC.OVERRIDE,
     rpcExtensions: globalConfig.RPC.EXTENSION,
     conceroRpcsUrl: globalConfig.URLS.CONCERO_RPCS,
     networkMode: globalConfig.NETWORK_MODE
   });
-  const viemClientManager = import_operator_utils5.ViemClientManager.createInstance(
+  const viemClientManager = import_operator_utils4.ViemClientManager.createInstance(
     logger.getLogger("ViemClientManager"),
     rpcManager,
     {
       fallbackTransportOptions: globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS
     }
   );
-  const networkManager = import_operator_utils5.NetworkManager.createInstance(
+  const networkManager = import_operator_utils4.NetworkManager.createInstance(
     logger.getLogger("NetworkManager"),
     httpClient,
     {
@@ -78303,7 +78300,7 @@ async function initializeManagers() {
       useCheckpoints: globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS
     }
   );
-  const blockManagerRegistry = import_operator_utils5.BlockManagerRegistry.createInstance(
+  const blockManagerRegistry = import_operator_utils4.BlockManagerRegistry.createInstance(
     logger.getLogger("BlockManagerRegistry"),
     blockCheckpointManager,
     networkManager,
@@ -78335,20 +78332,20 @@ async function initializeManagers() {
   networkManager.registerUpdateListener(viemClientManager);
   networkManager.registerUpdateListener(blockManagerRegistry);
   await networkManager.triggerInitialUpdates();
-  const txMonitor = import_operator_utils5.TxMonitor.createInstance(logger.getLogger("TxMonitor"), viemClientManager, {
+  const txMonitor = import_operator_utils4.TxMonitor.createInstance(logger.getLogger("TxMonitor"), viemClientManager, {
     checkIntervalMs: 5e3,
     dropTimeoutMs: 6e4,
     retryDelayMs: 3e4
   });
-  const txReader = import_operator_utils5.TxReader.createInstance(
+  const txReader = import_operator_utils4.TxReader.createInstance(
     logger.getLogger("TxReader"),
     networkManager,
     viemClientManager,
     {}
   );
-  const nonceManager = import_operator_utils5.NonceManager.createInstance(logger.getLogger("NonceManager"), {});
+  const nonceManager = import_operator_utils4.NonceManager.createInstance(logger.getLogger("NonceManager"), {});
   await nonceManager.initialize();
-  const txWriter = import_operator_utils5.TxWriter.createInstance(
+  const txWriter = import_operator_utils4.TxWriter.createInstance(
     logger.getLogger("TxWriter"),
     viemClientManager,
     txMonitor,
@@ -78376,7 +78373,7 @@ async function initializeManagers() {
 }
 
 // src/relayer-a/businessLogic/ensureDeposit.ts
-var import_operator_utils6 = __toESM(require_dist(), 1);
+var import_operator_utils5 = __toESM(require_dist(), 1);
 async function getMinimumDeposit(publicClient, verifierAddress) {
   const depositAmount = await publicClient.readContract({
     address: verifierAddress,
@@ -78396,9 +78393,9 @@ async function getCurrentOperatorDeposit(publicClient, verifierAddress) {
   return BigInt(currentDeposit);
 }
 async function fetchDepositAndDepositIfNeeded() {
-  const logger = import_operator_utils6.Logger.getInstance().getLogger("ensureDeposit");
-  const networkManager = import_operator_utils6.NetworkManager.getInstance();
-  const viemClientManager = import_operator_utils6.ViemClientManager.getInstance();
+  const logger = import_operator_utils5.Logger.getInstance().getLogger("ensureDeposit");
+  const networkManager = import_operator_utils5.NetworkManager.getInstance();
+  const viemClientManager = import_operator_utils5.ViemClientManager.getInstance();
   const deploymentManager = MessagingDeploymentManager.getInstance();
   const verifierNetwork = networkManager.getVerifierNetwork();
   const verifierAddress = await deploymentManager.getConceroVerifier();
@@ -78409,7 +78406,7 @@ async function fetchDepositAndDepositIfNeeded() {
     logger.info(`Sufficient deposit of ${currentDeposit} already exists`);
     return void 0;
   }
-  const txHash = await import_operator_utils6.TxWriter.getInstance().callContract(verifierNetwork, {
+  const txHash = await import_operator_utils5.TxWriter.getInstance().callContract(verifierNetwork, {
     chain: verifierNetwork.viemChain,
     address: verifierAddress,
     abi: globalConfig.ABI.CONCERO_VERIFIER,
@@ -78427,7 +78424,7 @@ async function ensureDeposit() {
 }
 
 // src/relayer-a/businessLogic/ensureOperatorIsRegistered.ts
-var import_operator_utils7 = __toESM(require_dist(), 1);
+var import_operator_utils6 = __toESM(require_dist(), 1);
 var ChainType = {
   EVM: 0,
   NON_EVM: 1
@@ -78451,7 +78448,7 @@ async function requestOperatorRegistration(networkManager, deploymentManager) {
   const chainTypes = [BigInt(ChainType.EVM)];
   const operatorActions = [BigInt(OperatorRegistrationAction.Register)];
   const operatorAddresses = [globalConfig.OPERATOR_ADDRESS];
-  const transactionHash = await import_operator_utils7.TxWriter.getInstance().callContract(conceroVerifierNetwork, {
+  const transactionHash = await import_operator_utils6.TxWriter.getInstance().callContract(conceroVerifierNetwork, {
     address: await deploymentManager.getConceroVerifier(),
     abi: globalConfig.ABI.CONCERO_VERIFIER,
     functionName: "requestOperatorRegistration",
@@ -78461,8 +78458,8 @@ async function requestOperatorRegistration(networkManager, deploymentManager) {
   return transactionHash;
 }
 async function waitForOperatorRegistration(network, contractAddress, fromBlockNumber, operatorAddress) {
-  const logger = import_operator_utils7.Logger.getInstance().getLogger("waitForOperatorRegistration");
-  const viemClientManager = import_operator_utils7.ViemClientManager.getInstance();
+  const logger = import_operator_utils6.Logger.getInstance().getLogger("waitForOperatorRegistration");
+  const viemClientManager = import_operator_utils6.ViemClientManager.getInstance();
   const { publicClient } = viemClientManager.getClients(network);
   const POLL_INTERVAL_MS = 3 * 1e3;
   const MAX_RETRIES = 100;
@@ -78510,7 +78507,7 @@ async function waitForOperatorRegistration(network, contractAddress, fromBlockNu
 }
 function findOperatorRegistrationLog(logs, operatorAddress) {
   const EVENT_NAME = "OperatorRegistered";
-  const logger = import_operator_utils7.Logger.getInstance().getLogger("findOperatorRegistrationLog");
+  const logger = import_operator_utils6.Logger.getInstance().getLogger("findOperatorRegistrationLog");
   for (const log of logs) {
     try {
       if (log?.args?.operator.toLowerCase() === operatorAddress.toLowerCase() && isHex(log.transactionHash)) {
@@ -78525,9 +78522,9 @@ function findOperatorRegistrationLog(logs, operatorAddress) {
   return void 0;
 }
 async function ensureOperatorIsRegistered() {
-  const logger = import_operator_utils7.Logger.getInstance().getLogger("ensureOperatorIsRegistered");
-  const viemClientManager = import_operator_utils7.ViemClientManager.getInstance();
-  const networkManager = import_operator_utils7.NetworkManager.getInstance();
+  const logger = import_operator_utils6.Logger.getInstance().getLogger("ensureOperatorIsRegistered");
+  const viemClientManager = import_operator_utils6.ViemClientManager.getInstance();
+  const networkManager = import_operator_utils6.NetworkManager.getInstance();
   const deploymentManager = MessagingDeploymentManager.getInstance();
   const verifierNetwork = networkManager.getVerifierNetwork();
   const { publicClient } = viemClientManager.getClients(verifierNetwork);
@@ -78551,12 +78548,12 @@ async function ensureOperatorIsRegistered() {
 }
 
 // src/relayer-a/eventListener/setupEventListeners.ts
-var import_operator_utils11 = __toESM(require_dist(), 1);
+var import_operator_utils10 = __toESM(require_dist(), 1);
 
 // src/common/eventListener/setupEventListener.ts
-var import_operator_utils8 = __toESM(require_dist(), 1);
+var import_operator_utils7 = __toESM(require_dist(), 1);
 async function setupEventListener(network, contractAddress, onLogs, event, blockManager) {
-  const logger = import_operator_utils8.Logger.getInstance().getLogger("setupEventListener");
+  const logger = import_operator_utils7.Logger.getInstance().getLogger("setupEventListener");
   const txManager = TxManager.getInstance();
   const watcherId = txManager.logWatcher.create(
     contractAddress,
@@ -78586,7 +78583,7 @@ async function setupEventListener(network, contractAddress, onLogs, event, block
 }
 
 // src/relayer-a/businessLogic/requestCLFMessageReport.ts
-var import_operator_utils9 = __toESM(require_dist(), 1);
+var import_operator_utils8 = __toESM(require_dist(), 1);
 
 // src/common/eventListener/decodeLogs.ts
 function decodeLogs(logs, abi3) {
@@ -78614,11 +78611,11 @@ function decodeLogs(logs, abi3) {
 // src/relayer-a/businessLogic/requestCLFMessageReport.ts
 async function requestCLFMessageReport(logs, network) {
   if (logs.length === 0) return;
-  const logger = import_operator_utils9.Logger.getInstance().getLogger("requestCLFMessageReport");
+  const logger = import_operator_utils8.Logger.getInstance().getLogger("requestCLFMessageReport");
   logger.debug(
     `Processing ${logs.length} logs for CLF message report requests from ${network.name}`
   );
-  const networkManager = import_operator_utils9.NetworkManager.getInstance();
+  const networkManager = import_operator_utils8.NetworkManager.getInstance();
   const verifierNetwork = networkManager.getVerifierNetwork();
   const verifierAddress = await MessagingDeploymentManager.getInstance().getConceroVerifier();
   try {
@@ -78673,7 +78670,7 @@ async function processMessageReportRequest(decodedLog, srcChainSelector, logger,
       eventEmitter.emit("requestMessageReport", { txHash: dryRunTxHash });
       return;
     }
-    const txHash = await import_operator_utils9.TxWriter.getInstance().callContract(verifierNetwork, {
+    const txHash = await import_operator_utils8.TxWriter.getInstance().callContract(verifierNetwork, {
       address: verifierAddress,
       abi: globalConfig.ABI.CONCERO_VERIFIER,
       functionName: "requestMessageReport",
@@ -78710,7 +78707,7 @@ async function processMessageReportRequest(decodedLog, srcChainSelector, logger,
 }
 
 // src/relayer-a/businessLogic/submitCLFMessageReport.ts
-var import_operator_utils10 = __toESM(require_dist(), 1);
+var import_operator_utils9 = __toESM(require_dist(), 1);
 async function parseMessageResults(decodedCLFReport, logger) {
   const messageResults = [];
   for (let i = 0; i < decodedCLFReport.report.results.length; i++) {
@@ -78810,7 +78807,7 @@ async function submitBatchToDestination(dstChain, reportSubmission, messages, in
 }
 async function submitCLFMessageReport(logs, network) {
   if (logs.length === 0) return;
-  const logger = import_operator_utils10.Logger.getInstance().getLogger("processMessageReports");
+  const logger = import_operator_utils9.Logger.getInstance().getLogger("processMessageReports");
   logger.debug(`Processing ${logs.length} MessageReport logs`);
   try {
     const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_VERIFIER);
@@ -78820,13 +78817,13 @@ async function submitCLFMessageReport(logs, network) {
   }
 }
 async function processMessageReports(logs) {
-  const logger = import_operator_utils10.Logger.getInstance().getLogger("submitCLFMessageReport");
-  const networkManager = import_operator_utils10.NetworkManager.getInstance();
-  const blockManagerRegistry = import_operator_utils10.BlockManagerRegistry.getInstance();
-  const viemClientManager = import_operator_utils10.ViemClientManager.getInstance();
+  const logger = import_operator_utils9.Logger.getInstance().getLogger("submitCLFMessageReport");
+  const networkManager = import_operator_utils9.NetworkManager.getInstance();
+  const blockManagerRegistry = import_operator_utils9.BlockManagerRegistry.getInstance();
+  const viemClientManager = import_operator_utils9.ViemClientManager.getInstance();
   const deploymentManager = MessagingDeploymentManager.getInstance();
   const txManager = TxManager.getInstance();
-  const txWriter = import_operator_utils10.TxWriter.getInstance();
+  const txWriter = import_operator_utils9.TxWriter.getInstance();
   const activeNetworks = networkManager.getActiveNetworks();
   const activeNetworkNames = activeNetworks.map((network) => network.name);
   try {
@@ -78934,10 +78931,10 @@ async function processMessageReports(logs) {
 
 // src/relayer-a/eventListener/setupEventListeners.ts
 async function setupEventListeners() {
-  const logger = import_operator_utils11.Logger.getInstance().getLogger("setupEventListeners");
-  const networkManager = import_operator_utils11.NetworkManager.getInstance();
+  const logger = import_operator_utils10.Logger.getInstance().getLogger("setupEventListeners");
+  const networkManager = import_operator_utils10.NetworkManager.getInstance();
   const deploymentManager = MessagingDeploymentManager.getInstance();
-  const blockManagerRegistry = import_operator_utils11.BlockManagerRegistry.getInstance();
+  const blockManagerRegistry = import_operator_utils10.BlockManagerRegistry.getInstance();
   const activeNetworks = networkManager.getActiveNetworks();
   const eventListenerHandles = [];
   for (const network of activeNetworks) {
@@ -79017,7 +79014,7 @@ async function main() {
   await ensureDeposit();
   await ensureOperatorIsRegistered();
   await setupEventListeners();
-  const blockManagerRegistry = import_operator_utils12.BlockManagerRegistry.getInstance();
+  const blockManagerRegistry = import_operator_utils11.BlockManagerRegistry.getInstance();
   for (const blockManager of blockManagerRegistry.getAllBlockManagers()) {
     await blockManager.startPolling();
   }
