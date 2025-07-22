@@ -1,13 +1,8 @@
-import { Log, PublicClient, WalletClient, encodeAbiParameters, keccak256 } from "viem";
+import { Log, encodeAbiParameters, keccak256 } from "viem";
 
+import { Logger, NetworkManager, TxWriter } from "@concero/operator-utils";
 import { decodeLogs } from "../../common/eventListener/decodeLogs";
-import {
-    DeploymentManager,
-    NetworkManager,
-    TxManager,
-    ViemClientManager,
-} from "../../common/managers";
-import { Logger } from "../../common/utils";
+import { MessagingDeploymentManager } from "../../common/managers";
 
 import { eventEmitter, globalConfig } from "../../constants";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
@@ -23,9 +18,7 @@ export async function requestCLFMessageReport(logs: Log[], network: ConceroNetwo
 
     const networkManager = NetworkManager.getInstance();
     const verifierNetwork = networkManager.getVerifierNetwork();
-    const verifierAddress = await DeploymentManager.getInstance().getConceroVerifier();
-    const { publicClient, walletClient } =
-        ViemClientManager.getInstance().getClients(verifierNetwork);
+    const verifierAddress = await MessagingDeploymentManager.getInstance().getConceroVerifier();
 
     // Decode logs to access event data
     try {
@@ -41,8 +34,6 @@ export async function requestCLFMessageReport(logs: Log[], network: ConceroNetwo
                     networkManager,
                     verifierNetwork,
                     verifierAddress,
-                    publicClient,
-                    walletClient,
                 ),
             );
         }
@@ -60,8 +51,6 @@ async function processMessageReportRequest(
     networkManager: ReturnType<typeof NetworkManager.getInstance>,
     verifierNetwork: ConceroNetwork,
     verifierAddress: string,
-    publicClient: PublicClient,
-    walletClient: WalletClient,
 ) {
     try {
         const { messageId, message, sender } = decodedLog.args;
@@ -98,29 +87,24 @@ async function processMessageReportRequest(
             return;
         }
 
-        const managedTx = await TxManager.getInstance().callContract(
-            walletClient,
-            publicClient,
-            verifierNetwork,
-            {
-                address: verifierAddress,
-                abi: globalConfig.ABI.CONCERO_VERIFIER,
-                functionName: "requestMessageReport",
-                args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
-                chain: verifierNetwork.viemChain,
-                options: {
-                    receiptConfirmations: 3,
-                    receiptTimeout: 60_000,
-                },
+        const txHash = await TxWriter.getInstance().callContract(verifierNetwork, {
+            address: verifierAddress,
+            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            functionName: "requestMessageReport",
+            args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
+            chain: verifierNetwork.viemChain,
+            options: {
+                receiptConfirmations: 3,
+                receiptTimeout: 60_000,
             },
-        );
+        });
 
-        if (managedTx && managedTx.txHash) {
+        if (txHash) {
             eventEmitter.emit("requestMessageReport", {
-                txHash: managedTx.txHash,
+                txHash: txHash,
             });
             logger.info(
-                `${verifierNetwork.name} CLF message report requested with hash: ${managedTx.txHash}`,
+                `${verifierNetwork.name} CLF message report requested with hash: ${txHash}`,
             );
         } else {
             logger.error(

@@ -2,11 +2,8 @@ import { Address, formatUnits, PublicClient } from "viem";
 
 import { WebClient } from "@slack/web-api";
 
+import { HttpClient, Logger, NetworkManager, ViemClientManager } from "@concero/operator-utils";
 import { globalConfig } from "../../constants";
-import { NetworkManager, ViemClientManager } from "../managers";
-
-import { HttpClient } from "./HttpClient";
-import { Logger } from "./logger";
 
 const SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE = 15n;
 

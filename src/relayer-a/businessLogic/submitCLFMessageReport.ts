@@ -1,15 +1,15 @@
 import { Log, decodeAbiParameters, getAbiItem } from "viem";
 
-import { decodeLogs } from "../../common/eventListener/decodeLogs";
 import {
     BlockManagerRegistry,
-    DeploymentManager,
+    Logger,
     NetworkManager,
-    TxManager,
+    TxWriter,
     ViemClientManager,
-} from "../../common/managers";
+} from "@concero/operator-utils";
+import { decodeLogs } from "../../common/eventListener/decodeLogs";
+import { MessagingDeploymentManager, TxManager } from "../../common/managers";
 import { decodeCLFReport, decodeMessageReportResult } from "../../common/utils";
-import { Logger } from "../../common/utils/";
 import { DecodedMessageReportResult } from "../../common/utils/decoders/types";
 
 import { globalConfig } from "../../constants";
@@ -59,7 +59,7 @@ async function fetchOriginalMessage(
     result: DecodedMessageReportResult,
     activeNetworkNames: string[],
     networkManager: NetworkManager,
-    deploymentManager: DeploymentManager,
+    deploymentManager: MessagingDeploymentManager,
     blockManagerRegistry: BlockManagerRegistry,
     txManager: TxManager,
     logger: any,
@@ -128,9 +128,8 @@ async function submitBatchToDestination(
     indexes: number[],
     results: DecodedMessageReportResult[],
     totalGasLimit: bigint,
-    viemClientManager: ViemClientManager,
-    deploymentManager: DeploymentManager,
-    txManager: TxManager,
+    deploymentManager: MessagingDeploymentManager,
+    txWriter: TxWriter,
     logger: any,
 ) {
     if (globalConfig.TX_MANAGER.DRY_RUN) {
@@ -141,9 +140,8 @@ async function submitBatchToDestination(
     }
 
     const dstConceroRouter = await deploymentManager.getRouterByChainName(dstChain.name);
-    const { walletClient, publicClient } = viemClientManager.getClients(dstChain);
 
-    const managedTx = await txManager.callContract(walletClient, publicClient, dstChain, {
+    const txHash = await txWriter.callContract(dstChain, {
         address: dstConceroRouter,
         abi: globalConfig.ABI.CONCERO_ROUTER,
         functionName: "submitMessageReport",
@@ -157,9 +155,9 @@ async function submitBatchToDestination(
 
     const messageIds = results.map(result => result.messageId).join(", ");
 
-    if (managedTx && managedTx.txHash) {
+    if (txHash) {
         logger.info(
-            `[${dstChain.name}] CLF Report with ${messages.length} results submitted with hash: ${managedTx.txHash}`,
+            `[${dstChain.name}] CLF Report with ${messages.length} results submitted with hash: ${txHash}`,
         );
         logger.debug(`[${dstChain.name}] Message IDs in batch: ${messageIds}`);
     } else {
@@ -196,8 +194,9 @@ async function processMessageReports(logs: DecodedLog[]) {
     const networkManager = NetworkManager.getInstance();
     const blockManagerRegistry = BlockManagerRegistry.getInstance();
     const viemClientManager = ViemClientManager.getInstance();
-    const deploymentManager = DeploymentManager.getInstance();
+    const deploymentManager = MessagingDeploymentManager.getInstance();
     const txManager = TxManager.getInstance();
+    const txWriter = TxWriter.getInstance();
 
     const activeNetworks = networkManager.getActiveNetworks();
     const activeNetworkNames = activeNetworks.map(network => network.name);
@@ -315,9 +314,8 @@ async function processMessageReports(logs: DecodedLog[]) {
                                 indexes,
                                 results,
                                 totalGasLimit,
-                                viemClientManager,
                                 deploymentManager,
-                                txManager,
+                                txWriter,
                                 logger,
                             );
                         },

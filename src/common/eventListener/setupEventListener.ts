@@ -1,8 +1,8 @@
 import { AbiEvent, type Address, Log } from "viem";
 
+import { Logger } from "@concero/operator-utils";
 import { ConceroNetwork } from "../../types/ConceroNetwork";
 import { TxManager } from "../managers";
-import { Logger } from "../utils";
 
 export interface EventListenerHandle {
     stop: () => void;
@@ -13,6 +13,7 @@ export async function setupEventListener<T>(
     contractAddress: Address,
     onLogs: (logs: Log[], network: ConceroNetwork) => Promise<void>,
     event: AbiEvent,
+    blockManager: any,
 ): Promise<EventListenerHandle> {
     const logger = Logger.getInstance().getLogger("setupEventListener");
 
@@ -20,7 +21,7 @@ export async function setupEventListener<T>(
 
     const watcherId = txManager.logWatcher.create(
         contractAddress,
-        network.name,
+        network,
         async (logs, network) => {
             if (logs.length === 0) return;
 
@@ -34,6 +35,7 @@ export async function setupEventListener<T>(
             }
         },
         event,
+        blockManager,
     );
 
     return {

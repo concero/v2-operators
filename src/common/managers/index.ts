@@ -1,16 +1,6 @@
 export { initializeManagers } from "../utils/initializeManagers";
 export { BlockCheckpointManager } from "./BlockCheckpointManager";
-export { BlockManager } from "./BlockManager";
-export { BlockManagerRegistry } from "./BlockManagerRegistry";
 export { DbManager } from "./DbManager";
-export { DeploymentManager } from "./DeploymentManager";
 export { ManagerBase } from "./ManagerBase";
-export { NetworkManager } from "./NetworkManager";
-export { NonceManager } from "./NonceManager";
-export { RpcManager } from "./RpcManager";
-export { Singleton } from "./Singleton";
+export { MessagingDeploymentManager } from "./MessagingDeploymentManager";
 export { TxManager } from "./TxManager";
-export { TxMonitor } from "./TxMonitor";
-export { TxReader } from "./TxReader";
-export { TxWriter } from "./TxWriter";
-export { ViemClientManager } from "./ViemClientManager";

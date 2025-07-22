@@ -43,11 +43,15 @@ export interface DeploymentManagerConfig extends BaseManagerConfig {
 /** Configuration for TxWriter */
 export interface TxWriterConfig extends BaseManagerConfig {
     dryRun: boolean;
+    simulateTx: boolean;
+    defaultGasLimit?: bigint;
 }
 
 /** Configuration for TxMonitor */
 export interface TxMonitorConfig extends BaseManagerConfig {
-    // Any specific config properties for TxMonitor
+    checkIntervalMs?: number;
+    dropTimeoutMs?: number;
+    retryDelayMs?: number;
 }
 
 /** Configuration for NonceManager */
@@ -84,6 +88,7 @@ export interface LoggerConfig extends BaseManagerConfig {
     logMaxFiles: string | number;
     logLevelDefault: string;
     logLevelsGranular: Record<string, string>;
+    enableConsoleTransport?: boolean;
 }
 
 /** Configuration for HttpClient */
