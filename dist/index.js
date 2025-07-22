@@ -11902,11 +11902,11 @@ var require_dist = __commonJS({
         version3 = "1.0.8";
       }
     });
-    var BaseError4;
+    var BaseError3;
     var init_errors2 = __esm2({
       "node_modules/abitype/dist/esm/errors.js"() {
         init_version3();
-        BaseError4 = class _BaseError extends Error {
+        BaseError3 = class _BaseError extends Error {
           constructor(shortMessage, args = {}) {
             const details = args.cause instanceof _BaseError ? args.cause.details : args.cause?.message ? args.cause.message : args.details;
             const docsPath8 = args.cause instanceof _BaseError ? args.cause.docsPath || args.docsPath : args.docsPath;
@@ -12110,7 +12110,7 @@ var require_dist = __commonJS({
     var init_abiItem2 = __esm2({
       "node_modules/abitype/dist/esm/human-readable/errors/abiItem.js"() {
         init_errors2();
-        InvalidAbiItemError2 = class extends BaseError4 {
+        InvalidAbiItemError2 = class extends BaseError3 {
           constructor({ signature }) {
             super("Failed to parse ABI item.", {
               details: `parseAbiItem(${JSON.stringify(signature, null, 2)})`,
@@ -12124,7 +12124,7 @@ var require_dist = __commonJS({
             });
           }
         };
-        UnknownTypeError2 = class extends BaseError4 {
+        UnknownTypeError2 = class extends BaseError3 {
           constructor({ type }) {
             super("Unknown type.", {
               metaMessages: [
@@ -12139,7 +12139,7 @@ var require_dist = __commonJS({
             });
           }
         };
-        UnknownSolidityTypeError2 = class extends BaseError4 {
+        UnknownSolidityTypeError2 = class extends BaseError3 {
           constructor({ type }) {
             super("Unknown type.", {
               metaMessages: [`Type "${type}" is not a valid ABI type.`]
@@ -12162,7 +12162,7 @@ var require_dist = __commonJS({
     var init_abiParameter2 = __esm2({
       "node_modules/abitype/dist/esm/human-readable/errors/abiParameter.js"() {
         init_errors2();
-        InvalidParameterError2 = class extends BaseError4 {
+        InvalidParameterError2 = class extends BaseError3 {
           constructor({ param }) {
             super("Invalid ABI parameter.", {
               details: param
@@ -12175,7 +12175,7 @@ var require_dist = __commonJS({
             });
           }
         };
-        SolidityProtectedKeywordError2 = class extends BaseError4 {
+        SolidityProtectedKeywordError2 = class extends BaseError3 {
           constructor({ param, name }) {
             super("Invalid ABI parameter.", {
               details: param,
@@ -12191,7 +12191,7 @@ var require_dist = __commonJS({
             });
           }
         };
-        InvalidModifierError2 = class extends BaseError4 {
+        InvalidModifierError2 = class extends BaseError3 {
           constructor({ param, type, modifier }) {
             super("Invalid ABI parameter.", {
               details: param,
@@ -12207,7 +12207,7 @@ var require_dist = __commonJS({
             });
           }
         };
-        InvalidFunctionModifierError2 = class extends BaseError4 {
+        InvalidFunctionModifierError2 = class extends BaseError3 {
           constructor({ param, type, modifier }) {
             super("Invalid ABI parameter.", {
               details: param,
@@ -12224,7 +12224,7 @@ var require_dist = __commonJS({
             });
           }
         };
-        InvalidAbiTypeParameterError2 = class extends BaseError4 {
+        InvalidAbiTypeParameterError2 = class extends BaseError3 {
           constructor({ abiParameter }) {
             super("Invalid ABI parameter.", {
               details: JSON.stringify(abiParameter, null, 2),
@@ -12246,7 +12246,7 @@ var require_dist = __commonJS({
     var init_signature2 = __esm2({
       "node_modules/abitype/dist/esm/human-readable/errors/signature.js"() {
         init_errors2();
-        InvalidSignatureError2 = class extends BaseError4 {
+        InvalidSignatureError2 = class extends BaseError3 {
           constructor({ signature, type }) {
             super(`Invalid ${type} signature.`, {
               details: signature
@@ -12259,7 +12259,7 @@ var require_dist = __commonJS({
             });
           }
         };
-        UnknownSignatureError2 = class extends BaseError4 {
+        UnknownSignatureError2 = class extends BaseError3 {
           constructor({ signature }) {
             super("Unknown signature.", {
               details: signature
@@ -12272,7 +12272,7 @@ var require_dist = __commonJS({
             });
           }
         };
-        InvalidStructSignatureError2 = class extends BaseError4 {
+        InvalidStructSignatureError2 = class extends BaseError3 {
           constructor({ signature }) {
             super("Invalid struct signature.", {
               details: signature,
@@ -12292,7 +12292,7 @@ var require_dist = __commonJS({
     var init_struct2 = __esm2({
       "node_modules/abitype/dist/esm/human-readable/errors/struct.js"() {
         init_errors2();
-        CircularReferenceError2 = class extends BaseError4 {
+        CircularReferenceError2 = class extends BaseError3 {
           constructor({ type }) {
             super("Circular reference detected.", {
               metaMessages: [`Struct "${type}" is a circular reference.`]
@@ -12311,7 +12311,7 @@ var require_dist = __commonJS({
     var init_splitParameters2 = __esm2({
       "node_modules/abitype/dist/esm/human-readable/errors/splitParameters.js"() {
         init_errors2();
-        InvalidParenthesisError2 = class extends BaseError4 {
+        InvalidParenthesisError2 = class extends BaseError3 {
           constructor({ current, depth }) {
             super("Unbalanced parentheses.", {
               metaMessages: [
@@ -12599,7 +12599,7 @@ var require_dist = __commonJS({
     var abiParameterWithTupleRegex2;
     var dynamicIntegerRegex2;
     var protectedKeywordsRegex2;
-    var init_utils4 = __esm2({
+    var init_utils3 = __esm2({
       "node_modules/abitype/dist/esm/human-readable/runtime/utils.js"() {
         init_regex3();
         init_abiItem2();
@@ -12690,7 +12690,7 @@ var require_dist = __commonJS({
         init_signature2();
         init_struct2();
         init_signatures2();
-        init_utils4();
+        init_utils3();
         typeWithoutTupleRegex2 = /^(?<type>[a-zA-Z$_][a-zA-Z0-9$_]*)(?<array>(?:\[\d*?\])+?)?$/;
       }
     });
@@ -12710,7 +12710,7 @@ var require_dist = __commonJS({
       "node_modules/abitype/dist/esm/human-readable/parseAbi.js"() {
         init_signatures2();
         init_structs2();
-        init_utils4();
+        init_utils3();
       }
     });
     function parseAbiItem2(signature) {
@@ -12737,7 +12737,7 @@ var require_dist = __commonJS({
         init_abiItem2();
         init_signatures2();
         init_structs2();
-        init_utils4();
+        init_utils3();
       }
     });
     var init_exports2 = __esm2({
@@ -15132,38 +15132,38 @@ var require_dist = __commonJS({
         init_formatAbiItem22();
       }
     });
-    var stringify2;
-    var init_stringify2 = __esm2({
+    var stringify;
+    var init_stringify = __esm2({
       "node_modules/viem/_esm/utils/stringify.js"() {
-        stringify2 = (value, replacer, space) => JSON.stringify(value, (key, value_) => {
+        stringify = (value, replacer, space) => JSON.stringify(value, (key, value_) => {
           const value2 = typeof value_ === "bigint" ? value_.toString() : value_;
           return typeof replacer === "function" ? replacer(key, value2) : value2;
         }, space);
       }
     });
-    function formatAbiItemWithArgs2({ abiItem, args, includeFunctionName = true, includeName = false }) {
+    function formatAbiItemWithArgs({ abiItem, args, includeFunctionName = true, includeName = false }) {
       if (!("name" in abiItem))
         return;
       if (!("inputs" in abiItem))
         return;
       if (!abiItem.inputs)
         return;
-      return `${includeFunctionName ? abiItem.name : ""}(${abiItem.inputs.map((input, i) => `${includeName && input.name ? `${input.name}: ` : ""}${typeof args[i] === "object" ? stringify2(args[i]) : args[i]}`).join(", ")})`;
+      return `${includeFunctionName ? abiItem.name : ""}(${abiItem.inputs.map((input, i) => `${includeName && input.name ? `${input.name}: ` : ""}${typeof args[i] === "object" ? stringify(args[i]) : args[i]}`).join(", ")})`;
     }
-    var init_formatAbiItemWithArgs2 = __esm2({
+    var init_formatAbiItemWithArgs = __esm2({
       "node_modules/viem/_esm/utils/abi/formatAbiItemWithArgs.js"() {
-        init_stringify2();
+        init_stringify();
       }
     });
-    var etherUnits2;
-    var gweiUnits2;
-    var init_unit2 = __esm2({
+    var etherUnits;
+    var gweiUnits;
+    var init_unit = __esm2({
       "node_modules/viem/_esm/constants/unit.js"() {
-        etherUnits2 = {
+        etherUnits = {
           gwei: 9,
           wei: 18
         };
-        gweiUnits2 = {
+        gweiUnits = {
           ether: -9,
           wei: 9
         };
@@ -15186,21 +15186,21 @@ var require_dist = __commonJS({
       "node_modules/viem/_esm/utils/unit/formatUnits.js"() {
       }
     });
-    function formatEther2(wei, unit = "wei") {
-      return formatUnits2(wei, etherUnits2[unit]);
+    function formatEther(wei, unit = "wei") {
+      return formatUnits2(wei, etherUnits[unit]);
     }
-    var init_formatEther2 = __esm2({
+    var init_formatEther = __esm2({
       "node_modules/viem/_esm/utils/unit/formatEther.js"() {
-        init_unit2();
+        init_unit();
         init_formatUnits2();
       }
     });
-    function formatGwei2(wei, unit = "wei") {
-      return formatUnits2(wei, gweiUnits2[unit]);
+    function formatGwei(wei, unit = "wei") {
+      return formatUnits2(wei, gweiUnits[unit]);
     }
-    var init_formatGwei2 = __esm2({
+    var init_formatGwei = __esm2({
       "node_modules/viem/_esm/utils/unit/formatGwei.js"() {
-        init_unit2();
+        init_unit();
         init_formatUnits2();
       }
     });
@@ -15255,7 +15255,7 @@ var require_dist = __commonJS({
         };
       }
     });
-    function prettyPrint2(args) {
+    function prettyPrint(args) {
       const entries = Object.entries(args).map(([key, value]) => {
         if (value === void 0 || value === false)
           return null;
@@ -15264,20 +15264,20 @@ var require_dist = __commonJS({
       const maxLength = entries.reduce((acc, [key]) => Math.max(acc, key.length), 0);
       return entries.map(([key, value]) => `  ${`${key}:`.padEnd(maxLength + 1)}  ${value}`).join("\n");
     }
-    var FeeConflictError2;
-    var InvalidLegacyVError2;
-    var InvalidSerializableTransactionError2;
-    var InvalidStorageKeySizeError2;
-    var TransactionExecutionError2;
-    var TransactionNotFoundError2;
-    var TransactionReceiptNotFoundError2;
-    var WaitForTransactionReceiptTimeoutError2;
-    var init_transaction2 = __esm2({
+    var FeeConflictError;
+    var InvalidLegacyVError;
+    var InvalidSerializableTransactionError;
+    var InvalidStorageKeySizeError;
+    var TransactionExecutionError;
+    var TransactionNotFoundError;
+    var TransactionReceiptNotFoundError;
+    var WaitForTransactionReceiptTimeoutError;
+    var init_transaction = __esm2({
       "node_modules/viem/_esm/errors/transaction.js"() {
-        init_formatEther2();
-        init_formatGwei2();
+        init_formatEther();
+        init_formatGwei();
         init_base2();
-        FeeConflictError2 = class extends BaseError22 {
+        FeeConflictError = class extends BaseError22 {
           constructor() {
             super([
               "Cannot specify both a `gasPrice` and a `maxFeePerGas`/`maxPriorityFeePerGas`.",
@@ -15285,20 +15285,20 @@ var require_dist = __commonJS({
             ].join("\n"), { name: "FeeConflictError" });
           }
         };
-        InvalidLegacyVError2 = class extends BaseError22 {
+        InvalidLegacyVError = class extends BaseError22 {
           constructor({ v }) {
             super(`Invalid \`v\` value "${v}". Expected 27 or 28.`, {
               name: "InvalidLegacyVError"
             });
           }
         };
-        InvalidSerializableTransactionError2 = class extends BaseError22 {
+        InvalidSerializableTransactionError = class extends BaseError22 {
           constructor({ transaction }) {
             super("Cannot infer a transaction type from provided transaction.", {
               metaMessages: [
                 "Provided Transaction:",
                 "{",
-                prettyPrint2(transaction),
+                prettyPrint(transaction),
                 "}",
                 "",
                 "To infer the type, either provide:",
@@ -15313,23 +15313,23 @@ var require_dist = __commonJS({
             });
           }
         };
-        InvalidStorageKeySizeError2 = class extends BaseError22 {
+        InvalidStorageKeySizeError = class extends BaseError22 {
           constructor({ storageKey }) {
             super(`Size for storage key "${storageKey}" is invalid. Expected 32 bytes. Got ${Math.floor((storageKey.length - 2) / 2)} bytes.`, { name: "InvalidStorageKeySizeError" });
           }
         };
-        TransactionExecutionError2 = class extends BaseError22 {
+        TransactionExecutionError = class extends BaseError22 {
           constructor(cause, { account, docsPath: docsPath8, chain, data, gas, gasPrice, maxFeePerGas, maxPriorityFeePerGas, nonce, to: to2, value }) {
-            const prettyArgs = prettyPrint2({
+            const prettyArgs = prettyPrint({
               chain: chain && `${chain?.name} (id: ${chain?.id})`,
               from: account?.address,
               to: to2,
-              value: typeof value !== "undefined" && `${formatEther2(value)} ${chain?.nativeCurrency?.symbol || "ETH"}`,
+              value: typeof value !== "undefined" && `${formatEther(value)} ${chain?.nativeCurrency?.symbol || "ETH"}`,
               data,
               gas,
-              gasPrice: typeof gasPrice !== "undefined" && `${formatGwei2(gasPrice)} gwei`,
-              maxFeePerGas: typeof maxFeePerGas !== "undefined" && `${formatGwei2(maxFeePerGas)} gwei`,
-              maxPriorityFeePerGas: typeof maxPriorityFeePerGas !== "undefined" && `${formatGwei2(maxPriorityFeePerGas)} gwei`,
+              gasPrice: typeof gasPrice !== "undefined" && `${formatGwei(gasPrice)} gwei`,
+              maxFeePerGas: typeof maxFeePerGas !== "undefined" && `${formatGwei(maxFeePerGas)} gwei`,
+              maxPriorityFeePerGas: typeof maxPriorityFeePerGas !== "undefined" && `${formatGwei(maxPriorityFeePerGas)} gwei`,
               nonce
             });
             super(cause.shortMessage, {
@@ -15351,7 +15351,7 @@ var require_dist = __commonJS({
             this.cause = cause;
           }
         };
-        TransactionNotFoundError2 = class extends BaseError22 {
+        TransactionNotFoundError = class extends BaseError22 {
           constructor({ blockHash, blockNumber, blockTag, hash: hash22, index: index2 }) {
             let identifier = "Transaction";
             if (blockTag && index2 !== void 0)
@@ -15367,61 +15367,61 @@ var require_dist = __commonJS({
             });
           }
         };
-        TransactionReceiptNotFoundError2 = class extends BaseError22 {
+        TransactionReceiptNotFoundError = class extends BaseError22 {
           constructor({ hash: hash22 }) {
             super(`Transaction receipt with hash "${hash22}" could not be found. The Transaction may not be processed on a block yet.`, {
               name: "TransactionReceiptNotFoundError"
             });
           }
         };
-        WaitForTransactionReceiptTimeoutError2 = class extends BaseError22 {
+        WaitForTransactionReceiptTimeoutError = class extends BaseError22 {
           constructor({ hash: hash22 }) {
             super(`Timed out while waiting for transaction with hash "${hash22}" to be confirmed.`, { name: "WaitForTransactionReceiptTimeoutError" });
           }
         };
       }
     });
-    var getContractAddress2;
+    var getContractAddress;
     var getUrl;
     var init_utils32 = __esm2({
       "node_modules/viem/_esm/errors/utils.js"() {
-        getContractAddress2 = (address) => address;
+        getContractAddress = (address) => address;
         getUrl = (url2) => url2;
       }
     });
-    var CallExecutionError2;
-    var ContractFunctionExecutionError2;
-    var ContractFunctionRevertedError2;
-    var ContractFunctionZeroDataError2;
-    var CounterfactualDeploymentFailedError2;
-    var RawContractError2;
-    var init_contract2 = __esm2({
+    var CallExecutionError;
+    var ContractFunctionExecutionError;
+    var ContractFunctionRevertedError;
+    var ContractFunctionZeroDataError;
+    var CounterfactualDeploymentFailedError;
+    var RawContractError;
+    var init_contract = __esm2({
       "node_modules/viem/_esm/errors/contract.js"() {
         init_parseAccount();
         init_solidity();
         init_decodeErrorResult();
         init_formatAbiItem22();
-        init_formatAbiItemWithArgs2();
+        init_formatAbiItemWithArgs();
         init_getAbiItem2();
-        init_formatEther2();
-        init_formatGwei2();
+        init_formatEther();
+        init_formatGwei();
         init_abi2();
         init_base2();
         init_stateOverride();
-        init_transaction2();
+        init_transaction();
         init_utils32();
-        CallExecutionError2 = class extends BaseError22 {
+        CallExecutionError = class extends BaseError22 {
           constructor(cause, { account: account_, docsPath: docsPath8, chain, data, gas, gasPrice, maxFeePerGas, maxPriorityFeePerGas, nonce, to: to2, value, stateOverride }) {
             const account = account_ ? parseAccount(account_) : void 0;
-            let prettyArgs = prettyPrint2({
+            let prettyArgs = prettyPrint({
               from: account?.address,
               to: to2,
-              value: typeof value !== "undefined" && `${formatEther2(value)} ${chain?.nativeCurrency?.symbol || "ETH"}`,
+              value: typeof value !== "undefined" && `${formatEther(value)} ${chain?.nativeCurrency?.symbol || "ETH"}`,
               data,
               gas,
-              gasPrice: typeof gasPrice !== "undefined" && `${formatGwei2(gasPrice)} gwei`,
-              maxFeePerGas: typeof maxFeePerGas !== "undefined" && `${formatGwei2(maxFeePerGas)} gwei`,
-              maxPriorityFeePerGas: typeof maxPriorityFeePerGas !== "undefined" && `${formatGwei2(maxPriorityFeePerGas)} gwei`,
+              gasPrice: typeof gasPrice !== "undefined" && `${formatGwei(gasPrice)} gwei`,
+              maxFeePerGas: typeof maxFeePerGas !== "undefined" && `${formatGwei(maxFeePerGas)} gwei`,
+              maxPriorityFeePerGas: typeof maxPriorityFeePerGas !== "undefined" && `${formatGwei(maxPriorityFeePerGas)} gwei`,
               nonce
             });
             if (stateOverride) {
@@ -15447,18 +15447,18 @@ ${prettyStateOverride(stateOverride)}`;
             this.cause = cause;
           }
         };
-        ContractFunctionExecutionError2 = class extends BaseError22 {
+        ContractFunctionExecutionError = class extends BaseError22 {
           constructor(cause, { abi: abi22, args, contractAddress, docsPath: docsPath8, functionName, sender }) {
             const abiItem = getAbiItem2({ abi: abi22, args, name: functionName });
-            const formattedArgs = abiItem ? formatAbiItemWithArgs2({
+            const formattedArgs = abiItem ? formatAbiItemWithArgs({
               abiItem,
               args,
               includeFunctionName: false,
               includeName: false
             }) : void 0;
             const functionWithParams = abiItem ? formatAbiItem22(abiItem, { includeName: true }) : void 0;
-            const prettyArgs = prettyPrint2({
-              address: contractAddress && getContractAddress2(contractAddress),
+            const prettyArgs = prettyPrint({
+              address: contractAddress && getContractAddress(contractAddress),
               function: functionWithParams,
               args: formattedArgs && formattedArgs !== "()" && `${[...Array(functionName?.length ?? 0).keys()].map(() => " ").join("")}${formattedArgs}`,
               sender
@@ -15523,7 +15523,7 @@ ${prettyStateOverride(stateOverride)}`;
             this.sender = sender;
           }
         };
-        ContractFunctionRevertedError2 = class extends BaseError22 {
+        ContractFunctionRevertedError = class extends BaseError22 {
           constructor({ abi: abi22, data, functionName, message }) {
             let cause;
             let decodedData = void 0;
@@ -15540,7 +15540,7 @@ ${prettyStateOverride(stateOverride)}`;
                   reason = panicReasons[firstArg];
                 } else {
                   const errorWithParams = abiItem ? formatAbiItem22(abiItem, { includeName: true }) : void 0;
-                  const formattedArgs = abiItem && errorArgs ? formatAbiItemWithArgs2({
+                  const formattedArgs = abiItem && errorArgs ? formatAbiItemWithArgs({
                     abiItem,
                     args: errorArgs,
                     includeFunctionName: false,
@@ -15603,7 +15603,7 @@ ${prettyStateOverride(stateOverride)}`;
             this.signature = signature;
           }
         };
-        ContractFunctionZeroDataError2 = class extends BaseError22 {
+        ContractFunctionZeroDataError = class extends BaseError22 {
           constructor({ functionName }) {
             super(`The contract function "${functionName}" returned no data ("0x").`, {
               metaMessages: [
@@ -15616,7 +15616,7 @@ ${prettyStateOverride(stateOverride)}`;
             });
           }
         };
-        CounterfactualDeploymentFailedError2 = class extends BaseError22 {
+        CounterfactualDeploymentFailedError = class extends BaseError22 {
           constructor({ factory }) {
             super(`Deployment for counterfactual contract call failed${factory ? ` for factory "${factory}".` : ""}`, {
               metaMessages: [
@@ -15628,7 +15628,7 @@ ${prettyStateOverride(stateOverride)}`;
             });
           }
         };
-        RawContractError2 = class extends BaseError22 {
+        RawContractError = class extends BaseError22 {
           constructor({ data, message }) {
             super(message || "", { name: "RawContractError" });
             Object.defineProperty(this, "code", {
@@ -15653,7 +15653,7 @@ ${prettyStateOverride(stateOverride)}`;
     var TimeoutError;
     var init_request = __esm2({
       "node_modules/viem/_esm/errors/request.js"() {
-        init_stringify2();
+        init_stringify();
         init_base2();
         init_utils32();
         HttpRequestError = class extends BaseError22 {
@@ -15664,7 +15664,7 @@ ${prettyStateOverride(stateOverride)}`;
               metaMessages: [
                 status && `Status: ${status}`,
                 `URL: ${getUrl(url2)}`,
-                body && `Request body: ${stringify2(body)}`
+                body && `Request body: ${stringify(body)}`
               ].filter(Boolean),
               name: "HttpRequestError"
             });
@@ -15703,7 +15703,7 @@ ${prettyStateOverride(stateOverride)}`;
             super("RPC Request failed.", {
               cause: error,
               details: error.message,
-              metaMessages: [`URL: ${getUrl(url2)}`, `Request body: ${stringify2(body)}`],
+              metaMessages: [`URL: ${getUrl(url2)}`, `Request body: ${stringify(body)}`],
               name: "RpcRequestError"
             });
             Object.defineProperty(this, "code", {
@@ -15726,7 +15726,7 @@ ${prettyStateOverride(stateOverride)}`;
           constructor({ body, url: url2 }) {
             super("The request took too long to respond.", {
               details: "The request timed out.",
-              metaMessages: [`URL: ${getUrl(url2)}`, `Request body: ${stringify2(body)}`],
+              metaMessages: [`URL: ${getUrl(url2)}`, `Request body: ${stringify(body)}`],
               name: "TimeoutError"
             });
           }
@@ -16679,7 +16679,7 @@ ${prettyStateOverride(stateOverride)}`;
     var _1n22;
     var isPosBig;
     var bitMask;
-    var init_utils42 = __esm2({
+    var init_utils4 = __esm2({
       "node_modules/@noble/curves/esm/utils.js"() {
         init_utils22();
         init_utils22();
@@ -16966,7 +16966,7 @@ ${prettyStateOverride(stateOverride)}`;
     var FIELD_FIELDS;
     var init_modular = __esm2({
       "node_modules/@noble/curves/esm/abstract/modular.js"() {
-        init_utils42();
+        init_utils4();
         _0n3 = BigInt(0);
         _1n3 = BigInt(1);
         _2n22 = /* @__PURE__ */ BigInt(2);
@@ -17270,7 +17270,7 @@ ${prettyStateOverride(stateOverride)}`;
     var pointWindowSizes;
     var init_curve = __esm2({
       "node_modules/@noble/curves/esm/abstract/curve.js"() {
-        init_utils42();
+        init_utils4();
         init_modular();
         _0n4 = BigInt(0);
         _1n4 = BigInt(1);
@@ -18198,7 +18198,7 @@ ${prettyStateOverride(stateOverride)}`;
     var init_weierstrass = __esm2({
       "node_modules/@noble/curves/esm/abstract/weierstrass.js"() {
         init_hmac();
-        init_utils42();
+        init_utils4();
         init_curve();
         init_modular();
         DERErr = class extends Error {
@@ -18473,7 +18473,7 @@ ${prettyStateOverride(stateOverride)}`;
     var os2ip;
     var init_hash_to_curve = __esm2({
       "node_modules/@noble/curves/esm/abstract/hash-to-curve.js"() {
-        init_utils42();
+        init_utils4();
         init_modular();
         os2ip = bytesToNumberBE;
       }
@@ -18609,7 +18609,7 @@ ${prettyStateOverride(stateOverride)}`;
         init_hash_to_curve();
         init_modular();
         init_weierstrass();
-        init_utils42();
+        init_utils4();
         secp256k1_CURVE = {
           p: BigInt("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f"),
           n: BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"),
@@ -18730,23 +18730,23 @@ ${prettyStateOverride(stateOverride)}`;
         encodeToCurve = /* @__PURE__ */ (() => secp256k1_hasher.encodeToCurve)();
       }
     });
-    var ExecutionRevertedError2;
-    var FeeCapTooHighError2;
-    var FeeCapTooLowError2;
-    var NonceTooHighError2;
-    var NonceTooLowError2;
-    var NonceMaxValueError2;
-    var InsufficientFundsError2;
-    var IntrinsicGasTooHighError2;
-    var IntrinsicGasTooLowError2;
-    var TransactionTypeNotSupportedError2;
-    var TipAboveFeeCapError2;
-    var UnknownNodeError2;
-    var init_node2 = __esm2({
+    var ExecutionRevertedError;
+    var FeeCapTooHighError;
+    var FeeCapTooLowError;
+    var NonceTooHighError;
+    var NonceTooLowError;
+    var NonceMaxValueError;
+    var InsufficientFundsError;
+    var IntrinsicGasTooHighError;
+    var IntrinsicGasTooLowError;
+    var TransactionTypeNotSupportedError;
+    var TipAboveFeeCapError;
+    var UnknownNodeError;
+    var init_node = __esm2({
       "node_modules/viem/_esm/errors/node.js"() {
-        init_formatGwei2();
+        init_formatGwei();
         init_base2();
-        ExecutionRevertedError2 = class extends BaseError22 {
+        ExecutionRevertedError = class extends BaseError22 {
           constructor({ cause, message } = {}) {
             const reason = message?.replace("execution reverted: ", "")?.replace("execution reverted", "");
             super(`Execution reverted ${reason ? `with reason: ${reason}` : "for an unknown reason"}.`, {
@@ -18755,58 +18755,58 @@ ${prettyStateOverride(stateOverride)}`;
             });
           }
         };
-        Object.defineProperty(ExecutionRevertedError2, "code", {
+        Object.defineProperty(ExecutionRevertedError, "code", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: 3
         });
-        Object.defineProperty(ExecutionRevertedError2, "nodeMessage", {
+        Object.defineProperty(ExecutionRevertedError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /execution reverted/
         });
-        FeeCapTooHighError2 = class extends BaseError22 {
+        FeeCapTooHighError = class extends BaseError22 {
           constructor({ cause, maxFeePerGas } = {}) {
-            super(`The fee cap (\`maxFeePerGas\`${maxFeePerGas ? ` = ${formatGwei2(maxFeePerGas)} gwei` : ""}) cannot be higher than the maximum allowed value (2^256-1).`, {
+            super(`The fee cap (\`maxFeePerGas\`${maxFeePerGas ? ` = ${formatGwei(maxFeePerGas)} gwei` : ""}) cannot be higher than the maximum allowed value (2^256-1).`, {
               cause,
               name: "FeeCapTooHighError"
             });
           }
         };
-        Object.defineProperty(FeeCapTooHighError2, "nodeMessage", {
+        Object.defineProperty(FeeCapTooHighError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /max fee per gas higher than 2\^256-1|fee cap higher than 2\^256-1/
         });
-        FeeCapTooLowError2 = class extends BaseError22 {
+        FeeCapTooLowError = class extends BaseError22 {
           constructor({ cause, maxFeePerGas } = {}) {
-            super(`The fee cap (\`maxFeePerGas\`${maxFeePerGas ? ` = ${formatGwei2(maxFeePerGas)}` : ""} gwei) cannot be lower than the block base fee.`, {
+            super(`The fee cap (\`maxFeePerGas\`${maxFeePerGas ? ` = ${formatGwei(maxFeePerGas)}` : ""} gwei) cannot be lower than the block base fee.`, {
               cause,
               name: "FeeCapTooLowError"
             });
           }
         };
-        Object.defineProperty(FeeCapTooLowError2, "nodeMessage", {
+        Object.defineProperty(FeeCapTooLowError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /max fee per gas less than block base fee|fee cap less than block base fee|transaction is outdated/
         });
-        NonceTooHighError2 = class extends BaseError22 {
+        NonceTooHighError = class extends BaseError22 {
           constructor({ cause, nonce } = {}) {
             super(`Nonce provided for the transaction ${nonce ? `(${nonce}) ` : ""}is higher than the next one expected.`, { cause, name: "NonceTooHighError" });
           }
         };
-        Object.defineProperty(NonceTooHighError2, "nodeMessage", {
+        Object.defineProperty(NonceTooHighError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /nonce too high/
         });
-        NonceTooLowError2 = class extends BaseError22 {
+        NonceTooLowError = class extends BaseError22 {
           constructor({ cause, nonce } = {}) {
             super([
               `Nonce provided for the transaction ${nonce ? `(${nonce}) ` : ""}is lower than the current nonce of the account.`,
@@ -18814,24 +18814,24 @@ ${prettyStateOverride(stateOverride)}`;
             ].join("\n"), { cause, name: "NonceTooLowError" });
           }
         };
-        Object.defineProperty(NonceTooLowError2, "nodeMessage", {
+        Object.defineProperty(NonceTooLowError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /nonce too low|transaction already imported|already known/
         });
-        NonceMaxValueError2 = class extends BaseError22 {
+        NonceMaxValueError = class extends BaseError22 {
           constructor({ cause, nonce } = {}) {
             super(`Nonce provided for the transaction ${nonce ? `(${nonce}) ` : ""}exceeds the maximum allowed nonce.`, { cause, name: "NonceMaxValueError" });
           }
         };
-        Object.defineProperty(NonceMaxValueError2, "nodeMessage", {
+        Object.defineProperty(NonceMaxValueError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /nonce has max value/
         });
-        InsufficientFundsError2 = class extends BaseError22 {
+        InsufficientFundsError = class extends BaseError22 {
           constructor({ cause } = {}) {
             super([
               "The total cost (gas * gas fee + value) of executing this transaction exceeds the balance of the account."
@@ -18851,13 +18851,13 @@ ${prettyStateOverride(stateOverride)}`;
             });
           }
         };
-        Object.defineProperty(InsufficientFundsError2, "nodeMessage", {
+        Object.defineProperty(InsufficientFundsError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /insufficient funds|exceeds transaction sender account balance/
         });
-        IntrinsicGasTooHighError2 = class extends BaseError22 {
+        IntrinsicGasTooHighError = class extends BaseError22 {
           constructor({ cause, gas } = {}) {
             super(`The amount of gas ${gas ? `(${gas}) ` : ""}provided for the transaction exceeds the limit allowed for the block.`, {
               cause,
@@ -18865,13 +18865,13 @@ ${prettyStateOverride(stateOverride)}`;
             });
           }
         };
-        Object.defineProperty(IntrinsicGasTooHighError2, "nodeMessage", {
+        Object.defineProperty(IntrinsicGasTooHighError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /intrinsic gas too high|gas limit reached/
         });
-        IntrinsicGasTooLowError2 = class extends BaseError22 {
+        IntrinsicGasTooLowError = class extends BaseError22 {
           constructor({ cause, gas } = {}) {
             super(`The amount of gas ${gas ? `(${gas}) ` : ""}provided for the transaction is too low.`, {
               cause,
@@ -18879,13 +18879,13 @@ ${prettyStateOverride(stateOverride)}`;
             });
           }
         };
-        Object.defineProperty(IntrinsicGasTooLowError2, "nodeMessage", {
+        Object.defineProperty(IntrinsicGasTooLowError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /intrinsic gas too low/
         });
-        TransactionTypeNotSupportedError2 = class extends BaseError22 {
+        TransactionTypeNotSupportedError = class extends BaseError22 {
           constructor({ cause }) {
             super("The transaction type is not supported for this chain.", {
               cause,
@@ -18893,29 +18893,29 @@ ${prettyStateOverride(stateOverride)}`;
             });
           }
         };
-        Object.defineProperty(TransactionTypeNotSupportedError2, "nodeMessage", {
+        Object.defineProperty(TransactionTypeNotSupportedError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /transaction type not valid/
         });
-        TipAboveFeeCapError2 = class extends BaseError22 {
+        TipAboveFeeCapError = class extends BaseError22 {
           constructor({ cause, maxPriorityFeePerGas, maxFeePerGas } = {}) {
             super([
-              `The provided tip (\`maxPriorityFeePerGas\`${maxPriorityFeePerGas ? ` = ${formatGwei2(maxPriorityFeePerGas)} gwei` : ""}) cannot be higher than the fee cap (\`maxFeePerGas\`${maxFeePerGas ? ` = ${formatGwei2(maxFeePerGas)} gwei` : ""}).`
+              `The provided tip (\`maxPriorityFeePerGas\`${maxPriorityFeePerGas ? ` = ${formatGwei(maxPriorityFeePerGas)} gwei` : ""}) cannot be higher than the fee cap (\`maxFeePerGas\`${maxFeePerGas ? ` = ${formatGwei(maxFeePerGas)} gwei` : ""}).`
             ].join("\n"), {
               cause,
               name: "TipAboveFeeCapError"
             });
           }
         };
-        Object.defineProperty(TipAboveFeeCapError2, "nodeMessage", {
+        Object.defineProperty(TipAboveFeeCapError, "nodeMessage", {
           enumerable: true,
           configurable: true,
           writable: true,
           value: /max priority fee per gas higher than max fee per gas|tip higher than fee cap/
         });
-        UnknownNodeError2 = class extends BaseError22 {
+        UnknownNodeError = class extends BaseError22 {
           constructor({ cause }) {
             super(`An error occurred while executing: ${cause?.shortMessage}`, {
               cause,
@@ -18927,55 +18927,55 @@ ${prettyStateOverride(stateOverride)}`;
     });
     function getNodeError(err, args) {
       const message = (err.details || "").toLowerCase();
-      const executionRevertedError = err instanceof BaseError22 ? err.walk((e) => e?.code === ExecutionRevertedError2.code) : err;
+      const executionRevertedError = err instanceof BaseError22 ? err.walk((e) => e?.code === ExecutionRevertedError.code) : err;
       if (executionRevertedError instanceof BaseError22)
-        return new ExecutionRevertedError2({
+        return new ExecutionRevertedError({
           cause: err,
           message: executionRevertedError.details
         });
-      if (ExecutionRevertedError2.nodeMessage.test(message))
-        return new ExecutionRevertedError2({
+      if (ExecutionRevertedError.nodeMessage.test(message))
+        return new ExecutionRevertedError({
           cause: err,
           message: err.details
         });
-      if (FeeCapTooHighError2.nodeMessage.test(message))
-        return new FeeCapTooHighError2({
+      if (FeeCapTooHighError.nodeMessage.test(message))
+        return new FeeCapTooHighError({
           cause: err,
           maxFeePerGas: args?.maxFeePerGas
         });
-      if (FeeCapTooLowError2.nodeMessage.test(message))
-        return new FeeCapTooLowError2({
+      if (FeeCapTooLowError.nodeMessage.test(message))
+        return new FeeCapTooLowError({
           cause: err,
           maxFeePerGas: args?.maxFeePerGas
         });
-      if (NonceTooHighError2.nodeMessage.test(message))
-        return new NonceTooHighError2({ cause: err, nonce: args?.nonce });
-      if (NonceTooLowError2.nodeMessage.test(message))
-        return new NonceTooLowError2({ cause: err, nonce: args?.nonce });
-      if (NonceMaxValueError2.nodeMessage.test(message))
-        return new NonceMaxValueError2({ cause: err, nonce: args?.nonce });
-      if (InsufficientFundsError2.nodeMessage.test(message))
-        return new InsufficientFundsError2({ cause: err });
-      if (IntrinsicGasTooHighError2.nodeMessage.test(message))
-        return new IntrinsicGasTooHighError2({ cause: err, gas: args?.gas });
-      if (IntrinsicGasTooLowError2.nodeMessage.test(message))
-        return new IntrinsicGasTooLowError2({ cause: err, gas: args?.gas });
-      if (TransactionTypeNotSupportedError2.nodeMessage.test(message))
-        return new TransactionTypeNotSupportedError2({ cause: err });
-      if (TipAboveFeeCapError2.nodeMessage.test(message))
-        return new TipAboveFeeCapError2({
+      if (NonceTooHighError.nodeMessage.test(message))
+        return new NonceTooHighError({ cause: err, nonce: args?.nonce });
+      if (NonceTooLowError.nodeMessage.test(message))
+        return new NonceTooLowError({ cause: err, nonce: args?.nonce });
+      if (NonceMaxValueError.nodeMessage.test(message))
+        return new NonceMaxValueError({ cause: err, nonce: args?.nonce });
+      if (InsufficientFundsError.nodeMessage.test(message))
+        return new InsufficientFundsError({ cause: err });
+      if (IntrinsicGasTooHighError.nodeMessage.test(message))
+        return new IntrinsicGasTooHighError({ cause: err, gas: args?.gas });
+      if (IntrinsicGasTooLowError.nodeMessage.test(message))
+        return new IntrinsicGasTooLowError({ cause: err, gas: args?.gas });
+      if (TransactionTypeNotSupportedError.nodeMessage.test(message))
+        return new TransactionTypeNotSupportedError({ cause: err });
+      if (TipAboveFeeCapError.nodeMessage.test(message))
+        return new TipAboveFeeCapError({
           cause: err,
           maxFeePerGas: args?.maxFeePerGas,
           maxPriorityFeePerGas: args?.maxPriorityFeePerGas
         });
-      return new UnknownNodeError2({
+      return new UnknownNodeError({
         cause: err
       });
     }
     var init_getNodeError = __esm2({
       "node_modules/viem/_esm/utils/errors/getNodeError.js"() {
         init_base2();
-        init_node2();
+        init_node();
       }
     });
     function extract(value_, { format }) {
@@ -19325,19 +19325,19 @@ ${prettyStateOverride(stateOverride)}`;
       if (to2 && !isAddress2(to2))
         throw new InvalidAddressError2({ address: to2 });
       if (typeof gasPrice !== "undefined" && (typeof maxFeePerGas !== "undefined" || typeof maxPriorityFeePerGas !== "undefined"))
-        throw new FeeConflictError2();
+        throw new FeeConflictError();
       if (maxFeePerGas && maxFeePerGas > maxUint256)
-        throw new FeeCapTooHighError2({ maxFeePerGas });
+        throw new FeeCapTooHighError({ maxFeePerGas });
       if (maxPriorityFeePerGas && maxFeePerGas && maxPriorityFeePerGas > maxFeePerGas)
-        throw new TipAboveFeeCapError2({ maxFeePerGas, maxPriorityFeePerGas });
+        throw new TipAboveFeeCapError({ maxFeePerGas, maxPriorityFeePerGas });
     }
     var init_assertRequest = __esm2({
       "node_modules/viem/_esm/utils/transaction/assertRequest.js"() {
         init_parseAccount();
         init_number();
         init_address2();
-        init_node2();
-        init_transaction2();
+        init_node();
+        init_transaction();
         init_isAddress2();
       }
     });
@@ -19494,7 +19494,7 @@ ${prettyStateOverride(stateOverride)}`;
         };
       }
     });
-    function stringify22(value, replacer, space) {
+    function stringify2(value, replacer, space) {
       return JSON.stringify(value, (key, value2) => {
         if (typeof replacer === "function")
           return replacer(key, value2);
@@ -19800,7 +19800,7 @@ ${prettyStateOverride(stateOverride)}`;
         };
         InvalidHexTypeError = class extends BaseError32 {
           constructor(value) {
-            super(`Value \`${typeof value === "object" ? stringify22(value) : value}\` of type \`${typeof value}\` is an invalid hex type.`, {
+            super(`Value \`${typeof value === "object" ? stringify2(value) : value}\` of type \`${typeof value}\` is an invalid hex type.`, {
               metaMessages: ['Hex types must be represented as `"0x${string}"`.']
             });
             Object.defineProperty(this, "name", {
@@ -20197,7 +20197,7 @@ ${prettyStateOverride(stateOverride)}`;
       }
     });
     var aggregate3Signature;
-    var init_contract22 = __esm2({
+    var init_contract2 = __esm2({
       "node_modules/viem/_esm/constants/contract.js"() {
         aggregate3Signature = "0x82ad56cb";
       }
@@ -20319,19 +20319,19 @@ ${prettyStateOverride(stateOverride)}`;
     function getCallError(err, { docsPath: docsPath8, ...args }) {
       const cause = (() => {
         const cause2 = getNodeError(err, args);
-        if (cause2 instanceof UnknownNodeError2)
+        if (cause2 instanceof UnknownNodeError)
           return err;
         return cause2;
       })();
-      return new CallExecutionError2(cause, {
+      return new CallExecutionError(cause, {
         docsPath: docsPath8,
         ...args
       });
     }
     var init_getCallError = __esm2({
       "node_modules/viem/_esm/utils/errors/getCallError.js"() {
-        init_contract2();
-        init_node2();
+        init_contract();
+        init_node();
         init_getNodeError();
       }
     });
@@ -20403,7 +20403,7 @@ ${prettyStateOverride(stateOverride)}`;
     var OffchainLookupSenderMismatchError;
     var init_ccip = __esm2({
       "node_modules/viem/_esm/errors/ccip.js"() {
-        init_stringify2();
+        init_stringify();
         init_base2();
         init_utils32();
         OffchainLookupError = class extends BaseError22 {
@@ -20432,7 +20432,7 @@ ${prettyStateOverride(stateOverride)}`;
             super("Offchain gateway response is malformed. Response data must be a hex value.", {
               metaMessages: [
                 `Gateway URL: ${getUrl(url2)}`,
-                `Response: ${stringify2(result)}`
+                `Response: ${stringify(result)}`
               ],
               name: "OffchainLookupResponseMalformedError"
             });
@@ -20648,7 +20648,7 @@ ${prettyStateOverride(stateOverride)}`;
           if (!response.ok) {
             error = new HttpRequestError({
               body,
-              details: result?.error ? stringify2(result.error) : response.statusText,
+              details: result?.error ? stringify(result.error) : response.statusText,
               headers: response.headers,
               status: response.status,
               url: url2
@@ -20686,7 +20686,7 @@ ${prettyStateOverride(stateOverride)}`;
         init_concat2();
         init_isHex2();
         init_localBatchGatewayRequest();
-        init_stringify2();
+        init_stringify();
         offchainLookupSignature = "0x556f1830";
         offchainLookupAbiItem = {
           name: "OffchainLookup",
@@ -20804,7 +20804,7 @@ ${prettyStateOverride(stateOverride)}`;
         if (client.ccipRead !== false && data2?.slice(0, 10) === offchainLookupSignature2 && to2)
           return { data: await offchainLookup2(client, { data: data2, to: to2 }) };
         if (deploylessCall && data2?.slice(0, 10) === "0x101bb98d")
-          throw new CounterfactualDeploymentFailedError2({ factory });
+          throw new CounterfactualDeploymentFailedError({ factory });
         throw getCallError(err, {
           ...args,
           account,
@@ -20877,7 +20877,7 @@ ${prettyStateOverride(stateOverride)}`;
       });
       const [{ returnData, success }] = await schedule({ data, to: to2 });
       if (!success)
-        throw new RawContractError2({ data: returnData });
+        throw new RawContractError({ data: returnData });
       if (returnData === "0x")
         return { data: void 0 };
       return { data: returnData };
@@ -20910,11 +20910,11 @@ ${prettyStateOverride(stateOverride)}`;
         init_BlockOverrides();
         init_parseAccount();
         init_abis();
-        init_contract22();
+        init_contract2();
         init_contracts();
         init_base2();
         init_chain();
-        init_contract2();
+        init_contract();
         init_decodeFunctionResult();
         init_encodeDeployData();
         init_encodeFunctionData();
@@ -36588,10 +36588,14 @@ ${originalIndentation}`;
       Logger: () => Logger11,
       ManagerBase: () => ManagerBase2,
       NetworkManager: () => NetworkManager8,
-      NonceManager: () => NonceManager3,
+      NonceManager: () => NonceManager2,
       RpcManager: () => RpcManager2,
-      ViemClientManager: () => ViemClientManager7,
+      TxMonitor: () => TxMonitor2,
+      TxReader: () => TxReader2,
+      TxWriter: () => TxWriter6,
+      ViemClientManager: () => ViemClientManager6,
       appErrors: () => appErrors2,
+      callContract: () => callContract,
       createCustomHttpTransport: () => createCustomHttpTransport2,
       createViemChain: () => createViemChain2,
       fetchNetworkConfigs: () => fetchNetworkConfigs,
@@ -37708,7 +37712,7 @@ ${originalIndentation}`;
       forcedJSONParsing: true,
       clarifyTimeoutError: false
     };
-    var import_crypto3 = __toESM2(__require("crypto"), 1);
+    var import_crypto = __toESM2(__require("crypto"), 1);
     var import_url = __toESM2(__require("url"), 1);
     var URLSearchParams_default = import_url.default.URLSearchParams;
     var ALPHA = "abcdefghijklmnopqrstuvwxyz";
@@ -37722,7 +37726,7 @@ ${originalIndentation}`;
       let str = "";
       const { length } = alphabet;
       const randomValues = new Uint32Array(size5);
-      import_crypto3.default.randomFillSync(randomValues);
+      import_crypto.default.randomFillSync(randomValues);
       for (let i = 0; i < size5; i++) {
         str += alphabet[randomValues[i] % length];
       }
@@ -40492,18 +40496,18 @@ ${originalIndentation}`;
     init_encodeFunctionData();
     init_abi2();
     init_base2();
-    init_contract2();
+    init_contract();
     init_request();
     init_rpc();
     var EXECUTION_REVERTED_ERROR_CODE = 3;
     function getContractError(err, { abi: abi22, address, args, docsPath: docsPath8, functionName, sender }) {
-      const error = err instanceof RawContractError2 ? err : err instanceof BaseError22 ? err.walk((err2) => "data" in err2) || err.walk() : {};
+      const error = err instanceof RawContractError ? err : err instanceof BaseError22 ? err.walk((err2) => "data" in err2) || err.walk() : {};
       const { code, data, details, message, shortMessage } = error;
       const cause = (() => {
         if (err instanceof AbiDecodingZeroDataError2)
-          return new ContractFunctionZeroDataError2({ functionName });
+          return new ContractFunctionZeroDataError({ functionName });
         if ([EXECUTION_REVERTED_ERROR_CODE, InternalRpcError.code].includes(code) && (data || details || message || shortMessage)) {
-          return new ContractFunctionRevertedError2({
+          return new ContractFunctionRevertedError({
             abi: abi22,
             data: typeof data === "object" ? data.data : data,
             functionName,
@@ -40512,7 +40516,7 @@ ${originalIndentation}`;
         }
         return err;
       })();
-      return new ContractFunctionExecutionError2(cause, {
+      return new ContractFunctionExecutionError(cause, {
         abi: abi22,
         args,
         contractAddress: address,
@@ -40683,21 +40687,21 @@ ${originalIndentation}`;
       });
     }
     init_toHex2();
-    init_formatEther2();
-    init_formatGwei2();
+    init_formatEther();
+    init_formatGwei();
     init_base2();
-    init_transaction2();
+    init_transaction();
     var EstimateGasExecutionError = class extends BaseError22 {
       constructor(cause, { account, docsPath: docsPath8, chain, data, gas, gasPrice, maxFeePerGas, maxPriorityFeePerGas, nonce, to: to2, value }) {
-        const prettyArgs = prettyPrint2({
+        const prettyArgs = prettyPrint({
           from: account?.address,
           to: to2,
-          value: typeof value !== "undefined" && `${formatEther2(value)} ${chain?.nativeCurrency?.symbol || "ETH"}`,
+          value: typeof value !== "undefined" && `${formatEther(value)} ${chain?.nativeCurrency?.symbol || "ETH"}`,
           data,
           gas,
-          gasPrice: typeof gasPrice !== "undefined" && `${formatGwei2(gasPrice)} gwei`,
-          maxFeePerGas: typeof maxFeePerGas !== "undefined" && `${formatGwei2(maxFeePerGas)} gwei`,
-          maxPriorityFeePerGas: typeof maxPriorityFeePerGas !== "undefined" && `${formatGwei2(maxPriorityFeePerGas)} gwei`,
+          gasPrice: typeof gasPrice !== "undefined" && `${formatGwei(gasPrice)} gwei`,
+          maxFeePerGas: typeof maxFeePerGas !== "undefined" && `${formatGwei(maxFeePerGas)} gwei`,
+          maxPriorityFeePerGas: typeof maxPriorityFeePerGas !== "undefined" && `${formatGwei(maxPriorityFeePerGas)} gwei`,
           nonce
         });
         super(cause.shortMessage, {
@@ -40719,12 +40723,12 @@ ${originalIndentation}`;
         this.cause = cause;
       }
     };
-    init_node2();
+    init_node();
     init_getNodeError();
     function getEstimateGasError(err, { docsPath: docsPath8, ...args }) {
       const cause = (() => {
         const cause2 = getNodeError(err, args);
-        if (cause2 instanceof UnknownNodeError2)
+        if (cause2 instanceof UnknownNodeError)
           return err;
         return cause2;
       })();
@@ -40738,7 +40742,7 @@ ${originalIndentation}`;
     init_stateOverride2();
     init_assertRequest();
     init_parseAccount();
-    init_formatGwei2();
+    init_formatGwei();
     init_base2();
     var BaseFeeScalarError = class extends BaseError22 {
       constructor() {
@@ -40756,7 +40760,7 @@ ${originalIndentation}`;
     };
     var MaxFeePerGasTooLowError = class extends BaseError22 {
       constructor({ maxPriorityFeePerGas }) {
-        super(`\`maxFeePerGas\` cannot be less than the \`maxPriorityFeePerGas\` (${formatGwei2(maxPriorityFeePerGas)} gwei).`, { name: "MaxFeePerGasTooLowError" });
+        super(`\`maxFeePerGas\` cannot be less than the \`maxPriorityFeePerGas\` (${formatGwei(maxPriorityFeePerGas)} gwei).`, { name: "MaxFeePerGasTooLowError" });
       }
     };
     init_fromHex2();
@@ -41145,7 +41149,7 @@ ${originalIndentation}`;
       return sidecars;
     }
     init_assertRequest();
-    init_transaction2();
+    init_transaction();
     function getTransactionType(transaction) {
       if (transaction.type)
         return transaction.type;
@@ -41161,7 +41165,7 @@ ${originalIndentation}`;
           return "eip2930";
         return "legacy";
       }
-      throw new InvalidSerializableTransactionError2({ transaction });
+      throw new InvalidSerializableTransactionError({ transaction });
     }
     init_fromHex2();
     async function getChainId(client) {
@@ -41800,7 +41804,7 @@ ${originalIndentation}`;
       watch();
       return unwatch;
     }
-    init_stringify2();
+    init_stringify();
     var promiseCache = /* @__PURE__ */ new Map();
     var responseCache = /* @__PURE__ */ new Map();
     function getCache(cacheKey2) {
@@ -41886,7 +41890,7 @@ ${originalIndentation}`;
       })();
       const pollContractEvent = () => {
         const strict = strict_ ?? false;
-        const observerId = stringify2([
+        const observerId = stringify([
           "watchContractEvent",
           address,
           args,
@@ -41965,7 +41969,7 @@ ${originalIndentation}`;
       };
       const subscribeContractEvent = () => {
         const strict = strict_ ?? false;
-        const observerId = stringify2([
+        const observerId = stringify([
           "watchContractEvent",
           address,
           args,
@@ -42078,17 +42082,17 @@ ${originalIndentation}`;
       if (currentChainId !== chain.id)
         throw new ChainMismatchError({ chain, currentChainId });
     }
-    init_node2();
-    init_transaction2();
+    init_node();
+    init_transaction();
     init_getNodeError();
     function getTransactionError(err, { docsPath: docsPath8, ...args }) {
       const cause = (() => {
         const cause2 = getNodeError(err, args);
-        if (cause2 instanceof UnknownNodeError2)
+        if (cause2 instanceof UnknownNodeError)
           return err;
         return cause2;
       })();
-      return new TransactionExecutionError2(cause, {
+      return new TransactionExecutionError(cause, {
         docsPath: docsPath8,
         ...args
       });
@@ -42269,7 +42273,7 @@ ${originalIndentation}`;
     }
     init_base2();
     init_withResolvers();
-    init_stringify2();
+    init_stringify();
     init_slice2();
     init_trim2();
     init_fromHex2();
@@ -42462,7 +42466,7 @@ ${originalIndentation}`;
     }
     async function waitForCallsStatus(client, parameters) {
       const { id: id2, pollingInterval = client.pollingInterval, status = ({ statusCode }) => statusCode >= 200, timeout = 6e4 } = parameters;
-      const observerId = stringify2(["waitForCallsStatus", client.uid, id2]);
+      const observerId = stringify(["waitForCallsStatus", client.uid, id2]);
       const { promise, resolve, reject } = withResolvers();
       let timer = void 0;
       const unobserve = observe(observerId, { resolve, reject }, (emit) => {
@@ -42588,7 +42592,7 @@ ${originalIndentation}`;
         attemptRetry();
       });
     }
-    init_stringify2();
+    init_stringify();
     function buildRequest(request, options = {}) {
       return async (args, overrideOptions = {}) => {
         const { dedupe = false, methods, retryDelay = 150, retryCount = 3, uid: uid2 } = {
@@ -42604,7 +42608,7 @@ ${originalIndentation}`;
           throw new MethodNotSupportedRpcError(new Error("method not supported"), {
             method
           });
-        const requestId = dedupe ? stringToHex2(`${uid2}.${stringify2(args)}`) : void 0;
+        const requestId = dedupe ? stringToHex2(`${uid2}.${stringify(args)}`) : void 0;
         return withDedupe(() => withRetry(async () => {
           try {
             return await request(args);
@@ -42760,7 +42764,7 @@ ${originalIndentation}`;
         value
       };
     }
-    init_node2();
+    init_node();
     init_rpc();
     function fallback(transports_, config3 = {}) {
       const { key = "fallback", name = "Fallback", rank = false, shouldThrow: shouldThrow_ = shouldThrow, retryCount, retryDelay } = config3;
@@ -42845,7 +42849,7 @@ ${originalIndentation}`;
     }
     function shouldThrow(error) {
       if ("code" in error && typeof error.code === "number") {
-        if (error.code === TransactionRejectedRpcError.code || error.code === UserRejectedRequestError.code || ExecutionRevertedError2.nodeMessage.test(error.message) || error.code === 5e3)
+        if (error.code === TransactionRejectedRpcError.code || error.code === UserRejectedRequestError.code || ExecutionRevertedError.nodeMessage.test(error.message) || error.code === 5e3)
           return true;
       }
       return false;
@@ -42932,7 +42936,7 @@ ${originalIndentation}`;
         })();
       });
     }
-    init_stringify2();
+    init_stringify();
     function createIdStore() {
       return {
         current: 0,
@@ -42958,11 +42962,11 @@ ${originalIndentation}`;
             const response = await withTimeout(async ({ signal }) => {
               const init = {
                 ...fetchOptions,
-                body: Array.isArray(body) ? stringify2(body.map((body2) => ({
+                body: Array.isArray(body) ? stringify(body.map((body2) => ({
                   jsonrpc: "2.0",
                   id: body2.id ?? idCache.take(),
                   ...body2
-                }))) : stringify2({
+                }))) : stringify({
                   jsonrpc: "2.0",
                   id: body.id ?? idCache.take(),
                   ...body
@@ -43001,7 +43005,7 @@ ${originalIndentation}`;
             if (!response.ok) {
               throw new HttpRequestError({
                 body,
-                details: stringify2(data.error) || response.statusText,
+                details: stringify(data.error) || response.statusText,
                 headers: response.headers,
                 status: response.status,
                 url: url2
@@ -43088,12 +43092,12 @@ ${originalIndentation}`;
     init_toHex2();
     init_solidity();
     init_base2();
-    init_contract2();
+    init_contract();
     function isNullUniversalResolverError(err, callType) {
       if (!(err instanceof BaseError22))
         return false;
-      const cause = err.walk((e) => e instanceof ContractFunctionRevertedError2);
-      if (!(cause instanceof ContractFunctionRevertedError2))
+      const cause = err.walk((e) => e instanceof ContractFunctionRevertedError);
+      if (!(cause instanceof ContractFunctionRevertedError))
         return false;
       if (cause.data?.errorName === "ResolverNotFound")
         return true;
@@ -43860,11 +43864,11 @@ ${originalIndentation}`;
     }
     init_abi2();
     init_address2();
-    init_stringify2();
+    init_stringify();
     init_base2();
     var InvalidDomainError = class extends BaseError22 {
       constructor({ domain }) {
-        super(`Invalid domain "${stringify2(domain)}".`, {
+        super(`Invalid domain "${stringify(domain)}".`, {
           metaMessages: ["Must be a valid EIP-712 domain."]
         });
       }
@@ -44004,7 +44008,7 @@ ${originalIndentation}`;
       }
       return [{ type }, value];
     }
-    init_stringify2();
+    init_stringify();
     function serializeTypedData(parameters) {
       const { domain: domain_, message: message_, primaryType, types } = parameters;
       const normalizeData = (struct, data_) => {
@@ -44028,7 +44032,7 @@ ${originalIndentation}`;
           return void 0;
         return normalizeData(types[primaryType], message_);
       })();
-      return stringify2({ domain, message, primaryType, types });
+      return stringify({ domain, message, primaryType, types });
     }
     function validateTypedData(parameters) {
       const { domain, message, primaryType, types } = parameters;
@@ -44095,7 +44099,7 @@ ${originalIndentation}`;
     }
     init_encodeFunctionData();
     init_toHex2();
-    init_transaction2();
+    init_transaction();
     init_concat2();
     init_trim2();
     init_toHex2();
@@ -44103,7 +44107,7 @@ ${originalIndentation}`;
     init_address2();
     init_base2();
     init_chain();
-    init_node2();
+    init_node();
     init_isAddress2();
     init_size2();
     init_slice2();
@@ -44148,9 +44152,9 @@ ${originalIndentation}`;
       if (to2 && !isAddress2(to2))
         throw new InvalidAddressError2({ address: to2 });
       if (maxFeePerGas && maxFeePerGas > maxUint256)
-        throw new FeeCapTooHighError2({ maxFeePerGas });
+        throw new FeeCapTooHighError({ maxFeePerGas });
       if (maxPriorityFeePerGas && maxFeePerGas && maxPriorityFeePerGas > maxFeePerGas)
-        throw new TipAboveFeeCapError2({ maxFeePerGas, maxPriorityFeePerGas });
+        throw new TipAboveFeeCapError({ maxFeePerGas, maxPriorityFeePerGas });
     }
     function assertTransactionEIP2930(transaction) {
       const { chainId, maxPriorityFeePerGas, gasPrice, maxFeePerGas, to: to2 } = transaction;
@@ -44161,7 +44165,7 @@ ${originalIndentation}`;
       if (maxPriorityFeePerGas || maxFeePerGas)
         throw new BaseError22("`maxFeePerGas`/`maxPriorityFeePerGas` is not a valid EIP-2930 Transaction attribute.");
       if (gasPrice && gasPrice > maxUint256)
-        throw new FeeCapTooHighError2({ maxFeePerGas: gasPrice });
+        throw new FeeCapTooHighError({ maxFeePerGas: gasPrice });
     }
     function assertTransactionLegacy(transaction) {
       const { chainId, maxPriorityFeePerGas, gasPrice, maxFeePerGas, to: to2 } = transaction;
@@ -44172,10 +44176,10 @@ ${originalIndentation}`;
       if (maxPriorityFeePerGas || maxFeePerGas)
         throw new BaseError22("`maxFeePerGas`/`maxPriorityFeePerGas` is not a valid Legacy Transaction attribute.");
       if (gasPrice && gasPrice > maxUint256)
-        throw new FeeCapTooHighError2({ maxFeePerGas: gasPrice });
+        throw new FeeCapTooHighError({ maxFeePerGas: gasPrice });
     }
     init_address2();
-    init_transaction2();
+    init_transaction();
     init_isAddress2();
     function serializeAccessList(accessList) {
       if (!accessList || accessList.length === 0)
@@ -44185,7 +44189,7 @@ ${originalIndentation}`;
         const { address, storageKeys } = accessList[i];
         for (let j2 = 0; j2 < storageKeys.length; j2++) {
           if (storageKeys[j2].length - 2 !== 64) {
-            throw new InvalidStorageKeySizeError2({ storageKey: storageKeys[j2] });
+            throw new InvalidStorageKeySizeError({ storageKey: storageKeys[j2] });
           }
         }
         if (!isAddress2(address, { strict: false })) {
@@ -44350,7 +44354,7 @@ ${originalIndentation}`;
             return BigInt(chainId * 2) + BigInt(35n + signature.v - 27n);
           const v2 = 27n + (signature.v === 27n ? 0n : 1n);
           if (signature.v !== v2)
-            throw new InvalidLegacyVError2({ v: signature.v });
+            throw new InvalidLegacyVError({ v: signature.v });
           return v2;
         })();
         const r = trim2(signature.r);
@@ -44479,7 +44483,7 @@ ${originalIndentation}`;
       });
       return data;
     }
-    init_transaction2();
+    init_transaction();
     init_toHex2();
     async function getTransaction(client, { blockHash, blockNumber, blockTag: blockTag_, hash: hash22, index: index2 }) {
       const blockTag = blockTag_ || "latest";
@@ -44502,7 +44506,7 @@ ${originalIndentation}`;
         }, { dedupe: Boolean(blockNumberHex) });
       }
       if (!transaction)
-        throw new TransactionNotFoundError2({
+        throw new TransactionNotFoundError({
           blockHash,
           blockNumber,
           blockTag,
@@ -44522,21 +44526,21 @@ ${originalIndentation}`;
         return 0n;
       return blockNumber - transactionBlockNumber + 1n;
     }
-    init_transaction2();
+    init_transaction();
     async function getTransactionReceipt(client, { hash: hash22 }) {
       const receipt = await client.request({
         method: "eth_getTransactionReceipt",
         params: [hash22]
       }, { dedupe: true });
       if (!receipt)
-        throw new TransactionReceiptNotFoundError2({ hash: hash22 });
+        throw new TransactionReceiptNotFoundError({ hash: hash22 });
       const format = client.chain?.formatters?.transactionReceipt?.format || formatTransactionReceipt;
       return format(receipt);
     }
     init_abis();
     init_abi2();
     init_base2();
-    init_contract2();
+    init_contract();
     init_decodeFunctionResult();
     init_encodeFunctionData();
     init_getChainContractAddress();
@@ -44635,7 +44639,7 @@ ${originalIndentation}`;
             if (callData === "0x")
               throw new AbiDecodingZeroDataError2();
             if (!success)
-              throw new RawContractError2({ data: returnData });
+              throw new RawContractError({ data: returnData });
             const result2 = decodeFunctionResult({
               abi: abi22,
               args,
@@ -44664,8 +44668,8 @@ ${originalIndentation}`;
     init_BlockOverrides();
     init_parseAccount();
     init_abi2();
-    init_contract2();
-    init_node2();
+    init_contract();
+    init_node();
     init_decodeFunctionResult();
     init_encodeFunctionData();
     init_concat2();
@@ -44728,7 +44732,7 @@ ${originalIndentation}`;
               if (call2.error?.data === "0x")
                 error2 = new AbiDecodingZeroDataError2();
               else if (call2.error)
-                error2 = new RawContractError2(call2.error);
+                error2 = new RawContractError(call2.error);
               if (!error2)
                 return void 0;
               return getContractError(error2, {
@@ -44754,7 +44758,7 @@ ${originalIndentation}`;
       } catch (e) {
         const cause = e;
         const error = getNodeError(cause, {});
-        if (error instanceof UnknownNodeError2)
+        if (error instanceof UnknownNodeError)
           throw cause;
         throw error;
       }
@@ -45813,7 +45817,7 @@ ${originalIndentation}`;
     }
     init_abis();
     init_contracts();
-    init_contract2();
+    init_contract();
     init_encodeDeployData();
     init_getAddress2();
     init_isAddressEqual();
@@ -45882,7 +45886,7 @@ ${originalIndentation}`;
             return true;
         } catch {
         }
-        if (error instanceof CallExecutionError2) {
+        if (error instanceof CallExecutionError) {
           return false;
         }
         throw error;
@@ -45911,11 +45915,11 @@ ${originalIndentation}`;
         ...callRequest
       });
     }
-    init_transaction2();
+    init_transaction();
     init_withResolvers();
-    init_stringify2();
+    init_stringify();
     init_fromHex2();
-    init_stringify2();
+    init_stringify();
     function watchBlockNumber(client, { emitOnBegin = false, emitMissed = false, onBlockNumber, onError, poll: poll_, pollingInterval = client.pollingInterval }) {
       const enablePolling = (() => {
         if (typeof poll_ !== "undefined")
@@ -45928,7 +45932,7 @@ ${originalIndentation}`;
       })();
       let prevBlockNumber;
       const pollBlockNumber = () => {
-        const observerId = stringify2([
+        const observerId = stringify([
           "watchBlockNumber",
           client.uid,
           emitOnBegin,
@@ -45961,7 +45965,7 @@ ${originalIndentation}`;
         }));
       };
       const subscribeBlockNumber = () => {
-        const observerId = stringify2([
+        const observerId = stringify([
           "watchBlockNumber",
           client.uid,
           emitOnBegin,
@@ -46017,7 +46021,7 @@ ${originalIndentation}`;
         // exponential backoff
         timeout = 18e4
       } = parameters;
-      const observerId = stringify2(["waitForTransactionReceipt", client.uid, hash22]);
+      const observerId = stringify(["waitForTransactionReceipt", client.uid, hash22]);
       const pollingInterval = (() => {
         if (parameters.pollingInterval)
           return parameters.pollingInterval;
@@ -46035,7 +46039,7 @@ ${originalIndentation}`;
       const timer = timeout ? setTimeout(() => {
         _unwatch();
         _unobserve();
-        reject(new WaitForTransactionReceiptTimeoutError2({ hash: hash22 }));
+        reject(new WaitForTransactionReceiptTimeoutError({ hash: hash22 }));
       }, timeout) : void 0;
       _unobserve = observe(observerId, { onReplaced, resolve, reject }, async (emit) => {
         receipt = await getAction(client, getTransactionReceipt, "getTransactionReceipt")({ hash: hash22 }).catch(() => void 0);
@@ -46084,7 +46088,7 @@ ${originalIndentation}`;
                 return;
               done(() => emit.resolve(receipt));
             } catch (err) {
-              if (err instanceof TransactionNotFoundError2 || err instanceof TransactionReceiptNotFoundError2) {
+              if (err instanceof TransactionNotFoundError || err instanceof TransactionReceiptNotFoundError) {
                 if (!transaction) {
                   retrying = false;
                   return;
@@ -46136,7 +46140,7 @@ ${originalIndentation}`;
       });
       return promise;
     }
-    init_stringify2();
+    init_stringify();
     function watchBlocks(client, { blockTag = client.experimental_blockTag ?? "latest", emitMissed = false, emitOnBegin = false, onBlock, onError, includeTransactions: includeTransactions_, poll: poll_, pollingInterval = client.pollingInterval }) {
       const enablePolling = (() => {
         if (typeof poll_ !== "undefined")
@@ -46150,7 +46154,7 @@ ${originalIndentation}`;
       const includeTransactions = includeTransactions_ ?? false;
       let prevBlock;
       const pollBlocks = () => {
-        const observerId = stringify2([
+        const observerId = stringify([
           "watchBlocks",
           client.uid,
           blockTag,
@@ -46256,7 +46260,7 @@ ${originalIndentation}`;
       };
       return enablePolling ? pollBlocks() : subscribeBlocks();
     }
-    init_stringify2();
+    init_stringify();
     init_abi2();
     init_rpc();
     function watchEvent(client, { address, args, batch = true, event, events, fromBlock, onError, onLogs, poll: poll_, pollingInterval = client.pollingInterval, strict: strict_ }) {
@@ -46273,7 +46277,7 @@ ${originalIndentation}`;
       })();
       const strict = strict_ ?? false;
       const pollEvent = () => {
-        const observerId = stringify2([
+        const observerId = stringify([
           "watchEvent",
           address,
           args,
@@ -46420,11 +46424,11 @@ ${originalIndentation}`;
       };
       return enablePolling ? pollEvent() : subscribeEvent();
     }
-    init_stringify2();
+    init_stringify();
     function watchPendingTransactions(client, { batch = true, onError, onTransactions, poll: poll_, pollingInterval = client.pollingInterval }) {
       const enablePolling = typeof poll_ !== "undefined" ? poll_ : client.transport.type !== "webSocket" && client.transport.type !== "ipc";
       const pollPendingTransactions = () => {
-        const observerId = stringify2([
+        const observerId = stringify([
           "watchPendingTransactions",
           client.uid,
           batch,
@@ -46896,6 +46900,9 @@ ${originalIndentation}`;
       });
       return client.extend(walletActions);
     }
+    init_contract();
+    init_node();
+    init_transaction();
     var localhostViemChain2 = defineChain2({
       id: 1,
       name: "localhost",
@@ -46936,6 +46943,18 @@ ${originalIndentation}`;
         }
         return _Logger.instance;
       }
+      safeStringify(obj, indent) {
+        return JSON.stringify(
+          obj,
+          (key, value) => {
+            if (typeof value === "bigint") {
+              return `${value}n`;
+            }
+            return value;
+          },
+          indent
+        );
+      }
       createBaseLogger() {
         const logFormat = import_winston.default.format.combine(
           import_winston.default.format.colorize({ level: true }),
@@ -46944,8 +46963,8 @@ ${originalIndentation}`;
           }),
           import_winston.default.format.printf(({ level, message, timestamp, consumer, ...meta }) => {
             const prefix = consumer ? `${consumer}` : "";
-            const formattedMessage = typeof message === "object" ? JSON.stringify(message, null, 2) : message;
-            const formattedMeta = meta && Object.keys(meta).length ? JSON.stringify(meta, null, 2) : "";
+            const formattedMessage = typeof message === "object" ? this.safeStringify(message, 2) : message;
+            const formattedMeta = meta && Object.keys(meta).length ? this.safeStringify(meta, 2) : "";
             return `${timestamp} ${level} ${prefix}: ${formattedMessage} ${formattedMeta}`.trim();
           })
         );
@@ -47145,6 +47164,88 @@ ${originalIndentation}`;
         }
       }
       return processedNetworks;
+    }
+    var confirmations_default = {
+      "1270": 3
+    };
+    async function sleep2(ms2) {
+      return new Promise((resolve) => setTimeout(resolve, ms2));
+    }
+    async function asyncRetry2(fn2, options = {}) {
+      const { maxRetries = 3, delayMs = 2e3, isRetryableError = () => false } = options;
+      const logger = Logger11.getInstance().getLogger("AsyncRetry");
+      let attempt = 0;
+      let lastError;
+      while (attempt <= maxRetries) {
+        try {
+          return await fn2();
+        } catch (error) {
+          lastError = error;
+          if (await isRetryableError(error) && attempt < maxRetries) {
+            ++attempt;
+            logger.debug(`Retry attempt ${attempt} failed. Retrying in ${delayMs}ms...`);
+            await sleep2(delayMs);
+          } else {
+            throw error;
+          }
+        }
+      }
+      throw lastError;
+    }
+    function isNonceError(error) {
+      return error instanceof ContractFunctionExecutionError && error.cause instanceof TransactionExecutionError && (error.cause.cause instanceof NonceTooHighError || error.cause.cause instanceof NonceTooLowError);
+    }
+    function isWaitingForReceiptError(error) {
+      return error instanceof TransactionNotFoundError || error instanceof WaitForTransactionReceiptTimeoutError;
+    }
+    async function executeTransaction(publicClient, walletClient, params, nonceManager, config3) {
+      const chainId = publicClient.chain.id;
+      const address = walletClient.account.address;
+      let txHash;
+      if (config3.simulateTx) {
+        const { request } = await publicClient.simulateContract(params);
+        txHash = await walletClient.writeContract({ request });
+      } else {
+        const nonce = await nonceManager.consume({
+          address,
+          chainId,
+          client: publicClient
+        });
+        const paramsToSend = {
+          ...config3.defaultGasLimit && { gas: config3.defaultGasLimit },
+          ...params,
+          nonce
+        };
+        txHash = await walletClient.writeContract(paramsToSend);
+      }
+      await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+        confirmations: confirmations_default[chainId.toString()] ?? void 0
+      });
+      return txHash;
+    }
+    async function callContract(publicClient, walletClient, params, nonceManager, config3) {
+      try {
+        const isRetryableError = async (error) => {
+          if (isNonceError(error) || isWaitingForReceiptError(error)) {
+            const chainId = publicClient.chain.id;
+            const address = walletClient.account.address;
+            nonceManager.reset({ chainId, address });
+            return true;
+          }
+          return false;
+        };
+        return asyncRetry2(
+          () => executeTransaction(publicClient, walletClient, params, nonceManager, config3),
+          {
+            maxRetries: 20,
+            delayMs: 1e3,
+            isRetryableError
+          }
+        );
+      } catch (error) {
+        throw new AppError2("ContractCallError", error);
+      }
     }
     var NetworkManager8 = class _NetworkManager extends ManagerBase2 {
       constructor(logger, httpClient, config3) {
@@ -47624,7 +47725,7 @@ ${originalIndentation}`;
         return this._semaphore.cancel();
       }
     };
-    var NonceManager3 = class _NonceManager extends ManagerBase2 {
+    var NonceManager2 = class _NonceManager extends ManagerBase2 {
       constructor(logger, config3) {
         super();
         this.noncesMap = {};
@@ -47678,13 +47779,20 @@ ${originalIndentation}`;
         this.noncesMap[params.chainId] = nonce;
       }
       async fetchNonce(params) {
-        return await params.client.getTransactionCount({ address: params.address });
+        const publicClient = this.createPublicCLientFromGetNonceParams(params);
+        return await publicClient.getTransactionCount({ address: params.address });
       }
       getMutex(chainId) {
         if (!this.mutexMap[chainId]) {
           this.mutexMap[chainId] = new Mutex();
         }
         return this.mutexMap[chainId];
+      }
+      createPublicCLientFromGetNonceParams(params) {
+        return createPublicClient({
+          transport: () => params.client.transport,
+          chain: params.client.chain
+        });
       }
     };
     var RpcManager2 = class _RpcManager extends ManagerBase2 {
@@ -47873,7 +47981,7 @@ ${originalIndentation}`;
         source: "privateKey"
       };
     }
-    var ViemClientManager7 = class _ViemClientManager extends ManagerBase2 {
+    var ViemClientManager6 = class _ViemClientManager extends ManagerBase2 {
       constructor(logger, rpcManager, config3) {
         super();
         this.clients = /* @__PURE__ */ new Map();
@@ -47974,6 +48082,560 @@ ${originalIndentation}`;
         super.dispose();
         _ViemClientManager.instance = void 0;
         this.logger.debug("Disposed");
+      }
+    };
+    var TxMonitor2 = class _TxMonitor {
+      constructor(logger, viemClientManager, config3) {
+        this.monitors = /* @__PURE__ */ new Map();
+        this.disposed = false;
+        this.checkInterval = null;
+        this.viemClientManager = viemClientManager;
+        this.logger = logger;
+        this.config = config3;
+        this.startMonitoring();
+        this.logger.info("initialized");
+      }
+      static createInstance(logger, viemClientManager, config3) {
+        if (!_TxMonitor.instance) {
+          _TxMonitor.instance = new _TxMonitor(logger, viemClientManager, config3);
+        }
+        return _TxMonitor.instance;
+      }
+      static getInstance() {
+        if (!_TxMonitor.instance) {
+          throw new Error("TxMonitor is not initialized. Call createInstance() first.");
+        }
+        return _TxMonitor.instance;
+      }
+      startMonitoring() {
+        const intervalMs = this.config.checkIntervalMs || 5e3;
+        this.checkInterval = setInterval(() => {
+          this.checkAllTransactions().catch((error) => {
+            this.logger.error("Error in transaction monitoring cycle:", error);
+          });
+        }, intervalMs);
+      }
+      watchTxFinality(txInfo, retryCallback, finalityCallback) {
+        if (this.monitors.has(txInfo.txHash)) {
+          this.logger.debug(`Transaction ${txInfo.txHash} is already being monitored`);
+          return;
+        }
+        const monitoredTx = {
+          txHash: txInfo.txHash,
+          chainName: txInfo.chainName,
+          blockNumber: txInfo.submissionBlock,
+          firstSeen: Date.now(),
+          lastChecked: Date.now(),
+          status: "pending",
+          managedTxId: txInfo.id
+        };
+        const monitor = {
+          transaction: monitoredTx,
+          retryCallback,
+          finalityCallback,
+          retryCount: 0
+        };
+        this.monitors.set(txInfo.txHash, monitor);
+        this.logger.debug(`Started monitoring tx ${txInfo.txHash} on ${txInfo.chainName}`);
+      }
+      addTransaction(txHash, txInfo) {
+        this.logger.warn(`addTransaction called directly - use watchTxFinality instead`);
+        const defaultRetryCallback = async (failedTx) => {
+          this.logger.warn(
+            `Transaction ${failedTx.txHash} failed but no retry callback provided`
+          );
+          return null;
+        };
+        const defaultFinalityCallback = (finalizedTx) => {
+          this.logger.info(
+            `Transaction ${finalizedTx.txHash} finalized (using legacy addTransaction)`
+          );
+        };
+        this.watchTxFinality(txInfo, defaultRetryCallback, defaultFinalityCallback);
+      }
+      async checkAllTransactions() {
+        if (this.disposed) return;
+        const networksToCheck = /* @__PURE__ */ new Map();
+        for (const monitor of this.monitors.values()) {
+          const chainName = monitor.transaction.chainName;
+          if (!networksToCheck.has(chainName)) {
+            networksToCheck.set(chainName, []);
+          }
+          networksToCheck.get(chainName).push(monitor);
+        }
+        for (const [chainName, monitors] of networksToCheck) {
+          const network = this.getNetwork(chainName);
+          if (!network) continue;
+          await this.checkNetworkTransactions(network, monitors);
+        }
+      }
+      async checkNetworkTransactions(network, monitors) {
+        const { publicClient } = this.viemClientManager.getClients(network);
+        const currentBlock = await publicClient.getBlockNumber();
+        const finalityConfirmations = BigInt(network.finalityConfirmations ?? 12);
+        const finalityBlockNumber = currentBlock - finalityConfirmations;
+        for (const monitor of monitors) {
+          await this.checkTransaction(monitor, currentBlock, finalityBlockNumber, network);
+        }
+      }
+      async checkTransaction(monitor, currentBlock, finalityBlockNumber, network) {
+        const tx = monitor.transaction;
+        tx.lastChecked = Date.now();
+        try {
+          const { publicClient } = this.viemClientManager.getClients(network);
+          const txInfo = await publicClient.getTransaction({
+            hash: tx.txHash
+          });
+          if (!txInfo) {
+            await this.handleMissingTransaction(monitor, network);
+            return;
+          }
+          if (!tx.blockNumber && txInfo.blockNumber) {
+            tx.blockNumber = txInfo.blockNumber;
+            this.logger.debug(
+              `Transaction ${tx.txHash} included in block ${txInfo.blockNumber}`
+            );
+          }
+          if (tx.blockNumber && txInfo.blockNumber && tx.blockNumber !== txInfo.blockNumber) {
+            this.logger.warn(
+              `Transaction ${tx.txHash} block changed from ${tx.blockNumber} to ${txInfo.blockNumber} (reorg detected)`
+            );
+            tx.blockNumber = txInfo.blockNumber;
+          }
+          if (txInfo.blockNumber && txInfo.blockNumber <= finalityBlockNumber) {
+            await this.handleFinalizedTransaction(monitor);
+          } else if (txInfo.blockNumber) {
+            const confirmations = currentBlock - txInfo.blockNumber + 1n;
+            const requiredConfirmations = BigInt(network.finalityConfirmations ?? 12);
+            this.logger.debug(
+              `Transaction ${tx.txHash} has ${confirmations} confirmations (needs ${requiredConfirmations})`
+            );
+          }
+        } catch (error) {
+          this.logger.error(`Error checking transaction ${tx.txHash}:`, error);
+          const timeSinceLastRetry = tx.lastChecked - (monitor.lastRetryAt || 0);
+          const retryDelayMs = this.config.retryDelayMs || 3e4;
+          if (timeSinceLastRetry > retryDelayMs) {
+            await this.retryTransaction(monitor, network);
+          }
+        }
+      }
+      async handleMissingTransaction(monitor, network) {
+        const tx = monitor.transaction;
+        const timeSinceSubmission = Date.now() - tx.firstSeen;
+        const dropTimeoutMs = this.config.dropTimeoutMs || 6e4;
+        if (timeSinceSubmission < dropTimeoutMs) {
+          this.logger.debug(
+            `Transaction ${tx.txHash} not found yet (${timeSinceSubmission}ms since submission)`
+          );
+          return;
+        }
+        tx.status = "dropped";
+        this.logger.warn(
+          `Transaction ${tx.txHash} not found on chain ${network.name} after ${timeSinceSubmission}ms`
+        );
+        await this.retryTransaction(monitor, network);
+      }
+      async retryTransaction(monitor, network) {
+        const tx = monitor.transaction;
+        monitor.retryCount++;
+        monitor.lastRetryAt = Date.now();
+        this.logger.info(
+          `Retrying transaction ${tx.txHash} on ${network.name} (attempt ${monitor.retryCount})`
+        );
+        const failedTx = {
+          id: tx.managedTxId,
+          txHash: tx.txHash,
+          chainName: tx.chainName,
+          submittedAt: tx.firstSeen,
+          submissionBlock: tx.blockNumber,
+          status: "failed"
+        };
+        const newTxInfo = await monitor.retryCallback(failedTx);
+        if (newTxInfo) {
+          this.monitors.delete(tx.txHash);
+          this.watchTxFinality(newTxInfo, monitor.retryCallback, monitor.finalityCallback);
+          this.logger.info(`Transaction ${tx.txHash} replaced with ${newTxInfo.txHash}`);
+        } else {
+          this.logger.error(`Failed to retry transaction ${tx.txHash} - will try again later`);
+        }
+      }
+      async handleFinalizedTransaction(monitor) {
+        const tx = monitor.transaction;
+        tx.status = "finalized";
+        this.logger.info(`Transaction ${tx.txHash} has reached finality on ${tx.chainName}`);
+        const finalizedTx = {
+          id: tx.managedTxId,
+          txHash: tx.txHash,
+          chainName: tx.chainName,
+          submittedAt: tx.firstSeen,
+          submissionBlock: tx.blockNumber,
+          status: "finalized"
+        };
+        monitor.finalityCallback(finalizedTx);
+        this.monitors.delete(tx.txHash);
+      }
+      getNetwork(chainName) {
+        return void 0;
+      }
+      async checkTransactionsInRange(network, startBlock, endBlock) {
+        this.logger.debug(`Batch checking not implemented - using continuous monitoring instead`);
+      }
+      getMonitoredTransactions(chainName) {
+        const transactions = [];
+        for (const monitor of this.monitors.values()) {
+          if (!chainName || monitor.transaction.chainName === chainName) {
+            transactions.push(monitor.transaction);
+          }
+        }
+        return transactions;
+      }
+      getTransactionsByMessageId() {
+        this.logger.warn("getTransactionsByMessageId called on generic TxMonitor");
+        return /* @__PURE__ */ new Map();
+      }
+      dispose() {
+        this.disposed = true;
+        if (this.checkInterval) {
+          clearInterval(this.checkInterval);
+          this.checkInterval = null;
+        }
+        this.monitors.clear();
+        this.logger.info("Disposed");
+      }
+    };
+    var byteToHex = [];
+    for (let i = 0; i < 256; ++i) {
+      byteToHex.push((i + 256).toString(16).slice(1));
+    }
+    function unsafeStringify(arr, offset = 0) {
+      return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + "-" + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + "-" + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
+    }
+    var import_crypto3 = __require("crypto");
+    var rnds8Pool = new Uint8Array(256);
+    var poolPtr = rnds8Pool.length;
+    function rng() {
+      if (poolPtr > rnds8Pool.length - 16) {
+        (0, import_crypto3.randomFillSync)(rnds8Pool);
+        poolPtr = 0;
+      }
+      return rnds8Pool.slice(poolPtr, poolPtr += 16);
+    }
+    var import_crypto4 = __require("crypto");
+    var native_default = { randomUUID: import_crypto4.randomUUID };
+    function v4(options, buf, offset) {
+      if (native_default.randomUUID && !buf && !options) {
+        return native_default.randomUUID();
+      }
+      options = options || {};
+      const rnds = options.random ?? options.rng?.() ?? rng();
+      if (rnds.length < 16) {
+        throw new Error("Random bytes length must be >= 16");
+      }
+      rnds[6] = rnds[6] & 15 | 64;
+      rnds[8] = rnds[8] & 63 | 128;
+      if (buf) {
+        offset = offset || 0;
+        if (offset < 0 || offset + 16 > buf.length) {
+          throw new RangeError(`UUID byte range ${offset}:${offset + 15} is out of buffer bounds`);
+        }
+        for (let i = 0; i < 16; ++i) {
+          buf[offset + i] = rnds[i];
+        }
+        return buf;
+      }
+      return unsafeStringify(rnds);
+    }
+    var v4_default = v4;
+    var TxReader2 = class _TxReader {
+      constructor(logger, networkManager, viemClientManager, config3) {
+        this.logWatchers = /* @__PURE__ */ new Map();
+        this.readContractWatchers = /* @__PURE__ */ new Map();
+        this.readContractIntervals = /* @__PURE__ */ new Map();
+        this.logWatcher = {
+          create: (contractAddress, network, onLogs, event, blockManager) => {
+            const id2 = v4_default();
+            const unwatcher = blockManager.watchBlocks({
+              onBlockRange: async (startBlock, endBlock) => {
+                await this.fetchLogsForWatcher(id2, startBlock, endBlock);
+              }
+            });
+            const watcher = {
+              id: id2,
+              network,
+              contractAddress,
+              event,
+              callback: onLogs,
+              blockManager,
+              unwatch: unwatcher
+            };
+            this.logWatchers.set(id2, watcher);
+            this.logger.debug(
+              `Created log watcher for ${network.name}:${contractAddress} (${event.name})`
+            );
+            return id2;
+          },
+          remove: (watcherId) => {
+            const watcher = this.logWatchers.get(watcherId);
+            if (!watcher) {
+              this.logger.warn(`Failed to remove log watcher ${watcherId} (not found)`);
+              return false;
+            }
+            watcher.unwatch();
+            this.logWatchers.delete(watcherId);
+            this.logger.info(`Removed log watcher ${watcherId}`);
+            return true;
+          }
+        };
+        this.readContractWatcher = {
+          create: (contractAddress, network, functionName, abi22, callback, intervalMs = 1e4, args) => {
+            const id2 = v4_default();
+            const watcher = {
+              id: id2,
+              network,
+              contractAddress,
+              functionName,
+              abi: abi22,
+              args,
+              intervalMs,
+              callback
+            };
+            this.readContractWatchers.set(id2, watcher);
+            const interval = setInterval(async () => {
+              await this.executeReadContract(watcher);
+            }, intervalMs);
+            this.readContractIntervals.set(id2, interval);
+            this.executeReadContract(watcher).catch((error) => {
+              this.logger.error(`Error in initial read contract execution (ID: ${id2}):`, error);
+            });
+            this.logger.debug(
+              `Created read contract watcher for ${network.name}:${contractAddress}.${functionName}`
+            );
+            return id2;
+          },
+          remove: (watcherId) => {
+            const watcher = this.readContractWatchers.get(watcherId);
+            if (!watcher) {
+              this.logger.warn(`Failed to remove read contract watcher ${watcherId} (not found)`);
+              return false;
+            }
+            const interval = this.readContractIntervals.get(watcherId);
+            if (interval) {
+              clearInterval(interval);
+              this.readContractIntervals.delete(watcherId);
+            }
+            this.readContractWatchers.delete(watcherId);
+            this.logger.info(`Removed read contract watcher ${watcherId}`);
+            return true;
+          }
+        };
+        this.networkManager = networkManager;
+        this.viemClientManager = viemClientManager;
+        this.logger = logger;
+      }
+      static createInstance(logger, networkManager, viemClientManager, config3) {
+        _TxReader.instance = new _TxReader(logger, networkManager, viemClientManager, config3);
+        return _TxReader.instance;
+      }
+      static getInstance() {
+        if (!_TxReader.instance) {
+          throw new Error("TxReader is not initialized. Call createInstance() first.");
+        }
+        return _TxReader.instance;
+      }
+      async initialize() {
+        this.logger.info("Initialized");
+      }
+      async fetchLogsForWatcher(watcherId, fromBlock, toBlock) {
+        const watcher = this.logWatchers.get(watcherId);
+        if (!watcher) return;
+        try {
+          const logs = await this.getLogs(
+            {
+              address: watcher.contractAddress,
+              event: watcher.event,
+              fromBlock,
+              toBlock
+            },
+            watcher.network
+          );
+          if (logs.length > 0) {
+            watcher.callback(logs, watcher.network).catch((error) => {
+              this.logger.error(`Error in watcher callback (ID: ${watcher.id}):`, error);
+            });
+          }
+        } catch (error) {
+          this.logger.error(
+            `Error fetching logs for ${watcher.contractAddress} on ${watcher.network.name}:`,
+            error
+          );
+        }
+      }
+      async executeReadContract(watcher) {
+        try {
+          const { publicClient } = this.viemClientManager.getClients(watcher.network);
+          const result = await publicClient.readContract({
+            address: watcher.contractAddress,
+            abi: watcher.abi,
+            functionName: watcher.functionName,
+            args: watcher.args
+          });
+          await watcher.callback(result, watcher.network);
+        } catch (error) {
+          this.logger.error(`Error executing read contract (ID: ${watcher.id}):`, error);
+        }
+      }
+      async getLogs(query, network) {
+        const { publicClient } = this.viemClientManager.getClients(network);
+        try {
+          const filter2 = {
+            address: query.address,
+            fromBlock: query.fromBlock,
+            toBlock: query.toBlock,
+            event: query.event,
+            ...query.args && { args: query.args }
+          };
+          const logs = await publicClient.getLogs(filter2);
+          return logs;
+        } catch (error) {
+          this.logger.error(`Error fetching logs on ${network.name}:`, error);
+          return [];
+        }
+      }
+      dispose() {
+        for (const [watcherId, watcher] of this.logWatchers.entries()) {
+          watcher.unwatch();
+        }
+        for (const [watcherId, interval] of this.readContractIntervals.entries()) {
+          clearInterval(interval);
+        }
+        this.logWatchers.clear();
+        this.readContractWatchers.clear();
+        this.readContractIntervals.clear();
+        this.logger.info("Disposed");
+      }
+    };
+    var TxWriter6 = class _TxWriter {
+      constructor(logger, viemClientManager, txMonitor, nonceManager, config3) {
+        this.viemClientManager = viemClientManager;
+        this.txMonitor = txMonitor;
+        this.logger = logger;
+        this.config = config3;
+        this.nonceManager = nonceManager;
+      }
+      static createInstance(logger, viemClientManager, txMonitor, nonceManager, config3) {
+        _TxWriter.instance = new _TxWriter(
+          logger,
+          viemClientManager,
+          txMonitor,
+          nonceManager,
+          config3
+        );
+        return _TxWriter.instance;
+      }
+      static getInstance() {
+        if (!_TxWriter.instance) {
+          throw new Error("TxWriter is not initialized. Call createInstance() first.");
+        }
+        return _TxWriter.instance;
+      }
+      async initialize() {
+        this.logger.info("Initialized");
+      }
+      async callContract(network, params) {
+        try {
+          const { walletClient, publicClient } = this.viemClientManager.getClients(network);
+          if (this.config.dryRun) {
+            this.logger.info(
+              `[DRY_RUN][${network.name}] Contract call: ${params.functionName}`
+            );
+            const mockTxHash = `0xdry${Date.now().toString(16)}`;
+            return mockTxHash;
+          }
+          const txHash = await callContract(
+            publicClient,
+            walletClient,
+            params,
+            this.nonceManager,
+            {
+              simulateTx: this.config.simulateTx,
+              defaultGasLimit: this.config.defaultGasLimit
+            }
+          );
+          this.logger.debug(`[${network.name}] Contract call transaction hash: ${txHash}`);
+          const currentBlock = await publicClient.getBlockNumber();
+          const txInfo = {
+            id: v4_default(),
+            txHash,
+            chainName: network.name,
+            submittedAt: Date.now(),
+            submissionBlock: currentBlock,
+            status: "submitted",
+            metadata: {
+              functionName: params.functionName,
+              contractAddress: params.address
+            }
+          };
+          this.txMonitor.watchTxFinality(
+            txInfo,
+            this.createRetryCallback(network, params),
+            this.createFinalityCallback(network)
+          );
+          return txHash;
+        } catch (error) {
+          this.logger.error(`[${network.name}] Contract call failed:`, error);
+          throw error;
+        }
+      }
+      createRetryCallback(network, params) {
+        return async (failedTx) => {
+          this.logger.info(
+            `[${network.name}] Retrying transaction ${failedTx.txHash} (${failedTx.id})`
+          );
+          try {
+            const { walletClient, publicClient } = this.viemClientManager.getClients(network);
+            const newTxHash = await callContract(
+              publicClient,
+              walletClient,
+              params,
+              this.nonceManager,
+              {
+                simulateTx: this.config.simulateTx,
+                defaultGasLimit: this.config.defaultGasLimit
+              }
+            );
+            this.logger.info(`[${network.name}] Retry successful. New tx hash: ${newTxHash}`);
+            const currentBlock = await publicClient.getBlockNumber();
+            return {
+              id: v4_default(),
+              txHash: newTxHash,
+              chainName: network.name,
+              submittedAt: Date.now(),
+              submissionBlock: currentBlock,
+              status: "submitted",
+              metadata: {
+                functionName: params.functionName,
+                contractAddress: params.address
+              }
+            };
+          } catch (error) {
+            this.logger.error(
+              `[${network.name}] Failed to retry transaction ${failedTx.txHash}:`,
+              error
+            );
+            return null;
+          }
+        };
+      }
+      createFinalityCallback(network) {
+        return (finalizedTx) => {
+          this.logger.info(
+            `[${network.name}] Transaction ${finalizedTx.txHash} (${finalizedTx.id}) is now final`
+          );
+        };
+      }
+      dispose() {
+        this.logger.info("Disposed");
       }
     };
   }
@@ -50714,48 +51376,6 @@ var init_decodeAbiParameters = __esm({
   }
 });
 
-// node_modules/viem/_esm/utils/stringify.js
-var stringify;
-var init_stringify = __esm({
-  "node_modules/viem/_esm/utils/stringify.js"() {
-    stringify = (value, replacer, space) => JSON.stringify(value, (key, value_) => {
-      const value2 = typeof value_ === "bigint" ? value_.toString() : value_;
-      return typeof replacer === "function" ? replacer(key, value2) : value2;
-    }, space);
-  }
-});
-
-// node_modules/viem/_esm/utils/abi/formatAbiItemWithArgs.js
-function formatAbiItemWithArgs({ abiItem, args, includeFunctionName = true, includeName = false }) {
-  if (!("name" in abiItem))
-    return;
-  if (!("inputs" in abiItem))
-    return;
-  if (!abiItem.inputs)
-    return;
-  return `${includeFunctionName ? abiItem.name : ""}(${abiItem.inputs.map((input, i) => `${includeName && input.name ? `${input.name}: ` : ""}${typeof args[i] === "object" ? stringify(args[i]) : args[i]}`).join(", ")})`;
-}
-var init_formatAbiItemWithArgs = __esm({
-  "node_modules/viem/_esm/utils/abi/formatAbiItemWithArgs.js"() {
-    init_stringify();
-  }
-});
-
-// node_modules/viem/_esm/constants/unit.js
-var etherUnits, gweiUnits;
-var init_unit = __esm({
-  "node_modules/viem/_esm/constants/unit.js"() {
-    etherUnits = {
-      gwei: 9,
-      wei: 18
-    };
-    gweiUnits = {
-      ether: -9,
-      wei: 9
-    };
-  }
-});
-
 // node_modules/viem/_esm/utils/unit/formatUnits.js
 function formatUnits(value, decimals) {
   let display = value.toString();
@@ -50772,376 +51392,6 @@ function formatUnits(value, decimals) {
 }
 var init_formatUnits = __esm({
   "node_modules/viem/_esm/utils/unit/formatUnits.js"() {
-  }
-});
-
-// node_modules/viem/_esm/utils/unit/formatEther.js
-function formatEther(wei, unit = "wei") {
-  return formatUnits(wei, etherUnits[unit]);
-}
-var init_formatEther = __esm({
-  "node_modules/viem/_esm/utils/unit/formatEther.js"() {
-    init_unit();
-    init_formatUnits();
-  }
-});
-
-// node_modules/viem/_esm/utils/unit/formatGwei.js
-function formatGwei(wei, unit = "wei") {
-  return formatUnits(wei, gweiUnits[unit]);
-}
-var init_formatGwei = __esm({
-  "node_modules/viem/_esm/utils/unit/formatGwei.js"() {
-    init_unit();
-    init_formatUnits();
-  }
-});
-
-// node_modules/viem/_esm/errors/transaction.js
-function prettyPrint(args) {
-  const entries = Object.entries(args).map(([key, value]) => {
-    if (value === void 0 || value === false)
-      return null;
-    return [key, value];
-  }).filter(Boolean);
-  const maxLength = entries.reduce((acc, [key]) => Math.max(acc, key.length), 0);
-  return entries.map(([key, value]) => `  ${`${key}:`.padEnd(maxLength + 1)}  ${value}`).join("\n");
-}
-var TransactionExecutionError, TransactionNotFoundError, WaitForTransactionReceiptTimeoutError;
-var init_transaction = __esm({
-  "node_modules/viem/_esm/errors/transaction.js"() {
-    init_formatEther();
-    init_formatGwei();
-    init_base();
-    TransactionExecutionError = class extends BaseError2 {
-      constructor(cause, { account, docsPath: docsPath2, chain, data, gas, gasPrice, maxFeePerGas, maxPriorityFeePerGas, nonce, to: to2, value }) {
-        const prettyArgs = prettyPrint({
-          chain: chain && `${chain?.name} (id: ${chain?.id})`,
-          from: account?.address,
-          to: to2,
-          value: typeof value !== "undefined" && `${formatEther(value)} ${chain?.nativeCurrency?.symbol || "ETH"}`,
-          data,
-          gas,
-          gasPrice: typeof gasPrice !== "undefined" && `${formatGwei(gasPrice)} gwei`,
-          maxFeePerGas: typeof maxFeePerGas !== "undefined" && `${formatGwei(maxFeePerGas)} gwei`,
-          maxPriorityFeePerGas: typeof maxPriorityFeePerGas !== "undefined" && `${formatGwei(maxPriorityFeePerGas)} gwei`,
-          nonce
-        });
-        super(cause.shortMessage, {
-          cause,
-          docsPath: docsPath2,
-          metaMessages: [
-            ...cause.metaMessages ? [...cause.metaMessages, " "] : [],
-            "Request Arguments:",
-            prettyArgs
-          ].filter(Boolean),
-          name: "TransactionExecutionError"
-        });
-        Object.defineProperty(this, "cause", {
-          enumerable: true,
-          configurable: true,
-          writable: true,
-          value: void 0
-        });
-        this.cause = cause;
-      }
-    };
-    TransactionNotFoundError = class extends BaseError2 {
-      constructor({ blockHash, blockNumber, blockTag, hash: hash2, index }) {
-        let identifier = "Transaction";
-        if (blockTag && index !== void 0)
-          identifier = `Transaction at block time "${blockTag}" at index "${index}"`;
-        if (blockHash && index !== void 0)
-          identifier = `Transaction at block hash "${blockHash}" at index "${index}"`;
-        if (blockNumber && index !== void 0)
-          identifier = `Transaction at block number "${blockNumber}" at index "${index}"`;
-        if (hash2)
-          identifier = `Transaction with hash "${hash2}"`;
-        super(`${identifier} could not be found.`, {
-          name: "TransactionNotFoundError"
-        });
-      }
-    };
-    WaitForTransactionReceiptTimeoutError = class extends BaseError2 {
-      constructor({ hash: hash2 }) {
-        super(`Timed out while waiting for transaction with hash "${hash2}" to be confirmed.`, { name: "WaitForTransactionReceiptTimeoutError" });
-      }
-    };
-  }
-});
-
-// node_modules/viem/_esm/errors/utils.js
-var getContractAddress;
-var init_utils3 = __esm({
-  "node_modules/viem/_esm/errors/utils.js"() {
-    getContractAddress = (address) => address;
-  }
-});
-
-// node_modules/viem/_esm/errors/contract.js
-var ContractFunctionExecutionError;
-var init_contract = __esm({
-  "node_modules/viem/_esm/errors/contract.js"() {
-    init_formatAbiItem2();
-    init_formatAbiItemWithArgs();
-    init_getAbiItem();
-    init_base();
-    init_transaction();
-    init_utils3();
-    ContractFunctionExecutionError = class extends BaseError2 {
-      constructor(cause, { abi: abi3, args, contractAddress, docsPath: docsPath2, functionName, sender }) {
-        const abiItem = getAbiItem({ abi: abi3, args, name: functionName });
-        const formattedArgs = abiItem ? formatAbiItemWithArgs({
-          abiItem,
-          args,
-          includeFunctionName: false,
-          includeName: false
-        }) : void 0;
-        const functionWithParams = abiItem ? formatAbiItem2(abiItem, { includeName: true }) : void 0;
-        const prettyArgs = prettyPrint({
-          address: contractAddress && getContractAddress(contractAddress),
-          function: functionWithParams,
-          args: formattedArgs && formattedArgs !== "()" && `${[...Array(functionName?.length ?? 0).keys()].map(() => " ").join("")}${formattedArgs}`,
-          sender
-        });
-        super(cause.shortMessage || `An unknown error occurred while executing the contract function "${functionName}".`, {
-          cause,
-          docsPath: docsPath2,
-          metaMessages: [
-            ...cause.metaMessages ? [...cause.metaMessages, " "] : [],
-            prettyArgs && "Contract Call:",
-            prettyArgs
-          ].filter(Boolean),
-          name: "ContractFunctionExecutionError"
-        });
-        Object.defineProperty(this, "abi", {
-          enumerable: true,
-          configurable: true,
-          writable: true,
-          value: void 0
-        });
-        Object.defineProperty(this, "args", {
-          enumerable: true,
-          configurable: true,
-          writable: true,
-          value: void 0
-        });
-        Object.defineProperty(this, "cause", {
-          enumerable: true,
-          configurable: true,
-          writable: true,
-          value: void 0
-        });
-        Object.defineProperty(this, "contractAddress", {
-          enumerable: true,
-          configurable: true,
-          writable: true,
-          value: void 0
-        });
-        Object.defineProperty(this, "formattedArgs", {
-          enumerable: true,
-          configurable: true,
-          writable: true,
-          value: void 0
-        });
-        Object.defineProperty(this, "functionName", {
-          enumerable: true,
-          configurable: true,
-          writable: true,
-          value: void 0
-        });
-        Object.defineProperty(this, "sender", {
-          enumerable: true,
-          configurable: true,
-          writable: true,
-          value: void 0
-        });
-        this.abi = abi3;
-        this.args = args;
-        this.cause = cause;
-        this.contractAddress = contractAddress;
-        this.functionName = functionName;
-        this.sender = sender;
-      }
-    };
-  }
-});
-
-// node_modules/viem/_esm/errors/node.js
-var ExecutionRevertedError, FeeCapTooHighError, FeeCapTooLowError, NonceTooHighError, NonceTooLowError, NonceMaxValueError, InsufficientFundsError, IntrinsicGasTooHighError, IntrinsicGasTooLowError, TransactionTypeNotSupportedError, TipAboveFeeCapError;
-var init_node = __esm({
-  "node_modules/viem/_esm/errors/node.js"() {
-    init_formatGwei();
-    init_base();
-    ExecutionRevertedError = class extends BaseError2 {
-      constructor({ cause, message } = {}) {
-        const reason = message?.replace("execution reverted: ", "")?.replace("execution reverted", "");
-        super(`Execution reverted ${reason ? `with reason: ${reason}` : "for an unknown reason"}.`, {
-          cause,
-          name: "ExecutionRevertedError"
-        });
-      }
-    };
-    Object.defineProperty(ExecutionRevertedError, "code", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: 3
-    });
-    Object.defineProperty(ExecutionRevertedError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /execution reverted/
-    });
-    FeeCapTooHighError = class extends BaseError2 {
-      constructor({ cause, maxFeePerGas } = {}) {
-        super(`The fee cap (\`maxFeePerGas\`${maxFeePerGas ? ` = ${formatGwei(maxFeePerGas)} gwei` : ""}) cannot be higher than the maximum allowed value (2^256-1).`, {
-          cause,
-          name: "FeeCapTooHighError"
-        });
-      }
-    };
-    Object.defineProperty(FeeCapTooHighError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /max fee per gas higher than 2\^256-1|fee cap higher than 2\^256-1/
-    });
-    FeeCapTooLowError = class extends BaseError2 {
-      constructor({ cause, maxFeePerGas } = {}) {
-        super(`The fee cap (\`maxFeePerGas\`${maxFeePerGas ? ` = ${formatGwei(maxFeePerGas)}` : ""} gwei) cannot be lower than the block base fee.`, {
-          cause,
-          name: "FeeCapTooLowError"
-        });
-      }
-    };
-    Object.defineProperty(FeeCapTooLowError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /max fee per gas less than block base fee|fee cap less than block base fee|transaction is outdated/
-    });
-    NonceTooHighError = class extends BaseError2 {
-      constructor({ cause, nonce } = {}) {
-        super(`Nonce provided for the transaction ${nonce ? `(${nonce}) ` : ""}is higher than the next one expected.`, { cause, name: "NonceTooHighError" });
-      }
-    };
-    Object.defineProperty(NonceTooHighError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /nonce too high/
-    });
-    NonceTooLowError = class extends BaseError2 {
-      constructor({ cause, nonce } = {}) {
-        super([
-          `Nonce provided for the transaction ${nonce ? `(${nonce}) ` : ""}is lower than the current nonce of the account.`,
-          "Try increasing the nonce or find the latest nonce with `getTransactionCount`."
-        ].join("\n"), { cause, name: "NonceTooLowError" });
-      }
-    };
-    Object.defineProperty(NonceTooLowError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /nonce too low|transaction already imported|already known/
-    });
-    NonceMaxValueError = class extends BaseError2 {
-      constructor({ cause, nonce } = {}) {
-        super(`Nonce provided for the transaction ${nonce ? `(${nonce}) ` : ""}exceeds the maximum allowed nonce.`, { cause, name: "NonceMaxValueError" });
-      }
-    };
-    Object.defineProperty(NonceMaxValueError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /nonce has max value/
-    });
-    InsufficientFundsError = class extends BaseError2 {
-      constructor({ cause } = {}) {
-        super([
-          "The total cost (gas * gas fee + value) of executing this transaction exceeds the balance of the account."
-        ].join("\n"), {
-          cause,
-          metaMessages: [
-            "This error could arise when the account does not have enough funds to:",
-            " - pay for the total gas fee,",
-            " - pay for the value to send.",
-            " ",
-            "The cost of the transaction is calculated as `gas * gas fee + value`, where:",
-            " - `gas` is the amount of gas needed for transaction to execute,",
-            " - `gas fee` is the gas fee,",
-            " - `value` is the amount of ether to send to the recipient."
-          ],
-          name: "InsufficientFundsError"
-        });
-      }
-    };
-    Object.defineProperty(InsufficientFundsError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /insufficient funds|exceeds transaction sender account balance/
-    });
-    IntrinsicGasTooHighError = class extends BaseError2 {
-      constructor({ cause, gas } = {}) {
-        super(`The amount of gas ${gas ? `(${gas}) ` : ""}provided for the transaction exceeds the limit allowed for the block.`, {
-          cause,
-          name: "IntrinsicGasTooHighError"
-        });
-      }
-    };
-    Object.defineProperty(IntrinsicGasTooHighError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /intrinsic gas too high|gas limit reached/
-    });
-    IntrinsicGasTooLowError = class extends BaseError2 {
-      constructor({ cause, gas } = {}) {
-        super(`The amount of gas ${gas ? `(${gas}) ` : ""}provided for the transaction is too low.`, {
-          cause,
-          name: "IntrinsicGasTooLowError"
-        });
-      }
-    };
-    Object.defineProperty(IntrinsicGasTooLowError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /intrinsic gas too low/
-    });
-    TransactionTypeNotSupportedError = class extends BaseError2 {
-      constructor({ cause }) {
-        super("The transaction type is not supported for this chain.", {
-          cause,
-          name: "TransactionTypeNotSupportedError"
-        });
-      }
-    };
-    Object.defineProperty(TransactionTypeNotSupportedError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /transaction type not valid/
-    });
-    TipAboveFeeCapError = class extends BaseError2 {
-      constructor({ cause, maxPriorityFeePerGas, maxFeePerGas } = {}) {
-        super([
-          `The provided tip (\`maxPriorityFeePerGas\`${maxPriorityFeePerGas ? ` = ${formatGwei(maxPriorityFeePerGas)} gwei` : ""}) cannot be higher than the fee cap (\`maxFeePerGas\`${maxFeePerGas ? ` = ${formatGwei(maxFeePerGas)} gwei` : ""}).`
-        ].join("\n"), {
-          cause,
-          name: "TipAboveFeeCapError"
-        });
-      }
-    };
-    Object.defineProperty(TipAboveFeeCapError, "nodeMessage", {
-      enumerable: true,
-      configurable: true,
-      writable: true,
-      value: /max priority fee per gas higher than max fee per gas|tip higher than fee cap/
-    });
   }
 });
 
@@ -75573,7 +75823,7 @@ function configureDotEnv(basePath = "./") {
 configureDotEnv();
 
 // src/relayer-a/index.ts
-var import_operator_utils13 = __toESM(require_dist(), 1);
+var import_operator_utils12 = __toESM(require_dist(), 1);
 
 // src/constants/appErrors.ts
 var appErrors = {
@@ -77344,42 +77594,6 @@ var AppError = class extends Error {
 // src/common/utils/asyncRetry.ts
 var import_operator_utils = __toESM(require_dist(), 1);
 
-// src/common/utils/sleep.ts
-async function sleep(ms2) {
-  return new Promise((resolve) => setTimeout(resolve, ms2));
-}
-
-// src/common/utils/asyncRetry.ts
-async function asyncRetry(fn2, options = {}) {
-  const { maxRetries = 3, delayMs = 2e3, isRetryableError = () => false } = options;
-  const logger = import_operator_utils.Logger.getInstance().getLogger("AsyncRetry");
-  let attempt = 0;
-  let lastError;
-  while (attempt <= maxRetries) {
-    try {
-      return await fn2();
-    } catch (error) {
-      lastError = error;
-      if (await isRetryableError(error) && attempt < maxRetries) {
-        ++attempt;
-        logger.debug(`Retry attempt ${attempt} failed. Retrying in ${delayMs}ms...`);
-        await sleep(delayMs);
-      } else {
-        throw error;
-      }
-    }
-  }
-  throw lastError;
-}
-
-// src/common/utils/callContract.ts
-var import_operator_utils2 = __toESM(require_dist(), 1);
-
-// src/constants/confirmations.json
-var confirmations_default = {
-  "1270": 3
-};
-
 // node_modules/viem/_esm/index.js
 init_exports();
 
@@ -77475,9 +77689,6 @@ function defineChain(chain) {
 
 // node_modules/viem/_esm/index.js
 init_abi();
-init_contract();
-init_node();
-init_transaction();
 init_decodeAbiParameters();
 init_encodeAbiParameters();
 init_getAbiItem();
@@ -77486,69 +77697,9 @@ init_formatUnits();
 init_isHex();
 init_keccak256();
 
-// src/common/utils/viemErrorParser.ts
-function isNonceError(error) {
-  return error instanceof ContractFunctionExecutionError && error.cause instanceof TransactionExecutionError && (error.cause.cause instanceof NonceTooHighError || error.cause.cause instanceof NonceTooLowError);
-}
-function isWaitingForReceiptError(error) {
-  return error instanceof TransactionNotFoundError || error instanceof WaitForTransactionReceiptTimeoutError;
-}
-
-// src/common/utils/callContract.ts
-async function executeTransaction(publicClient, walletClient, params, nonceManager) {
-  const chainId = publicClient.chain.id;
-  const address = walletClient.account.address;
-  let txHash;
-  if (globalConfig.VIEM.SIMULATE_TX) {
-    const { request } = await publicClient.simulateContract(params);
-    txHash = await walletClient.writeContract({ request });
-  } else {
-    const nonce = await nonceManager.consume({
-      address,
-      chainId,
-      client: publicClient
-    });
-    const paramsToSend = {
-      gas: globalConfig.TX_MANAGER.GAS_LIMIT.DEFAULT,
-      ...params,
-      nonce
-    };
-    txHash = await walletClient.writeContract(paramsToSend);
-  }
-  await publicClient.waitForTransactionReceipt({
-    hash: txHash,
-    confirmations: confirmations_default[chainId.toString()] ?? void 0
-  });
-  return txHash;
-}
-async function callContract(publicClient, walletClient, params) {
-  try {
-    const nonceManager = import_operator_utils2.NonceManager.getInstance();
-    const isRetryableError = async (error) => {
-      if (isNonceError(error) || isWaitingForReceiptError(error)) {
-        const chainId = publicClient.chain.id;
-        const address = walletClient.account.address;
-        nonceManager.reset({ chainId, address });
-        return true;
-      }
-      return false;
-    };
-    return asyncRetry(
-      () => executeTransaction(publicClient, walletClient, params, nonceManager),
-      {
-        maxRetries: 20,
-        delayMs: 1e3,
-        isRetryableError
-      }
-    );
-  } catch (error) {
-    throw new AppError("ContractCallError" /* ContractCallError */, error);
-  }
-}
-
 // src/common/utils/checkGas.ts
 var import_web_api = __toESM(require_dist5(), 1);
-var import_operator_utils3 = __toESM(require_dist(), 1);
+var import_operator_utils2 = __toESM(require_dist(), 1);
 var SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE = 15n;
 async function notifyInSlack(message) {
   try {
@@ -77577,9 +77728,9 @@ async function getChainOperatorMinBalance(publicClient) {
 }
 async function checkAndNotifyInsufficientGas() {
   const operatorAddress = globalConfig.OPERATOR_ADDRESS;
-  const viemClientManager = import_operator_utils3.ViemClientManager.getInstance();
-  const networkManager = import_operator_utils3.NetworkManager.getInstance();
-  const logger = import_operator_utils3.Logger.getInstance().getLogger("GasChecker");
+  const viemClientManager = import_operator_utils2.ViemClientManager.getInstance();
+  const networkManager = import_operator_utils2.NetworkManager.getInstance();
+  const logger = import_operator_utils2.Logger.getInstance().getLogger("GasChecker");
   try {
     const activeNetworks = networkManager.getActiveNetworks();
     if (activeNetworks.length === 0) {
@@ -77625,7 +77776,7 @@ async function checkGas() {
 }
 
 // src/common/utils/customHttpTransport.ts
-var import_operator_utils4 = __toESM(require_dist(), 1);
+var import_operator_utils3 = __toESM(require_dist(), 1);
 
 // src/common/utils/decoders/decodeCLFReport.ts
 var clfReportSubmissionAbi = parseAbiParameters([
@@ -77772,50 +77923,8 @@ var localhostViemChain = defineChain({
   testnet: true
 });
 
-// src/common/utils/safeStringify.ts
-function safeStringify(value) {
-  if (value === null || value === void 0) {
-    return String(value);
-  }
-  if (value instanceof Error) {
-    const errorInfo = {
-      name: value.name,
-      message: value.message,
-      stack: value.stack
-    };
-    Object.keys(value).forEach((key) => {
-      if (!(key in errorInfo)) {
-        errorInfo[key] = value[key];
-      }
-    });
-    return JSON.stringify(errorInfo, replaceBigInt, 2);
-  }
-  if (typeof value !== "object") {
-    return String(value);
-  }
-  try {
-    return JSON.stringify(value, replaceBigInt, 2);
-  } catch (error) {
-    try {
-      return `[Stringify Error: ${error instanceof Error ? error.message : "Unknown error"}] ${Object.prototype.toString.call(value)}`;
-    } catch {
-      return "[Unable to stringify value]";
-    }
-  }
-}
-function replaceBigInt(key, value) {
-  if (typeof value === "bigint") {
-    return value.toString() + "n";
-  }
-  return value;
-}
-function formatError(error, context) {
-  const errorString = safeStringify(error);
-  return context ? `${context}: ${errorString}` : errorString;
-}
-
 // src/common/utils/initializeManagers.ts
-var import_operator_utils6 = __toESM(require_dist(), 1);
+var import_operator_utils5 = __toESM(require_dist(), 1);
 
 // src/common/managers/DbManager.ts
 var import_client = __toESM(require_default2(), 1);
@@ -77922,7 +78031,7 @@ var BlockCheckpointManager = class _BlockCheckpointManager extends ManagerBase {
 };
 
 // src/common/managers/MessagingDeploymentManager.ts
-var import_operator_utils5 = __toESM(require_dist(), 1);
+var import_operator_utils4 = __toESM(require_dist(), 1);
 var MessagingDeploymentManager = class _MessagingDeploymentManager extends ManagerBase {
   static instance;
   conceroRoutersMapByChainName = {};
@@ -77936,7 +78045,7 @@ var MessagingDeploymentManager = class _MessagingDeploymentManager extends Manag
     super();
     this.logger = logger;
     this.config = config3;
-    this.deploymentFetcher = new import_operator_utils5.DeploymentFetcher(logger);
+    this.deploymentFetcher = new import_operator_utils4.DeploymentFetcher(logger);
   }
   static createInstance(logger, config3) {
     _MessagingDeploymentManager.instance = new _MessagingDeploymentManager(logger, config3);
@@ -78079,13 +78188,8 @@ var TxManager = class _TxManager extends ManagerBase {
     super.initialize();
     this.logger.info("initialized");
   }
-  async callContract(walletClient, publicClient, network, params) {
-    const txHash = await this.txWriter.callContract(
-      walletClient,
-      publicClient,
-      network,
-      params
-    );
+  async callContract(network, params) {
+    const txHash = await this.txWriter.callContract(network, params);
     return txHash;
   }
   // Transaction Monitoring Methods (Deprecated - handled internally by TxWriter/TxMonitor)
@@ -78149,561 +78253,9 @@ var TxManager = class _TxManager extends ManagerBase {
   }
 };
 
-// src/common/managers/TxMonitor.ts
-var TxMonitor = class _TxMonitor {
-  static instance;
-  monitors = /* @__PURE__ */ new Map();
-  viemClientManager;
-  disposed = false;
-  logger;
-  config;
-  checkInterval = null;
-  constructor(logger, viemClientManager, config3) {
-    this.viemClientManager = viemClientManager;
-    this.logger = logger;
-    this.config = config3;
-    this.startMonitoring();
-    this.logger.info("initialized");
-  }
-  static createInstance(logger, viemClientManager, config3) {
-    if (!_TxMonitor.instance) {
-      _TxMonitor.instance = new _TxMonitor(logger, viemClientManager, config3);
-    }
-    return _TxMonitor.instance;
-  }
-  static getInstance() {
-    if (!_TxMonitor.instance) {
-      throw new Error("TxMonitor is not initialized. Call createInstance() first.");
-    }
-    return _TxMonitor.instance;
-  }
-  startMonitoring() {
-    const intervalMs = this.config.checkIntervalMs || 5e3;
-    this.checkInterval = setInterval(() => {
-      this.checkAllTransactions().catch((error) => {
-        this.logger.error("Error in transaction monitoring cycle:", error);
-      });
-    }, intervalMs);
-  }
-  watchTxFinality(txInfo, retryCallback, finalityCallback) {
-    if (this.monitors.has(txInfo.txHash)) {
-      this.logger.debug(`Transaction ${txInfo.txHash} is already being monitored`);
-      return;
-    }
-    const monitoredTx = {
-      txHash: txInfo.txHash,
-      chainName: txInfo.chainName,
-      blockNumber: txInfo.submissionBlock,
-      firstSeen: Date.now(),
-      lastChecked: Date.now(),
-      status: "pending" /* Pending */,
-      managedTxId: txInfo.id
-    };
-    const monitor = {
-      transaction: monitoredTx,
-      retryCallback,
-      finalityCallback,
-      retryCount: 0
-    };
-    this.monitors.set(txInfo.txHash, monitor);
-    this.logger.debug(`Started monitoring tx ${txInfo.txHash} on ${txInfo.chainName}`);
-  }
-  addTransaction(txHash, txInfo) {
-    this.logger.warn(`addTransaction called directly - use watchTxFinality instead`);
-    const defaultRetryCallback = async (failedTx) => {
-      this.logger.warn(
-        `Transaction ${failedTx.txHash} failed but no retry callback provided`
-      );
-      return null;
-    };
-    const defaultFinalityCallback = (finalizedTx) => {
-      this.logger.info(
-        `Transaction ${finalizedTx.txHash} finalized (using legacy addTransaction)`
-      );
-    };
-    this.watchTxFinality(txInfo, defaultRetryCallback, defaultFinalityCallback);
-  }
-  async checkAllTransactions() {
-    if (this.disposed) return;
-    const networksToCheck = /* @__PURE__ */ new Map();
-    for (const monitor of this.monitors.values()) {
-      const chainName = monitor.transaction.chainName;
-      if (!networksToCheck.has(chainName)) {
-        networksToCheck.set(chainName, []);
-      }
-      networksToCheck.get(chainName).push(monitor);
-    }
-    for (const [chainName, monitors] of networksToCheck) {
-      const network = this.getNetwork(chainName);
-      if (!network) continue;
-      await this.checkNetworkTransactions(network, monitors);
-    }
-  }
-  async checkNetworkTransactions(network, monitors) {
-    const { publicClient } = this.viemClientManager.getClients(network);
-    const currentBlock = await publicClient.getBlockNumber();
-    const finalityConfirmations = BigInt(network.finalityConfirmations ?? 12);
-    const finalityBlockNumber = currentBlock - finalityConfirmations;
-    for (const monitor of monitors) {
-      await this.checkTransaction(monitor, currentBlock, finalityBlockNumber, network);
-    }
-  }
-  async checkTransaction(monitor, currentBlock, finalityBlockNumber, network) {
-    const tx = monitor.transaction;
-    tx.lastChecked = Date.now();
-    try {
-      const { publicClient } = this.viemClientManager.getClients(network);
-      const txInfo = await publicClient.getTransaction({
-        hash: tx.txHash
-      });
-      if (!txInfo) {
-        await this.handleMissingTransaction(monitor, network);
-        return;
-      }
-      if (!tx.blockNumber && txInfo.blockNumber) {
-        tx.blockNumber = txInfo.blockNumber;
-        this.logger.debug(
-          `Transaction ${tx.txHash} included in block ${txInfo.blockNumber}`
-        );
-      }
-      if (tx.blockNumber && txInfo.blockNumber && tx.blockNumber !== txInfo.blockNumber) {
-        this.logger.warn(
-          `Transaction ${tx.txHash} block changed from ${tx.blockNumber} to ${txInfo.blockNumber} (reorg detected)`
-        );
-        tx.blockNumber = txInfo.blockNumber;
-      }
-      if (txInfo.blockNumber && txInfo.blockNumber <= finalityBlockNumber) {
-        await this.handleFinalizedTransaction(monitor);
-      } else if (txInfo.blockNumber) {
-        const confirmations = currentBlock - txInfo.blockNumber + 1n;
-        const requiredConfirmations = BigInt(network.finalityConfirmations ?? 12);
-        this.logger.debug(
-          `Transaction ${tx.txHash} has ${confirmations} confirmations (needs ${requiredConfirmations})`
-        );
-      }
-    } catch (error) {
-      this.logger.error(`Error checking transaction ${tx.txHash}:`, error);
-      const timeSinceLastRetry = tx.lastChecked - (monitor.lastRetryAt || 0);
-      const retryDelayMs = this.config.retryDelayMs || 3e4;
-      if (timeSinceLastRetry > retryDelayMs) {
-        await this.retryTransaction(monitor, network);
-      }
-    }
-  }
-  async handleMissingTransaction(monitor, network) {
-    const tx = monitor.transaction;
-    const timeSinceSubmission = Date.now() - tx.firstSeen;
-    const dropTimeoutMs = this.config.dropTimeoutMs || 6e4;
-    if (timeSinceSubmission < dropTimeoutMs) {
-      this.logger.debug(
-        `Transaction ${tx.txHash} not found yet (${timeSinceSubmission}ms since submission)`
-      );
-      return;
-    }
-    tx.status = "dropped" /* Dropped */;
-    this.logger.warn(
-      `Transaction ${tx.txHash} not found on chain ${network.name} after ${timeSinceSubmission}ms`
-    );
-    await this.retryTransaction(monitor, network);
-  }
-  async retryTransaction(monitor, network) {
-    const tx = monitor.transaction;
-    monitor.retryCount++;
-    monitor.lastRetryAt = Date.now();
-    this.logger.info(
-      `Retrying transaction ${tx.txHash} on ${network.name} (attempt ${monitor.retryCount})`
-    );
-    const failedTx = {
-      id: tx.managedTxId,
-      txHash: tx.txHash,
-      chainName: tx.chainName,
-      submittedAt: tx.firstSeen,
-      submissionBlock: tx.blockNumber,
-      status: "failed"
-    };
-    const newTxInfo = await monitor.retryCallback(failedTx);
-    if (newTxInfo) {
-      this.monitors.delete(tx.txHash);
-      this.watchTxFinality(newTxInfo, monitor.retryCallback, monitor.finalityCallback);
-      this.logger.info(`Transaction ${tx.txHash} replaced with ${newTxInfo.txHash}`);
-    } else {
-      this.logger.error(`Failed to retry transaction ${tx.txHash} - will try again later`);
-    }
-  }
-  async handleFinalizedTransaction(monitor) {
-    const tx = monitor.transaction;
-    tx.status = "finalized" /* Finalized */;
-    this.logger.info(`Transaction ${tx.txHash} has reached finality on ${tx.chainName}`);
-    const finalizedTx = {
-      id: tx.managedTxId,
-      txHash: tx.txHash,
-      chainName: tx.chainName,
-      submittedAt: tx.firstSeen,
-      submissionBlock: tx.blockNumber,
-      status: "finalized"
-    };
-    monitor.finalityCallback(finalizedTx);
-    this.monitors.delete(tx.txHash);
-  }
-  getNetwork(chainName) {
-    return void 0;
-  }
-  async checkTransactionsInRange(network, startBlock, endBlock) {
-    this.logger.debug(`Batch checking not implemented - using continuous monitoring instead`);
-  }
-  getMonitoredTransactions(chainName) {
-    const transactions = [];
-    for (const monitor of this.monitors.values()) {
-      if (!chainName || monitor.transaction.chainName === chainName) {
-        transactions.push(monitor.transaction);
-      }
-    }
-    return transactions;
-  }
-  getTransactionsByMessageId() {
-    this.logger.warn("getTransactionsByMessageId called on generic TxMonitor");
-    return /* @__PURE__ */ new Map();
-  }
-  dispose() {
-    this.disposed = true;
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval);
-      this.checkInterval = null;
-    }
-    this.monitors.clear();
-    this.logger.info("Disposed");
-  }
-};
-
-// node_modules/uuid/dist/esm/stringify.js
-var byteToHex = [];
-for (let i = 0; i < 256; ++i) {
-  byteToHex.push((i + 256).toString(16).slice(1));
-}
-function unsafeStringify(arr, offset = 0) {
-  return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + "-" + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + "-" + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
-}
-
-// node_modules/uuid/dist/esm/rng.js
-import { randomFillSync } from "crypto";
-var rnds8Pool = new Uint8Array(256);
-var poolPtr = rnds8Pool.length;
-function rng() {
-  if (poolPtr > rnds8Pool.length - 16) {
-    randomFillSync(rnds8Pool);
-    poolPtr = 0;
-  }
-  return rnds8Pool.slice(poolPtr, poolPtr += 16);
-}
-
-// node_modules/uuid/dist/esm/native.js
-import { randomUUID } from "crypto";
-var native_default = { randomUUID };
-
-// node_modules/uuid/dist/esm/v4.js
-function v4(options, buf, offset) {
-  if (native_default.randomUUID && !buf && !options) {
-    return native_default.randomUUID();
-  }
-  options = options || {};
-  const rnds = options.random ?? options.rng?.() ?? rng();
-  if (rnds.length < 16) {
-    throw new Error("Random bytes length must be >= 16");
-  }
-  rnds[6] = rnds[6] & 15 | 64;
-  rnds[8] = rnds[8] & 63 | 128;
-  if (buf) {
-    offset = offset || 0;
-    if (offset < 0 || offset + 16 > buf.length) {
-      throw new RangeError(`UUID byte range ${offset}:${offset + 15} is out of buffer bounds`);
-    }
-    for (let i = 0; i < 16; ++i) {
-      buf[offset + i] = rnds[i];
-    }
-    return buf;
-  }
-  return unsafeStringify(rnds);
-}
-var v4_default = v4;
-
-// src/common/managers/TxReader.ts
-var TxReader = class _TxReader {
-  static instance;
-  logWatchers = /* @__PURE__ */ new Map();
-  readContractWatchers = /* @__PURE__ */ new Map();
-  readContractIntervals = /* @__PURE__ */ new Map();
-  logger;
-  networkManager;
-  viemClientManager;
-  constructor(logger, networkManager, viemClientManager, config3) {
-    this.networkManager = networkManager;
-    this.viemClientManager = viemClientManager;
-    this.logger = logger;
-  }
-  static createInstance(logger, networkManager, viemClientManager, config3) {
-    _TxReader.instance = new _TxReader(logger, networkManager, viemClientManager, config3);
-    return _TxReader.instance;
-  }
-  static getInstance() {
-    if (!_TxReader.instance) {
-      throw new Error("TxReader is not initialized. Call createInstance() first.");
-    }
-    return _TxReader.instance;
-  }
-  async initialize() {
-    this.logger.info("Initialized");
-  }
-  logWatcher = {
-    create: (contractAddress, network, onLogs, event, blockManager) => {
-      const id2 = v4_default();
-      const unwatcher = blockManager.watchBlocks({
-        onBlockRange: async (startBlock, endBlock) => {
-          await this.fetchLogsForWatcher(id2, startBlock, endBlock);
-        }
-      });
-      const watcher = {
-        id: id2,
-        network,
-        contractAddress,
-        event,
-        callback: onLogs,
-        blockManager,
-        unwatch: unwatcher
-      };
-      this.logWatchers.set(id2, watcher);
-      this.logger.debug(
-        `Created log watcher for ${network.name}:${contractAddress} (${event.name})`
-      );
-      return id2;
-    },
-    remove: (watcherId) => {
-      const watcher = this.logWatchers.get(watcherId);
-      if (!watcher) {
-        this.logger.warn(`Failed to remove log watcher ${watcherId} (not found)`);
-        return false;
-      }
-      watcher.unwatch();
-      this.logWatchers.delete(watcherId);
-      this.logger.info(`Removed log watcher ${watcherId}`);
-      return true;
-    }
-  };
-  readContractWatcher = {
-    create: (contractAddress, network, functionName, abi3, callback, intervalMs = 1e4, args) => {
-      const id2 = v4_default();
-      const watcher = {
-        id: id2,
-        network,
-        contractAddress,
-        functionName,
-        abi: abi3,
-        args,
-        intervalMs,
-        callback
-      };
-      this.readContractWatchers.set(id2, watcher);
-      const interval = setInterval(async () => {
-        await this.executeReadContract(watcher);
-      }, intervalMs);
-      this.readContractIntervals.set(id2, interval);
-      this.executeReadContract(watcher).catch((error) => {
-        this.logger.error(`Error in initial read contract execution (ID: ${id2}):`, error);
-      });
-      this.logger.debug(
-        `Created read contract watcher for ${network.name}:${contractAddress}.${functionName}`
-      );
-      return id2;
-    },
-    remove: (watcherId) => {
-      const watcher = this.readContractWatchers.get(watcherId);
-      if (!watcher) {
-        this.logger.warn(`Failed to remove read contract watcher ${watcherId} (not found)`);
-        return false;
-      }
-      const interval = this.readContractIntervals.get(watcherId);
-      if (interval) {
-        clearInterval(interval);
-        this.readContractIntervals.delete(watcherId);
-      }
-      this.readContractWatchers.delete(watcherId);
-      this.logger.info(`Removed read contract watcher ${watcherId}`);
-      return true;
-    }
-  };
-  async fetchLogsForWatcher(watcherId, fromBlock, toBlock) {
-    const watcher = this.logWatchers.get(watcherId);
-    if (!watcher) return;
-    try {
-      const logs = await this.getLogs(
-        {
-          address: watcher.contractAddress,
-          event: watcher.event,
-          fromBlock,
-          toBlock
-        },
-        watcher.network
-      );
-      if (logs.length > 0) {
-        watcher.callback(logs, watcher.network).catch((error) => {
-          this.logger.error(`Error in watcher callback (ID: ${watcher.id}):`, error);
-        });
-      }
-    } catch (error) {
-      this.logger.error(
-        `Error fetching logs for ${watcher.contractAddress} on ${watcher.network.name}:`,
-        error
-      );
-    }
-  }
-  async executeReadContract(watcher) {
-    try {
-      const { publicClient } = this.viemClientManager.getClients(watcher.network);
-      const result = await publicClient.readContract({
-        address: watcher.contractAddress,
-        abi: watcher.abi,
-        functionName: watcher.functionName,
-        args: watcher.args
-      });
-      await watcher.callback(result, watcher.network);
-    } catch (error) {
-      this.logger.error(`Error executing read contract (ID: ${watcher.id}):`, error);
-    }
-  }
-  async getLogs(query, network) {
-    const { publicClient } = this.viemClientManager.getClients(network);
-    try {
-      const filter = {
-        address: query.address,
-        fromBlock: query.fromBlock,
-        toBlock: query.toBlock,
-        event: query.event,
-        ...query.args && { args: query.args }
-      };
-      const logs = await publicClient.getLogs(filter);
-      return logs;
-    } catch (error) {
-      this.logger.error(`Error fetching logs on ${network.name}:`, error);
-      return [];
-    }
-  }
-  dispose() {
-    for (const [watcherId, watcher] of this.logWatchers.entries()) {
-      watcher.unwatch();
-    }
-    for (const [watcherId, interval] of this.readContractIntervals.entries()) {
-      clearInterval(interval);
-    }
-    this.logWatchers.clear();
-    this.readContractWatchers.clear();
-    this.readContractIntervals.clear();
-    this.logger.info("Disposed");
-  }
-};
-
-// src/common/managers/TxWriter.ts
-var TxWriter = class _TxWriter {
-  static instance;
-  txMonitor;
-  logger;
-  config;
-  constructor(logger, txMonitor, config3) {
-    this.txMonitor = txMonitor;
-    this.logger = logger;
-    this.config = config3;
-  }
-  static createInstance(logger, txMonitor, config3) {
-    _TxWriter.instance = new _TxWriter(logger, txMonitor, config3);
-    return _TxWriter.instance;
-  }
-  static getInstance() {
-    if (!_TxWriter.instance) {
-      throw new Error("TxWriter is not initialized. Call createInstance() first.");
-    }
-    return _TxWriter.instance;
-  }
-  async initialize() {
-    this.logger.info("Initialized");
-  }
-  async callContract(walletClient, publicClient, network, params) {
-    try {
-      if (this.config.dryRun) {
-        this.logger.info(
-          `[DRY_RUN][${network.name}] Contract call: ${params.functionName}`
-        );
-        const mockTxHash = `0xdry${Date.now().toString(16)}`;
-        return mockTxHash;
-      }
-      const txHash = await callContract(publicClient, walletClient, params);
-      this.logger.debug(`[${network.name}] Contract call transaction hash: ${txHash}`);
-      const currentBlock = await publicClient.getBlockNumber();
-      const txInfo = {
-        id: v4_default(),
-        txHash,
-        chainName: network.name,
-        submittedAt: Date.now(),
-        submissionBlock: currentBlock,
-        status: "submitted",
-        metadata: {
-          functionName: params.functionName,
-          contractAddress: params.address
-        }
-      };
-      this.txMonitor.watchTxFinality(
-        txInfo,
-        this.createRetryCallback(walletClient, publicClient, network, params),
-        this.createFinalityCallback(network)
-      );
-      return txHash;
-    } catch (error) {
-      this.logger.error(`[${network.name}] Contract call failed:`, error);
-      throw error;
-    }
-  }
-  createRetryCallback(walletClient, publicClient, network, params) {
-    return async (failedTx) => {
-      this.logger.info(
-        `[${network.name}] Retrying transaction ${failedTx.txHash} (${failedTx.id})`
-      );
-      try {
-        const newTxHash = await callContract(publicClient, walletClient, params);
-        this.logger.info(`[${network.name}] Retry successful. New tx hash: ${newTxHash}`);
-        const currentBlock = await publicClient.getBlockNumber();
-        return {
-          id: v4_default(),
-          txHash: newTxHash,
-          chainName: network.name,
-          submittedAt: Date.now(),
-          submissionBlock: currentBlock,
-          status: "submitted",
-          metadata: {
-            functionName: params.functionName,
-            contractAddress: params.address
-          }
-        };
-      } catch (error) {
-        this.logger.error(
-          `[${network.name}] Failed to retry transaction ${failedTx.txHash}:`,
-          error
-        );
-        return null;
-      }
-    };
-  }
-  createFinalityCallback(network) {
-    return (finalizedTx) => {
-      this.logger.info(
-        `[${network.name}] Transaction ${finalizedTx.txHash} (${finalizedTx.id}) is now final`
-      );
-    };
-  }
-  dispose() {
-    this.logger.info("Disposed");
-  }
-};
-
 // src/common/utils/initializeManagers.ts
 async function initializeManagers() {
-  const logger = import_operator_utils6.Logger.createInstance({
+  const logger = import_operator_utils5.Logger.createInstance({
     logDir: globalConfig.LOGGER.LOG_DIR,
     logMaxSize: globalConfig.LOGGER.LOG_MAX_SIZE,
     logMaxFiles: globalConfig.LOGGER.LOG_MAX_FILES,
@@ -78713,26 +78265,26 @@ async function initializeManagers() {
   });
   await logger.initialize();
   const httpLoggerInstance = logger.getLogger("HttpClient");
-  const httpClient = import_operator_utils6.HttpClient.createInstance(httpLoggerInstance, {
+  const httpClient = import_operator_utils5.HttpClient.createInstance(httpLoggerInstance, {
     retryDelay: globalConfig.HTTPCLIENT.RETRY_DELAY,
     maxRetries: globalConfig.HTTPCLIENT.MAX_RETRIES,
     defaultTimeout: globalConfig.HTTPCLIENT.DEFAULT_TIMEOUT
   });
   await httpClient.initialize();
-  const rpcManager = import_operator_utils6.RpcManager.createInstance(logger.getLogger("RpcManager"), {
+  const rpcManager = import_operator_utils5.RpcManager.createInstance(logger.getLogger("RpcManager"), {
     rpcOverrides: globalConfig.RPC.OVERRIDE,
     rpcExtensions: globalConfig.RPC.EXTENSION,
     conceroRpcsUrl: globalConfig.URLS.CONCERO_RPCS,
     networkMode: globalConfig.NETWORK_MODE
   });
-  const viemClientManager = import_operator_utils6.ViemClientManager.createInstance(
+  const viemClientManager = import_operator_utils5.ViemClientManager.createInstance(
     logger.getLogger("ViemClientManager"),
     rpcManager,
     {
       fallbackTransportOptions: globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS
     }
   );
-  const networkManager = import_operator_utils6.NetworkManager.createInstance(
+  const networkManager = import_operator_utils5.NetworkManager.createInstance(
     logger.getLogger("NetworkManager"),
     httpClient,
     {
@@ -78751,7 +78303,7 @@ async function initializeManagers() {
       useCheckpoints: globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS
     }
   );
-  const blockManagerRegistry = import_operator_utils6.BlockManagerRegistry.createInstance(
+  const blockManagerRegistry = import_operator_utils5.BlockManagerRegistry.createInstance(
     logger.getLogger("BlockManagerRegistry"),
     blockCheckpointManager,
     networkManager,
@@ -78783,20 +78335,30 @@ async function initializeManagers() {
   networkManager.registerUpdateListener(viemClientManager);
   networkManager.registerUpdateListener(blockManagerRegistry);
   await networkManager.triggerInitialUpdates();
-  const txMonitor = TxMonitor.createInstance(logger.getLogger("TxMonitor"), viemClientManager, {
+  const txMonitor = import_operator_utils5.TxMonitor.createInstance(logger.getLogger("TxMonitor"), viemClientManager, {
     checkIntervalMs: 5e3,
     dropTimeoutMs: 6e4,
     retryDelayMs: 3e4
   });
-  const txReader = TxReader.createInstance(
+  const txReader = import_operator_utils5.TxReader.createInstance(
     logger.getLogger("TxReader"),
     networkManager,
     viemClientManager,
     {}
   );
-  const txWriter = TxWriter.createInstance(logger.getLogger("TxWriter"), txMonitor, {
-    dryRun: globalConfig.TX_MANAGER.DRY_RUN
-  });
+  const nonceManager = import_operator_utils5.NonceManager.createInstance(logger.getLogger("NonceManager"), {});
+  await nonceManager.initialize();
+  const txWriter = import_operator_utils5.TxWriter.createInstance(
+    logger.getLogger("TxWriter"),
+    viemClientManager,
+    txMonitor,
+    nonceManager,
+    {
+      dryRun: globalConfig.TX_MANAGER.DRY_RUN,
+      simulateTx: globalConfig.VIEM.SIMULATE_TX,
+      defaultGasLimit: globalConfig.TX_MANAGER.GAS_LIMIT.DEFAULT
+    }
+  );
   await txWriter.initialize();
   await txReader.initialize();
   const txManager = TxManager.createInstance(
@@ -78811,12 +78373,10 @@ async function initializeManagers() {
     }
   );
   await txManager.initialize();
-  const nonceManager = import_operator_utils6.NonceManager.createInstance(logger.getLogger("NonceManager"), {});
-  await nonceManager.initialize();
 }
 
 // src/relayer-a/businessLogic/ensureDeposit.ts
-var import_operator_utils7 = __toESM(require_dist(), 1);
+var import_operator_utils6 = __toESM(require_dist(), 1);
 async function getMinimumDeposit(publicClient, verifierAddress) {
   const depositAmount = await publicClient.readContract({
     address: verifierAddress,
@@ -78836,27 +78396,26 @@ async function getCurrentOperatorDeposit(publicClient, verifierAddress) {
   return BigInt(currentDeposit);
 }
 async function fetchDepositAndDepositIfNeeded() {
-  const logger = import_operator_utils7.Logger.getInstance().getLogger("ensureDeposit");
-  const networkManager = import_operator_utils7.NetworkManager.getInstance();
-  const viemClientManager = import_operator_utils7.ViemClientManager.getInstance();
+  const logger = import_operator_utils6.Logger.getInstance().getLogger("ensureDeposit");
+  const networkManager = import_operator_utils6.NetworkManager.getInstance();
+  const viemClientManager = import_operator_utils6.ViemClientManager.getInstance();
   const deploymentManager = MessagingDeploymentManager.getInstance();
   const verifierNetwork = networkManager.getVerifierNetwork();
   const verifierAddress = await deploymentManager.getConceroVerifier();
-  const { publicClient, walletClient, account } = viemClientManager.getClients(verifierNetwork);
+  const { publicClient } = viemClientManager.getClients(verifierNetwork);
   const requiredDeposit = await getMinimumDeposit(publicClient, verifierAddress) * 200n;
   const currentDeposit = await getCurrentOperatorDeposit(publicClient, verifierAddress);
   if (currentDeposit >= requiredDeposit) {
     logger.info(`Sufficient deposit of ${currentDeposit} already exists`);
     return void 0;
   }
-  const txHash = await callContract(publicClient, walletClient, {
+  const txHash = await import_operator_utils6.TxWriter.getInstance().callContract(verifierNetwork, {
     chain: verifierNetwork.viemChain,
     address: verifierAddress,
     abi: globalConfig.ABI.CONCERO_VERIFIER,
     functionName: "operatorDeposit",
     args: [globalConfig.OPERATOR_ADDRESS],
-    value: requiredDeposit,
-    account
+    value: requiredDeposit
   });
   logger.info(`Deposited ${requiredDeposit} to ConceroVerifier with hash ${txHash}`);
 }
@@ -78868,7 +78427,7 @@ async function ensureDeposit() {
 }
 
 // src/relayer-a/businessLogic/ensureOperatorIsRegistered.ts
-var import_operator_utils8 = __toESM(require_dist(), 1);
+var import_operator_utils7 = __toESM(require_dist(), 1);
 var ChainType = {
   EVM: 0,
   NON_EVM: 1
@@ -78887,24 +78446,23 @@ async function isOperatorRegistered(publicClient, networkManager, deploymentMana
   });
   return isRegistered;
 }
-async function requestOperatorRegistration(publicClient, walletClient, account, networkManager, deploymentManager) {
+async function requestOperatorRegistration(networkManager, deploymentManager) {
   const conceroVerifierNetwork = networkManager.getVerifierNetwork();
   const chainTypes = [BigInt(ChainType.EVM)];
   const operatorActions = [BigInt(OperatorRegistrationAction.Register)];
   const operatorAddresses = [globalConfig.OPERATOR_ADDRESS];
-  const transactionHash = await callContract(publicClient, walletClient, {
+  const transactionHash = await import_operator_utils7.TxWriter.getInstance().callContract(conceroVerifierNetwork, {
     address: await deploymentManager.getConceroVerifier(),
     abi: globalConfig.ABI.CONCERO_VERIFIER,
     functionName: "requestOperatorRegistration",
-    args: [chainTypes, operatorActions, operatorAddresses],
-    account
+    args: [chainTypes, operatorActions, operatorAddresses]
   });
   eventEmitter.emit("requestOperatorRegistration", { txHash: transactionHash });
   return transactionHash;
 }
 async function waitForOperatorRegistration(network, contractAddress, fromBlockNumber, operatorAddress) {
-  const logger = import_operator_utils8.Logger.getInstance().getLogger("waitForOperatorRegistration");
-  const viemClientManager = import_operator_utils8.ViemClientManager.getInstance();
+  const logger = import_operator_utils7.Logger.getInstance().getLogger("waitForOperatorRegistration");
+  const viemClientManager = import_operator_utils7.ViemClientManager.getInstance();
   const { publicClient } = viemClientManager.getClients(network);
   const POLL_INTERVAL_MS = 3 * 1e3;
   const MAX_RETRIES = 100;
@@ -78952,7 +78510,7 @@ async function waitForOperatorRegistration(network, contractAddress, fromBlockNu
 }
 function findOperatorRegistrationLog(logs, operatorAddress) {
   const EVENT_NAME = "OperatorRegistered";
-  const logger = import_operator_utils8.Logger.getInstance().getLogger("findOperatorRegistrationLog");
+  const logger = import_operator_utils7.Logger.getInstance().getLogger("findOperatorRegistrationLog");
   for (const log of logs) {
     try {
       if (log?.args?.operator.toLowerCase() === operatorAddress.toLowerCase() && isHex(log.transactionHash)) {
@@ -78967,25 +78525,19 @@ function findOperatorRegistrationLog(logs, operatorAddress) {
   return void 0;
 }
 async function ensureOperatorIsRegistered() {
-  const logger = import_operator_utils8.Logger.getInstance().getLogger("ensureOperatorIsRegistered");
-  const viemClientManager = import_operator_utils8.ViemClientManager.getInstance();
-  const networkManager = import_operator_utils8.NetworkManager.getInstance();
+  const logger = import_operator_utils7.Logger.getInstance().getLogger("ensureOperatorIsRegistered");
+  const viemClientManager = import_operator_utils7.ViemClientManager.getInstance();
+  const networkManager = import_operator_utils7.NetworkManager.getInstance();
   const deploymentManager = MessagingDeploymentManager.getInstance();
   const verifierNetwork = networkManager.getVerifierNetwork();
-  const { publicClient, walletClient, account } = viemClientManager.getClients(verifierNetwork);
+  const { publicClient } = viemClientManager.getClients(verifierNetwork);
   const registered = await isOperatorRegistered(publicClient, networkManager, deploymentManager);
   if (registered) {
     logger.info("Operator already registered");
     eventEmitter.emit("operatorRegistered", {});
     return;
   }
-  const txHash = await requestOperatorRegistration(
-    publicClient,
-    walletClient,
-    account,
-    networkManager,
-    deploymentManager
-  );
+  const txHash = await requestOperatorRegistration(networkManager, deploymentManager);
   logger.info(`Requested operator registration with txHash ${txHash}`);
   const transaction = await publicClient.getTransaction({ hash: txHash });
   const confirmedTxHash = await waitForOperatorRegistration(
@@ -78999,12 +78551,12 @@ async function ensureOperatorIsRegistered() {
 }
 
 // src/relayer-a/eventListener/setupEventListeners.ts
-var import_operator_utils12 = __toESM(require_dist(), 1);
+var import_operator_utils11 = __toESM(require_dist(), 1);
 
 // src/common/eventListener/setupEventListener.ts
-var import_operator_utils9 = __toESM(require_dist(), 1);
+var import_operator_utils8 = __toESM(require_dist(), 1);
 async function setupEventListener(network, contractAddress, onLogs, event, blockManager) {
-  const logger = import_operator_utils9.Logger.getInstance().getLogger("setupEventListener");
+  const logger = import_operator_utils8.Logger.getInstance().getLogger("setupEventListener");
   const txManager = TxManager.getInstance();
   const watcherId = txManager.logWatcher.create(
     contractAddress,
@@ -79034,7 +78586,7 @@ async function setupEventListener(network, contractAddress, onLogs, event, block
 }
 
 // src/relayer-a/businessLogic/requestCLFMessageReport.ts
-var import_operator_utils10 = __toESM(require_dist(), 1);
+var import_operator_utils9 = __toESM(require_dist(), 1);
 
 // src/common/eventListener/decodeLogs.ts
 function decodeLogs(logs, abi3) {
@@ -79062,14 +78614,13 @@ function decodeLogs(logs, abi3) {
 // src/relayer-a/businessLogic/requestCLFMessageReport.ts
 async function requestCLFMessageReport(logs, network) {
   if (logs.length === 0) return;
-  const logger = import_operator_utils10.Logger.getInstance().getLogger("requestCLFMessageReport");
+  const logger = import_operator_utils9.Logger.getInstance().getLogger("requestCLFMessageReport");
   logger.debug(
     `Processing ${logs.length} logs for CLF message report requests from ${network.name}`
   );
-  const networkManager = import_operator_utils10.NetworkManager.getInstance();
+  const networkManager = import_operator_utils9.NetworkManager.getInstance();
   const verifierNetwork = networkManager.getVerifierNetwork();
   const verifierAddress = await MessagingDeploymentManager.getInstance().getConceroVerifier();
-  const { publicClient, walletClient } = import_operator_utils10.ViemClientManager.getInstance().getClients(verifierNetwork);
   try {
     const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_ROUTER);
     const promises = [];
@@ -79081,9 +78632,7 @@ async function requestCLFMessageReport(logs, network) {
           logger,
           networkManager,
           verifierNetwork,
-          verifierAddress,
-          publicClient,
-          walletClient
+          verifierAddress
         )
       );
     }
@@ -79092,7 +78641,7 @@ async function requestCLFMessageReport(logs, network) {
     logger.error(`Error processing logs from ${network.name}:`, error);
   }
 }
-async function processMessageReportRequest(decodedLog, srcChainSelector, logger, networkManager, verifierNetwork, verifierAddress, publicClient, walletClient) {
+async function processMessageReportRequest(decodedLog, srcChainSelector, logger, networkManager, verifierNetwork, verifierAddress) {
   try {
     const { messageId, message, sender } = decodedLog.args;
     if (!messageId || !message || !sender) {
@@ -79124,22 +78673,17 @@ async function processMessageReportRequest(decodedLog, srcChainSelector, logger,
       eventEmitter.emit("requestMessageReport", { txHash: dryRunTxHash });
       return;
     }
-    const txHash = await TxWriter.getInstance().callContract(
-      walletClient,
-      publicClient,
-      verifierNetwork,
-      {
-        address: verifierAddress,
-        abi: globalConfig.ABI.CONCERO_VERIFIER,
-        functionName: "requestMessageReport",
-        args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
-        chain: verifierNetwork.viemChain,
-        options: {
-          receiptConfirmations: 3,
-          receiptTimeout: 6e4
-        }
+    const txHash = await import_operator_utils9.TxWriter.getInstance().callContract(verifierNetwork, {
+      address: verifierAddress,
+      abi: globalConfig.ABI.CONCERO_VERIFIER,
+      functionName: "requestMessageReport",
+      args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
+      chain: verifierNetwork.viemChain,
+      options: {
+        receiptConfirmations: 3,
+        receiptTimeout: 6e4
       }
-    );
+    });
     if (txHash) {
       eventEmitter.emit("requestMessageReport", {
         txHash
@@ -79166,7 +78710,7 @@ async function processMessageReportRequest(decodedLog, srcChainSelector, logger,
 }
 
 // src/relayer-a/businessLogic/submitCLFMessageReport.ts
-var import_operator_utils11 = __toESM(require_dist(), 1);
+var import_operator_utils10 = __toESM(require_dist(), 1);
 async function parseMessageResults(decodedCLFReport, logger) {
   const messageResults = [];
   for (let i = 0; i < decodedCLFReport.report.results.length; i++) {
@@ -79175,7 +78719,7 @@ async function parseMessageResults(decodedCLFReport, logger) {
       messageResults.push(decodedResult);
       logger.debug(`Successfully decoded result ${i}: messageId ${decodedResult.messageId}`);
     } catch (error) {
-      logger.error(`Failed to decode result ${i}: ${formatError(error)}`);
+      logger.error(`Failed to decode result ${i}: ${error}`);
     }
   }
   return messageResults;
@@ -79218,7 +78762,7 @@ async function fetchOriginalMessage(result, activeNetworkNames, networkManager, 
   );
   if (decodedLogs.length === 0) {
     logger.warn(
-      `${srcChain.name}: No decodedLogs found for messageId ${messageId} around block ${srcBlockNumber.toString()}.`
+      `${srcChain.name}: No decodedLogs found for messageId ${messageId} around block ${srcBlockNumber}.`
     );
     return { message: null, gasLimit: BigInt(0) };
   }
@@ -79236,7 +78780,7 @@ async function fetchOriginalMessage(result, activeNetworkNames, networkManager, 
   )[0];
   return { message, gasLimit: decodedDstChainData.gasLimit };
 }
-async function submitBatchToDestination(dstChain, reportSubmission, messages, indexes, results, totalGasLimit, viemClientManager, deploymentManager, txWriter, logger) {
+async function submitBatchToDestination(dstChain, reportSubmission, messages, indexes, results, totalGasLimit, deploymentManager, txWriter, logger) {
   if (globalConfig.TX_MANAGER.DRY_RUN) {
     logger.info(
       `[${dstChain.name}] Dry run: CLF message report with ${messages.length} messages would be submitted`
@@ -79244,8 +78788,7 @@ async function submitBatchToDestination(dstChain, reportSubmission, messages, in
     return;
   }
   const dstConceroRouter = await deploymentManager.getRouterByChainName(dstChain.name);
-  const { walletClient, publicClient } = viemClientManager.getClients(dstChain);
-  const txHash = await txWriter.callContract(walletClient, publicClient, dstChain, {
+  const txHash = await txWriter.callContract(dstChain, {
     address: dstConceroRouter,
     abi: globalConfig.ABI.CONCERO_ROUTER,
     functionName: "submitMessageReport",
@@ -79267,23 +78810,23 @@ async function submitBatchToDestination(dstChain, reportSubmission, messages, in
 }
 async function submitCLFMessageReport(logs, network) {
   if (logs.length === 0) return;
-  const logger = import_operator_utils11.Logger.getInstance().getLogger("processMessageReports");
+  const logger = import_operator_utils10.Logger.getInstance().getLogger("processMessageReports");
   logger.debug(`Processing ${logs.length} MessageReport logs`);
   try {
     const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_VERIFIER);
     await processMessageReports(decodedLogs);
   } catch (error) {
-    logger.error(`Error processing message report logs: ${formatError(error)}`);
+    logger.error(`Error processing message report logs: ${error}`);
   }
 }
 async function processMessageReports(logs) {
-  const logger = import_operator_utils11.Logger.getInstance().getLogger("submitCLFMessageReport");
-  const networkManager = import_operator_utils11.NetworkManager.getInstance();
-  const blockManagerRegistry = import_operator_utils11.BlockManagerRegistry.getInstance();
-  const viemClientManager = import_operator_utils11.ViemClientManager.getInstance();
+  const logger = import_operator_utils10.Logger.getInstance().getLogger("submitCLFMessageReport");
+  const networkManager = import_operator_utils10.NetworkManager.getInstance();
+  const blockManagerRegistry = import_operator_utils10.BlockManagerRegistry.getInstance();
+  const viemClientManager = import_operator_utils10.ViemClientManager.getInstance();
   const deploymentManager = MessagingDeploymentManager.getInstance();
   const txManager = TxManager.getInstance();
-  const txWriter = TxWriter.getInstance();
+  const txWriter = import_operator_utils10.TxWriter.getInstance();
   const activeNetworks = networkManager.getActiveNetworks();
   const activeNetworkNames = activeNetworks.map((network) => network.name);
   try {
@@ -79300,24 +78843,10 @@ async function processMessageReports(logs) {
         try {
           const verifierNetwork = networkManager.getVerifierNetwork();
           const { publicClient: verifierPublicClient } = viemClientManager.getClients(verifierNetwork);
-          let messageReportTx;
-          let decodedCLFReport;
-          try {
-            messageReportTx = await verifierPublicClient.getTransaction({
-              hash: txHash
-            });
-          } catch (error) {
-            logger.error(`Failed to get transaction ${txHash}: ${formatError(error)}`);
-            return;
-          }
-          try {
-            decodedCLFReport = decodeCLFReport(messageReportTx);
-          } catch (error) {
-            logger.error(
-              `Failed to decode CLF report for transaction ${txHash}: ${formatError(error)}`
-            );
-            return;
-          }
+          const messageReportTx = await verifierPublicClient.getTransaction({
+            hash: txHash
+          });
+          const decodedCLFReport = decodeCLFReport(messageReportTx);
           logger.debug(
             `Report contains ${decodedCLFReport.report.results.length} results`
           );
@@ -79385,7 +78914,6 @@ async function processMessageReports(logs) {
                 indexes,
                 results,
                 totalGasLimit,
-                viemClientManager,
                 deploymentManager,
                 txWriter,
                 logger
@@ -79394,22 +78922,22 @@ async function processMessageReports(logs) {
           );
           await Promise.all(dstChainProcessPromises);
         } catch (error) {
-          logger.error(`Error processing transaction ${txHash}: ${formatError(error)}`);
+          logger.error(`Error processing transaction ${txHash}: ${error}`);
         }
       }
     );
     await Promise.all(txProcessPromises);
   } catch (e) {
-    logger.error(`Error when submitting clf report: ${formatError(e)}`);
+    logger.error(`Error when submitting clf report: ${e}`);
   }
 }
 
 // src/relayer-a/eventListener/setupEventListeners.ts
 async function setupEventListeners() {
-  const logger = import_operator_utils12.Logger.getInstance().getLogger("setupEventListeners");
-  const networkManager = import_operator_utils12.NetworkManager.getInstance();
+  const logger = import_operator_utils11.Logger.getInstance().getLogger("setupEventListeners");
+  const networkManager = import_operator_utils11.NetworkManager.getInstance();
   const deploymentManager = MessagingDeploymentManager.getInstance();
-  const blockManagerRegistry = import_operator_utils12.BlockManagerRegistry.getInstance();
+  const blockManagerRegistry = import_operator_utils11.BlockManagerRegistry.getInstance();
   const activeNetworks = networkManager.getActiveNetworks();
   const eventListenerHandles = [];
   for (const network of activeNetworks) {
@@ -79489,7 +79017,7 @@ async function main() {
   await ensureDeposit();
   await ensureOperatorIsRegistered();
   await setupEventListeners();
-  const blockManagerRegistry = import_operator_utils13.BlockManagerRegistry.getInstance();
+  const blockManagerRegistry = import_operator_utils12.BlockManagerRegistry.getInstance();
   for (const blockManager of blockManagerRegistry.getAllBlockManagers()) {
     await blockManager.startPolling();
   }
