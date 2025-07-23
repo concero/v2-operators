@@ -1,8 +1,8 @@
 import {
     BlockManagerRegistry,
+    ConceroNetworkManager,
     HttpClient,
     Logger,
-    NetworkManager,
     NonceManager,
     RpcManager,
     TxMonitor,
@@ -49,11 +49,10 @@ export async function initializeManagers(): Promise<void> {
         },
     );
 
-    const networkManager = NetworkManager.createInstance(
+    const networkManager = ConceroNetworkManager.createInstance(
         logger.getLogger("NetworkManager"),
         httpClient,
         {
-            networkUpdateIntervalMs: globalConfig.NETWORK_MANAGER.NETWORK_UPDATE_INTERVAL_MS,
             networkMode: globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
             ignoredNetworkIds: globalConfig.IGNORED_NETWORK_IDS,
             whitelistedNetworkIds: globalConfig.WHITELISTED_NETWORK_IDS,
@@ -110,6 +109,15 @@ export async function initializeManagers(): Promise<void> {
     // Trigger initial updates sequentially for all registered listeners
     // This ensures each manager has the data it needs before the next one initializes
     await networkManager.triggerInitialUpdates();
+
+    // Set up periodic network updates since ConceroNetworkManager no longer manages its own intervals
+    setInterval(async () => {
+        try {
+            await networkManager.forceUpdate();
+        } catch (error) {
+            logger.getLogger("NetworkManager").error("Failed to update networks:", error);
+        }
+    }, globalConfig.NETWORK_MANAGER.NETWORK_UPDATE_INTERVAL_MS);
 
     const txMonitor = TxMonitor.createInstance(logger.getLogger("TxMonitor"), viemClientManager, {
         checkIntervalMs: 5000,
