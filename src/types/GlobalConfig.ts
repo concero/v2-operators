@@ -51,6 +51,7 @@ type GlobalConfig = {
     TX_MANAGER: {
         DRY_RUN: boolean;
         DEFAULT_CONFIRMATIONS: number;
+		DEFAULT_FINALITY_CONFIRMATIONS: number;
         DEFAULT_RECEIPT_TIMEOUT: number;
         GAS_LIMIT: {
             DEFAULT: bigint;

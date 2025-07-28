@@ -57,6 +57,7 @@ export async function initializeManagers(): Promise<void> {
             ignoredNetworkIds: globalConfig.IGNORED_NETWORK_IDS,
             whitelistedNetworkIds: globalConfig.WHITELISTED_NETWORK_IDS,
             defaultConfirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
+			finalityConfirmations: globalConfig.TX_MANAGER.DEFAULT_FINALITY_CONFIRMATIONS,
             mainnetUrl: globalConfig.URLS.V2_NETWORKS.MAINNET,
             testnetUrl: globalConfig.URLS.V2_NETWORKS.TESTNET,
         },
