@@ -57,6 +57,7 @@ export async function initializeManagers(): Promise<void> {
             ignoredNetworkIds: globalConfig.IGNORED_NETWORK_IDS,
             whitelistedNetworkIds: globalConfig.WHITELISTED_NETWORK_IDS,
             defaultConfirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
+            defaultFinalityConfirmations: globalConfig.TX_MANAGER.DEFAULT_FINALITY_CONFIRMATIONS,
             mainnetUrl: globalConfig.URLS.V2_NETWORKS.MAINNET,
             testnetUrl: globalConfig.URLS.V2_NETWORKS.TESTNET,
         },
@@ -119,11 +120,17 @@ export async function initializeManagers(): Promise<void> {
         }
     }, globalConfig.NETWORK_MANAGER.NETWORK_UPDATE_INTERVAL_MS);
 
-    const txMonitor = TxMonitor.createInstance(logger.getLogger("TxMonitor"), viemClientManager, {
-        checkIntervalMs: 5000,
-        dropTimeoutMs: 60000,
-        retryDelayMs: 30000,
-    });
+    const txMonitor = TxMonitor.createInstance(
+        logger.getLogger("TxMonitor"),
+        viemClientManager,
+        blockManagerRegistry,
+        networkManager,
+        {
+            checkIntervalMs: 5000,
+            dropTimeoutMs: 60000,
+            retryDelayMs: 30000,
+        },
+    );
     const txReader = TxReader.createInstance(
         logger.getLogger("TxReader"),
         networkManager,
