@@ -1,35 +1,32 @@
 {
-  "overrides": [
-    {
-      "files": ["*.ts", "**/*.ts"],
-      "options": {
-        "arrowParens": "avoid",
-        "printWidth": 100,
-        "tabWidth": 4,
-        "trailingComma": "all",
-        "plugins": [
-          "@trivago/prettier-plugin-sort-imports",
-          "prettier-plugin-organize-imports"
-        ],
-        "parser": "typescript",
-        "importOrderSeparation": true,
-        "importOrderSortSpecifiers": true,
-        "importOrder": [
-          "./utils/configureDotEnv",
-          "./utils/configureOperatorEnv",
-          "^viem(.*)$",
-          "^[a-zA-Z](.*)$",
-          "^@(.*)$",
-          "^@concero/(.*)$",
-          "^src/common/(.*)$",
-          "^src/constants(.*)$",
-          "^src/types(.*)$",
-          "^../../common/(.*)$",
-          "^../(.*)$",
-          "^./(.*)$",
-          "^[./]"
-        ]
-      }
-    }
-  ]
+    "$schema": "https://json.schemastore.org/prettierrc",
+    "plugins": ["@trivago/prettier-plugin-sort-imports"],
+    "arrowParens": "avoid",
+    "printWidth": 100,
+    "tabWidth": 4,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "overrides": [
+        {
+            "files": ["**/*.ts"],
+            "options": {
+                "importOrderSeparation": true,
+                "importOrderSortSpecifiers": true,
+                "importOrder": [
+                    "^(node:.*|assert|buffer|child_process|cluster|crypto|dgram|dns|events|fs|http|https|net|os|path|punycode|querystring|readline|stream|string_decoder|tls|url|util|v8|vm|worker_threads|zlib)(/.*)?$",
+                    "^\\u0000",
+                    "^@?\\w",
+                    "^(viem|ethers|hardhat)",
+                    "^@concero(/.*)?$",
+                    "^@lanca(/.*)?$",
+                    "^src/.*$",
+                    "^\\.\\.(?!/?$)",
+                    "^\\.\\./?$",
+                    "^\\./(?=.*/)",
+                    "^\\./?$"
+                ]
+            }
+        }
+    ]
 }
