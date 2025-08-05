@@ -85,13 +85,9 @@ export class MessageReportFinalityService {
 
         this.txMonitor.watchTxFinality(
             txInfo,
-            async failedTx => {
-                this.onTransactionFailed(failedTx.txHash);
-                return null;
-            },
-            finalizedTx => {
-                this.onTransactionFinalized(finalizedTx.txHash);
-            },
+            this.createRetryCallback(),
+            this.createFinalityCallback(),
+            false, // can't retry
         );
     }
 
@@ -110,7 +106,6 @@ export class MessageReportFinalityService {
         // Execute processMessageReportRequest asynchronously
         this.executeMessageReportRequest(pendingReport)
             .then(() => {
-                this.logger.info(`Successfully processed message report for tx ${txHash}`);
                 // Remove from pending after successful processing
                 this.pendingTransactions.delete(txHash);
             })
@@ -145,6 +140,19 @@ export class MessageReportFinalityService {
             pendingReport.verifierNetwork,
             pendingReport.verifierAddress,
         );
+    }
+
+    private createRetryCallback(): (failedTx: TransactionInfo) => Promise<TransactionInfo | null> {
+        return async (failedTx: TransactionInfo): Promise<TransactionInfo | null> => {
+            this.onTransactionFailed(failedTx.txHash);
+            return null; // Can't retry observe-only transactions
+        };
+    }
+
+    private createFinalityCallback(): (finalizedTx: TransactionInfo) => void {
+        return (finalizedTx: TransactionInfo): void => {
+            this.onTransactionFinalized(finalizedTx.txHash);
+        };
     }
 
     // Methods for monitoring state

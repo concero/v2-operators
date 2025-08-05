@@ -129,6 +129,7 @@ export async function initializeManagers(): Promise<void> {
             checkIntervalMs: 5000,
             dropTimeoutMs: 60000,
             retryDelayMs: 30000,
+			networkIdleThresholdMs: 60 * 60 * 1000, // 1 hour
         },
     );
     const txReader = TxReader.createInstance(
