@@ -6,19 +6,8 @@ import { ConceroNetwork } from '../../types/ConceroNetwork';
 import { DecodedLog } from '../../types/DecodedLog';
 import { processMessageReportRequest } from '../businessLogic/requestCLFMessageReport';
 
-interface PendingMessageReport {
-    decodedLog: DecodedLog;
-    network: ConceroNetwork;
-    verifierNetwork: ConceroNetwork;
-    verifierAddress: string;
-    chainSelector: string;
-    status: 'pending' | 'finalized' | 'failed';
-    createdAt: number;
-}
-
 export class MessageReportFinalityService {
     private static instance: MessageReportFinalityService;
-    private pendingTransactions: Map<string, PendingMessageReport> = new Map();
     private logger: ReturnType<typeof Logger.prototype.getLogger>;
     private txMonitor: TxMonitor;
     private networkManager: NetworkManager;
@@ -43,136 +32,71 @@ export class MessageReportFinalityService {
         verifierAddress: string,
     ): void {
         const txHash = decodedLog.transactionHash!;
+        const blockNumber = Number(decodedLog.blockNumber!);
 
         this.logger.debug(`Adding transaction ${txHash} for finality tracking`);
-
-        // Save transaction data
-        const pendingReport: PendingMessageReport = {
-            decodedLog,
-            network,
-            verifierNetwork,
-            verifierAddress,
-            chainSelector: network.chainSelector,
-            status: 'pending',
-            createdAt: Date.now(),
-        };
-
-        this.pendingTransactions.set(txHash, pendingReport);
-
-        // Start finality tracking
-        this.startWatchingFinality(txHash, Number(decodedLog.blockNumber!));
-    }
-
-    private startWatchingFinality(txHash: string, blockNumber: number): void {
-        const pendingReport = this.pendingTransactions.get(txHash);
-        if (!pendingReport) {
-            this.logger.error(`No pending report found for tx ${txHash}`);
-            return;
-        }
 
         const txInfo: TransactionInfo = {
             id: uuidv4(),
             txHash: txHash,
-            chainName: pendingReport.network.name,
+            chainName: network.name,
             submittedAt: Date.now(),
             submissionBlock: BigInt(blockNumber),
             status: 'pending',
         };
 
-        this.logger.debug(
-            `Starting finality watch for tx ${txHash} on ${pendingReport.network.name}`,
-        );
+        this.logger.debug(`Starting finality watch for tx ${txHash} on ${network.name}`);
 
-        this.txMonitor.watchTxFinality(
+        this.txMonitor.ensureTxFinality(
             txInfo,
-            this.createRetryCallback(),
-            this.createFinalityCallback(),
-            false, // can't retry
+            this.createFinalityCallback(decodedLog, network, verifierNetwork, verifierAddress),
         );
     }
 
-    private onTransactionFinalized(txHash: string): void {
-        const pendingReport = this.pendingTransactions.get(txHash);
-        if (!pendingReport) {
-            this.logger.warn(`No pending report found for finalized tx ${txHash}`);
-            return;
-        }
+    private createFinalityCallback(
+        decodedLog: DecodedLog,
+        network: ConceroNetwork,
+        verifierNetwork: ConceroNetwork,
+        verifierAddress: string,
+    ): (txInfo: TransactionInfo, isFinalized: boolean) => void {
+        const txHash = decodedLog.transactionHash!;
+        const chainSelector = network.chainSelector;
 
-        this.logger.debug(`Transaction ${txHash} finalized, processing message report request`);
+        return (txInfo: TransactionInfo, isFinalized: boolean): void => {
+            if (isFinalized) {
+                this.logger.debug(
+                    `Transaction ${txHash} finalized, processing message report request`,
+                );
 
-        // Update status
-        pendingReport.status = 'finalized';
-
-        // Execute processMessageReportRequest asynchronously
-        this.executeMessageReportRequest(pendingReport)
-            .then(() => {
-                // Remove from pending after successful processing
-                this.pendingTransactions.delete(txHash);
-            })
-            .catch(error => {
-                this.logger.error(`Failed to process message report for tx ${txHash}:`, error);
-                // Can keep in pending for retry or mark as failed
-                pendingReport.status = 'failed';
-            });
+                this.executeMessageReportRequest(
+                    decodedLog,
+                    chainSelector,
+                    verifierNetwork,
+                    verifierAddress,
+                ).catch(error => {
+                    this.logger.error(`Failed to process message report for tx ${txHash}:`, error);
+                });
+            } else {
+                this.logger.error(
+                    `Transaction ${txHash} failed to reach finality on ${network.name}`,
+                );
+            }
+        };
     }
 
-    private onTransactionFailed(txHash: string): void {
-        const pendingReport = this.pendingTransactions.get(txHash);
-        if (!pendingReport) {
-            this.logger.warn(`No pending report found for failed tx ${txHash}`);
-            return;
-        }
-
-        this.logger.error(
-            `Transaction ${txHash} failed to reach finality on ${pendingReport.network.name}`,
-        );
-
-        // Update status
-        pendingReport.status = 'failed';
-    }
-
-    private async executeMessageReportRequest(pendingReport: PendingMessageReport): Promise<void> {
+    private async executeMessageReportRequest(
+        decodedLog: DecodedLog,
+        chainSelector: string,
+        verifierNetwork: ConceroNetwork,
+        verifierAddress: string,
+    ): Promise<void> {
         await processMessageReportRequest(
-            pendingReport.decodedLog,
-            pendingReport.chainSelector,
+            decodedLog,
+            chainSelector,
             this.logger,
             this.networkManager,
-            pendingReport.verifierNetwork,
-            pendingReport.verifierAddress,
+            verifierNetwork,
+            verifierAddress,
         );
-    }
-
-    private createRetryCallback(): (failedTx: TransactionInfo) => Promise<TransactionInfo | null> {
-        return async (failedTx: TransactionInfo): Promise<TransactionInfo | null> => {
-            this.onTransactionFailed(failedTx.txHash);
-            return null; // Can't retry observe-only transactions
-        };
-    }
-
-    private createFinalityCallback(): (finalizedTx: TransactionInfo) => void {
-        return (finalizedTx: TransactionInfo): void => {
-            this.onTransactionFinalized(finalizedTx.txHash);
-        };
-    }
-
-    // Methods for monitoring state
-    public getPendingTransactions(): Map<string, PendingMessageReport> {
-        return new Map(this.pendingTransactions);
-    }
-
-    public getTransactionStatus(txHash: string): string | undefined {
-        return this.pendingTransactions.get(txHash)?.status;
-    }
-
-    public getPendingCount(): number {
-        return Array.from(this.pendingTransactions.values()).filter(
-            report => report.status === 'pending',
-        ).length;
-    }
-
-    public getFailedCount(): number {
-        return Array.from(this.pendingTransactions.values()).filter(
-            report => report.status === 'failed',
-        ).length;
     }
 }
