@@ -1,4 +1,10 @@
-import { Logger, NetworkManager, TxWriter } from '@concero/operator-utils';
+import {
+    Logger,
+    LoggerInterface,
+    NetworkManager,
+    TxMonitor,
+    TxWriter,
+} from '@concero/operator-utils';
 import { Log, encodeAbiParameters, keccak256 } from 'viem';
 
 import { decodeLogs } from '../../common/eventListener/decodeLogs';
@@ -6,7 +12,53 @@ import { MessagingDeploymentManager } from '../../common/managers';
 import { eventEmitter, globalConfig } from '../../constants';
 import { ConceroNetwork } from '../../types/ConceroNetwork';
 import { DecodedLog } from '../../types/DecodedLog';
-import { MessageReportFinalityService } from '../services/MessageReportFinalityService';
+import { FinalityContext, FinalityHandler, FinalityService } from '../services/FinalityService';
+
+interface MessageReportContext {
+    decodedLog: DecodedLog;
+    chainSelector: string;
+    verifierNetwork: ConceroNetwork;
+    verifierAddress: string;
+    logger: LoggerInterface;
+}
+
+function createMessageReportFinalityHandler(
+    networkName: string,
+    logger: LoggerInterface,
+): FinalityHandler<MessageReportContext> {
+    return {
+        async onFinalized(context: FinalityContext<MessageReportContext>): Promise<void> {
+            const { decodedLog, chainSelector, verifierNetwork, verifierAddress, logger } =
+                context.data;
+
+            logger.debug(
+                `Transaction ${decodedLog.transactionHash} finalized, processing message report request`,
+            );
+
+            try {
+                await processMessageReportRequest(
+                    decodedLog,
+                    chainSelector,
+                    logger,
+                    verifierNetwork,
+                    verifierAddress,
+                );
+            } catch (error) {
+                logger.error(
+                    `Failed to process message report for tx ${decodedLog.transactionHash}:`,
+                    error,
+                );
+            }
+        },
+
+        async onFailed(context: FinalityContext<MessageReportContext>): Promise<void> {
+            const { decodedLog } = context.data;
+            logger.error(
+                `Transaction ${decodedLog.transactionHash} failed to reach finality on ${networkName}`,
+            );
+        },
+    };
+}
 
 export async function requestCLFMessageReport(logs: Log[], network: ConceroNetwork) {
     if (logs.length === 0) return;
@@ -42,16 +94,39 @@ export async function requestCLFMessageReport(logs: Log[], network: ConceroNetwo
                 decodedLog,
                 network.chainSelector,
                 logger,
-                networkManager,
                 verifierNetwork,
                 verifierAddress,
             ),
         );
 
-        // For logs with finality requirement, use MessageReportFinalityService
-        const finalityService = MessageReportFinalityService.getInstance();
+        // For logs with finality requirement, use FinalityService
+        let finalityService: FinalityService;
+        try {
+            finalityService = FinalityService.getInstance();
+        } catch {
+            const finalityLogger = Logger.getInstance().getLogger('FinalityService');
+            const txMonitor = TxMonitor.getInstance();
+            return FinalityService.createInstance(finalityLogger, txMonitor);
+        }
+
+        const messageReportHandler = createMessageReportFinalityHandler(network.name, logger);
+
         finalityRequiredLogs.forEach(decodedLog => {
-            finalityService.addTransaction(decodedLog, network, verifierNetwork, verifierAddress);
+            const context: MessageReportContext = {
+                decodedLog,
+                chainSelector: network.chainSelector,
+                verifierNetwork,
+                verifierAddress,
+                logger,
+            };
+
+            finalityService.addTransaction(
+                decodedLog.transactionHash!,
+                network.name,
+                BigInt(decodedLog.blockNumber!),
+                { data: context, metadata: { network: network.name } },
+                messageReportHandler,
+            );
         });
 
         // Wait for immediate processing to complete, finality checks run asynchronously
@@ -63,11 +138,10 @@ export async function requestCLFMessageReport(logs: Log[], network: ConceroNetwo
     }
 }
 
-export async function processMessageReportRequest(
+async function processMessageReportRequest(
     decodedLog: DecodedLog,
     srcChainSelector: string,
-    logger: ReturnType<typeof Logger.prototype.getLogger>,
-    networkManager: ReturnType<typeof NetworkManager.getInstance>,
+    logger: LoggerInterface,
     verifierNetwork: ConceroNetwork,
     verifierAddress: string,
 ) {
