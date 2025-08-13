@@ -1,9 +1,8 @@
-import { Address, formatUnits, PublicClient } from "viem";
+import { HttpClient, Logger, NetworkManager, ViemClientManager } from '@concero/operator-utils';
+import { WebClient } from '@slack/web-api';
+import { Address, PublicClient, formatUnits } from 'viem';
 
-import { WebClient } from "@slack/web-api";
-
-import { HttpClient, Logger, NetworkManager, ViemClientManager } from "@concero/operator-utils";
-import { globalConfig } from "../../constants";
+import { globalConfig } from '../../constants';
 
 const SAFE_TXS_COUNT_FOR_OPERATOR_BALANCE = 15n;
 
@@ -44,13 +43,13 @@ async function checkAndNotifyInsufficientGas() {
     const operatorAddress = globalConfig.OPERATOR_ADDRESS;
     const viemClientManager = ViemClientManager.getInstance();
     const networkManager = NetworkManager.getInstance();
-    const logger = Logger.getInstance().getLogger("GasChecker");
+    const logger = Logger.getInstance().getLogger('GasChecker');
 
     try {
         const activeNetworks = networkManager.getActiveNetworks();
 
         if (activeNetworks.length === 0) {
-            logger.warn("No active networks found when checking gas balances");
+            logger.warn('No active networks found when checking gas balances');
             return;
         }
 
@@ -101,7 +100,7 @@ async function checkAndNotifyInsufficientGas() {
 
         // logger.info(`All chains (${activeNetworks.length}) have sufficient gas.`);
     } catch (error) {
-        logger.error("Error checking gas balances:", error);
+        logger.error('Error checking gas balances:', error);
     }
 }
 

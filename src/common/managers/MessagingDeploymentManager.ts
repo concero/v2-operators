@@ -1,13 +1,13 @@
-import { Address } from "viem";
+import { ManagerBase } from './ManagerBase';
 
-import { LoggerInterface } from "@concero/operator-utils";
-import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { DeploymentManagerConfig } from "../../types/ManagerConfigs";
-import { IMessagingDeploymentManager, NetworkUpdateListener } from "../../types/managers";
-import { getEnvVar } from "../utils/getEnvVar";
+import { LoggerInterface } from '@concero/operator-utils';
+import { DeploymentFetcher, DeploymentPattern, ParsedDeployment } from '@concero/operator-utils';
+import { Address } from 'viem';
 
-import { DeploymentFetcher, DeploymentPattern, ParsedDeployment } from "@concero/operator-utils";
-import { ManagerBase } from "./ManagerBase";
+import { ConceroNetwork } from '../../types/ConceroNetwork';
+import { DeploymentManagerConfig } from '../../types/ManagerConfigs';
+import { IMessagingDeploymentManager, NetworkUpdateListener } from '../../types/managers';
+import { getEnvVar } from '../utils/getEnvVar';
 
 export class MessagingDeploymentManager
     extends ManagerBase
@@ -44,9 +44,9 @@ export class MessagingDeploymentManager
         try {
             await super.initialize();
             // Initial fetch of deployments will happen on first network update
-            this.logger.debug("Initialized");
+            this.logger.debug('Initialized');
         } catch (error) {
-            this.logger.error("Failed to initialize:", error);
+            this.logger.error('Failed to initialize:', error);
             throw error;
         }
     }
@@ -54,15 +54,15 @@ export class MessagingDeploymentManager
     public static getInstance(): MessagingDeploymentManager {
         if (!MessagingDeploymentManager.instance) {
             throw new Error(
-                "MessagingDeploymentManager is not initialized. Call createInstance() first.",
+                'MessagingDeploymentManager is not initialized. Call createInstance() first.',
             );
         }
         return MessagingDeploymentManager.instance;
     }
 
     async getRouterByChainName(chainName: string): Promise<Address> {
-        if (this.config.networkMode === "localhost") {
-            return getEnvVar("CONCERO_ROUTER_PROXY_LOCALHOST") as Address;
+        if (this.config.networkMode === 'localhost') {
+            return getEnvVar('CONCERO_ROUTER_PROXY_LOCALHOST') as Address;
         }
 
         const router = this.conceroRoutersMapByChainName[chainName];
@@ -75,10 +75,10 @@ export class MessagingDeploymentManager
     }
 
     async getConceroRouters(): Promise<Record<string, Address>> {
-        if (this.config.networkMode === "localhost") {
+        if (this.config.networkMode === 'localhost') {
             return {
-                [getEnvVar("LOCALHOST_FORK_CHAIN_ID")]: getEnvVar(
-                    "CONCERO_ROUTER_PROXY_LOCALHOST",
+                [getEnvVar('LOCALHOST_FORK_CHAIN_ID')]: getEnvVar(
+                    'CONCERO_ROUTER_PROXY_LOCALHOST',
                 ) as Address,
             };
         }
@@ -87,14 +87,14 @@ export class MessagingDeploymentManager
     }
 
     async getConceroVerifier(): Promise<Address> {
-        if (this.config.networkMode === "localhost") {
-            return getEnvVar("CONCERO_VERIFIER_PROXY_LOCALHOST") as Address;
+        if (this.config.networkMode === 'localhost') {
+            return getEnvVar('CONCERO_VERIFIER_PROXY_LOCALHOST') as Address;
         }
 
         if (this.conceroVerifier !== undefined) return this.conceroVerifier;
 
         if (!this.conceroVerifier) {
-            throw new Error("Concero verifier address not found after update");
+            throw new Error('Concero verifier address not found after update');
         }
 
         return this.conceroVerifier;
@@ -109,7 +109,7 @@ export class MessagingDeploymentManager
             );
             await this.processDeployments(deployments, networks);
         } catch (err) {
-            this.logger.error("Failed to update deployments after network update:", err);
+            this.logger.error('Failed to update deployments after network update:', err);
             throw err;
         }
     }
@@ -146,7 +146,7 @@ export class MessagingDeploymentManager
 
         // Process verifier deployment
         const networkSuffix =
-            this.config.networkMode === "testnet" ? "arbitrumSepolia" : "arbitrum";
+            this.config.networkMode === 'testnet' ? 'arbitrumSepolia' : 'arbitrum';
         const verifierDeployment = deployments.find(
             d => d.key.match(this.verifierPattern) && d.networkName === networkSuffix,
         );

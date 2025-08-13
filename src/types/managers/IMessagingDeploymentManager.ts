@@ -1,6 +1,6 @@
-import { Address } from "viem";
+import { NetworkUpdateListener } from './NetworkUpdateListener';
 
-import { NetworkUpdateListener } from "./NetworkUpdateListener";
+import { Address } from 'viem';
 
 export interface IMessagingDeploymentManager extends NetworkUpdateListener {
     initialize(): Promise<void>;

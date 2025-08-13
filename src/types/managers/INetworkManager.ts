@@ -1,6 +1,6 @@
-import { ConceroNetwork } from "../ConceroNetwork";
+import { NetworkUpdateListener } from './NetworkUpdateListener';
 
-import { NetworkUpdateListener } from "./NetworkUpdateListener";
+import { ConceroNetwork } from '../ConceroNetwork';
 
 export interface INetworkManager {
     initialize(): Promise<void>;

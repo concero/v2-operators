@@ -1,15 +1,15 @@
-import { Abi } from "viem";
+import { getRpcExtension, getRpcOverride } from './localRpcLoaders';
 
-import { abi as conceroRouterAbi } from "../abi/ConceroRouter.json";
-import { abi as conceroVerifierAbi } from "../abi/ConceroVerifier.json";
-import { getEnvVar, getGranularLogLevels, getOptionalEnvVar } from "../common/utils";
-import { type GlobalConfig } from "../types/GlobalConfig";
+import { getEnvVar, getGranularLogLevels } from '@concero/operator-utils';
+import { Abi } from 'viem';
 
-import { getRpcExtension, getRpcOverride } from "./localRpcLoaders";
+import { abi as conceroRouterAbi } from '../abi/ConceroRouter.json';
+import { abi as conceroVerifierAbi } from '../abi/ConceroVerifier.json';
+import { type GlobalConfig } from '../types/GlobalConfig';
 
 const globalConfig: GlobalConfig = {
-    NETWORK_MODE: getEnvVar("NETWORK_MODE"),
-    OPERATOR_ADDRESS: getEnvVar("OPERATOR_ADDRESS"),
+    NETWORK_MODE: getEnvVar('NETWORK_MODE'),
+    OPERATOR_ADDRESS: getEnvVar('OPERATOR_ADDRESS'),
     IGNORED_NETWORK_IDS: [44787],
     WHITELISTED_NETWORK_IDS: {
         mainnet: [],
@@ -19,20 +19,20 @@ const globalConfig: GlobalConfig = {
         ],
     },
     LOGGER: {
-        LOG_LEVEL_DEFAULT: getOptionalEnvVar("LOG_LEVEL_DEFAULT", "info"),
+        LOG_LEVEL_DEFAULT: getEnvVar('LOG_LEVEL_DEFAULT') || 'info',
         LOG_LEVELS_GRANULAR: getGranularLogLevels(),
-        LOG_DIR: "logs",
-        LOG_MAX_FILES: "7d",
-        LOG_MAX_SIZE: "20m",
+        LOG_DIR: 'logs',
+        LOG_MAX_FILES: '7d',
+        LOG_MAX_SIZE: '20m',
     },
     URLS: {
-        CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${process.env.RPC_SERVICE_GIT_BRANCH ?? "master"}/output`,
-        CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${process.env.DEPLOYMENTS_SERVICE_GIT_BRANCH ?? "master"}/.env.deployments.${getEnvVar("NETWORK_MODE") === "localhost" || getEnvVar("NETWORK_MODE") === "testnet" ? "testnet" : "mainnet"}`,
+        CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${process.env.RPC_SERVICE_GIT_BRANCH ?? 'master'}/output`,
+        CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${process.env.DEPLOYMENTS_SERVICE_GIT_BRANCH ?? 'master'}/.env.deployments.${getEnvVar('NETWORK_MODE') === 'localhost' || getEnvVar('NETWORK_MODE') === 'testnet' ? 'testnet' : 'mainnet'}`,
         V2_NETWORKS: {
             MAINNET:
-                "https://github.com/concero/v2-networks/raw/refs/heads/master/networks/mainnet.json",
+                'https://github.com/concero/v2-networks/raw/refs/heads/master/networks/mainnet.json',
             TESTNET:
-                "https://github.com/concero/v2-networks/raw/refs/heads/master/networks/testnet.json",
+                'https://github.com/concero/v2-networks/raw/refs/heads/master/networks/testnet.json',
         },
     },
     VIEM: {
@@ -42,7 +42,7 @@ const globalConfig: GlobalConfig = {
             retryCount: 5,
             retryDelay: 150,
         },
-        SIMULATE_TX: getEnvVar("SIMULATE_TX") === "true",
+        SIMULATE_TX: getEnvVar('SIMULATE_TX') === 'true',
     },
     HTTPCLIENT: {
         DEFAULT_TIMEOUT: 5000,
@@ -55,19 +55,19 @@ const globalConfig: GlobalConfig = {
         EVM_DST_CHAIN_DATA: {
             components: [
                 {
-                    internalType: "address",
-                    name: "receiver",
-                    type: "address",
+                    internalType: 'address',
+                    name: 'receiver',
+                    type: 'address',
                 },
                 {
-                    internalType: "uint256",
-                    name: "gasLimit",
-                    type: "uint256",
+                    internalType: 'uint256',
+                    name: 'gasLimit',
+                    type: 'uint256',
                 },
             ],
-            internalType: "struct ConceroTypes.EvmDstChainData",
-            name: "dstChainData",
-            type: "tuple",
+            internalType: 'struct ConceroTypes.EvmDstChainData',
+            name: 'dstChainData',
+            type: 'tuple',
         },
     },
     RPC: {
@@ -75,7 +75,7 @@ const globalConfig: GlobalConfig = {
         EXTENSION: getRpcExtension(),
     },
     TX_MANAGER: {
-        DRY_RUN: getEnvVar("DRY_RUN") === "true",
+        DRY_RUN: getEnvVar('DRY_RUN') === 'true',
         DEFAULT_CONFIRMATIONS: 3,
         DEFAULT_RECEIPT_TIMEOUT: 60_000,
         GAS_LIMIT: {
@@ -87,11 +87,11 @@ const globalConfig: GlobalConfig = {
         NETWORK_UPDATE_INTERVAL_MS: 1000 * 60 * 60, // 1 hour
     },
     BLOCK_MANAGER: {
-        POLLING_INTERVAL_MS: parseInt(getEnvVar("BLOCK_MANAGER_POLLING_INTERVAL_MS")) || 5000,
+        POLLING_INTERVAL_MS: parseInt(getEnvVar('BLOCK_MANAGER_POLLING_INTERVAL_MS')) || 5000,
         SEQUENTIAL_BATCH_SIZE: 100n,
         CATCHUP_BATCH_SIZE: 500n,
         MAX_BLOCKS_TO_PROCESS: 100n,
-        USE_CHECKPOINTS: getEnvVar("USE_CHECKPOINTS") === "true",
+        USE_CHECKPOINTS: getEnvVar('USE_CHECKPOINTS') === 'true',
     },
     NOTIFICATIONS: {
         SLACK: {

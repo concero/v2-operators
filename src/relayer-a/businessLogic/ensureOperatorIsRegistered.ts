@@ -1,10 +1,10 @@
-import { Logger, NetworkManager, TxWriter, ViemClientManager } from "@concero/operator-utils";
-import { Hash, isHex, Log, PublicClient, type Address } from "viem";
-import { MessagingDeploymentManager } from "../../common/managers";
+import { Logger, NetworkManager, TxWriter, ViemClientManager } from '@concero/operator-utils';
+import { type Address, Hash, Log, PublicClient, isHex } from 'viem';
+import { getAbiItem } from 'viem';
 
-import { getAbiItem } from "viem";
-import { eventEmitter, globalConfig } from "../../constants";
-import { ConceroNetwork } from "../../types/ConceroNetwork";
+import { MessagingDeploymentManager } from '../../common/managers';
+import { eventEmitter, globalConfig } from '../../constants';
+import { ConceroNetwork } from '../../types/ConceroNetwork';
 
 const ChainType = {
     EVM: 0,
@@ -35,7 +35,7 @@ async function isOperatorRegistered(
     const isRegistered = (await publicClient.readContract({
         address: await deploymentManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
-        functionName: "isOperatorRegistered",
+        functionName: 'isOperatorRegistered',
         args: [globalConfig.OPERATOR_ADDRESS],
     })) as boolean;
 
@@ -61,11 +61,11 @@ async function requestOperatorRegistration(
     const transactionHash = await TxWriter.getInstance().callContract(conceroVerifierNetwork, {
         address: await deploymentManager.getConceroVerifier(),
         abi: globalConfig.ABI.CONCERO_VERIFIER,
-        functionName: "requestOperatorRegistration",
+        functionName: 'requestOperatorRegistration',
         args: [chainTypes, operatorActions, operatorAddresses],
     });
 
-    eventEmitter.emit("requestOperatorRegistration", { txHash: transactionHash });
+    eventEmitter.emit('requestOperatorRegistration', { txHash: transactionHash });
 
     return transactionHash;
 }
@@ -87,13 +87,13 @@ export async function waitForOperatorRegistration(
     fromBlockNumber: bigint,
     operatorAddress: string,
 ): Promise<Hash> {
-    const logger = Logger.getInstance().getLogger("waitForOperatorRegistration");
+    const logger = Logger.getInstance().getLogger('waitForOperatorRegistration');
     const viemClientManager = ViemClientManager.getInstance();
     const { publicClient } = viemClientManager.getClients(network);
 
     const POLL_INTERVAL_MS = 3 * 1000;
     const MAX_RETRIES = 100;
-    const EVENT_NAME = "OperatorRegistered";
+    const EVENT_NAME = 'OperatorRegistered';
     let retries = 0;
 
     logger.info(
@@ -103,7 +103,7 @@ export async function waitForOperatorRegistration(
     return new Promise((resolve, reject) => {
         const checkForRegistrationEvent = async () => {
             if (retries >= MAX_RETRIES) {
-                reject(new Error("Max retries reached while waiting for operator registration"));
+                reject(new Error('Max retries reached while waiting for operator registration'));
                 return;
             }
 
@@ -123,7 +123,7 @@ export async function waitForOperatorRegistration(
                     toBlock: latestBlockNumber,
                     event: getAbiItem({
                         abi: globalConfig.ABI.CONCERO_VERIFIER,
-                        name: "OperatorRegistered",
+                        name: 'OperatorRegistered',
                     }),
                 });
 
@@ -155,8 +155,8 @@ export async function waitForOperatorRegistration(
  * @returns The matching log or undefined if not found
  */
 function findOperatorRegistrationLog(logs: Log[], operatorAddress: string): Log | undefined {
-    const EVENT_NAME = "OperatorRegistered";
-    const logger = Logger.getInstance().getLogger("findOperatorRegistrationLog");
+    const EVENT_NAME = 'OperatorRegistered';
+    const logger = Logger.getInstance().getLogger('findOperatorRegistrationLog');
 
     for (const log of logs) {
         try {
@@ -183,7 +183,7 @@ function findOperatorRegistrationLog(logs: Log[], operatorAddress: string): Log 
  * @returns {Promise<void>}
  */
 export async function ensureOperatorIsRegistered(): Promise<void> {
-    const logger = Logger.getInstance().getLogger("ensureOperatorIsRegistered");
+    const logger = Logger.getInstance().getLogger('ensureOperatorIsRegistered');
     const viemClientManager = ViemClientManager.getInstance();
     const networkManager = NetworkManager.getInstance();
     const deploymentManager = MessagingDeploymentManager.getInstance();
@@ -194,8 +194,8 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
     const registered = await isOperatorRegistered(publicClient, networkManager, deploymentManager);
 
     if (registered) {
-        logger.info("Operator already registered");
-        eventEmitter.emit("operatorRegistered", {});
+        logger.info('Operator already registered');
+        eventEmitter.emit('operatorRegistered', {});
         return;
     }
 
@@ -213,5 +213,5 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
     );
 
     logger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
-    eventEmitter.emit("operatorRegistered", {});
+    eventEmitter.emit('operatorRegistered', {});
 }

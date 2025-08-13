@@ -1,13 +1,11 @@
-import { AbiEvent, getAbiItem } from "viem";
+import { BlockManagerRegistry, Logger, NetworkManager } from '@concero/operator-utils';
+import { AbiEvent, getAbiItem } from 'viem';
 
-import { BlockManagerRegistry, Logger, NetworkManager } from "@concero/operator-utils";
-import { setupEventListener } from "../../common/eventListener/setupEventListener";
-import { MessagingDeploymentManager } from "../../common/managers";
-
-import { globalConfig } from "../../constants";
-
-import { requestCLFMessageReport } from "../businessLogic/requestCLFMessageReport";
-import { submitCLFMessageReport } from "../businessLogic/submitCLFMessageReport";
+import { setupEventListener } from '../../common/eventListener/setupEventListener';
+import { MessagingDeploymentManager } from '../../common/managers';
+import { globalConfig } from '../../constants';
+import { requestCLFMessageReport } from '../businessLogic/requestCLFMessageReport';
+import { submitCLFMessageReport } from '../businessLogic/submitCLFMessageReport';
 
 /**
  * Sets up event listeners for all active networks and the verifier network.
@@ -16,7 +14,7 @@ import { submitCLFMessageReport } from "../businessLogic/submitCLFMessageReport"
  * - MessageReportRequested and MessageReport on the ConceroVerifier
  */
 export async function setupEventListeners() {
-    const logger = Logger.getInstance().getLogger("setupEventListeners");
+    const logger = Logger.getInstance().getLogger('setupEventListeners');
     const networkManager = NetworkManager.getInstance();
     const deploymentManager = MessagingDeploymentManager.getInstance();
     const blockManagerRegistry = BlockManagerRegistry.getInstance();
@@ -39,7 +37,7 @@ export async function setupEventListeners() {
             // Create event watchers for ConceroMessageSent event
             const sentEvent = getAbiItem({
                 abi: globalConfig.ABI.CONCERO_ROUTER,
-                name: "ConceroMessageSent",
+                name: 'ConceroMessageSent',
             });
 
             const sentHandle = await setupEventListener(
@@ -101,7 +99,7 @@ export async function setupEventListeners() {
         // Create event watcher for MessageReport event
         const messageReportEvent = getAbiItem({
             abi: globalConfig.ABI.CONCERO_VERIFIER,
-            name: "MessageReport",
+            name: 'MessageReport',
         });
 
         const messageReportHandle = await setupEventListener(
@@ -113,6 +111,6 @@ export async function setupEventListeners() {
         );
         eventListenerHandles.push(messageReportHandle);
     } catch (error) {
-        logger.error("Failed to set up verifier event listeners:", error);
+        logger.error('Failed to set up verifier event listeners:', error);
     }
 }

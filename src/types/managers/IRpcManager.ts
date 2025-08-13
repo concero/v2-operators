@@ -1,4 +1,4 @@
-import { ConceroNetwork } from "../ConceroNetwork";
+import { ConceroNetwork } from '../ConceroNetwork';
 
 export interface IRpcManager {
     initialize(): Promise<void>;

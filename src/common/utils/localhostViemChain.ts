@@ -1,19 +1,19 @@
-import { defineChain } from "viem";
+import { defineChain } from 'viem';
 
 export const localhostViemChain = defineChain({
     id: 1,
-    name: "localhost",
+    name: 'localhost',
     nativeCurrency: {
         decimals: 18,
-        name: "eth",
-        symbol: "eth",
+        name: 'eth',
+        symbol: 'eth',
     },
     rpcUrls: {
         default: { http: [process.env.LOCALHOST_RPC_URL] },
     },
     blockExplorers: [
         {
-            name: "localhost",
+            name: 'localhost',
             url: process.env.LOCALHOST_RPC_URL,
         },
     ],

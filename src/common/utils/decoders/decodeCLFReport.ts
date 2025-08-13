@@ -1,20 +1,20 @@
-import { decodeAbiParameters, parseAbiParameters } from "viem";
-import type { GetTransactionReturnType } from "viem/actions/public/getTransaction";
+import { decodeAbiParameters, parseAbiParameters } from 'viem';
+import type { GetTransactionReturnType } from 'viem/actions/public/getTransaction';
 
 const clfReportSubmissionAbi = parseAbiParameters([
-    "bytes32[3] reportContext",
-    "bytes report",
-    "bytes32[] rs",
-    "bytes32[] ss",
-    "bytes32 rawVs",
+    'bytes32[3] reportContext',
+    'bytes report',
+    'bytes32[] rs',
+    'bytes32[] ss',
+    'bytes32 rawVs',
 ]);
 
 const clfReportAbi = parseAbiParameters([
-    "bytes32[] requestIds",
-    "bytes[] results",
-    "bytes[] errors",
-    "bytes[] onchainMetadata",
-    "bytes[] offchainMetadata",
+    'bytes32[] requestIds',
+    'bytes[] results',
+    'bytes[] errors',
+    'bytes[] onchainMetadata',
+    'bytes[] offchainMetadata',
 ]);
 
 /**

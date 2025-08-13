@@ -1,10 +1,11 @@
-import { LoggerInterface } from "@concero/operator-utils";
-import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { BlockCheckpointManagerConfig } from "../../types/ManagerConfigs";
-import { IBlockCheckpointManager } from "../../types/managers/";
+import { DbManager } from './DbManager';
+import { ManagerBase } from './ManagerBase';
 
-import { DbManager } from "./DbManager";
-import { ManagerBase } from "./ManagerBase";
+import { LoggerInterface } from '@concero/operator-utils';
+
+import { ConceroNetwork } from '../../types/ConceroNetwork';
+import { BlockCheckpointManagerConfig } from '../../types/ManagerConfigs';
+import { IBlockCheckpointManager } from '../../types/managers/';
 
 export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpointManager {
     private static instance: BlockCheckpointManager;
@@ -28,7 +29,7 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
     public static getInstance(): BlockCheckpointManager {
         if (!BlockCheckpointManager.instance) {
             throw new Error(
-                "BlockCheckpointManager is not initialized. Call createInstance() first.",
+                'BlockCheckpointManager is not initialized. Call createInstance() first.',
             );
         }
         return BlockCheckpointManager.instance;
@@ -77,11 +78,11 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
         if (this.initialized) return;
 
         await super.initialize();
-        this.logger.debug("Initialized");
+        this.logger.debug('Initialized');
     }
 
     public override dispose(): void {
         super.dispose();
-        this.logger.debug("Disposed");
+        this.logger.debug('Disposed');
     }
 }

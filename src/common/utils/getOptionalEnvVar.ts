@@ -6,5 +6,5 @@
  */
 export function getOptionalEnvVar(key: string, defaultValue?: string): string {
     const value = process.env[key];
-    return value !== undefined && value !== "" ? value : defaultValue;
+    return value !== undefined && value !== '' ? value : defaultValue;
 }

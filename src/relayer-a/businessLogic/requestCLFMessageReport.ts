@@ -1,17 +1,16 @@
-import { Log, encodeAbiParameters, keccak256 } from "viem";
+import { Logger, NetworkManager, TxWriter } from '@concero/operator-utils';
+import { Log, encodeAbiParameters, keccak256 } from 'viem';
 
-import { Logger, NetworkManager, TxWriter } from "@concero/operator-utils";
-import { decodeLogs } from "../../common/eventListener/decodeLogs";
-import { MessagingDeploymentManager } from "../../common/managers";
-
-import { eventEmitter, globalConfig } from "../../constants";
-import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { DecodedLog } from "../../types/DecodedLog";
+import { decodeLogs } from '../../common/eventListener/decodeLogs';
+import { MessagingDeploymentManager } from '../../common/managers';
+import { eventEmitter, globalConfig } from '../../constants';
+import { ConceroNetwork } from '../../types/ConceroNetwork';
+import { DecodedLog } from '../../types/DecodedLog';
 
 export async function requestCLFMessageReport(logs: Log[], network: ConceroNetwork) {
     if (logs.length === 0) return;
 
-    const logger = Logger.getInstance().getLogger("requestCLFMessageReport");
+    const logger = Logger.getInstance().getLogger('requestCLFMessageReport');
     logger.debug(
         `Processing ${logs.length} logs for CLF message report requests from ${network.name}`,
     );
@@ -63,10 +62,10 @@ async function processMessageReportRequest(
         const encodedSrcChainData = encodeAbiParameters(
             [
                 {
-                    type: "tuple",
+                    type: 'tuple',
                     components: [
-                        { name: "blockNumber", type: "uint256" },
-                        { name: "sender", type: "address" },
+                        { name: 'blockNumber', type: 'uint256' },
+                        { name: 'sender', type: 'address' },
                     ],
                 },
             ],
@@ -83,14 +82,14 @@ async function processMessageReportRequest(
             logger.info(
                 `[DRY_RUN]:${verifierNetwork.name} CLF message report requested with hash: ${dryRunTxHash}`,
             );
-            eventEmitter.emit("requestMessageReport", { txHash: dryRunTxHash });
+            eventEmitter.emit('requestMessageReport', { txHash: dryRunTxHash });
             return;
         }
 
         const txHash = await TxWriter.getInstance().callContract(verifierNetwork, {
             address: verifierAddress,
             abi: globalConfig.ABI.CONCERO_VERIFIER,
-            functionName: "requestMessageReport",
+            functionName: 'requestMessageReport',
             args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
             chain: verifierNetwork.viemChain,
             options: {
@@ -100,7 +99,7 @@ async function processMessageReportRequest(
         });
 
         if (txHash) {
-            eventEmitter.emit("requestMessageReport", {
+            eventEmitter.emit('requestMessageReport', {
                 txHash: txHash,
             });
             logger.info(
@@ -114,12 +113,12 @@ async function processMessageReportRequest(
     } catch (error) {
         // TODO: move this error handling to global error handler!
         logger.error(
-            `[${verifierNetwork.name}] Error requesting CLF message report for messageId ${decodedLog.args?.messageId || "unknown"}:`,
+            `[${verifierNetwork.name}] Error requesting CLF message report for messageId ${decodedLog.args?.messageId || 'unknown'}:`,
             error,
         );
 
         // Emit error event for monitoring
-        eventEmitter.emit("requestMessageReportError", {
+        eventEmitter.emit('requestMessageReportError', {
             messageId: decodedLog.args?.messageId,
             error: error.message,
             chainName: verifierNetwork.name,

@@ -1,11 +1,11 @@
-import { Address, Chain } from "viem";
+import { Address, Chain } from 'viem';
 
-export type ConceroTestingNetworkNames = "localhost";
+export type ConceroTestingNetworkNames = 'localhost';
 
 export type ConceroNetwork = {
     id: number;
     name: string;
-    type: "mainnet" | "testnet" | "localhost";
+    type: 'mainnet' | 'testnet' | 'localhost';
     chainSelector: string;
     accounts: string[];
     viemChain: Chain;
@@ -17,4 +17,4 @@ export type ConceroNetwork = {
     };
 };
 
-export type NetworkType = "mainnet" | "testnet";
+export type NetworkType = 'mainnet' | 'testnet';

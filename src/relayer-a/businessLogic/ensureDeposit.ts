@@ -1,9 +1,8 @@
-import { Hash, PublicClient } from "viem";
+import { Logger, NetworkManager, TxWriter, ViemClientManager } from '@concero/operator-utils';
+import { Hash, PublicClient } from 'viem';
 
-import { Logger, NetworkManager, TxWriter, ViemClientManager } from "@concero/operator-utils";
-import { MessagingDeploymentManager } from "../../common/managers";
-
-import { globalConfig } from "../../constants";
+import { MessagingDeploymentManager } from '../../common/managers';
+import { globalConfig } from '../../constants';
 
 /**
  * @returns {bigint} The minimum deposit amount.
@@ -16,7 +15,7 @@ async function getMinimumDeposit(
     const depositAmount = await publicClient.readContract({
         address: verifierAddress,
         abi: globalConfig.ABI.CONCERO_VERIFIER,
-        functionName: "getMinimumOperatorDeposit",
+        functionName: 'getMinimumOperatorDeposit',
         args: [],
     });
     return BigInt(depositAmount);
@@ -33,14 +32,14 @@ async function getCurrentOperatorDeposit(
     const currentDeposit = await publicClient.readContract({
         address: verifierAddress,
         abi: globalConfig.ABI.CONCERO_VERIFIER,
-        functionName: "getOperatorDeposit",
+        functionName: 'getOperatorDeposit',
         args: [globalConfig.OPERATOR_ADDRESS],
     });
     return BigInt(currentDeposit);
 }
 
 async function fetchDepositAndDepositIfNeeded() {
-    const logger = Logger.getInstance().getLogger("ensureDeposit");
+    const logger = Logger.getInstance().getLogger('ensureDeposit');
 
     const networkManager = NetworkManager.getInstance();
     const viemClientManager = ViemClientManager.getInstance();
@@ -62,7 +61,7 @@ async function fetchDepositAndDepositIfNeeded() {
         chain: verifierNetwork.viemChain,
         address: verifierAddress,
         abi: globalConfig.ABI.CONCERO_VERIFIER,
-        functionName: "operatorDeposit",
+        functionName: 'operatorDeposit',
         args: [globalConfig.OPERATOR_ADDRESS],
         value: requiredDeposit,
     });
