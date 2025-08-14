@@ -9,9 +9,10 @@ import {
     TxReader,
     TxWriter,
     ViemClientManager,
-} from "@concero/operator-utils";
-import { globalConfig } from "../../constants";
-import { BlockCheckpointManager, MessagingDeploymentManager, TxManager } from "../managers";
+} from '@concero/operator-utils';
+
+import { globalConfig } from '../../constants';
+import { BlockCheckpointManager, MessagingDeploymentManager, TxManager } from '../managers';
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
@@ -21,11 +22,11 @@ export async function initializeManagers(): Promise<void> {
         logMaxFiles: globalConfig.LOGGER.LOG_MAX_FILES,
         logLevelDefault: globalConfig.LOGGER.LOG_LEVEL_DEFAULT,
         logLevelsGranular: globalConfig.LOGGER.LOG_LEVELS_GRANULAR,
-        enableConsoleTransport: process.env.NODE_ENV !== "production",
+        enableConsoleTransport: process.env.NODE_ENV !== 'production',
     });
     await logger.initialize();
 
-    const httpLoggerInstance = logger.getLogger("HttpClient");
+    const httpLoggerInstance = logger.getLogger('HttpClient');
     const httpClient = HttpClient.createInstance(httpLoggerInstance, {
         retryDelay: globalConfig.HTTPCLIENT.RETRY_DELAY,
         maxRetries: globalConfig.HTTPCLIENT.MAX_RETRIES,
@@ -35,14 +36,14 @@ export async function initializeManagers(): Promise<void> {
     await httpClient.initialize();
 
     // Core infrastructure managers
-    const rpcManager = RpcManager.createInstance(logger.getLogger("RpcManager"), {
+    const rpcManager = RpcManager.createInstance(logger.getLogger('RpcManager'), {
         rpcOverrides: globalConfig.RPC.OVERRIDE,
         rpcExtensions: globalConfig.RPC.EXTENSION,
         conceroRpcsUrl: globalConfig.URLS.CONCERO_RPCS,
-        networkMode: globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
+        networkMode: globalConfig.NETWORK_MODE as 'mainnet' | 'testnet' | 'localhost',
     });
     const viemClientManager = ViemClientManager.createInstance(
-        logger.getLogger("ViemClientManager"),
+        logger.getLogger('ViemClientManager'),
         rpcManager,
         {
             fallbackTransportOptions: globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
@@ -50,10 +51,10 @@ export async function initializeManagers(): Promise<void> {
     );
 
     const networkManager = ConceroNetworkManager.createInstance(
-        logger.getLogger("NetworkManager"),
+        logger.getLogger('NetworkManager'),
         httpClient,
         {
-            networkMode: globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
+            networkMode: globalConfig.NETWORK_MODE as 'mainnet' | 'testnet' | 'localhost',
             ignoredNetworkIds: globalConfig.IGNORED_NETWORK_IDS,
             whitelistedNetworkIds: globalConfig.WHITELISTED_NETWORK_IDS,
             defaultConfirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
@@ -63,14 +64,14 @@ export async function initializeManagers(): Promise<void> {
         },
     );
     const blockCheckpointManager = BlockCheckpointManager.createInstance(
-        logger.getLogger("BlockCheckpointManager"),
+        logger.getLogger('BlockCheckpointManager'),
         {
             useCheckpoints: globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS,
         },
     );
 
     const blockManagerRegistry = BlockManagerRegistry.createInstance(
-        logger.getLogger("BlockManagerRegistry"),
+        logger.getLogger('BlockManagerRegistry'),
         blockCheckpointManager,
         networkManager,
         viemClientManager,
@@ -85,10 +86,10 @@ export async function initializeManagers(): Promise<void> {
     );
 
     const messagingDeploymentManager = MessagingDeploymentManager.createInstance(
-        logger.getLogger("MessagingDeploymentManager"),
+        logger.getLogger('MessagingDeploymentManager'),
         {
             conceroDeploymentsUrl: globalConfig.URLS.CONCERO_DEPLOYMENTS,
-            networkMode: globalConfig.NETWORK_MODE as "mainnet" | "testnet" | "localhost",
+            networkMode: globalConfig.NETWORK_MODE as 'mainnet' | 'testnet' | 'localhost',
         },
     );
 
@@ -116,34 +117,29 @@ export async function initializeManagers(): Promise<void> {
         try {
             await networkManager.forceUpdate();
         } catch (error) {
-            logger.getLogger("NetworkManager").error("Failed to update networks:", error);
+            logger.getLogger('NetworkManager').error('Failed to update networks:', error);
         }
     }, globalConfig.NETWORK_MANAGER.NETWORK_UPDATE_INTERVAL_MS);
 
     const txMonitor = TxMonitor.createInstance(
-        logger.getLogger("TxMonitor"),
+        logger.getLogger('TxMonitor'),
         viemClientManager,
         blockManagerRegistry,
         networkManager,
-        {
-            checkIntervalMs: 5000,
-            dropTimeoutMs: 60000,
-            retryDelayMs: 30000,
-			networkIdleThresholdMs: 60 * 60 * 1000, // 1 hour
-        },
+        {},
     );
     const txReader = TxReader.createInstance(
-        logger.getLogger("TxReader"),
+        logger.getLogger('TxReader'),
         networkManager,
         viemClientManager,
         {},
     );
 
-    const nonceManager = NonceManager.createInstance(logger.getLogger("NonceManager"), {});
+    const nonceManager = NonceManager.createInstance(logger.getLogger('NonceManager'), {});
     await nonceManager.initialize();
 
     const txWriter = TxWriter.createInstance(
-        logger.getLogger("TxWriter"),
+        logger.getLogger('TxWriter'),
         viemClientManager,
         txMonitor,
         nonceManager,
@@ -158,7 +154,7 @@ export async function initializeManagers(): Promise<void> {
     await txReader.initialize();
 
     const txManager = TxManager.createInstance(
-        logger.getLogger("TxManager"),
+        logger.getLogger('TxManager'),
         networkManager,
         viemClientManager,
         txWriter,
