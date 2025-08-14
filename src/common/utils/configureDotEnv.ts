@@ -1,6 +1,6 @@
-import * as dotenv from "dotenv";
+import * as dotenv from 'dotenv';
 
-const ENV_FILES = [".env", ".env.wallets", ".env.deployments.testnet", ".env.deployments.mainnet"];
+const ENV_FILES = ['.env'];
 
 /**
  * Configures the dotenv with paths relative to a base directory.
@@ -8,8 +8,8 @@ const ENV_FILES = [".env", ".env.wallets", ".env.deployments.testnet", ".env.dep
  * @param {string} [basePath='../../../'] - The base path where .env files are located. Defaults to
  *   '../../'. Default is `'../../../'`
  */
-export function configureDotEnv(basePath = "./"): void {
-    const normalizedBasePath = basePath.endsWith("/") ? basePath : `${basePath}/`;
+export function configureDotEnv(basePath = './'): void {
+    const normalizedBasePath = basePath.endsWith('/') ? basePath : `${basePath}/`;
 
     ENV_FILES.forEach(file => {
         dotenv.config({ path: `${normalizedBasePath}${file}` });

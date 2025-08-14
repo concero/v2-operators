@@ -5,7 +5,7 @@ import {
     FallbackTransportConfig,
     WaitForTransactionReceiptParameters,
     WriteContractParameters,
-} from "viem";
+} from 'viem';
 
 type GlobalConfig = {
     NETWORK_MODE: string;

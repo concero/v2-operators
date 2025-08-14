@@ -1,4 +1,4 @@
-import { defineChain } from "viem/utils";
+import { defineChain } from 'viem/utils';
 
 export interface ChainDefinition {
     id: number;
@@ -17,8 +17,8 @@ export function createViemChain(chainDefinition: ChainDefinition): ReturnType<ty
         name: chainDefinition.name,
         nativeCurrency: {
             decimals: 18,
-            name: "eth",
-            symbol: "eth",
+            name: 'eth',
+            symbol: 'eth',
         },
         rpcUrls: {
             default: { http: chainDefinition.rpcUrls },

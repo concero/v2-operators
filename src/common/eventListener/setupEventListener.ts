@@ -1,8 +1,8 @@
-import { AbiEvent, type Address, Log } from "viem";
+import { Logger } from '@concero/operator-utils';
+import { AbiEvent, type Address, Log } from 'viem';
 
-import { Logger } from "@concero/operator-utils";
-import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { TxManager } from "../managers";
+import { ConceroNetwork } from '../../types/ConceroNetwork';
+import { TxManager } from '../managers';
 
 export interface EventListenerHandle {
     stop: () => void;
@@ -15,7 +15,7 @@ export async function setupEventListener<T>(
     event: AbiEvent,
     blockManager: any,
 ): Promise<EventListenerHandle> {
-    const logger = Logger.getInstance().getLogger("setupEventListener");
+    const logger = Logger.getInstance().getLogger('setupEventListener');
 
     const txManager = TxManager.getInstance();
 

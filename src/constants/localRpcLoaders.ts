@@ -1,6 +1,6 @@
 export function getRpcOverride() {
     try {
-        return require("../../rpcs.override.json");
+        return require('../../rpcs.override.json');
     } catch {
         return {};
     }
@@ -8,7 +8,7 @@ export function getRpcOverride() {
 
 export function getRpcExtension() {
     try {
-        return require("../../rpcs.extension.json");
+        return require('../../rpcs.extension.json');
     } catch {
         return {};
     }

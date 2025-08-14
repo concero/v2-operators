@@ -7,8 +7,6 @@ services:
       dockerfile: ./docker/Dockerfile
     env_file:
       - ./../.env
-      - ./../.env.deployments.testnet
-      - ./../.env.deployments.mainnet
     volumes:
       - ../logs:/app/logs
     restart: always

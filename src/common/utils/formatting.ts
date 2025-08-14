@@ -1,4 +1,4 @@
-import { type Address } from "viem";
+import { type Address } from 'viem';
 
 function shorten(address: Address) {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -6,7 +6,7 @@ function shorten(address: Address) {
 
 function formatGas(gasAmountWei: bigint) {
     // splits gas number with commas like so: 1,000,000
-    return gasAmountWei.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return gasAmountWei.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 export { formatGas, shorten };

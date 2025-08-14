@@ -1,8 +1,7 @@
-import { ViemClients } from "../../common/managers/ViemClientManager";
+import { NetworkUpdateListener } from './NetworkUpdateListener';
 
-import { ConceroNetwork } from "../ConceroNetwork";
-
-import { NetworkUpdateListener } from "./NetworkUpdateListener";
+import { ViemClients } from '../../common/managers/ViemClientManager';
+import { ConceroNetwork } from '../ConceroNetwork';
 
 export interface IViemClientManager extends NetworkUpdateListener {
     initialize(): Promise<void>;

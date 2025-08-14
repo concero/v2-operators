@@ -1,13 +1,13 @@
-import "../common/utils/configureDotEnv";
+import { BlockManagerRegistry } from '@concero/operator-utils';
 
-import { BlockManagerRegistry } from "@concero/operator-utils";
-import { AppError, checkGas } from "../common/utils";
-import { initializeManagers } from "../common/utils/initializeManagers";
-import { AppErrorEnum } from "../constants";
+import { AppError, checkGas } from '../common/utils';
+import '../common/utils/configureDotEnv';
+import { initializeManagers } from '../common/utils/initializeManagers';
+import { AppErrorEnum } from '../constants';
 
-import { ensureDeposit } from "./businessLogic/ensureDeposit";
-import { ensureOperatorIsRegistered } from "./businessLogic/ensureOperatorIsRegistered";
-import { setupEventListeners } from "./eventListener/setupEventListeners";
+import { ensureDeposit } from './businessLogic/ensureDeposit';
+import { ensureOperatorIsRegistered } from './businessLogic/ensureOperatorIsRegistered';
+import { setupEventListeners } from './eventListener/setupEventListeners';
 
 const globalErrorHandler = (error: Error) => {
     if (error instanceof AppError) {
@@ -20,7 +20,7 @@ const globalErrorHandler = (error: Error) => {
     }
 };
 
-process.on("unhandledRejection", (reason: any) => {
+process.on('unhandledRejection', (reason: any) => {
     globalErrorHandler(
         new AppError(
             AppErrorEnum.UnhandledRejection,
@@ -29,7 +29,7 @@ process.on("unhandledRejection", (reason: any) => {
     );
 });
 
-process.on("uncaughtException", (error: Error) => {
+process.on('uncaughtException', (error: Error) => {
     globalErrorHandler(new AppError(AppErrorEnum.UncaughtException, error));
 });
 

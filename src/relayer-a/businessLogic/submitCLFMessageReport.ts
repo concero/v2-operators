@@ -1,20 +1,19 @@
-import { Log, decodeAbiParameters, getAbiItem } from "viem";
-
 import {
     BlockManagerRegistry,
     Logger,
     NetworkManager,
     TxWriter,
     ViemClientManager,
-} from "@concero/operator-utils";
-import { decodeLogs } from "../../common/eventListener/decodeLogs";
-import { MessagingDeploymentManager, TxManager } from "../../common/managers";
-import { decodeCLFReport, decodeMessageReportResult } from "../../common/utils";
-import { DecodedMessageReportResult } from "../../common/utils/decoders/types";
+} from '@concero/operator-utils';
+import { Log, decodeAbiParameters, getAbiItem } from 'viem';
 
-import { globalConfig } from "../../constants";
-import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { DecodedLog } from "../../types/DecodedLog";
+import { decodeLogs } from '../../common/eventListener/decodeLogs';
+import { MessagingDeploymentManager, TxManager } from '../../common/managers';
+import { decodeCLFReport, decodeMessageReportResult } from '../../common/utils';
+import { DecodedMessageReportResult } from '../../common/utils/decoders/types';
+import { globalConfig } from '../../constants';
+import { ConceroNetwork } from '../../types/ConceroNetwork';
+import { DecodedLog } from '../../types/DecodedLog';
 
 async function parseMessageResults(decodedCLFReport: any, logger: any) {
     const messageResults: DecodedMessageReportResult[] = [];
@@ -80,7 +79,7 @@ async function fetchOriginalMessage(
             address: srcContractAddress,
             event: getAbiItem({
                 abi: globalConfig.ABI.CONCERO_ROUTER,
-                name: "ConceroMessageSent",
+                name: 'ConceroMessageSent',
             }),
             args: {
                 messageId,
@@ -101,7 +100,7 @@ async function fetchOriginalMessage(
     // Find the ConceroMessageSent event
     const conceroMessageSentLog = decodedLogs.find(
         log =>
-            log.eventName === "ConceroMessageSent" &&
+            log.eventName === 'ConceroMessageSent' &&
             log.args?.messageId?.toLowerCase() === messageId.toLowerCase(),
     );
 
@@ -144,7 +143,7 @@ async function submitBatchToDestination(
     const txHash = await txWriter.callContract(dstChain, {
         address: dstConceroRouter,
         abi: globalConfig.ABI.CONCERO_ROUTER,
-        functionName: "submitMessageReport",
+        functionName: 'submitMessageReport',
         args: [reportSubmission, messages, indexes.map(index => BigInt(index))],
         chain: dstChain.viemChain,
         gas:
@@ -153,7 +152,7 @@ async function submitBatchToDestination(
                 globalConfig.TX_MANAGER.GAS_LIMIT.SUBMIT_MESSAGE_REPORT_OVERHEAD,
     });
 
-    const messageIds = results.map(result => result.messageId).join(", ");
+    const messageIds = results.map(result => result.messageId).join(', ');
 
     if (txHash) {
         logger.info(
@@ -174,7 +173,7 @@ async function submitBatchToDestination(
 export async function submitCLFMessageReport(logs: Log[], network?: ConceroNetwork) {
     if (logs.length === 0) return;
 
-    const logger = Logger.getInstance().getLogger("processMessageReports");
+    const logger = Logger.getInstance().getLogger('processMessageReports');
     logger.debug(`Processing ${logs.length} MessageReport logs`);
 
     try {
@@ -190,7 +189,7 @@ export async function submitCLFMessageReport(logs: Log[], network?: ConceroNetwo
  * Main function that processes decoded message report logs
  */
 async function processMessageReports(logs: DecodedLog[]) {
-    const logger = Logger.getInstance().getLogger("submitCLFMessageReport");
+    const logger = Logger.getInstance().getLogger('submitCLFMessageReport');
     const networkManager = NetworkManager.getInstance();
     const blockManagerRegistry = BlockManagerRegistry.getInstance();
     const viemClientManager = ViemClientManager.getInstance();

@@ -16,7 +16,7 @@ export interface BlockManagerConfig extends BaseManagerConfig {
 /** Configuration for NetworkManager */
 export interface NetworkManagerConfig extends BaseManagerConfig {
     networkUpdateIntervalMs: number;
-    networkMode: "mainnet" | "testnet" | "localhost";
+    networkMode: 'mainnet' | 'testnet' | 'localhost';
     ignoredNetworkIds: number[];
     whitelistedNetworkIds: {
         mainnet: number[];
@@ -31,13 +31,13 @@ export interface RpcManagerConfig extends BaseManagerConfig {
     rpcOverrides: Record<string, string[]>;
     rpcExtensions: Record<string, string[]>;
     conceroRpcsUrl: string;
-    networkMode: "mainnet" | "testnet" | "localhost";
+    networkMode: 'mainnet' | 'testnet' | 'localhost';
 }
 
 /** Configuration for DeploymentManager */
 export interface DeploymentManagerConfig extends BaseManagerConfig {
     conceroDeploymentsUrl: string;
-    networkMode: "mainnet" | "testnet" | "localhost";
+    networkMode: 'mainnet' | 'testnet' | 'localhost';
 }
 
 /** Configuration for TxWriter */

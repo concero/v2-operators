@@ -1,21 +1,21 @@
-import { ByteArray, decodeAbiParameters, hexToBytes } from "viem";
+import { DecodedMessageReportResult } from './types';
 
-import { DecodedMessageReportResult } from "./types";
+import { ByteArray, decodeAbiParameters, hexToBytes } from 'viem';
 
 export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessageReportResult {
     try {
         const decodedClfResult = decodeAbiParameters(
             [
                 {
-                    type: "tuple",
-                    name: "reportConfig",
+                    type: 'tuple',
+                    name: 'reportConfig',
                     components: [
-                        { type: "uint8", name: "type" },
-                        { type: "uint8", name: "payloadVersion" },
-                        { type: "address", name: "requester" },
+                        { type: 'uint8', name: 'type' },
+                        { type: 'uint8', name: 'payloadVersion' },
+                        { type: 'address', name: 'requester' },
                     ],
                 },
-                { type: "bytes", name: "payload" },
+                { type: 'bytes', name: 'payload' },
             ],
             resultBytes,
         );
@@ -25,23 +25,23 @@ export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessag
         const decodedPayload = decodeAbiParameters(
             [
                 {
-                    type: "tuple",
+                    type: 'tuple',
                     components: [
-                        { type: "bytes32", name: "messageId" },
-                        { type: "bytes32", name: "messageHashSum" },
-                        { type: "bytes", name: "messageSender" },
-                        { type: "uint24", name: "srcChainSelector" },
-                        { type: "uint24", name: "dstChainSelector" },
-                        { type: "uint256", name: "srcBlockNumber" },
+                        { type: 'bytes32', name: 'messageId' },
+                        { type: 'bytes32', name: 'messageHashSum' },
+                        { type: 'bytes', name: 'messageSender' },
+                        { type: 'uint24', name: 'srcChainSelector' },
+                        { type: 'uint24', name: 'dstChainSelector' },
+                        { type: 'uint256', name: 'srcBlockNumber' },
                         {
-                            type: "tuple",
-                            name: "dstChainData",
+                            type: 'tuple',
+                            name: 'dstChainData',
                             components: [
-                                { type: "address", name: "receiver" },
-                                { type: "uint256", name: "gasLimit" },
+                                { type: 'address', name: 'receiver' },
+                                { type: 'uint256', name: 'gasLimit' },
                             ],
                         },
-                        { type: "bytes[]", name: "allowedOperators" },
+                        { type: 'bytes[]', name: 'allowedOperators' },
                     ],
                 },
             ],
@@ -53,7 +53,7 @@ export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessag
             ...decodedPayload[0],
         };
     } catch (error) {
-        console.error("Error decoding CLF message report response:", error);
-        throw new Error("Failed to decode CLF message report response");
+        console.error('Error decoding CLF message report response:', error);
+        throw new Error('Failed to decode CLF message report response');
     }
 }

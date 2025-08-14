@@ -1,4 +1,4 @@
-import { Abi, AbiEvent, Address, Log, SimulateContractParameters } from "viem";
+import { ManagerBase } from './ManagerBase';
 
 import {
     ITxMonitor,
@@ -6,12 +6,12 @@ import {
     ITxWriter,
     LogQuery,
     LoggerInterface,
-} from "@concero/operator-utils";
-import { ConceroNetwork } from "../../types/ConceroNetwork";
-import { TxManagerConfig } from "../../types/ManagerConfigs";
-import { INetworkManager, ITxManager, IViemClientManager } from "../../types/managers";
+} from '@concero/operator-utils';
+import { Abi, AbiEvent, Address, Log, SimulateContractParameters } from 'viem';
 
-import { ManagerBase } from "./ManagerBase";
+import { ConceroNetwork } from '../../types/ConceroNetwork';
+import { TxManagerConfig } from '../../types/ManagerConfigs';
+import { INetworkManager, ITxManager, IViemClientManager } from '../../types/managers';
 
 // High-level interface for both reading & writing to the network
 export class TxManager extends ManagerBase implements ITxManager {
@@ -69,14 +69,14 @@ export class TxManager extends ManagerBase implements ITxManager {
 
     public static getInstance(): TxManager {
         if (!TxManager.instance) {
-            throw new Error("TxManager is not initialized. Call createInstance() first.");
+            throw new Error('TxManager is not initialized. Call createInstance() first.');
         }
         return TxManager.instance;
     }
 
     public async initialize(): Promise<void> {
         super.initialize();
-        this.logger.info("initialized");
+        this.logger.info('initialized');
     }
 
     public async callContract(
@@ -92,12 +92,12 @@ export class TxManager extends ManagerBase implements ITxManager {
 
     // Transaction Monitoring Methods (Deprecated - handled internally by TxWriter/TxMonitor)
     public async onTxReorg(txHash: string, chainName: string): Promise<string | null> {
-        this.logger.warn("onTxReorg is deprecated - transactions are monitored automatically");
+        this.logger.warn('onTxReorg is deprecated - transactions are monitored automatically');
         return null;
     }
 
     public onTxFinality(txHash: string, chainName: string): void {
-        this.logger.warn("onTxFinality is deprecated - transactions are monitored automatically");
+        this.logger.warn('onTxFinality is deprecated - transactions are monitored automatically');
     }
 
     // Log Reading Methods
@@ -155,14 +155,14 @@ export class TxManager extends ManagerBase implements ITxManager {
     public getPendingTransactions(chainName?: string): any[] {
         // This method is no longer supported - use TxMonitor for transaction tracking
         this.logger.warn(
-            "getPendingTransactions is deprecated - use TxMonitor for transaction tracking",
+            'getPendingTransactions is deprecated - use TxMonitor for transaction tracking',
         );
         return [];
     }
 
     public getTransactionsByMessageId(messageId: string): any[] {
         // This method is no longer relevant for generic transaction management
-        this.logger.warn("getTransactionsByMessageId is deprecated in generic TxManager");
+        this.logger.warn('getTransactionsByMessageId is deprecated in generic TxManager');
         return [];
     }
 
@@ -170,6 +170,6 @@ export class TxManager extends ManagerBase implements ITxManager {
         this.txWriter.dispose();
         this.txReader.dispose();
         this.txMonitor.dispose();
-        this.logger.info("disposed");
+        this.logger.info('disposed');
     }
 }
