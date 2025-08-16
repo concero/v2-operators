@@ -38,12 +38,17 @@ const globalConfig: GlobalConfig = {
     VIEM: {
         RECEIPT: {},
         WRITE_CONTRACT: {},
+        TX_RECEIPT_OPTIONS: {
+            confirmations: 1,
+            retryCount: 5,
+            retryDelay: 1000,
+            timeout: 30_000,
+        },
         HTTP_TRANSPORT_CONFIG: {
             timeout: 5_000,
             batch: true,
             retryCount: 5,
             retryDelay: 100,
-
         },
         FALLBACK_TRANSPORT_OPTIONS: {
             retryCount: 5,

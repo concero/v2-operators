@@ -152,6 +152,7 @@ export async function initializeManagers(): Promise<void> {
             dryRun: globalConfig.TX_MANAGER.DRY_RUN,
             simulateTx: globalConfig.VIEM.SIMULATE_TX,
             defaultGasLimit: globalConfig.TX_MANAGER.GAS_LIMIT.DEFAULT,
+            txReceiptOptions: globalConfig.VIEM.TX_RECEIPT_OPTIONS,
         },
     );
 

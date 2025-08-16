@@ -2,7 +2,8 @@ import {
     Abi,
     AbiParameter,
     Address,
-    FallbackTransportConfig, HttpTransportConfig,
+    FallbackTransportConfig,
+    HttpTransportConfig,
     WaitForTransactionReceiptParameters,
     WriteContractParameters,
 } from 'viem';
@@ -38,6 +39,12 @@ type GlobalConfig = {
     VIEM: {
         RECEIPT: Partial<WaitForTransactionReceiptParameters>;
         WRITE_CONTRACT: Partial<WriteContractParameters>;
+        TX_RECEIPT_OPTIONS: {
+            confirmations: number;
+            retryCount: number;
+            retryDelay: number;
+            timeout: number;
+        };
         FALLBACK_TRANSPORT_OPTIONS: Partial<FallbackTransportConfig>;
         HTTP_TRANSPORT_CONFIG: Partial<HttpTransportConfig>;
         SIMULATE_TX: boolean;
