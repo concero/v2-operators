@@ -40,6 +40,10 @@ type GlobalConfig = {
         WRITE_CONTRACT: Partial<WriteContractParameters>;
         FALLBACK_TRANSPORT_OPTIONS: Partial<FallbackTransportConfig>;
         SIMULATE_TX: boolean;
+        RELAYER: {
+            MESSAGE_REPORT_REQUEST_CONFIRMATIONS: number;
+            MESSAGE_REPORT_REQUEST_TIMEOUT_MS: number;
+        };
     };
     OPERATOR_ADDRESS: Address;
     ABI: {
@@ -67,6 +71,11 @@ type GlobalConfig = {
         CATCHUP_BATCH_SIZE: bigint;
         MAX_BLOCKS_TO_PROCESS: bigint;
         USE_CHECKPOINTS: boolean;
+    };
+    BALANCE_MANAGER: {
+        DEFAULT_MIN_BALANCE: bigint;
+        POLLING_INTERVAL_MS: number;
+        MIN_BALANCES: Record<string, bigint>;
     };
     NOTIFICATIONS: {
         SLACK: {

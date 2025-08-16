@@ -1,6 +1,6 @@
 import { Abi, AbiEventSignatureNotFoundError, Log, decodeEventLog } from 'viem';
 
-import { DecodedLog } from '../../types/DecodedLog';
+import { DecodedLog } from '../types/DecodedLog';
 
 export function decodeLogs(logs: Log[], abi: Abi): DecodedLog[] {
     const decodedLogs: any[] = [];

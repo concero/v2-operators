@@ -9,9 +9,9 @@ import {
 } from '@concero/operator-utils';
 import { Abi, AbiEvent, Address, Log, SimulateContractParameters } from 'viem';
 
-import { ConceroNetwork } from '../../types/ConceroNetwork';
-import { TxManagerConfig } from '../../types/ManagerConfigs';
-import { INetworkManager, ITxManager, IViemClientManager } from '../../types/managers';
+import { ConceroNetwork } from '../types/ConceroNetwork';
+import { TxManagerConfig } from '../types/ManagerConfigs';
+import { INetworkManager, ITxManager, IViemClientManager } from '../types/managers';
 
 // High-level interface for both reading & writing to the network
 export class TxManager extends ManagerBase implements ITxManager {

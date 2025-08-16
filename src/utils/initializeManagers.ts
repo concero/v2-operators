@@ -11,8 +11,14 @@ import {
     ViemClientManager,
 } from '@concero/operator-utils';
 
-import { globalConfig } from '../../constants';
-import { BlockCheckpointManager, MessagingDeploymentManager, TxManager } from '../managers';
+import { globalConfig } from '../constants';
+import {
+    BlockCheckpointManager,
+    MessagingDeploymentManager,
+    RelayerBalanceManager,
+    TxManager,
+} from '../managers';
+import { Relayer } from '../managers/Relayer';
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
@@ -35,21 +41,6 @@ export async function initializeManagers(): Promise<void> {
 
     await httpClient.initialize();
 
-    // Core infrastructure managers
-    const rpcManager = RpcManager.createInstance(logger.getLogger('RpcManager'), {
-        rpcOverrides: globalConfig.RPC.OVERRIDE,
-        rpcExtensions: globalConfig.RPC.EXTENSION,
-        conceroRpcsUrl: globalConfig.URLS.CONCERO_RPCS,
-        networkMode: globalConfig.NETWORK_MODE as 'mainnet' | 'testnet' | 'localhost',
-    });
-    const viemClientManager = ViemClientManager.createInstance(
-        logger.getLogger('ViemClientManager'),
-        rpcManager,
-        {
-            fallbackTransportOptions: globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
-        },
-    );
-
     const networkManager = ConceroNetworkManager.createInstance(
         logger.getLogger('NetworkManager'),
         httpClient,
@@ -61,6 +52,21 @@ export async function initializeManagers(): Promise<void> {
             defaultFinalityConfirmations: globalConfig.TX_MANAGER.DEFAULT_FINALITY_CONFIRMATIONS,
             mainnetUrl: globalConfig.URLS.V2_NETWORKS.MAINNET,
             testnetUrl: globalConfig.URLS.V2_NETWORKS.TESTNET,
+        },
+    );
+
+    // Core infrastructure managers
+    const rpcManager = RpcManager.createInstance(logger.getLogger('RpcManager'), networkManager, {
+        rpcOverrides: globalConfig.RPC.OVERRIDE,
+        rpcExtensions: globalConfig.RPC.EXTENSION,
+        conceroRpcsUrl: globalConfig.URLS.CONCERO_RPCS,
+        networkMode: globalConfig.NETWORK_MODE as 'mainnet' | 'testnet' | 'localhost',
+    });
+    const viemClientManager = ViemClientManager.createInstance(
+        logger.getLogger('ViemClientManager'),
+        rpcManager,
+        {
+            fallbackTransportOptions: globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
         },
     );
     const blockCheckpointManager = BlockCheckpointManager.createInstance(
@@ -87,6 +93,7 @@ export async function initializeManagers(): Promise<void> {
 
     const messagingDeploymentManager = MessagingDeploymentManager.createInstance(
         logger.getLogger('MessagingDeploymentManager'),
+        networkManager,
         {
             conceroDeploymentsUrl: globalConfig.URLS.CONCERO_DEPLOYMENTS,
             networkMode: globalConfig.NETWORK_MODE as 'mainnet' | 'testnet' | 'localhost',
@@ -95,15 +102,13 @@ export async function initializeManagers(): Promise<void> {
 
     await networkManager.initialize();
     await rpcManager.initialize();
-    await viemClientManager.initialize();
-
     await messagingDeploymentManager.initialize();
+    await viemClientManager.initialize();
     await blockCheckpointManager.initialize();
     await blockManagerRegistry.initialize();
 
     // Register network update listeners after all managers are initialized
     networkManager.registerUpdateListener(rpcManager);
-
     networkManager.registerUpdateListener(messagingDeploymentManager);
     networkManager.registerUpdateListener(viemClientManager);
     networkManager.registerUpdateListener(blockManagerRegistry);
@@ -112,7 +117,6 @@ export async function initializeManagers(): Promise<void> {
     // This ensures each manager has the data it needs before the next one initializes
     await networkManager.triggerInitialUpdates();
 
-    // Set up periodic network updates since ConceroNetworkManager no longer manages its own intervals
     setInterval(async () => {
         try {
             await networkManager.forceUpdate();
@@ -153,6 +157,17 @@ export async function initializeManagers(): Promise<void> {
     await txWriter.initialize();
     await txReader.initialize();
 
+    const relayerBalanceManager = RelayerBalanceManager.createInstance(
+        logger.getLogger('RelayerBalanceManager'),
+        viemClientManager,
+        txReader,
+        {
+            defaultMinBalance: globalConfig.BALANCE_MANAGER.DEFAULT_MIN_BALANCE,
+            minBalances: globalConfig.BALANCE_MANAGER.MIN_BALANCES,
+            pollingIntervalMs: globalConfig.BALANCE_MANAGER.POLLING_INTERVAL_MS,
+        },
+    );
+
     const txManager = TxManager.createInstance(
         logger.getLogger('TxManager'),
         networkManager,
@@ -166,4 +181,21 @@ export async function initializeManagers(): Promise<void> {
     );
 
     await txManager.initialize();
+
+    relayerBalanceManager.setActiveNetworks(networkManager.getActiveNetworks());
+    await relayerBalanceManager.initialize();
+
+    const relayer = Relayer.createInstance(
+        logger.getLogger('Relayer'),
+        networkManager,
+        blockManagerRegistry,
+        viemClientManager,
+        messagingDeploymentManager,
+        txManager,
+        txWriter,
+        txMonitor,
+        relayerBalanceManager,
+    );
+
+    await relayer.initialize();
 }

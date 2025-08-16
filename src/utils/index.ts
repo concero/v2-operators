@@ -1,5 +1,5 @@
 export { AppError } from './AppError';
-export { checkGas } from './checkGas';
+
 export { configureDotEnv } from './configureDotEnv';
 export { createViemChain } from './createViemChain';
 export { createCustomHttpTransport } from './customHttpTransport';

@@ -4,3 +4,5 @@ export { DbManager } from './DbManager';
 export { ManagerBase } from './ManagerBase';
 export { MessagingDeploymentManager } from './MessagingDeploymentManager';
 export { TxManager } from './TxManager';
+export { RelayerBalanceManager } from './balance';
+export { RelayerSetup } from './setup';

@@ -1,8 +1,8 @@
 import { Logger, NetworkManager, TxWriter, ViemClientManager } from '@concero/operator-utils';
 import { Hash, PublicClient } from 'viem';
 
-import { MessagingDeploymentManager } from '../../common/managers';
-import { globalConfig } from '../../constants';
+import { globalConfig } from '../constants';
+import { MessagingDeploymentManager } from '../managers';
 
 /**
  * @returns {bigint} The minimum deposit amount.

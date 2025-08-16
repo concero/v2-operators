@@ -1,13 +1,10 @@
+import { AppErrorEnum } from './constants';
+import { AppError } from './utils';
+
 import { BlockManagerRegistry } from '@concero/operator-utils';
 
-import { AppError, checkGas } from '../common/utils';
-import '../common/utils/configureDotEnv';
-import { initializeManagers } from '../common/utils/initializeManagers';
-import { AppErrorEnum } from '../constants';
-
-import { ensureDeposit } from './businessLogic/ensureDeposit';
-import { ensureOperatorIsRegistered } from './businessLogic/ensureOperatorIsRegistered';
-import { setupEventListeners } from './eventListener/setupEventListeners';
+import './utils/configureDotEnv';
+import { initializeManagers } from './utils/initializeManagers';
 
 const globalErrorHandler = (error: Error) => {
     if (error instanceof AppError) {
@@ -35,11 +32,6 @@ process.on('uncaughtException', (error: Error) => {
 
 export async function main() {
     await initializeManagers();
-
-    await checkGas();
-    await ensureDeposit();
-    await ensureOperatorIsRegistered();
-    await setupEventListeners();
 
     const blockManagerRegistry = BlockManagerRegistry.getInstance();
     for (const blockManager of blockManagerRegistry.getAllBlockManagers()) {

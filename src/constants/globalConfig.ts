@@ -43,6 +43,10 @@ const globalConfig: GlobalConfig = {
             retryDelay: 150,
         },
         SIMULATE_TX: getEnvVar('SIMULATE_TX') === 'true',
+        RELAYER: {
+            MESSAGE_REPORT_REQUEST_CONFIRMATIONS: 3,
+            MESSAGE_REPORT_REQUEST_TIMEOUT_MS: 60_000,
+        },
     },
     HTTPCLIENT: {
         DEFAULT_TIMEOUT: 5000,
@@ -93,6 +97,15 @@ const globalConfig: GlobalConfig = {
         CATCHUP_BATCH_SIZE: 500n,
         MAX_BLOCKS_TO_PROCESS: 100n,
         USE_CHECKPOINTS: getEnvVar('USE_CHECKPOINTS') === 'true',
+    },
+    BALANCE_MANAGER: {
+        DEFAULT_MIN_BALANCE: 1_000_000n, // 0.001 ETH
+        POLLING_INTERVAL_MS: 10_000,
+        MIN_BALANCES: {
+            // Example network-specific overrides:
+            // 'ethereum': BigInt('2000000000000000000'), // 2 ETH
+            // 'polygon': BigInt('100000000000000000000'), // 100 MATIC
+        },
     },
     NOTIFICATIONS: {
         SLACK: {

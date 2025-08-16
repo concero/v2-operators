@@ -1,8 +1,8 @@
 import { Logger } from '@concero/operator-utils';
 import { AbiEvent, type Address, Log } from 'viem';
 
-import { ConceroNetwork } from '../../types/ConceroNetwork';
 import { TxManager } from '../managers';
+import { ConceroNetwork } from '../types/ConceroNetwork';
 
 export interface EventListenerHandle {
     stop: () => void;
@@ -29,8 +29,7 @@ export async function setupEventListener<T>(
                 await onLogs(logs, network);
             } catch (error) {
                 logger.error(
-                    `${network.name} Error in onLogs callback for contract ${contractAddress}:`,
-                    error,
+                    `${network.name} Error in onLogs callback for contract ${contractAddress}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
                 );
             }
         },

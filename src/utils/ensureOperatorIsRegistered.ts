@@ -2,9 +2,9 @@ import { Logger, NetworkManager, TxWriter, ViemClientManager } from '@concero/op
 import { type Address, Hash, Log, PublicClient, isHex } from 'viem';
 import { getAbiItem } from 'viem';
 
-import { MessagingDeploymentManager } from '../../common/managers';
-import { eventEmitter, globalConfig } from '../../constants';
-import { ConceroNetwork } from '../../types/ConceroNetwork';
+import { eventEmitter, globalConfig } from '../constants';
+import { MessagingDeploymentManager } from '../managers';
+import { ConceroNetwork } from '../types/ConceroNetwork';
 
 const ChainType = {
     EVM: 0,

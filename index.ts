@@ -1,2 +1,1 @@
-console.log('Hello!');
-export { initializeManagers } from './src/relayer-a/common/utils/initializeManagers';
+export { initializeManagers } from './src/utils/initializeManagers';

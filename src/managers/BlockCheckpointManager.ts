@@ -3,9 +3,9 @@ import { ManagerBase } from './ManagerBase';
 
 import { LoggerInterface } from '@concero/operator-utils';
 
-import { ConceroNetwork } from '../../types/ConceroNetwork';
-import { BlockCheckpointManagerConfig } from '../../types/ManagerConfigs';
-import { IBlockCheckpointManager } from '../../types/managers/';
+import { ConceroNetwork } from '../types/ConceroNetwork';
+import { BlockCheckpointManagerConfig } from '../types/ManagerConfigs';
+import { IBlockCheckpointManager } from '../types/managers';
 
 export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpointManager {
     private static instance: BlockCheckpointManager;
@@ -67,8 +67,7 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
             // );
         } catch (error) {
             this.logger.error(
-                `Upsert failed for network: ${networkName}, blockNumber: ${blockNumber.toString()}`,
-                error,
+                `Upsert failed for network: ${networkName}, blockNumber: ${blockNumber.toString()}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
             );
             throw error;
         }

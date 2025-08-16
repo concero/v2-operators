@@ -1,12 +1,13 @@
 import { ManagerBase } from './ManagerBase';
 
-import { LoggerInterface } from '@concero/operator-utils';
+import { IConceroNetworkManager, LoggerInterface } from '@concero/operator-utils';
 import { DeploymentFetcher, DeploymentPattern, ParsedDeployment } from '@concero/operator-utils';
+import { ConceroNetworkManager } from '@concero/operator-utils';
 import { Address } from 'viem';
 
-import { ConceroNetwork } from '../../types/ConceroNetwork';
-import { DeploymentManagerConfig } from '../../types/ManagerConfigs';
-import { IMessagingDeploymentManager, NetworkUpdateListener } from '../../types/managers';
+import { ConceroNetwork } from '../types/ConceroNetwork';
+import { DeploymentManagerConfig } from '../types/ManagerConfigs';
+import { IMessagingDeploymentManager, NetworkUpdateListener } from '../types/managers';
 import { getEnvVar } from '../utils/getEnvVar';
 
 export class MessagingDeploymentManager
@@ -18,24 +19,35 @@ export class MessagingDeploymentManager
     private conceroRoutersMapByChainName: Record<string, Address> = {};
     private conceroVerifier: Address | undefined;
     private deploymentFetcher: DeploymentFetcher;
+    private networkManager: IConceroNetworkManager;
     private logger: LoggerInterface;
     private config: DeploymentManagerConfig;
 
     private readonly routerPattern: DeploymentPattern = /^CONCERO_ROUTER_PROXY_(?!ADMIN)(\w+)$/;
     private readonly verifierPattern: DeploymentPattern = /^CONCERO_VERIFIER_PROXY_(?!ADMIN)(\w+)$/;
 
-    private constructor(logger: LoggerInterface, config: DeploymentManagerConfig) {
+    private constructor(
+        logger: LoggerInterface,
+        networkManager: ConceroNetworkManager,
+        config: DeploymentManagerConfig,
+    ) {
         super();
         this.logger = logger;
         this.config = config;
+        this.networkManager = networkManager;
         this.deploymentFetcher = new DeploymentFetcher(logger);
     }
 
     public static createInstance(
         logger: LoggerInterface,
+        networkManager: ConceroNetworkManager,
         config: DeploymentManagerConfig,
     ): MessagingDeploymentManager {
-        MessagingDeploymentManager.instance = new MessagingDeploymentManager(logger, config);
+        MessagingDeploymentManager.instance = new MessagingDeploymentManager(
+            logger,
+            networkManager,
+            config,
+        );
         return MessagingDeploymentManager.instance;
     }
 
@@ -46,7 +58,9 @@ export class MessagingDeploymentManager
             // Initial fetch of deployments will happen on first network update
             this.logger.debug('Initialized');
         } catch (error) {
-            this.logger.error('Failed to initialize:', error);
+            this.logger.error(
+                `Failed to initialize: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
+            );
             throw error;
         }
     }
@@ -108,8 +122,21 @@ export class MessagingDeploymentManager
                 patterns,
             );
             await this.processDeployments(deployments, networks);
+
+            if (this.config.networkMode !== 'localhost') {
+                for (const network of networks) {
+                    if (!this.hasValidDeployments(network.name)) {
+                        this.networkManager.excludeNetwork(
+                            network.name,
+                            'Missing deployment address',
+                        );
+                    }
+                }
+            }
         } catch (err) {
-            this.logger.error('Failed to update deployments after network update:', err);
+            this.logger.error(
+                `Failed to update deployments after network update: ${err instanceof Error ? err.message : String(err)}. Stack: ${err instanceof Error && err.stack ? err.stack : 'No stack trace available'}`,
+            );
             throw err;
         }
     }
@@ -153,6 +180,25 @@ export class MessagingDeploymentManager
         if (verifierDeployment) {
             this.conceroVerifier = verifierDeployment.value as Address;
         }
+    }
+
+    public hasValidDeployments(networkName: string): boolean {
+        if (this.config.networkMode === 'localhost') {
+            return true; // localhost always valid
+        }
+
+        // Check if router exists for this network
+        const router = this.conceroRoutersMapByChainName[networkName];
+        if (!router) {
+            return false;
+        }
+
+        // Check if verifier exists (only check main verifier, not per-network)
+        if (this.conceroVerifier === undefined) {
+            return false;
+        }
+
+        return true;
     }
 
     public override dispose(): void {
