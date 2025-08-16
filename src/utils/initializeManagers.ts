@@ -66,6 +66,7 @@ export async function initializeManagers(): Promise<void> {
         logger.getLogger('ViemClientManager'),
         rpcManager,
         {
+            httpTransportConfig: globalConfig.VIEM.HTTP_TRANSPORT_CONFIG,
             fallbackTransportOptions: globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
         },
     );

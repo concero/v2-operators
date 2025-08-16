@@ -2,7 +2,7 @@ import {
     Abi,
     AbiParameter,
     Address,
-    FallbackTransportConfig,
+    FallbackTransportConfig, HttpTransportConfig,
     WaitForTransactionReceiptParameters,
     WriteContractParameters,
 } from 'viem';
@@ -39,6 +39,7 @@ type GlobalConfig = {
         RECEIPT: Partial<WaitForTransactionReceiptParameters>;
         WRITE_CONTRACT: Partial<WriteContractParameters>;
         FALLBACK_TRANSPORT_OPTIONS: Partial<FallbackTransportConfig>;
+        HTTP_TRANSPORT_CONFIG: Partial<HttpTransportConfig>;
         SIMULATE_TX: boolean;
         RELAYER: {
             MESSAGE_REPORT_REQUEST_CONFIRMATIONS: number;

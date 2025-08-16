@@ -10,7 +10,7 @@ import { type GlobalConfig } from '../types/GlobalConfig';
 const globalConfig: GlobalConfig = {
     NETWORK_MODE: getEnvVar('NETWORK_MODE'),
     OPERATOR_ADDRESS: getEnvVar('OPERATOR_ADDRESS'),
-    IGNORED_NETWORK_IDS: [44787],
+    IGNORED_NETWORK_IDS: [],
     WHITELISTED_NETWORK_IDS: {
         mainnet: [],
         testnet: [],
@@ -38,9 +38,16 @@ const globalConfig: GlobalConfig = {
     VIEM: {
         RECEIPT: {},
         WRITE_CONTRACT: {},
+        HTTP_TRANSPORT_CONFIG: {
+            timeout: 5_000,
+            batch: true,
+            retryCount: 5,
+            retryDelay: 100,
+
+        },
         FALLBACK_TRANSPORT_OPTIONS: {
             retryCount: 5,
-            retryDelay: 150,
+            retryDelay: 100,
         },
         SIMULATE_TX: getEnvVar('SIMULATE_TX') === 'true',
         RELAYER: {
@@ -83,7 +90,7 @@ const globalConfig: GlobalConfig = {
     },
     BALANCE_MANAGER: {
         DEFAULT_MIN_BALANCE: 1_000_000n, // 0.001 ETH
-        POLLING_INTERVAL_MS: 10_000,
+        POLLING_INTERVAL_MS: 100_000,
         MIN_BALANCES: {
             // Example network-specific overrides:
             // 'ethereum': BigInt('2000000000000000000'), // 2 ETH

@@ -7,8 +7,8 @@ import type {
 } from '@concero/operator-utils';
 import { Address, Hash, getAbiItem } from 'viem';
 
-import { globalConfig } from '../../constants';
-import { MessagingDeploymentManager } from '../MessagingDeploymentManager';
+import { globalConfig } from '../constants';
+import { MessagingDeploymentManager } from './MessagingDeploymentManager';
 
 export class RelayerSetup {
     private readonly logger: LoggerInterface;

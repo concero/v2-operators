@@ -19,7 +19,7 @@ RUN bun install
 # Copy the rest of the application code to the container
 COPY . .
 
-RUN esbuild src/relayer-a/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm
+RUN esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm
 
 RUN bunx prisma generate --schema=prisma/schema.prisma
 

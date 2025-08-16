@@ -1,0 +1,1 @@
+{"version":3,"file":"DbManager.d.ts","sourceRoot":"","sources":["../../../src/managers/DbManager.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,MAAM,gBAAgB,CAAC;AAG9C,cAAM,SAAS;IACX,OAAO,CAAC,MAAM,CAAC,QAAQ,CAA6B;IAEpD,OAAO;WAEO,SAAS,IAAI,YAAY;WAOnB,UAAU,IAAI,OAAO,CAAC,IAAI,CAAC;CAMlD;AAED,OAAO,EAAE,SAAS,EAAE,CAAC"}

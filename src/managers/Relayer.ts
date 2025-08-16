@@ -698,7 +698,6 @@ export class Relayer {
     }
 
     private addFinalityTracking(txHash: string, chainName: string, blockNumber: bigint): void {
-        this.logger.debug(`Adding transaction ${txHash} for finality tracking on ${chainName}`);
 
         const txInfo: TransactionInfo = {
             id: uuidv4(),

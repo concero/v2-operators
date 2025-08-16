@@ -1,0 +1,1 @@
+{"version":3,"file":"IDbManager.d.ts","sourceRoot":"","sources":["../../../../src/types/managers/IDbManager.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,MAAM,gBAAgB,CAAC;AAE9C;;;;GAIG;AACH,MAAM,WAAW,UAAU;IACvB,SAAS,IAAI,YAAY,CAAC;IAC1B,UAAU,IAAI,OAAO,CAAC,IAAI,CAAC,CAAC;CAC/B"}
