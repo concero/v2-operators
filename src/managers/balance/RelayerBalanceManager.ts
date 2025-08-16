@@ -39,24 +39,35 @@ export class RelayerBalanceManager extends BalanceManager {
     public async initialize(): Promise<void> {
         await super.initialize();
 
-        // Register native token watches for all active networks
         for (const network of this.activeNetworks) {
             this.registerNativeTokenWatch(network);
         }
 
-        // Start watching balances
+        // Wait for initial balances to be populated before starting watchers
+        await this.initializeBalances();
         this.beginWatching();
+    }
+
+    /**
+     * Initialize all balances immediately and wait for completion
+     * This ensures we have valid balance data before operations begin
+     */
+    private async initializeBalances(): Promise<void> {
+        await this.forceUpdate();
     }
 
     public setActiveNetworks(networks: ConceroNetwork[]): void {
         super.setActiveNetworks(networks);
 
-        // Register native token watches for newly active networks
         for (const network of networks) {
             this.registerNativeTokenWatch(network);
         }
 
-        // Restart watching with new networks
+        // Initialize balances asynchronously without blocking
+        this.initializeBalances().catch(error => {
+            this.logger.error(`Failed to initialize balances during network update: ${error}`);
+        });
+
         this.beginWatching();
     }
 
@@ -76,7 +87,6 @@ export class RelayerBalanceManager extends BalanceManager {
     }
 
     private registerNativeTokenWatch(network: ConceroNetwork): void {
-        // Register native token (zero address) for balance watching
         this.registerToken(network, 'NATIVE', '0x0000000000000000000000000000000000000000' as any);
     }
 }

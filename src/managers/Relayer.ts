@@ -602,7 +602,15 @@ export class Relayer {
         const { message, dstChainData } = (conceroMessageSentLog as any).args;
 
         const decodedDstChainData = decodeAbiParameters(
-            [globalConfig.ABI.EVM_DST_CHAIN_DATA],
+            [
+                {
+                    type: 'tuple',
+                    components: [
+                        { name: 'receiver', type: 'address' },
+                        { name: 'gasLimit', type: 'uint256' },
+                    ],
+                },
+            ],
             dstChainData,
         )[0] as any;
 
