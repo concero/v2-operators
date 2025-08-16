@@ -54,6 +54,7 @@ const globalConfig: GlobalConfig = {
             retryCount: 5,
             retryDelay: 100,
         },
+
         SIMULATE_TX: getEnvVar('SIMULATE_TX') === 'true',
         RELAYER: {
             MESSAGE_REPORT_REQUEST_CONFIRMATIONS: 3,
@@ -75,8 +76,6 @@ const globalConfig: GlobalConfig = {
     },
     TX_MANAGER: {
         DRY_RUN: getEnvVar('DRY_RUN') === 'true',
-        DEFAULT_CONFIRMATIONS: 3,
-        DEFAULT_FINALITY_CONFIRMATIONS: 12,
         DEFAULT_RECEIPT_TIMEOUT: 60_000,
         GAS_LIMIT: {
             DEFAULT: 2_000_000n,
@@ -84,6 +83,7 @@ const globalConfig: GlobalConfig = {
         },
     },
     NETWORK_MANAGER: {
+        DEFAULT_FINALITY_CONFIRMATIONS: 12,
         NETWORK_UPDATE_INTERVAL_MS: 1000 * 60 * 60, // 1 hour
     },
     BLOCK_MANAGER: {

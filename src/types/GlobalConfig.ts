@@ -61,8 +61,6 @@ type GlobalConfig = {
     RPC: { OVERRIDE: any; EXTENSION: any };
     TX_MANAGER: {
         DRY_RUN: boolean;
-        DEFAULT_CONFIRMATIONS: number;
-        DEFAULT_FINALITY_CONFIRMATIONS: number;
         DEFAULT_RECEIPT_TIMEOUT: number;
         GAS_LIMIT: {
             DEFAULT: bigint;
@@ -70,6 +68,7 @@ type GlobalConfig = {
         };
     };
     NETWORK_MANAGER: {
+        DEFAULT_FINALITY_CONFIRMATIONS: number;
         NETWORK_UPDATE_INTERVAL_MS: number;
     };
     BLOCK_MANAGER: {
