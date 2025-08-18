@@ -49,7 +49,8 @@ export async function initializeManagers(): Promise<void> {
             ignoredNetworkIds: globalConfig.IGNORED_NETWORK_IDS,
             whitelistedNetworkIds: globalConfig.WHITELISTED_NETWORK_IDS,
             defaultConfirmations: globalConfig.VIEM.TX_RECEIPT_OPTIONS.confirmations,
-            defaultFinalityConfirmations: globalConfig.NETWORK_MANAGER.DEFAULT_FINALITY_CONFIRMATIONS,
+            defaultFinalityConfirmations:
+                globalConfig.NETWORK_MANAGER.DEFAULT_FINALITY_CONFIRMATIONS,
             mainnetUrl: globalConfig.URLS.V2_NETWORKS.MAINNET,
             testnetUrl: globalConfig.URLS.V2_NETWORKS.TESTNET,
         },
