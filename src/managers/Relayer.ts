@@ -13,7 +13,6 @@ import {
     TxWriter,
     ViemClientManager,
 } from '@concero/operator-utils';
-import { v4 as uuidv4 } from 'uuid';
 import {
     AbiEvent,
     Log,
@@ -619,18 +618,6 @@ export class Relayer {
         results: DecodedMessageReportResult[],
         totalGasLimit: bigint,
     ): Promise<BatchSubmissionResult | null> {
-        // Check if we have sufficient balance before attempting submission
-        if (!this.balanceManager.hasMinBalance(dstChain.name)) {
-            const currentBalance = this.balanceManager.getNativeBalance(dstChain.name);
-            const minRequired = this.balanceManager.getMinBalanceForNetwork(dstChain.name);
-
-            this.logger.warn(
-                `[${dstChain.name}] Insufficient balance for transaction submission. ` +
-                    `Current: ${currentBalance.toString()}, Required: ${minRequired.toString()}. Skipping submission.`,
-            );
-            return null;
-        }
-
         if (globalConfig.TX_MANAGER.DRY_RUN) {
             this.logger.info(
                 `[DRY RUN] Would submit CLF report to ${dstChain.name} with ${messages.length} messages`,
