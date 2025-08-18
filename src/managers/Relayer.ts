@@ -13,7 +13,6 @@ import {
     TxWriter,
     ViemClientManager,
 } from '@concero/operator-utils';
-import { TransactionInfo } from '@concero/operator-utils';
 import { v4 as uuidv4 } from 'uuid';
 import {
     AbiEvent,
@@ -334,11 +333,6 @@ export class Relayer {
                 functionName: 'requestMessageReport',
                 args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
                 chain: verifierNetwork.viemChain,
-                options: {
-                    receiptConfirmations:
-                        globalConfig.VIEM.RELAYER.MESSAGE_REPORT_REQUEST_CONFIRMATIONS,
-                    receiptTimeout: globalConfig.VIEM.RELAYER.MESSAGE_REPORT_REQUEST_TIMEOUT_MS,
-                },
             });
 
             if (txHash) {
@@ -649,17 +643,21 @@ export class Relayer {
 
         const dstConceroRouter = await this.deploymentManager.getRouterByChainName(dstChain.name);
 
-        const txHash = await this.txWriter.callContract(dstChain as any, {
-            address: dstConceroRouter,
-            abi: globalConfig.ABI.CONCERO_ROUTER,
-            functionName: 'submitMessageReport',
-            args: [reportSubmission, messages, indexes.map(index => BigInt(index))],
-            chain: dstChain.viemChain,
-            gas:
-                totalGasLimit +
-                BigInt(messages.length) *
-                    globalConfig.TX_MANAGER.GAS_LIMIT.SUBMIT_MESSAGE_REPORT_OVERHEAD,
-        });
+        const txHash = await this.txWriter.callContract(
+            dstChain,
+            {
+                address: dstConceroRouter,
+                abi: globalConfig.ABI.CONCERO_ROUTER,
+                functionName: 'submitMessageReport',
+                args: [reportSubmission, messages, indexes.map(index => BigInt(index))],
+                chain: dstChain.viemChain,
+                gas:
+                    totalGasLimit +
+                    BigInt(messages.length) *
+                        globalConfig.TX_MANAGER.GAS_LIMIT.SUBMIT_MESSAGE_REPORT_OVERHEAD,
+            },
+            true,
+        );
 
         const messageIds = results.map(result => result.messageId).join(', ');
 
@@ -698,23 +696,16 @@ export class Relayer {
     }
 
     private addFinalityTracking(txHash: string, chainName: string, blockNumber: bigint): void {
-
-        const txInfo: TransactionInfo = {
-            id: uuidv4(),
-            txHash,
-            chainName,
-            submittedAt: Date.now(),
-            submissionBlock: blockNumber,
-            status: 'pending',
-        };
-
-        this.txMonitor.ensureTxFinality(txInfo, this.onFinalityCallback.bind(this));
+        this.txMonitor.ensureTxFinality(txHash, chainName, (txHash: string, isFinalized: boolean) =>
+            this.onFinalityCallback(txHash, chainName, isFinalized),
+        );
     }
 
-    private async onFinalityCallback(txInfo: TransactionInfo, isFinalized: boolean): Promise<void> {
-        const txHash = txInfo.txHash;
-        const chainName = txInfo.chainName;
-
+    private async onFinalityCallback(
+        txHash: string,
+        chainName: string,
+        isFinalized: boolean,
+    ): Promise<void> {
         if (this.sourceChainFinalityMap.has(txHash)) {
             const context = this.sourceChainFinalityMap.get(txHash)!;
             const { decodedLog, chainSelector } = context;

@@ -1,3 +1,5 @@
+import { MessagingDeploymentManager } from './MessagingDeploymentManager';
+
 import type {
     ConceroNetwork,
     ITxWriter,
@@ -8,7 +10,6 @@ import type {
 import { Address, Hash, getAbiItem } from 'viem';
 
 import { globalConfig } from '../constants';
-import { MessagingDeploymentManager } from './MessagingDeploymentManager';
 
 export class RelayerSetup {
     private readonly logger: LoggerInterface;
