@@ -104,7 +104,3 @@ export interface HttpClientConfig extends BaseManagerConfig {
     defaultTimeout: number;
 }
 
-/** Configuration for TxManager */
-export interface TxManagerConfig extends BaseManagerConfig {
-    defaultConfirmations: number;
-}

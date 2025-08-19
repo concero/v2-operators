@@ -16,7 +16,6 @@ import {
     BlockCheckpointManager,
     MessagingDeploymentManager,
     RelayerBalanceManager,
-    TxManager,
 } from '../managers';
 import { Relayer } from '../managers/Relayer';
 
@@ -171,19 +170,6 @@ export async function initializeManagers(): Promise<void> {
         },
     );
 
-    const txManager = TxManager.createInstance(
-        logger.getLogger('TxManager'),
-        networkManager,
-        viemClientManager,
-        txWriter,
-        txReader,
-        txMonitor,
-        {
-            defaultConfirmations: globalConfig.TX_MANAGER.DEFAULT_CONFIRMATIONS,
-        },
-    );
-
-    await txManager.initialize();
 
     relayerBalanceManager.setActiveNetworks(networkManager.getActiveNetworks());
     await relayerBalanceManager.initialize();
@@ -194,10 +180,9 @@ export async function initializeManagers(): Promise<void> {
         blockManagerRegistry,
         viemClientManager,
         messagingDeploymentManager,
-        txManager,
+        txReader,
         txWriter,
         txMonitor,
-        relayerBalanceManager,
     );
 
     await relayer.initialize();
