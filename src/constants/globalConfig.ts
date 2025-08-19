@@ -47,12 +47,12 @@ const globalConfig: GlobalConfig = {
         HTTP_TRANSPORT_CONFIG: {
             timeout: 5_000,
             batch: true,
-            retryCount: 5,
+            retryCount: 5, // This will be overwritten by FALLBACK_TRANSPORT_OPTIONS
             retryDelay: 100,
         },
         FALLBACK_TRANSPORT_OPTIONS: {
             retryCount: 5,
-            retryDelay: 100,
+            retryDelay: 150,
         },
 
         SIMULATE_TX: getEnvVar('SIMULATE_TX') === 'true',
