@@ -90,6 +90,9 @@ type GlobalConfig = {
         };
         INTERVAL: number;
     };
+    TX_MONITOR: {
+        MAX_INCLUSION_ATTEMPTS: number;
+    };
 };
 
 export { GlobalConfig };

@@ -1,8 +1,4 @@
-import {
-    MessagingDeploymentManager,
-    RelayerBalanceManager,
-    RelayerSetup,
-} from './index';
+import { MessagingDeploymentManager, RelayerBalanceManager, RelayerSetup } from './index';
 
 import {
     BlockManagerRegistry,
@@ -29,7 +25,6 @@ import { ConceroNetwork } from '../types/ConceroNetwork';
 import { DecodedLog } from '../types/DecodedLog';
 import { decodeCLFReport, decodeMessageReportResult } from '../utils';
 import { DecodedMessageReportResult } from '../utils/decoders/types';
-
 
 export class Relayer {
     private static instance: Relayer | undefined;
@@ -450,10 +445,7 @@ export class Relayer {
                                     totalGasLimit,
                                 });
 
-                                this.addFinalityTracking(
-                                    txHash,
-                                    dstChain.name,
-                                );
+                                this.addFinalityTracking(txHash, dstChain.name);
                             }
                         });
 
@@ -570,6 +562,7 @@ export class Relayer {
 
         const { message, dstChainData } = (conceroMessageSentLog as any).args;
 
+        //todo:  use parseAbiItem
         const decodedDstChainData = decodeAbiParameters(
             [
                 {

@@ -109,6 +109,9 @@ const globalConfig: GlobalConfig = {
         },
         INTERVAL: 60 * 60 * 1000,
     },
+    TX_MONITOR: {
+        MAX_INCLUSION_ATTEMPTS: parseInt(getEnvVar('TX_MONITOR_MAX_INCLUSION_ATTEMPTS')) || 5,
+    },
 };
 
 export { globalConfig };

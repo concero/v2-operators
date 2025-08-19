@@ -131,7 +131,9 @@ export async function initializeManagers(): Promise<void> {
         viemClientManager,
         blockManagerRegistry,
         networkManager,
-        {},
+        {
+            maxInclusionAttempts: globalConfig.TX_MONITOR.MAX_INCLUSION_ATTEMPTS,
+        },
     );
     const txReader = TxReader.createInstance(
         logger.getLogger('TxReader'),
@@ -169,7 +171,6 @@ export async function initializeManagers(): Promise<void> {
             pollingIntervalMs: globalConfig.BALANCE_MANAGER.POLLING_INTERVAL_MS,
         },
     );
-
 
     relayerBalanceManager.setActiveNetworks(networkManager.getActiveNetworks());
     await relayerBalanceManager.initialize();

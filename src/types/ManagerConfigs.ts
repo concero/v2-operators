@@ -103,4 +103,3 @@ export interface HttpClientConfig extends BaseManagerConfig {
     maxRetries: number;
     defaultTimeout: number;
 }
-
