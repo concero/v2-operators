@@ -59,7 +59,7 @@ type GlobalConfig = {
         CONCERO_ROUTER: Abi;
     };
     RPC: { OVERRIDE: any; EXTENSION: any };
-    TX_MANAGER: {
+    TX_WRITER: {
         DRY_RUN: boolean;
         DEFAULT_RECEIPT_TIMEOUT: number;
         GAS_LIMIT: {

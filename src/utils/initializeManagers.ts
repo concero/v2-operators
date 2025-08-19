@@ -151,9 +151,9 @@ export async function initializeManagers(): Promise<void> {
         txMonitor,
         nonceManager,
         {
-            dryRun: globalConfig.TX_MANAGER.DRY_RUN,
+            dryRun: globalConfig.TX_WRITER.DRY_RUN,
             simulateTx: globalConfig.VIEM.SIMULATE_TX,
-            defaultGasLimit: globalConfig.TX_MANAGER.GAS_LIMIT.DEFAULT,
+            defaultGasLimit: globalConfig.TX_WRITER.GAS_LIMIT.DEFAULT,
             txReceiptOptions: globalConfig.VIEM.TX_RECEIPT_OPTIONS,
         },
     );

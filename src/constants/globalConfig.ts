@@ -1,15 +1,18 @@
 import { getRpcExtension, getRpcOverride } from './localRpcLoaders';
 
-import { getEnvVar, getGranularLogLevels } from '@concero/operator-utils';
+import { getGranularLogLevels } from '@concero/operator-utils';
 import { Abi } from 'viem';
 
 import { abi as conceroRouterAbi } from '../abi/ConceroRouter.json';
 import { abi as conceroVerifierAbi } from '../abi/ConceroVerifier.json';
 import { type GlobalConfig } from '../types/GlobalConfig';
+import { getEnvBigint, getEnvBool, getEnvInt, getEnvString } from '../utils/getEnvVar';
+
+const networkMode = getEnvString('NETWORK_MODE', 'testnet');
 
 const globalConfig: GlobalConfig = {
-    NETWORK_MODE: getEnvVar('NETWORK_MODE'),
-    OPERATOR_ADDRESS: getEnvVar('OPERATOR_ADDRESS'),
+    NETWORK_MODE: networkMode,
+    OPERATOR_ADDRESS: getEnvString('OPERATOR_ADDRESS'),
     IGNORED_NETWORK_IDS: [],
     WHITELISTED_NETWORK_IDS: {
         mainnet: [],
@@ -19,52 +22,69 @@ const globalConfig: GlobalConfig = {
         ],
     },
     LOGGER: {
-        LOG_LEVEL_DEFAULT: getEnvVar('LOG_LEVEL_DEFAULT') || 'info',
+        LOG_LEVEL_DEFAULT: getEnvString('LOGGER_LOG_LEVEL_DEFAULT', 'info'),
         LOG_LEVELS_GRANULAR: getGranularLogLevels(),
-        LOG_DIR: 'logs',
-        LOG_MAX_FILES: '7d',
-        LOG_MAX_SIZE: '20m',
+        LOG_DIR: getEnvString('LOGGER_LOG_DIR', 'logs'),
+        LOG_MAX_FILES: getEnvString('LOGGER_LOG_MAX_FILES', '7d'),
+        LOG_MAX_SIZE: getEnvString('LOGGER_LOG_MAX_SIZE', '20m'),
     },
     URLS: {
-        CONCERO_RPCS: `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${process.env.RPC_SERVICE_GIT_BRANCH ?? 'master'}/output`,
-        CONCERO_DEPLOYMENTS: `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${process.env.DEPLOYMENTS_SERVICE_GIT_BRANCH ?? 'master'}/.env.deployments.${getEnvVar('NETWORK_MODE') === 'localhost' || getEnvVar('NETWORK_MODE') === 'testnet' ? 'testnet' : 'mainnet'}`,
+        CONCERO_RPCS: getEnvString(
+            'URLS_CONCERO_RPCS',
+            `https://raw.githubusercontent.com/concero/rpcs/refs/heads/${getEnvString('URLS_RPC_SERVICE_GIT_BRANCH', 'master')}/output`,
+        ),
+        CONCERO_DEPLOYMENTS: getEnvString(
+            'URLS_CONCERO_DEPLOYMENTS',
+            `https://raw.githubusercontent.com/concero/v2-contracts/refs/heads/${getEnvString('URLS_DEPLOYMENTS_SERVICE_GIT_BRANCH', 'master')}/.env.deployments.${
+                networkMode === 'localhost' || networkMode === 'testnet' ? 'testnet' : 'mainnet'
+            }`,
+        ),
         V2_NETWORKS: {
-            MAINNET:
+            MAINNET: getEnvString(
+                'URLS_V2_NETWORKS_MAINNET',
                 'https://github.com/concero/v2-networks/raw/refs/heads/master/networks/mainnet.json',
-            TESTNET:
+            ),
+            TESTNET: getEnvString(
+                'URLS_V2_NETWORKS_TESTNET',
                 'https://github.com/concero/v2-networks/raw/refs/heads/master/networks/testnet.json',
+            ),
         },
     },
     VIEM: {
         RECEIPT: {},
         WRITE_CONTRACT: {},
         TX_RECEIPT_OPTIONS: {
-            confirmations: 1,
-            retryCount: 5,
-            retryDelay: 1000,
-            timeout: 30_000,
+            confirmations: getEnvInt('VIEM_TX_RECEIPT_CONFIRMATIONS', 1),
+            retryCount: getEnvInt('VIEM_TX_RECEIPT_RETRY_COUNT', 5),
+            retryDelay: getEnvInt('VIEM_TX_RECEIPT_RETRY_DELAY', 1000),
+            timeout: getEnvInt('VIEM_TX_RECEIPT_TIMEOUT', 30_000),
         },
         HTTP_TRANSPORT_CONFIG: {
-            timeout: 5_000,
-            batch: true,
-            retryCount: 5, // This will be overwritten by FALLBACK_TRANSPORT_OPTIONS
-            retryDelay: 100,
+            timeout: getEnvInt('VIEM_HTTP_TRANSPORT_TIMEOUT', 5_000),
+            batch: getEnvBool('VIEM_HTTP_TRANSPORT_BATCH', true),
+            retryCount: getEnvInt('VIEM_HTTP_TRANSPORT_RETRY_COUNT', 5),
+            retryDelay: getEnvInt('VIEM_HTTP_TRANSPORT_RETRY_DELAY', 100),
         },
         FALLBACK_TRANSPORT_OPTIONS: {
-            retryCount: 5,
-            retryDelay: 150,
+            retryCount: getEnvInt('VIEM_FALLBACK_TRANSPORT_RETRY_COUNT', 5),
+            retryDelay: getEnvInt('VIEM_FALLBACK_TRANSPORT_RETRY_DELAY', 150),
         },
-
-        SIMULATE_TX: getEnvVar('SIMULATE_TX') === 'true',
+        SIMULATE_TX: getEnvBool('VIEM_SIMULATE_TX', false),
         RELAYER: {
-            MESSAGE_REPORT_REQUEST_CONFIRMATIONS: 3,
-            MESSAGE_REPORT_REQUEST_TIMEOUT_MS: 60_000,
+            MESSAGE_REPORT_REQUEST_CONFIRMATIONS: getEnvInt(
+                'VIEM_RELAYER_MESSAGE_REPORT_REQUEST_CONFIRMATIONS',
+                3,
+            ),
+            MESSAGE_REPORT_REQUEST_TIMEOUT_MS: getEnvInt(
+                'VIEM_RELAYER_MESSAGE_REPORT_REQUEST_TIMEOUT_MS',
+                60_000,
+            ),
         },
     },
     HTTPCLIENT: {
-        DEFAULT_TIMEOUT: 5000,
-        MAX_RETRIES: 3,
-        RETRY_DELAY: 100,
+        DEFAULT_TIMEOUT: getEnvInt('HTTPCLIENT_DEFAULT_TIMEOUT', 5000),
+        MAX_RETRIES: getEnvInt('HTTPCLIENT_MAX_RETRIES', 3),
+        RETRY_DELAY: getEnvInt('HTTPCLIENT_RETRY_DELAY', 100),
     },
     ABI: {
         CONCERO_VERIFIER: conceroVerifierAbi as Abi,
@@ -74,43 +94,50 @@ const globalConfig: GlobalConfig = {
         OVERRIDE: getRpcOverride(),
         EXTENSION: getRpcExtension(),
     },
-    TX_MANAGER: {
-        DRY_RUN: getEnvVar('DRY_RUN') === 'true',
-        DEFAULT_RECEIPT_TIMEOUT: 60_000,
+    TX_WRITER: {
+        DRY_RUN: getEnvBool('TX_WRITER_DRY_RUN', false),
+        DEFAULT_RECEIPT_TIMEOUT: getEnvInt('TX_WRITER_DEFAULT_RECEIPT_TIMEOUT', 60_000),
         GAS_LIMIT: {
-            DEFAULT: 2_000_000n,
-            SUBMIT_MESSAGE_REPORT_OVERHEAD: 1_000_000n,
+            DEFAULT: getEnvBigint('TX_WRITER_GAS_LIMIT_DEFAULT', 2_000_000n),
+            SUBMIT_MESSAGE_REPORT_OVERHEAD: getEnvBigint(
+                'TX_WRITER_GAS_LIMIT_SUBMIT_MESSAGE_REPORT_OVERHEAD',
+                1_000_000n,
+            ),
         },
     },
     NETWORK_MANAGER: {
-        DEFAULT_FINALITY_CONFIRMATIONS: 12,
-        NETWORK_UPDATE_INTERVAL_MS: 1000 * 60 * 60, // 1 hour
+        DEFAULT_FINALITY_CONFIRMATIONS: getEnvInt(
+            'NETWORK_MANAGER_DEFAULT_FINALITY_CONFIRMATIONS',
+            12,
+        ),
+        NETWORK_UPDATE_INTERVAL_MS: getEnvInt(
+            'NETWORK_MANAGER_NETWORK_UPDATE_INTERVAL_MS',
+            1000 * 60 * 60,
+        ),
     },
     BLOCK_MANAGER: {
-        POLLING_INTERVAL_MS: parseInt(getEnvVar('BLOCK_MANAGER_POLLING_INTERVAL_MS')) || 5000,
-        SEQUENTIAL_BATCH_SIZE: 100n,
-        CATCHUP_BATCH_SIZE: 500n,
-        MAX_BLOCKS_TO_PROCESS: 100n,
-        USE_CHECKPOINTS: getEnvVar('USE_CHECKPOINTS') === 'true',
+        POLLING_INTERVAL_MS: getEnvInt('BLOCK_MANAGER_POLLING_INTERVAL_MS', 5000),
+        SEQUENTIAL_BATCH_SIZE: getEnvBigint('BLOCK_MANAGER_SEQUENTIAL_BATCH_SIZE', 100n),
+        CATCHUP_BATCH_SIZE: getEnvBigint('BLOCK_MANAGER_CATCHUP_BATCH_SIZE', 500n),
+        MAX_BLOCKS_TO_PROCESS: getEnvBigint('BLOCK_MANAGER_MAX_BLOCKS_TO_PROCESS', 100n),
+        USE_CHECKPOINTS: getEnvBool('BLOCK_MANAGER_USE_CHECKPOINTS', true),
     },
     BALANCE_MANAGER: {
-        DEFAULT_MIN_BALANCE: 1_000_000n, // 0.001 ETH
-        POLLING_INTERVAL_MS: 100_000,
-        MIN_BALANCES: {
-            // Example network-specific overrides:
-            // 'ethereum': BigInt('2000000000000000000'), // 2 ETH
-            // 'polygon': BigInt('100000000000000000000'), // 100 MATIC
-        },
+        DEFAULT_MIN_BALANCE: getEnvBigint('BALANCE_MANAGER_DEFAULT_MIN_BALANCE', 1_000_000n),
+        POLLING_INTERVAL_MS: getEnvInt('BALANCE_MANAGER_POLLING_INTERVAL_MS', 100_000),
+        MIN_BALANCES: {},
     },
     NOTIFICATIONS: {
         SLACK: {
-            MONITORING_SYSTEM_CHANNEL_ID: process.env.SLACK_MONITORING_SYSTEM_CHANNEL_ID,
-            BOT_TOKEN: process.env.SLACK_BOT_TOKEN,
+            MONITORING_SYSTEM_CHANNEL_ID: getEnvString(
+                'NOTIFICATIONS_SLACK_MONITORING_SYSTEM_CHANNEL_ID',
+            ),
+            BOT_TOKEN: getEnvString('NOTIFICATIONS_SLACK_BOT_TOKEN'),
         },
-        INTERVAL: 60 * 60 * 1000,
+        INTERVAL: getEnvInt('NOTIFICATIONS_INTERVAL', 60 * 60 * 1000),
     },
     TX_MONITOR: {
-        MAX_INCLUSION_ATTEMPTS: parseInt(getEnvVar('TX_MONITOR_MAX_INCLUSION_ATTEMPTS')) || 5,
+        MAX_INCLUSION_ATTEMPTS: getEnvInt('TX_MONITOR_MAX_INCLUSION_ATTEMPTS', 5),
     },
 };
 

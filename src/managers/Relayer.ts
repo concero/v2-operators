@@ -292,7 +292,7 @@ export class Relayer {
                 ],
             );
 
-            if (globalConfig.TX_MANAGER.DRY_RUN) {
+            if (globalConfig.TX_WRITER.DRY_RUN) {
                 const dryRunTxHash = `dry-run-${Date.now()}-${messageId}`;
                 this.logger.info(
                     `[DRY_RUN]: ${verifierNetwork.name} CLF message report requested with hash: ${dryRunTxHash}`,
@@ -587,7 +587,7 @@ export class Relayer {
         results: DecodedMessageReportResult[],
         totalGasLimit: bigint,
     ): Promise<string | null> {
-        if (globalConfig.TX_MANAGER.DRY_RUN) {
+        if (globalConfig.TX_WRITER.DRY_RUN) {
             this.logger.info(
                 `[DRY RUN] Would submit CLF report to ${dstChain.name} with ${messages.length} messages`,
             );
@@ -607,7 +607,7 @@ export class Relayer {
                 gas:
                     totalGasLimit +
                     BigInt(messages.length) *
-                        globalConfig.TX_MANAGER.GAS_LIMIT.SUBMIT_MESSAGE_REPORT_OVERHEAD,
+                        globalConfig.TX_WRITER.GAS_LIMIT.SUBMIT_MESSAGE_REPORT_OVERHEAD,
             },
             true,
         );

@@ -24,3 +24,30 @@ export function getEnvAddress(prefix: keyof EnvPrefixes, networkName?: string): 
 
     return [value, friendlyName];
 }
+export const getEnvBigint = (key: string, defaultValue: bigint): bigint => {
+    const value = process.env[key];
+    if (!value) return defaultValue;
+    try {
+        return BigInt(value);
+    } catch {
+        return defaultValue;
+    }
+};
+
+export const getEnvInt = (key: string, defaultValue: number): number => {
+    const value = process.env[key];
+    if (!value) return defaultValue;
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? defaultValue : parsed;
+};
+
+export const getEnvBool = (key: string, defaultValue: boolean): boolean => {
+    const value = process.env[key];
+    if (!value) return defaultValue;
+    return value.toLowerCase() === 'true';
+};
+
+export function getEnvString(key: string, defaultValue?: string) {
+    const value = process.env[key];
+    return (value ?? defaultValue) as string | undefined;
+}
