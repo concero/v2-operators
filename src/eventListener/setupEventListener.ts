@@ -1,7 +1,6 @@
-import { Logger } from '@concero/operator-utils';
+import { Logger, TxReader } from '@concero/operator-utils';
 import { AbiEvent, type Address, Log } from 'viem';
 
-import { TxManager } from '../managers';
 import { ConceroNetwork } from '../types/ConceroNetwork';
 
 export interface EventListenerHandle {
@@ -17,9 +16,9 @@ export async function setupEventListener<T>(
 ): Promise<EventListenerHandle> {
     const logger = Logger.getInstance().getLogger('setupEventListener');
 
-    const txManager = TxManager.getInstance();
+    const txReader = TxReader.getInstance();
 
-    const watcherId = txManager.logWatcher.create(
+    const watcherId = txReader.logWatcher.create(
         contractAddress,
         network,
         async (logs, network) => {
@@ -39,7 +38,7 @@ export async function setupEventListener<T>(
 
     return {
         stop: () => {
-            txManager.logWatcher.remove(watcherId);
+            txReader.logWatcher.remove(watcherId);
             logger.info(
                 `${network.name} Stopped monitoring contract ${contractAddress} for ${event.name}`,
             );

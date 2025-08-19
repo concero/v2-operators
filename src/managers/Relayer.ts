@@ -2,7 +2,6 @@ import {
     MessagingDeploymentManager,
     RelayerBalanceManager,
     RelayerSetup,
-    TxManager,
 } from './index';
 
 import {
@@ -10,6 +9,7 @@ import {
     ITxMonitor,
     LoggerInterface,
     NetworkManager,
+    TxReader,
     TxWriter,
     ViemClientManager,
 } from '@concero/operator-utils';
@@ -30,10 +30,6 @@ import { DecodedLog } from '../types/DecodedLog';
 import { decodeCLFReport, decodeMessageReportResult } from '../utils';
 import { DecodedMessageReportResult } from '../utils/decoders/types';
 
-interface BatchSubmissionResult {
-    txHash: string;
-    blockNumber: bigint;
-}
 
 export class Relayer {
     private static instance: Relayer | undefined;
@@ -42,10 +38,9 @@ export class Relayer {
     private readonly blockManagerRegistry: BlockManagerRegistry;
     private readonly viemClientManager: ViemClientManager;
     private readonly deploymentManager: MessagingDeploymentManager;
-    private readonly txManager: TxManager;
+    private readonly txReader: TxReader;
     private readonly txWriter: TxWriter;
     private readonly txMonitor: ITxMonitor;
-    private readonly balanceManager: RelayerBalanceManager;
     private readonly setup: RelayerSetup;
 
     private eventListenerHandles: EventListenerHandle[] = [];
@@ -56,15 +51,12 @@ export class Relayer {
         {
             decodedLog: any;
             chainSelector: string;
-            attempts: number;
-            lastAttempt: number;
         }
     > = new Map();
 
     private destinationChainFinalityMap: Map<
         string,
         {
-            txHash: string;
             chainName: string;
             messageIds: string[];
             reportSubmission: any;
@@ -72,8 +64,6 @@ export class Relayer {
             indexes: number[];
             results: DecodedMessageReportResult[];
             totalGasLimit: bigint;
-            attempts: number;
-            lastAttempt: number;
         }
     > = new Map();
 
@@ -83,20 +73,18 @@ export class Relayer {
         blockManagerRegistry: BlockManagerRegistry,
         viemClientManager: ViemClientManager,
         deploymentManager: MessagingDeploymentManager,
-        txManager: TxManager,
+        txReader: TxReader,
         txWriter: TxWriter,
         txMonitor: ITxMonitor,
-        balanceManager: RelayerBalanceManager,
     ) {
         this.logger = logger;
         this.networkManager = networkManager;
         this.blockManagerRegistry = blockManagerRegistry;
         this.viemClientManager = viemClientManager;
         this.deploymentManager = deploymentManager;
-        this.txManager = txManager;
+        this.txReader = txReader;
         this.txWriter = txWriter;
         this.txMonitor = txMonitor;
-        this.balanceManager = balanceManager;
 
         this.setup = RelayerSetup.createInstance(
             logger,
@@ -113,10 +101,9 @@ export class Relayer {
         blockManagerRegistry: BlockManagerRegistry,
         viemClientManager: ViemClientManager,
         deploymentManager: MessagingDeploymentManager,
-        txManager: TxManager,
+        txReader: TxReader,
         txWriter: TxWriter,
         txMonitor: ITxMonitor,
-        balanceManager: RelayerBalanceManager,
     ): Relayer {
         if (!Relayer.instance) {
             Relayer.instance = new Relayer(
@@ -125,10 +112,9 @@ export class Relayer {
                 blockManagerRegistry,
                 viemClientManager,
                 deploymentManager,
-                txManager,
+                txReader,
                 txWriter,
                 txMonitor,
-                balanceManager,
             );
         }
         return Relayer.instance;
@@ -240,10 +226,6 @@ export class Relayer {
                 log => (log.args as any)?.shouldFinaliseSrc,
             );
 
-            // this.logger.debug(
-            //     `Split logs: ${immediateProcessLogs.length} immediate, ${finalityRequiredLogs.length} requiring finality`,
-            // );
-
             const immediatePromises = immediateProcessLogs.map(async decodedLog => {
                 return this.processMessageReportRequest(decodedLog, network.chainSelector);
             });
@@ -253,11 +235,9 @@ export class Relayer {
                 this.sourceChainFinalityMap.set(txHash, {
                     decodedLog,
                     chainSelector: network.chainSelector,
-                    attempts: 0,
-                    lastAttempt: Date.now(),
                 });
 
-                this.addFinalityTracking(txHash, network.name, BigInt(decodedLog.blockNumber!));
+                this.addFinalityTracking(txHash, network.name);
             });
 
             await Promise.all(immediatePromises);
@@ -457,11 +437,10 @@ export class Relayer {
                             );
 
                             if (submissionResult) {
-                                const txHash = submissionResult.txHash;
+                                const txHash = submissionResult;
                                 const messageIds = results.map(result => result.messageId);
 
                                 this.destinationChainFinalityMap.set(txHash, {
-                                    txHash,
                                     chainName: dstChain.name,
                                     messageIds,
                                     reportSubmission,
@@ -469,14 +448,11 @@ export class Relayer {
                                     indexes,
                                     results,
                                     totalGasLimit,
-                                    attempts: 0,
-                                    lastAttempt: Date.now(),
                                 });
 
                                 this.addFinalityTracking(
                                     txHash,
                                     dstChain.name,
-                                    submissionResult.blockNumber,
                                 );
                             }
                         });
@@ -556,7 +532,7 @@ export class Relayer {
 
         const srcContractAddress = await this.deploymentManager.getRouterByChainName(srcChain.name);
 
-        const decodedLogs = await this.txManager.getLogs(
+        const decodedLogs = await this.txReader.getLogs(
             {
                 address: srcContractAddress,
                 event: getAbiItem({
@@ -617,15 +593,12 @@ export class Relayer {
         indexes: number[],
         results: DecodedMessageReportResult[],
         totalGasLimit: bigint,
-    ): Promise<BatchSubmissionResult | null> {
+    ): Promise<string | null> {
         if (globalConfig.TX_MANAGER.DRY_RUN) {
             this.logger.info(
                 `[DRY RUN] Would submit CLF report to ${dstChain.name} with ${messages.length} messages`,
             );
-            return {
-                txHash: `dry-run-${Date.now()}-${dstChain.name}`,
-                blockNumber: BigInt(0),
-            };
+            return `dry-run-${Date.now()}-${dstChain.name}`;
         }
 
         const dstConceroRouter = await this.deploymentManager.getRouterByChainName(dstChain.name);
@@ -660,29 +633,10 @@ export class Relayer {
         );
         this.logger.debug(`[${dstChain.name}] Message IDs in batch: ${messageIds}`);
 
-        try {
-            const { publicClient } = this.viemClientManager.getClients(dstChain);
-            const receipt = await publicClient.waitForTransactionReceipt({
-                hash: txHash as `0x${string}`,
-                timeout: 30_000,
-            });
-
-            return {
-                txHash,
-                blockNumber: receipt.blockNumber,
-            };
-        } catch (error) {
-            this.logger.warn(
-                `[${dstChain.name}] Failed to get transaction receipt for ${txHash}, using block 0: ${error}`,
-            );
-            return {
-                txHash,
-                blockNumber: BigInt(0),
-            };
-        }
+        return txHash;
     }
 
-    private addFinalityTracking(txHash: string, chainName: string, blockNumber: bigint): void {
+    private addFinalityTracking(txHash: string, chainName: string): void {
         this.txMonitor.ensureTxFinality(txHash, chainName, (txHash: string, isFinalized: boolean) =>
             this.onFinalityCallback(txHash, chainName, isFinalized),
         );
@@ -703,9 +657,6 @@ export class Relayer {
                 );
 
                 try {
-                    context.attempts++;
-                    context.lastAttempt = Date.now();
-
                     await this.processMessageReportRequest(decodedLog, chainSelector);
 
                     this.sourceChainFinalityMap.delete(txHash);
@@ -773,10 +724,8 @@ export class Relayer {
                 return;
             }
 
-            context.attempts++;
-            context.lastAttempt = Date.now();
             this.logger.info(
-                `[${chainName}] Retrying CLF Report submission, attempt #${context.attempts}. Message IDs: ${context.messageIds.join(', ')}`,
+                `[${chainName}] Retrying CLF Report submission. Message IDs: ${context.messageIds.join(', ')}`,
             );
 
             const submissionResult = await this.submitBatchToDestination(
@@ -791,16 +740,9 @@ export class Relayer {
             if (submissionResult) {
                 this.destinationChainFinalityMap.delete(txHash);
 
-                const newTxHash = submissionResult.txHash;
-
-                const updatedContext = {
-                    ...context,
-                    txHash: newTxHash,
-                };
-
-                this.destinationChainFinalityMap.set(newTxHash, updatedContext);
-
-                this.addFinalityTracking(newTxHash, dstChain.name, submissionResult.blockNumber);
+                const newTxHash = submissionResult;
+                this.destinationChainFinalityMap.set(newTxHash, context);
+                this.addFinalityTracking(newTxHash, dstChain.name);
             } else {
                 this.logger.warn(
                     `[${chainName}] Submission attempt failed. Will retry. Message IDs: ${context.messageIds.join(', ')}`,
