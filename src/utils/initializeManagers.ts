@@ -78,7 +78,6 @@ export async function initializeManagers(): Promise<void> {
 
     const blockManagerRegistry = BlockManagerRegistry.createInstance(
         logger.getLogger('BlockManagerRegistry'),
-        undefined,
         networkManager,
         viemClientManager,
         rpcManager,
