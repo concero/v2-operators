@@ -1,2 +1,8 @@
-.env*
-
+node_modules
+.prisma
+dist
+logs
+.git
+.gitignore
+.env
+*.log

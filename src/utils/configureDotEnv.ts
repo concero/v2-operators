@@ -16,7 +16,6 @@ export const ENV_FILES = ['.env'] as string[];
 export function configureDotEnv(basePath = './'): void {
   const baseDir = basePath.endsWith(path.sep) ? basePath : `${basePath}${path.sep}`;
 
-  // Coerce NODE_ENV to either 'production' or 'development'
   const nodeEnvNormalized = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 
   for (const file of ENV_FILES) {
