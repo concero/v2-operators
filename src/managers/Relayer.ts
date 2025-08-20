@@ -1,4 +1,4 @@
-import { MessagingDeploymentManager, RelayerBalanceManager, RelayerSetup } from './index';
+import { MessagingDeploymentManager, RelayerSetup } from './index';
 
 import {
     BlockManagerRegistry,
@@ -669,7 +669,7 @@ export class Relayer {
             const { messageIds } = context;
 
             if (isFinalized) {
-                this.logger.info(
+                this.logger.debug(
                     `[${chainName}] CLF Report submission with hash ${txHash} finalized. Message IDs: ${messageIds.join(', ')}`,
                 );
 
