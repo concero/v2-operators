@@ -13,7 +13,6 @@ import {
 
 import { globalConfig } from '../constants';
 import {
-    BlockCheckpointManager,
     MessagingDeploymentManager,
     RelayerBalanceManager,
 } from '../managers';
@@ -70,16 +69,16 @@ export async function initializeManagers(): Promise<void> {
             fallbackTransportOptions: globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
         },
     );
-    const blockCheckpointManager = BlockCheckpointManager.createInstance(
-        logger.getLogger('BlockCheckpointManager'),
-        {
-            useCheckpoints: globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS,
-        },
-    );
+    // const blockCheckpointManager = BlockCheckpointManager.createInstance(
+    //     logger.getLogger('BlockCheckpointManager'),
+    //     {
+    //         useCheckpoints: globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS,
+    //     },
+    // );
 
     const blockManagerRegistry = BlockManagerRegistry.createInstance(
         logger.getLogger('BlockManagerRegistry'),
-        blockCheckpointManager,
+        undefined,
         networkManager,
         viemClientManager,
         rpcManager,
@@ -105,7 +104,6 @@ export async function initializeManagers(): Promise<void> {
     await rpcManager.initialize();
     await messagingDeploymentManager.initialize();
     await viemClientManager.initialize();
-    await blockCheckpointManager.initialize();
     await blockManagerRegistry.initialize();
 
     // Register network update listeners after all managers are initialized
