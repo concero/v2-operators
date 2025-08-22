@@ -10,7 +10,7 @@ services:
       - ./../.env
       - ./../.env.production
     volumes:
-      - ../logs:/app/logs
+      - relayer_logs:/app/logs
     environment:
       NODE_ENV: production
     restart: always
