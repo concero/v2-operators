@@ -48,4 +48,4 @@ COPY --from=builder --chown=bunuser:bunuser /app/package.json /app/
 # EXPOSE 3000
 
 # Start the application
-CMD ["NODE_ENV=production bun", "./dist/index.js"]
+CMD ["bun", "./dist/index.js"]

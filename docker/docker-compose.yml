@@ -11,4 +11,6 @@ services:
       - ./../.env.production
     volumes:
       - ../logs:/app/logs
+    environment:
+      NODE_ENV: production
     restart: always
