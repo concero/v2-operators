@@ -8,9 +8,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nodejs \
     npm \
+    openssl \
     && npm install -g esbuild
 
 COPY package.json bun.lockb* ./
+
+COPY prisma ./prisma
 
 RUN bun install
 
@@ -19,10 +22,14 @@ COPY . .
 
 RUN esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm
 
+RUN bunx prisma generate --schema=prisma/schema.prisma
+
 # Stage 2: Runner
 FROM oven/bun:canary-debian AS runner
 
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y openssl
 
 # Create a non-root user and set permissions
 RUN groupadd -r bunuser && useradd -r -g bunuser bunuser && \
