@@ -14,3 +14,7 @@ services:
     environment:
       NODE_ENV: production
     restart: always
+
+
+volumes:
+  relayer_logs: {}
