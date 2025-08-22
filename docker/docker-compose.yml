@@ -17,4 +17,5 @@ services:
 
 
 volumes:
-  relayer_logs: {}
+  relayer_logs:
+    name: relayer_logs
