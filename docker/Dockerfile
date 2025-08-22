@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY package.json bun.lockb* ./
 
-COPY prisma ./prisma
+#COPY prisma ./prisma
 
 RUN bun install
 
@@ -22,7 +22,7 @@ COPY . .
 
 RUN esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm
 
-RUN bunx prisma generate --schema=prisma/schema.prisma
+RUN #bunx prisma generate --schema=prisma/schema.prisma
 
 # Stage 2: Runner
 FROM oven/bun:canary-debian AS runner
@@ -42,7 +42,7 @@ USER bunuser
 COPY --from=builder --chown=bunuser:bunuser /app/dist /app/dist
 COPY --from=builder --chown=bunuser:bunuser /app/node_modules /app/node_modules
 COPY --from=builder --chown=bunuser:bunuser /app/package.json /app/
-COPY --from=builder --chown=bunuser:bunuser /app/prisma /app/prisma
+#COPY --from=builder --chown=bunuser:bunuser /app/prisma /app/prisma
 
 # Expose any necessary ports (if needed)
 # EXPOSE 3000
