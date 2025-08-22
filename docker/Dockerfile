@@ -41,4 +41,4 @@ COPY --from=builder --chown=bunuser:bunuser /app/prisma /app/prisma
 # EXPOSE 3000
 
 # Start the application
-CMD ["bun", "./dist/index.js"]
+CMD ["NODE_ENV=production bun", "./dist/index.js"]
