@@ -12,8 +12,3 @@ services:
     volumes:
       - ../logs:/app/logs
     restart: always
-    command: >
-      sh -c "
-        bunx prisma migrate deploy --schema=prisma/schema.prisma &&
-        bun ./dist/index.js
-      "
