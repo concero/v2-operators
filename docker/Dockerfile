@@ -33,7 +33,9 @@ RUN apt-get update && apt-get install -y openssl
 
 # Create a non-root user and set permissions
 RUN groupadd -r bunuser && useradd -r -g bunuser bunuser && \
-    chown -R bunuser:bunuser /app
+    mkdir -p /app/logs && \
+    chown -R bunuser:bunuser /app && \
+    chmod -R 755 /app/logs
 
 # Switch to a non-root user
 USER bunuser
