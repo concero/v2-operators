@@ -183,5 +183,6 @@ export async function initializeManagers(): Promise<void> {
         txMonitor,
     );
 
+
     await relayer.initialize();
 }

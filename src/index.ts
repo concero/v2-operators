@@ -1,10 +1,12 @@
 import { AppErrorEnum } from './constants';
 import { AppError } from './utils';
+import { startHeapSnapshotCollection } from './utils/heapSnapshotCollector';
 
 import { BlockManagerRegistry } from '@concero/operator-utils';
 
 import './utils/configureDotEnv';
 import { initializeManagers } from './utils/initializeManagers';
+import { globalConfig } from './constants';
 
 const globalErrorHandler = (error: Error) => {
     if (error instanceof AppError) {
@@ -31,6 +33,10 @@ process.on('uncaughtException', (error: Error) => {
 });
 
 export async function main() {
+    if (process.env.ENABLE_HEAP_SNAPSHOTS === 'true') {
+        startHeapSnapshotCollection(globalConfig.LOGGER.LOG_DIR);
+    }
+
     await initializeManagers();
 
     const blockManagerRegistry = BlockManagerRegistry.getInstance();

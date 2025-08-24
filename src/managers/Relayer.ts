@@ -4,6 +4,7 @@ import {
     BlockManagerRegistry,
     ITxMonitor,
     LoggerInterface,
+    ManagerBase,
     NetworkManager,
     TxReader,
     TxWriter,
@@ -20,13 +21,12 @@ import {
 
 import { eventEmitter, globalConfig } from '../constants';
 import { decodeLogs } from '../eventListener/decodeLogs';
-import { EventListenerHandle, setupEventListener } from '../eventListener/setupEventListener';
 import { ConceroNetwork } from '../types/ConceroNetwork';
 import { DecodedLog } from '../types/DecodedLog';
 import { decodeCLFReport, decodeMessageReportResult } from '../utils';
 import { DecodedMessageReportResult } from '../utils/decoders/types';
 
-export class Relayer {
+export class Relayer extends ManagerBase {
     private static instance: Relayer | undefined;
     private readonly logger: LoggerInterface;
     private readonly networkManager: NetworkManager;
@@ -38,8 +38,7 @@ export class Relayer {
     private readonly txMonitor: ITxMonitor;
     private readonly setup: RelayerSetup;
 
-    private eventListenerHandles: EventListenerHandle[] = [];
-    private isDisposed = false;
+    private watcherIds: string[] = [];
 
     private sourceChainFinalityMap: Map<
         string,
@@ -72,6 +71,7 @@ export class Relayer {
         txWriter: TxWriter,
         txMonitor: ITxMonitor,
     ) {
+        super()
         this.logger = logger;
         this.networkManager = networkManager;
         this.blockManagerRegistry = blockManagerRegistry;
@@ -123,17 +123,22 @@ export class Relayer {
     }
 
     public async initialize(): Promise<void> {
-        this.logger.info('Initializing Relayer...');
+        if (this.initialized) return;
 
         // Execute setup operations (deposit, registration)
         await this.setup.executeSetup();
 
         await this.setupEventListeners();
-        this.logger.info('Relayer initialized successfully');
+        this.logger.info('Relayer initialized');
     }
 
     private async setupEventListeners(): Promise<void> {
         const activeNetworks = this.networkManager.getActiveNetworks();
+
+        const sentEvent = getAbiItem({
+                    abi: globalConfig.ABI.CONCERO_ROUTER,
+                    name: 'ConceroMessageSent',
+                });
 
         for (const network of activeNetworks) {
             const routerAddress = await this.deploymentManager.getRouterByChainName(network.name);
@@ -147,19 +152,25 @@ export class Relayer {
             }
 
             try {
-                const sentEvent = getAbiItem({
-                    abi: globalConfig.ABI.CONCERO_ROUTER,
-                    name: 'ConceroMessageSent',
-                });
 
-                const sentHandle = await setupEventListener(
-                    network,
+                const watcherId = this.txReader.logWatcher.create(
                     routerAddress,
-                    logs => this.handleConceroMessageSent(logs, network),
+                    network,
+                    async (logs, network) => {
+                        if (logs.length === 0) return;
+
+                        try {
+                            await this.handleConceroMessageSent(logs, network);
+                        } catch (error) {
+                            this.logger.error(
+                                `${network.name} Error in onLogs callback for contract ${routerAddress}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
+                            );
+                        }
+                    },
                     sentEvent as AbiEvent,
                     blockManager,
                 );
-                this.eventListenerHandles.push(sentHandle);
+                this.watcherIds.push(watcherId);
                 this.logger.debug(`Created ConceroMessageSent watcher for ${network.name}`);
             } catch (error) {
                 this.logger.error(
@@ -188,14 +199,24 @@ export class Relayer {
                 name: 'MessageReport',
             });
 
-            const messageReportHandle = await setupEventListener(
-                verifierNetwork,
+            const watcherId = this.txReader.logWatcher.create(
                 verifierAddress,
-                logs => this.handleMessageReport(logs, verifierNetwork),
+                verifierNetwork,
+                async (logs, network) => {
+                    if (logs.length === 0) return;
+
+                    try {
+                        await this.handleMessageReport(logs, verifierNetwork);
+                    } catch (error) {
+                        this.logger.error(
+                            `${verifierNetwork.name} Error in onLogs callback for contract ${verifierAddress}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
+                        );
+                    }
+                },
                 messageReportEvent as AbiEvent,
                 verifierBlockManager,
             );
-            this.eventListenerHandles.push(messageReportHandle);
+            this.watcherIds.push(watcherId);
             this.logger.debug('Created MessageReport watcher for verifier');
         } catch (error) {
             this.logger.error(
@@ -323,12 +344,6 @@ export class Relayer {
             this.logger.error(
                 `[${errorNetwork.name}] Error requesting CLF message report for messageId ${messageId || 'unknown'}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
             );
-
-            eventEmitter.emit('requestMessageReportError', {
-                messageId: messageId,
-                error: error instanceof Error ? error.message : String(error),
-                chainName: errorNetwork.name,
-            });
         }
     }
 
@@ -422,17 +437,16 @@ export class Relayer {
                                 return;
                             }
 
-                            const submissionResult = await this.submitBatchToDestination(
-                                dstChain,
-                                reportSubmission,
-                                messages,
-                                indexes,
-                                results,
-                                totalGasLimit,
-                            );
+                            try {
+                                const txHash = await this.submitBatchToDestination(
+                                    dstChain,
+                                    reportSubmission,
+                                    messages,
+                                    indexes,
+                                    results,
+                                    totalGasLimit,
+                                );
 
-                            if (submissionResult) {
-                                const txHash = submissionResult;
                                 const messageIds = results.map(result => result.messageId);
 
                                 this.destinationChainFinalityMap.set(txHash, {
@@ -446,6 +460,10 @@ export class Relayer {
                                 });
 
                                 this.addFinalityTracking(txHash, dstChain.name);
+                            } catch (error) {
+                                this.logger.error(
+                                    `Failed to submit batch to ${dstChain.name}: ${error instanceof Error ? error.message : String(error)}`,
+                                );
                             }
                         });
 
@@ -586,7 +604,7 @@ export class Relayer {
         indexes: number[],
         results: DecodedMessageReportResult[],
         totalGasLimit: bigint,
-    ): Promise<string | null> {
+    ): Promise<string> {
         if (globalConfig.TX_WRITER.DRY_RUN) {
             this.logger.info(
                 `[DRY RUN] Would submit CLF report to ${dstChain.name} with ${messages.length} messages`,
@@ -615,10 +633,9 @@ export class Relayer {
         const messageIds = results.map(result => result.messageId).join(', ');
 
         if (!txHash) {
-            this.logger.error(
+            throw new Error(
                 `[${dstChain.name}] Failed to submit batch of CLF message reports. Message IDs: ${messageIds}`,
             );
-            return null;
         }
 
         this.logger.info(
@@ -645,55 +662,20 @@ export class Relayer {
             const { decodedLog, chainSelector } = context;
 
             if (isFinalized) {
-                this.logger.debug(
-                    `Transaction ${txHash} finalized, processing message report request`,
-                );
-
-                try {
-                    await this.processMessageReportRequest(decodedLog, chainSelector);
-
-                    this.sourceChainFinalityMap.delete(txHash);
-                } catch (error) {
-                    this.logger.error(
-                        `Failed to process message report for tx ${txHash}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-                    );
-                }
+                await this.processMessageReportRequest(decodedLog, chainSelector);
             } else {
                 this.logger.error(`Transaction ${txHash} failed to reach finality on ${chainName}`);
             }
+
+            this.sourceChainFinalityMap.delete(txHash);
             return;
         }
 
         if (this.destinationChainFinalityMap.has(txHash)) {
-            const context = this.destinationChainFinalityMap.get(txHash)!;
-            const { messageIds } = context;
-
             if (isFinalized) {
-                this.logger.debug(
-                    `[${chainName}] CLF Report submission with hash ${txHash} finalized. Message IDs: ${messageIds.join(', ')}`,
-                );
-
-                eventEmitter.emit('submitMessageReportFinalized', {
-                    txHash,
-                    chainName,
-                    messageIds,
-                });
-
                 this.destinationChainFinalityMap.delete(txHash);
             } else {
-                this.logger.error(
-                    `[${chainName}] CLF Report submission with hash ${txHash} failed to reach finality. Will retry. Message IDs: ${messageIds.join(', ')}`,
-                );
-
-                eventEmitter.emit('submitMessageReportFailed', {
-                    txHash,
-                    chainName,
-                    messageIds,
-                    error: 'Failed to reach finality',
-                });
-
-                // Retry the submission, but outside of this callback to avoid recursion
-                process.nextTick(() => this.retryDestinationSubmission(txHash));
+                this.retryDestinationSubmission(txHash);
             }
             return;
         }
@@ -701,77 +683,58 @@ export class Relayer {
         this.logger.error(`No context found for transaction ${txHash} on chain ${chainName}`);
     }
 
-    private async retryDestinationSubmission(txHash: string): Promise<void> {
-        const context = this.destinationChainFinalityMap.get(txHash);
+    private async retryDestinationSubmission(originalTxHash: string): Promise<void> {
+        const context = this.destinationChainFinalityMap.get(originalTxHash);
         if (!context) {
-            this.logger.error(`Cannot retry: no context found for ${txHash}`);
+            this.logger.error(`Cannot retry: no context found for ${originalTxHash}`);
             return;
         }
 
         const { chainName, reportSubmission, messages, indexes, results, totalGasLimit } = context;
 
-        try {
-            const dstChain = this.networkManager.getNetworkByName(chainName);
-            if (!dstChain) {
-                this.logger.error(`Cannot retry: network ${chainName} not found`);
-                return;
-            }
-
-            this.logger.info(
-                `[${chainName}] Retrying CLF Report submission. Message IDs: ${context.messageIds.join(', ')}`,
-            );
-
-            const submissionResult = await this.submitBatchToDestination(
-                dstChain,
-                reportSubmission,
-                messages,
-                indexes,
-                results,
-                totalGasLimit,
-            );
-
-            if (submissionResult) {
-                this.destinationChainFinalityMap.delete(txHash);
-
-                const newTxHash = submissionResult;
-                this.destinationChainFinalityMap.set(newTxHash, context);
-                this.addFinalityTracking(newTxHash, dstChain.name);
-            } else {
-                this.logger.warn(
-                    `[${chainName}] Submission attempt failed. Will retry. Message IDs: ${context.messageIds.join(', ')}`,
-                );
-
-                process.nextTick(() => this.retryDestinationSubmission(txHash));
-            }
-        } catch (error) {
-            this.logger.error(
-                `Error retrying destination submission for ${txHash}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-            );
-
-            process.nextTick(() => this.retryDestinationSubmission(txHash));
-        }
-    }
-
-    public dispose(): void {
-        if (this.isDisposed) {
+        const dstChain = this.networkManager.getNetworkByName(chainName);
+        if (!dstChain) {
+            this.logger.error(`Cannot retry: network ${chainName} not found`);
+            this.destinationChainFinalityMap.delete(originalTxHash);
             return;
         }
 
-        this.logger.info('Disposing Relayer...');
+        const maxAttempts = 3;
 
-        this.eventListenerHandles.forEach(handle => {
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
-                handle.stop();
+                this.logger.info(
+                    `[${chainName}] Retrying CLF Report submission (attempt ${attempt}/${maxAttempts}). Message IDs: ${context.messageIds.join(', ')}`,
+                );
+
+                const newTxHash = await this.submitBatchToDestination(
+                    dstChain,
+                    reportSubmission,
+                    messages,
+                    indexes,
+                    results,
+                    totalGasLimit,
+                );
+
+                this.destinationChainFinalityMap.delete(originalTxHash);
+                this.destinationChainFinalityMap.set(newTxHash, context);
+                this.addFinalityTracking(newTxHash, dstChain.name);
+                return;
             } catch (error) {
                 this.logger.error(
-                    `Error stopping event listener: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
+                    `Error in destination submission attempt ${attempt}/${maxAttempts} for ${originalTxHash}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
                 );
             }
-        });
 
-        this.eventListenerHandles = [];
-        this.isDisposed = true;
+            if (attempt < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+        }
 
-        this.logger.info('Relayer disposed');
+        // All attempts threw exceptions, clean up the original failed tx
+        this.logger.error(
+            `[${chainName}] All ${maxAttempts} submission attempts threw exceptions. Giving up. Message IDs: ${context.messageIds.join(', ')}`,
+        );
+        this.destinationChainFinalityMap.delete(originalTxHash);
     }
 }

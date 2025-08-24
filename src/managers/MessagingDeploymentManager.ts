@@ -200,10 +200,4 @@ export class MessagingDeploymentManager
 
         return true;
     }
-
-    public override dispose(): void {
-        super.dispose();
-        this.conceroRoutersMapByChainName = {};
-        this.conceroVerifier = undefined;
-    }
 }

@@ -19,7 +19,7 @@ export function decodeLogs(logs: Log[], abi: Abi): DecodedLog[] {
             if (error instanceof AbiEventSignatureNotFoundError) {
                 return; // Skip logs outside of ABI
             } else {
-                throw error;
+                console.error(`[decodeLogs] : ${error}`);
             }
         }
     });
