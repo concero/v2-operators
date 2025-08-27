@@ -166,6 +166,9 @@ export async function initializeManagers(): Promise<void> {
             defaultMinBalance: globalConfig.BALANCE_MANAGER.DEFAULT_MIN_BALANCE,
             minBalances: globalConfig.BALANCE_MANAGER.MIN_BALANCES,
             pollingIntervalMs: globalConfig.BALANCE_MANAGER.POLLING_INTERVAL_MS,
+            slackChannelId: globalConfig.NOTIFICATIONS.SLACK.MONITORING_SYSTEM_CHANNEL_ID || '',
+            slackBotToken: globalConfig.NOTIFICATIONS.SLACK.BOT_TOKEN || '',
+			slackIntervalMs: globalConfig.NOTIFICATIONS.INTERVAL,
         },
     );
 
