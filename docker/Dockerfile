@@ -50,4 +50,4 @@ COPY --from=builder --chown=bunuser:bunuser /app/package.json /app/
 # EXPOSE 3000
 
 # Start the application
-CMD ["bun", "./dist/index.js"]
+CMD ["bun", "run", "start:prod"]

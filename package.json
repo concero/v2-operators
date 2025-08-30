@@ -11,7 +11,7 @@
         "start": "bun run start:dev",
         "start:node": "NODE_ENV=development node ./dist/index.js",
         "start:dev": "NODE_ENV=development bun ./src/index.ts",
-        "start:prod": "NODE_ENV=production bun ./src/index.ts",
+        "start:prod": "NODE_ENV=production bun ./dist/index.js",
         "start:relayerA": "bun ./src/index.ts",
         "check-updates": "npx npm-check-updates",
         "prisma:reset": "npx prisma migrate reset",
