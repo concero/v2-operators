@@ -1,14 +1,14 @@
-export function getRpcOverride() {
+export function getRpcOverrides() {
     try {
-        return require('../../rpcs.override.json');
+        return require('../../rpc.overrides.json');
     } catch {
         return {};
     }
 }
 
-export function getRpcExtension() {
+export function getRpcExtensions() {
     try {
-        return require('../../rpcs.extension.json');
+        return require('../../rpc.extensions.json');
     } catch {
         return {};
     }

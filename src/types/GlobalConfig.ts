@@ -8,6 +8,8 @@ import {
     WriteContractParameters,
 } from 'viem';
 
+type LogLevel = 'error' | 'warn' | 'info' | 'verbose' | 'debug' | 'silly';
+
 type GlobalConfig = {
     NETWORK_MODE: string;
     IGNORED_NETWORK_IDS: number[];
@@ -17,11 +19,16 @@ type GlobalConfig = {
         localhost: number[];
     };
     LOGGER: {
-        LOG_LEVEL_DEFAULT: string;
-        LOG_LEVELS_GRANULAR: Record<string, string>;
-        LOG_DIR: string;
-        LOG_MAX_FILES: string;
-        LOG_MAX_SIZE: string;
+        logLevelDefault: LogLevel;
+        logLevelsGranular: Record<string, LogLevel>;
+        logDir: string;
+        logMaxFiles: string | number;
+        logMaxSize: string;
+        enableConsoleTransport?: boolean;
+        enableFileTransport?: boolean;
+        batchFlushIntervalMs?: number;
+        batchMaxItems?: number;
+        batchMaxBytes?: number;
     };
     URLS: {
         CONCERO_RPCS: string;
@@ -91,7 +98,8 @@ type GlobalConfig = {
         INTERVAL: number;
     };
     TX_MONITOR: {
-        MAX_INCLUSION_ATTEMPTS: number;
+        MAX_INCLUSION_WAIT: number;
+        MAX_FINALITY_WAIT: number;
     };
 };
 

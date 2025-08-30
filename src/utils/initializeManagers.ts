@@ -12,21 +12,22 @@ import {
 } from '@concero/operator-utils';
 
 import { globalConfig } from '../constants';
-import {
-    MessagingDeploymentManager,
-    RelayerBalanceManager,
-} from '../managers';
+import { MessagingDeploymentManager, RelayerBalanceManager } from '../managers';
 import { Relayer } from '../managers/Relayer';
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
     const logger = Logger.createInstance({
-        logDir: globalConfig.LOGGER.LOG_DIR,
-        logMaxSize: globalConfig.LOGGER.LOG_MAX_SIZE,
-        logMaxFiles: globalConfig.LOGGER.LOG_MAX_FILES,
-        logLevelDefault: globalConfig.LOGGER.LOG_LEVEL_DEFAULT,
-        logLevelsGranular: globalConfig.LOGGER.LOG_LEVELS_GRANULAR,
-        enableConsoleTransport: process.env.LOGGER_CONSOLE_ENABLED === "true",
+        logDir: globalConfig.LOGGER.logDir,
+        logMaxSize: globalConfig.LOGGER.logMaxSize,
+        logMaxFiles: globalConfig.LOGGER.logMaxFiles,
+        logLevelDefault: globalConfig.LOGGER.logLevelDefault,
+        logLevelsGranular: globalConfig.LOGGER.logLevelsGranular,
+        enableConsoleTransport: globalConfig.LOGGER.enableConsoleTransport,
+        enableFileTransport: globalConfig.LOGGER.enableFileTransport,
+        batchFlushIntervalMs: globalConfig.LOGGER.batchFlushIntervalMs,
+        batchMaxItems: globalConfig.LOGGER.batchMaxItems,
+        batchMaxBytes: globalConfig.LOGGER.batchMaxBytes,
     });
     await logger.initialize();
 
@@ -129,7 +130,8 @@ export async function initializeManagers(): Promise<void> {
         blockManagerRegistry,
         networkManager,
         {
-            maxInclusionAttempts: globalConfig.TX_MONITOR.MAX_INCLUSION_ATTEMPTS,
+            maxInclusionWait: globalConfig.TX_MONITOR.MAX_INCLUSION_WAIT,
+            maxFinalityWait: globalConfig.TX_MONITOR.MAX_FINALITY_WAIT,
         },
     );
     const txReader = TxReader.createInstance(
@@ -181,8 +183,18 @@ export async function initializeManagers(): Promise<void> {
         txReader,
         txWriter,
         txMonitor,
+        {
+            abi: {
+                CONCERO_VERIFIER: globalConfig.ABI.CONCERO_VERIFIER,
+                CONCERO_ROUTER: globalConfig.ABI.CONCERO_ROUTER,
+            },
+            operatorAddress: globalConfig.OPERATOR_ADDRESS,
+            gasLimit: {
+                submitMessageReportOverhead:
+                    globalConfig.TX_WRITER.GAS_LIMIT.SUBMIT_MESSAGE_REPORT_OVERHEAD,
+            },
+        },
     );
-
 
     await relayer.initialize();
 }

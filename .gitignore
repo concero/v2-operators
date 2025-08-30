@@ -29,8 +29,8 @@ dist
 logs/
 
 
-rpcs.override.json
-rpcs.extension.json
+rpc.overrides.json
+rpc.extensions.json
 
 # Prisma/SQLite databases
 prisma/*.db

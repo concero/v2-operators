@@ -19,10 +19,11 @@ import {
     keccak256,
 } from 'viem';
 
-import { eventEmitter, globalConfig } from '../constants';
+import { eventEmitter } from '../constants';
 import { decodeLogs } from '../eventListener/decodeLogs';
 import { ConceroNetwork } from '../types/ConceroNetwork';
 import { DecodedLog } from '../types/DecodedLog';
+import { RelayerConfig } from '../types/ManagerConfigs';
 import { decodeCLFReport, decodeMessageReportResult } from '../utils';
 import { DecodedMessageReportResult } from '../utils/decoders/types';
 
@@ -37,6 +38,7 @@ export class Relayer extends ManagerBase {
     private readonly txWriter: TxWriter;
     private readonly txMonitor: ITxMonitor;
     private readonly setup: RelayerSetup;
+    private readonly config: RelayerConfig;
 
     private watcherIds: string[] = [];
 
@@ -70,8 +72,9 @@ export class Relayer extends ManagerBase {
         txReader: TxReader,
         txWriter: TxWriter,
         txMonitor: ITxMonitor,
+        config: RelayerConfig,
     ) {
-        super()
+        super();
         this.logger = logger;
         this.networkManager = networkManager;
         this.blockManagerRegistry = blockManagerRegistry;
@@ -80,6 +83,7 @@ export class Relayer extends ManagerBase {
         this.txReader = txReader;
         this.txWriter = txWriter;
         this.txMonitor = txMonitor;
+        this.config = config;
 
         this.setup = RelayerSetup.createInstance(
             logger,
@@ -87,6 +91,13 @@ export class Relayer extends ManagerBase {
             viemClientManager,
             deploymentManager,
             txWriter,
+            {
+                abi: config.abi,
+                operatorAddress: config.operatorAddress,
+                txWriter: {
+                    dryRun: false, // This is handled by txWriter itself
+                },
+            },
         );
     }
 
@@ -99,6 +110,7 @@ export class Relayer extends ManagerBase {
         txReader: TxReader,
         txWriter: TxWriter,
         txMonitor: ITxMonitor,
+        config: RelayerConfig,
     ): Relayer {
         if (!Relayer.instance) {
             Relayer.instance = new Relayer(
@@ -110,6 +122,7 @@ export class Relayer extends ManagerBase {
                 txReader,
                 txWriter,
                 txMonitor,
+                config,
             );
         }
         return Relayer.instance;
@@ -125,7 +138,6 @@ export class Relayer extends ManagerBase {
     public async initialize(): Promise<void> {
         if (this.initialized) return;
 
-        // Execute setup operations (deposit, registration)
         await this.setup.executeSetup();
 
         await this.setupEventListeners();
@@ -136,9 +148,9 @@ export class Relayer extends ManagerBase {
         const activeNetworks = this.networkManager.getActiveNetworks();
 
         const sentEvent = getAbiItem({
-                    abi: globalConfig.ABI.CONCERO_ROUTER,
-                    name: 'ConceroMessageSent',
-                });
+            abi: this.config.abi.CONCERO_ROUTER,
+            name: 'ConceroMessageSent',
+        });
 
         for (const network of activeNetworks) {
             const routerAddress = await this.deploymentManager.getRouterByChainName(network.name);
@@ -152,7 +164,6 @@ export class Relayer extends ManagerBase {
             }
 
             try {
-
                 const watcherId = this.txReader.logWatcher.create(
                     routerAddress,
                     network,
@@ -195,7 +206,7 @@ export class Relayer extends ManagerBase {
 
         try {
             const messageReportEvent = getAbiItem({
-                abi: globalConfig.ABI.CONCERO_VERIFIER,
+                abi: this.config.abi.CONCERO_VERIFIER,
                 name: 'MessageReport',
             });
 
@@ -233,7 +244,7 @@ export class Relayer extends ManagerBase {
         );
 
         try {
-            const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_ROUTER);
+            const decodedLogs = decodeLogs(logs, this.config.abi.CONCERO_ROUTER);
 
             const immediateProcessLogs = decodedLogs.filter(
                 log => !(log.args as any)?.shouldFinaliseSrc,
@@ -270,7 +281,7 @@ export class Relayer extends ManagerBase {
         this.logger.debug(`Processing ${logs.length} MessageReport logs`);
 
         try {
-            const decodedLogs = decodeLogs(logs, globalConfig.ABI.CONCERO_VERIFIER);
+            const decodedLogs = decodeLogs(logs, this.config.abi.CONCERO_VERIFIER);
             await this.processMessageReportSubmission(decodedLogs);
         } catch (error) {
             this.logger.error(
@@ -313,18 +324,9 @@ export class Relayer extends ManagerBase {
                 ],
             );
 
-            if (globalConfig.TX_WRITER.DRY_RUN) {
-                const dryRunTxHash = `dry-run-${Date.now()}-${messageId}`;
-                this.logger.info(
-                    `[DRY_RUN]: ${verifierNetwork.name} CLF message report requested with hash: ${dryRunTxHash}`,
-                );
-                eventEmitter.emit('requestMessageReport', { txHash: dryRunTxHash });
-                return;
-            }
-
             const txHash = await this.txWriter.callContract(verifierNetwork as any, {
                 address: verifierAddress,
-                abi: globalConfig.ABI.CONCERO_VERIFIER,
+                abi: this.config.abi.CONCERO_VERIFIER,
                 functionName: 'requestMessageReport',
                 args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
                 chain: verifierNetwork.viemChain,
@@ -546,7 +548,7 @@ export class Relayer extends ManagerBase {
             {
                 address: srcContractAddress,
                 event: getAbiItem({
-                    abi: globalConfig.ABI.CONCERO_ROUTER,
+                    abi: this.config.abi.CONCERO_ROUTER,
                     name: 'ConceroMessageSent',
                 }) as any,
                 args: {
@@ -605,27 +607,19 @@ export class Relayer extends ManagerBase {
         results: DecodedMessageReportResult[],
         totalGasLimit: bigint,
     ): Promise<string> {
-        if (globalConfig.TX_WRITER.DRY_RUN) {
-            this.logger.info(
-                `[DRY RUN] Would submit CLF report to ${dstChain.name} with ${messages.length} messages`,
-            );
-            return `dry-run-${Date.now()}-${dstChain.name}`;
-        }
-
         const dstConceroRouter = await this.deploymentManager.getRouterByChainName(dstChain.name);
 
         const txHash = await this.txWriter.callContract(
             dstChain,
             {
                 address: dstConceroRouter,
-                abi: globalConfig.ABI.CONCERO_ROUTER,
+                abi: this.config.abi.CONCERO_ROUTER,
                 functionName: 'submitMessageReport',
                 args: [reportSubmission, messages, indexes.map(index => BigInt(index))],
                 chain: dstChain.viemChain,
                 gas:
                     totalGasLimit +
-                    BigInt(messages.length) *
-                        globalConfig.TX_WRITER.GAS_LIMIT.SUBMIT_MESSAGE_REPORT_OVERHEAD,
+                    BigInt(messages.length) * this.config.gasLimit.submitMessageReportOverhead,
             },
             true,
         );
@@ -700,7 +694,6 @@ export class Relayer extends ManagerBase {
         }
 
         const maxAttempts = 3;
-
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 this.logger.info(

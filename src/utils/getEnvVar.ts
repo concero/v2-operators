@@ -49,5 +49,5 @@ export const getEnvBool = (key: string, defaultValue: boolean): boolean => {
 
 export function getEnvString(key: string, defaultValue?: string) {
     const value = process.env[key];
-    return (value ?? defaultValue) as string | undefined;
+    return (value ?? defaultValue) as string;
 }

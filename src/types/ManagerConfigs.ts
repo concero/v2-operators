@@ -103,3 +103,27 @@ export interface HttpClientConfig extends BaseManagerConfig {
     maxRetries: number;
     defaultTimeout: number;
 }
+
+/** Configuration for RelayerSetup */
+export interface RelayerSetupConfig extends BaseManagerConfig {
+    abi: {
+        CONCERO_VERIFIER: any;
+        CONCERO_ROUTER: any;
+    };
+    operatorAddress: string;
+    txWriter: {
+        dryRun: boolean;
+    };
+}
+
+/** Configuration for Relayer */
+export interface RelayerConfig extends BaseManagerConfig {
+    abi: {
+        CONCERO_VERIFIER: any;
+        CONCERO_ROUTER: any;
+    };
+    operatorAddress: string;
+    gasLimit: {
+        submitMessageReportOverhead: bigint;
+    };
+}

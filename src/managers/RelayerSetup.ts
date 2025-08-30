@@ -9,7 +9,7 @@ import type {
 } from '@concero/operator-utils';
 import { Address, Hash, getAbiItem } from 'viem';
 
-import { globalConfig } from '../constants';
+import { RelayerSetupConfig } from '../types/ManagerConfigs';
 
 export class RelayerSetup {
     private readonly logger: LoggerInterface;
@@ -17,6 +17,7 @@ export class RelayerSetup {
     private readonly viemClientManager: IViemClientManager;
     private readonly deploymentManager: MessagingDeploymentManager;
     private readonly txWriter: ITxWriter;
+    private readonly config: RelayerSetupConfig;
 
     constructor(
         logger: LoggerInterface,
@@ -24,12 +25,14 @@ export class RelayerSetup {
         viemClientManager: IViemClientManager,
         deploymentManager: MessagingDeploymentManager,
         txWriter: ITxWriter,
+        config: RelayerSetupConfig,
     ) {
         this.logger = logger;
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
         this.deploymentManager = deploymentManager;
         this.txWriter = txWriter;
+        this.config = config;
     }
 
     public static createInstance(
@@ -38,6 +41,7 @@ export class RelayerSetup {
         viemClientManager: IViemClientManager,
         deploymentManager: MessagingDeploymentManager,
         txWriter: ITxWriter,
+        config: RelayerSetupConfig,
     ): RelayerSetup {
         return new RelayerSetup(
             logger,
@@ -45,6 +49,7 @@ export class RelayerSetup {
             viemClientManager,
             deploymentManager,
             txWriter,
+            config,
         );
     }
 
@@ -71,9 +76,9 @@ export class RelayerSetup {
 
         const isRegistered = (await publicClient.readContract({
             address: verifierAddress,
-            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            abi: this.config.abi.CONCERO_VERIFIER,
             functionName: 'isOperatorRegistered',
-            args: [globalConfig.OPERATOR_ADDRESS],
+            args: [this.config.operatorAddress],
         })) as boolean;
 
         if (isRegistered) {
@@ -83,11 +88,11 @@ export class RelayerSetup {
 
         const chainTypes = [BigInt(0)]; // EVM = 0
         const operatorActions = [BigInt(1)]; // Register = 1
-        const operatorAddresses = [globalConfig.OPERATOR_ADDRESS];
+        const operatorAddresses = [this.config.operatorAddress];
 
         const txHash = await this.txWriter.callContract(verifierNetwork, {
             address: verifierAddress,
-            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            abi: this.config.abi.CONCERO_VERIFIER,
             functionName: 'requestOperatorRegistration',
             args: [chainTypes, operatorActions, operatorAddresses],
         });
@@ -100,7 +105,7 @@ export class RelayerSetup {
             verifierNetwork,
             verifierAddress,
             transaction.blockNumber!,
-            globalConfig.OPERATOR_ADDRESS,
+            this.config.operatorAddress,
         );
 
         this.logger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
@@ -116,16 +121,16 @@ export class RelayerSetup {
         const requiredDeposit =
             ((await publicClient.readContract({
                 address: verifierAddress,
-                abi: globalConfig.ABI.CONCERO_VERIFIER,
+                abi: this.config.abi.CONCERO_VERIFIER,
                 functionName: 'getMinimumOperatorDeposit',
                 args: [],
             })) as bigint) * 200n;
 
         const currentDeposit = (await publicClient.readContract({
             address: verifierAddress,
-            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            abi: this.config.abi.CONCERO_VERIFIER,
             functionName: 'getOperatorDeposit',
-            args: [globalConfig.OPERATOR_ADDRESS],
+            args: [this.config.operatorAddress],
         })) as bigint;
 
         if (currentDeposit >= requiredDeposit) {
@@ -135,9 +140,9 @@ export class RelayerSetup {
 
         const txHash = await this.txWriter.callContract(verifierNetwork, {
             address: verifierAddress,
-            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            abi: this.config.abi.CONCERO_VERIFIER,
             functionName: 'operatorDeposit',
-            args: [globalConfig.OPERATOR_ADDRESS],
+            args: [this.config.operatorAddress],
             value: requiredDeposit,
         });
 
@@ -199,7 +204,7 @@ export class RelayerSetup {
                         fromBlock: fromBlockNumber,
                         toBlock: latestBlockNumber,
                         event: getAbiItem({
-                            abi: globalConfig.ABI.CONCERO_VERIFIER,
+                            abi: this.config.abi.CONCERO_VERIFIER,
                             name: 'OperatorRegistered',
                         }) as any,
                     });

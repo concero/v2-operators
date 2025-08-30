@@ -5,9 +5,11 @@
     "version": "1.0.0",
     "scripts": {
         "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm",
+        "build:cjs": "esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=cjs --out-extension=.js=.cjs --packages=external",
         "lint": "eslint --config .eslint.config.mjs",
         "format": "prettier --config .prettierrc.json --write \"**/*.{ts,json}\"",
         "start": "bun run start:dev",
+        "start:node": "NODE_ENV=development node ./dist/index.js",
         "start:dev": "NODE_ENV=development bun ./src/index.ts",
         "start:prod": "NODE_ENV=production bun ./src/index.ts",
         "start:relayerA": "bun ./src/index.ts",

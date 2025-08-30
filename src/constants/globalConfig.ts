@@ -1,4 +1,4 @@
-import { getRpcExtension, getRpcOverride } from './localRpcLoaders';
+import { getRpcExtensions, getRpcOverrides } from './localRpcLoaders';
 
 import { getGranularLogLevels } from '@concero/operator-utils';
 import { Abi } from 'viem';
@@ -22,11 +22,22 @@ const globalConfig: GlobalConfig = {
         ],
     },
     LOGGER: {
-        LOG_LEVEL_DEFAULT: getEnvString('LOGGER_LOG_LEVEL_DEFAULT', 'info'),
-        LOG_LEVELS_GRANULAR: getGranularLogLevels(),
-        LOG_DIR: getEnvString('LOGGER_LOG_DIR', 'logs'),
-        LOG_MAX_FILES: getEnvString('LOGGER_LOG_MAX_FILES', '7d'),
-        LOG_MAX_SIZE: getEnvString('LOGGER_LOG_MAX_SIZE', '20m'),
+        logLevelDefault: getEnvString('LOGGER_LOG_LEVEL_DEFAULT', 'info') as
+            | 'error'
+            | 'warn'
+            | 'info'
+            | 'verbose'
+            | 'debug'
+            | 'silly',
+        logLevelsGranular: getGranularLogLevels(),
+        logDir: getEnvString('LOGGER_LOG_DIR', 'logs'),
+        logMaxFiles: getEnvString('LOGGER_LOG_MAX_FILES', '7d'),
+        logMaxSize: getEnvString('LOGGER_LOG_MAX_SIZE', '20m'),
+        enableConsoleTransport: getEnvBool('LOGGER_ENABLE_CONSOLE_TRANSPORT', true),
+        enableFileTransport: getEnvBool('LOGGER_ENABLE_FILE_TRANSPORT', true),
+        batchFlushIntervalMs: getEnvInt('LOGGER_BATCH_FLUSH_INTERVAL_MS', 1000),
+        batchMaxItems: getEnvInt('LOGGER_BATCH_MAX_ITEMS', 100),
+        batchMaxBytes: getEnvInt('LOGGER_BATCH_MAX_BYTES', 1048576), // 1MB
     },
     URLS: {
         CONCERO_RPCS: getEnvString(
@@ -91,8 +102,8 @@ const globalConfig: GlobalConfig = {
         CONCERO_ROUTER: conceroRouterAbi as Abi,
     },
     RPC: {
-        OVERRIDE: getRpcOverride(),
-        EXTENSION: getRpcExtension(),
+        OVERRIDE: getRpcOverrides(),
+        EXTENSION: getRpcExtensions(),
     },
     TX_WRITER: {
         DRY_RUN: getEnvBool('TX_WRITER_DRY_RUN', false),
@@ -137,7 +148,8 @@ const globalConfig: GlobalConfig = {
         INTERVAL: getEnvInt('NOTIFICATIONS_INTERVAL', 60 * 60 * 1000),
     },
     TX_MONITOR: {
-        MAX_INCLUSION_ATTEMPTS: getEnvInt('TX_MONITOR_MAX_INCLUSION_ATTEMPTS', 5),
+        MAX_INCLUSION_WAIT: getEnvInt('TX_MONITOR_MAX_INCLUSION_WAIT', 300_000), // 5 minutes default
+        MAX_FINALITY_WAIT: getEnvInt('TX_MONITOR_MAX_FINALITY_WAIT', 600_000), // 10 minutes default
     },
 };
 
