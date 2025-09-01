@@ -399,7 +399,7 @@ export class Relayer extends ManagerBase {
                             }
                         });
 
-                        await Promise.all(dstChainProcessPromises);
+                        await Promise.allSettled(dstChainProcessPromises);
                     } catch (err) {
                         this.logger.error(
                             `Error processing transaction ${txHash}: ${
@@ -410,7 +410,7 @@ export class Relayer extends ManagerBase {
                 },
             );
 
-            await Promise.all(txProcessPromises);
+            await Promise.allSettled(txProcessPromises);
         } catch (e) {
             this.logger.error(
                 `Error when processing MessageReport logs: ${
