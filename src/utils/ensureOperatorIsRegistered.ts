@@ -1,6 +1,5 @@
+import { getAbiItem, Hash, isHex, Log, PublicClient, type Address } from 'viem';
 import { Logger, NetworkManager, TxWriter, ViemClientManager } from '@concero/operator-utils';
-import { type Address, Hash, Log, PublicClient, isHex } from 'viem';
-import { getAbiItem } from 'viem';
 
 import { eventEmitter, globalConfig } from '../constants';
 import { MessagingDeploymentManager } from '../managers';

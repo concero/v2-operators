@@ -1,6 +1,6 @@
 {
     "$schema": "https://json.schemastore.org/prettierrc",
-    "plugins": ["@trivago/prettier-plugin-sort-imports"],
+    "plugins": ["@ianvs/prettier-plugin-sort-imports"],
     "arrowParens": "avoid",
     "printWidth": 100,
     "tabWidth": 4,
@@ -11,20 +11,30 @@
         {
             "files": ["**/*.ts"],
             "options": {
-                "importOrderSeparation": true,
-                "importOrderSortSpecifiers": true,
                 "importOrder": [
-                    "^(node:.*|assert|buffer|child_process|cluster|crypto|dgram|dns|events|fs|http|https|net|os|path|punycode|querystring|readline|stream|string_decoder|tls|url|util|v8|vm|worker_threads|zlib)(/.*)?$",
-                    "^\\u0000",
-                    "^@?\\w",
-                    "^(viem|ethers|hardhat)",
+                    "^\\.\\/utils\\/configureDotEnv$",
+                    "^.*[eE][nN][vV].*$",
+
+                    "",
+
+                    "<BUILTIN_MODULES>",
+                    "^(viem|ethers|hardhat)(/.*)?$",
                     "^@concero(/.*)?$",
                     "^@lanca(/.*)?$",
+                    "<THIRD_PARTY_MODULES>",
+
+                    "",
+
                     "^src/.*$",
                     "^\\.\\.(?!/?$)",
                     "^\\.\\./?$",
                     "^\\./(?=.*/)",
                     "^\\./?$"
+                ],
+
+                "importOrderSafeSideEffects": [
+                    "^\\.\\/utils\\/configureDotEnv$",
+                    "^.*[eE][nN][vV].*$"
                 ]
             }
         }

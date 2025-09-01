@@ -1,5 +1,12 @@
-import { MessagingDeploymentManager, RelayerSetup } from './index';
-
+import {
+    AbiEvent,
+    Address,
+    decodeAbiParameters,
+    encodeAbiParameters,
+    getAbiItem,
+    keccak256,
+    Log,
+} from 'viem';
 import {
     BlockManagerRegistry,
     ITxMonitor,
@@ -10,14 +17,7 @@ import {
     TxWriter,
     ViemClientManager,
 } from '@concero/operator-utils';
-import {
-    AbiEvent,
-    Log,
-    decodeAbiParameters,
-    encodeAbiParameters,
-    getAbiItem,
-    keccak256,
-} from 'viem';
+import { MessagingDeploymentManager, RelayerSetup } from './index';
 
 import { eventEmitter } from '../constants';
 import { decodeLogs } from '../eventListener/decodeLogs';
@@ -39,6 +39,9 @@ export class Relayer extends ManagerBase {
     private readonly txMonitor: ITxMonitor;
     private readonly setup: RelayerSetup;
     private readonly config: RelayerConfig;
+
+    private verifierNetwork!: ConceroNetwork;
+    private verifierAddress!: Address;
 
     private watcherIds: string[] = [];
 
@@ -94,9 +97,6 @@ export class Relayer extends ManagerBase {
             {
                 abi: config.abi,
                 operatorAddress: config.operatorAddress,
-                txWriter: {
-                    dryRun: false, // This is handled by txWriter itself
-                },
             },
         );
     }
@@ -138,6 +138,9 @@ export class Relayer extends ManagerBase {
     public async initialize(): Promise<void> {
         if (this.initialized) return;
 
+        this.verifierNetwork = this.networkManager.getVerifierNetwork();
+        this.verifierAddress = await this.deploymentManager.getConceroVerifier();
+
         await this.setup.executeSetup();
 
         await this.setupEventListeners();
@@ -147,7 +150,10 @@ export class Relayer extends ManagerBase {
     private async setupEventListeners(): Promise<void> {
         const activeNetworks = this.networkManager.getActiveNetworks();
 
-        const sentEvent = getAbiItem({
+        const handleMessageReportLogs = this.handleMessageReportLogs.bind(this);
+        const handleMessageSentLogs = this.handleMessageSentLogs.bind(this);
+
+        const sentEventAbi = getAbiItem({
             abi: this.config.abi.CONCERO_ROUTER,
             name: 'ConceroMessageSent',
         });
@@ -167,18 +173,8 @@ export class Relayer extends ManagerBase {
                 const watcherId = this.txReader.logWatcher.create(
                     routerAddress,
                     network,
-                    async (logs, network) => {
-                        if (logs.length === 0) return;
-
-                        try {
-                            await this.handleConceroMessageSent(logs, network);
-                        } catch (error) {
-                            this.logger.error(
-                                `${network.name} Error in onLogs callback for contract ${routerAddress}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-                            );
-                        }
-                    },
-                    sentEvent as AbiEvent,
+                    handleMessageSentLogs,
+                    sentEventAbi,
                     blockManager,
                 );
                 this.watcherIds.push(watcherId);
@@ -190,41 +186,28 @@ export class Relayer extends ManagerBase {
             }
         }
 
-        const verifierNetwork = this.networkManager.getVerifierNetwork();
         const verifierBlockManager = this.blockManagerRegistry.getBlockManager(
-            verifierNetwork.name,
+            this.verifierNetwork.name,
         );
 
         if (!verifierBlockManager) {
             this.logger.error(
-                `No block manager available for verifier network ${verifierNetwork.name}`,
+                `No block manager available for verifier network ${this.verifierNetwork.name}`,
             );
             return;
         }
 
-        const verifierAddress = await this.deploymentManager.getConceroVerifier();
-
         try {
-            const messageReportEvent = getAbiItem({
+            const messageReportEventAbi = getAbiItem({
                 abi: this.config.abi.CONCERO_VERIFIER,
                 name: 'MessageReport',
             });
 
             const watcherId = this.txReader.logWatcher.create(
-                verifierAddress,
-                verifierNetwork,
-                async (logs, network) => {
-                    if (logs.length === 0) return;
-
-                    try {
-                        await this.handleMessageReport(logs, verifierNetwork);
-                    } catch (error) {
-                        this.logger.error(
-                            `${verifierNetwork.name} Error in onLogs callback for contract ${verifierAddress}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-                        );
-                    }
-                },
-                messageReportEvent as AbiEvent,
+                this.verifierAddress,
+                this.verifierNetwork,
+                handleMessageReportLogs,
+                messageReportEventAbi,
                 verifierBlockManager,
             );
             this.watcherIds.push(watcherId);
@@ -236,7 +219,7 @@ export class Relayer extends ManagerBase {
         }
     }
 
-    private async handleConceroMessageSent(logs: Log[], network: ConceroNetwork): Promise<void> {
+    private async handleMessageSentLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
         if (logs.length === 0) return;
 
         this.logger.debug(
@@ -247,15 +230,12 @@ export class Relayer extends ManagerBase {
             const decodedLogs = decodeLogs(logs, this.config.abi.CONCERO_ROUTER);
 
             const immediateProcessLogs = decodedLogs.filter(
-                log => !(log.args as any)?.shouldFinaliseSrc,
-            );
-            const finalityRequiredLogs = decodedLogs.filter(
-                log => (log.args as any)?.shouldFinaliseSrc,
+                log => log.args.shouldFinaliseSrc === false,
             );
 
-            const immediatePromises = immediateProcessLogs.map(async decodedLog => {
-                return this.processMessageReportRequest(decodedLog, network.chainSelector);
-            });
+            const finalityRequiredLogs = decodedLogs.filter(
+                log => log.args.shouldFinaliseSrc === true,
+            );
 
             finalityRequiredLogs.forEach(decodedLog => {
                 const txHash = decodedLog.transactionHash!;
@@ -264,10 +244,16 @@ export class Relayer extends ManagerBase {
                     chainSelector: network.chainSelector,
                 });
 
-                this.addFinalityTracking(txHash, network.name);
+                this.txMonitor.ensureTxFinality(
+                    txHash,
+                    network.name,
+                    this.onFinalityCallback.bind(this),
+                );
             });
 
-            await Promise.all(immediatePromises);
+            for (const log of immediateProcessLogs) {
+                void this.requestMessageReport(log, network.chainSelector); // @dev: not awaiting to avoid blocking
+            }
         } catch (error) {
             this.logger.error(
                 `Error processing logs from ${network.name}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
@@ -275,34 +261,165 @@ export class Relayer extends ManagerBase {
         }
     }
 
-    private async handleMessageReport(logs: Log[], network?: ConceroNetwork): Promise<void> {
+    private async handleMessageReportLogs(logs: Log[]): Promise<void> {
         if (logs.length === 0) return;
 
         this.logger.debug(`Processing ${logs.length} MessageReport logs`);
 
         try {
             const decodedLogs = decodeLogs(logs, this.config.abi.CONCERO_VERIFIER);
-            await this.processMessageReportSubmission(decodedLogs);
-        } catch (error) {
+
+            for (const log of decodedLogs) {
+                const txHash = log.transactionHash;
+                if (!txHash) {
+                    this.logger.warn('MessageReport log without transactionHash. Skipping.');
+                    continue;
+                }
+
+                void this.handleMessageReport(txHash);
+            }
+        } catch (e) {
             this.logger.error(
-                `Error processing message report logs: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
+                `Error when processing MessageReport logs: ${
+                    e instanceof Error ? e.message : String(e)
+                }. Stack: ${e instanceof Error && e.stack ? e.stack : 'No stack trace available'}`,
             );
         }
     }
 
-    private async processMessageReportRequest(
-        decodedLog: any,
+    private async handleMessageReport(txHash: `0x${string}`): Promise<void> {
+        try {
+            const activeNetworks = this.networkManager.getActiveNetworks();
+
+            const { publicClient: verifierPublicClient } = this.viemClientManager.getClients(
+                this.verifierNetwork,
+            );
+
+            const messageReportTx = await verifierPublicClient.getTransaction({
+                hash: txHash,
+            });
+            const decodedCLFReport = decodeCLFReport(messageReportTx);
+
+            const messageResults = await this.parseMessageResults(decodedCLFReport);
+            if (messageResults.length === 0) {
+                this.logger.warn(`No valid message results found in report for tx ${txHash}`);
+                return;
+            }
+
+            const messagesByDstChain = this.groupMessagesByDestination(messageResults);
+
+            const reportSubmission = {
+                context: decodedCLFReport.reportContext,
+                report: decodedCLFReport.reportBytes,
+                rs: decodedCLFReport.rs,
+                ss: decodedCLFReport.ss,
+                rawVs: decodedCLFReport.rawVs,
+            };
+
+            for (const [dstChainSelector, { results, indexes }] of messagesByDstChain.entries()) {
+                const dstChain = this.networkManager.getNetworkBySelector(dstChainSelector);
+
+                const dstChainIsActive = activeNetworks.some(n => n.name === dstChain.name);
+                if (!dstChainIsActive) {
+                    this.logger.warn(
+                        `${dstChain.name} is not active. Skipping message submission.`,
+                    );
+                    continue;
+                }
+
+                try {
+                    const resolved = await Promise.allSettled(
+                        results.map(r => this.fetchOriginalMessage(r, activeNetworks)),
+                    );
+
+                    const validMessages: string[] = [];
+                    const validIndexes: bigint[] = [];
+                    const validResults: any[] = [];
+                    let totalGasLimit = 0n;
+
+                    for (let i = 0; i < resolved.length; i++) {
+                        const result = resolved[i];
+                        if (result.status === 'fulfilled') {
+                            const { message, gasLimit } = result.value;
+                            if (message) {
+                                validMessages.push(message);
+                                validIndexes.push(indexes[i]);
+                                validResults.push(results[i]);
+                                totalGasLimit += gasLimit;
+                            }
+                        } else {
+                            this.logger.warn(
+                                `Failed to fetch original message for result ${i}: ${result.reason}`,
+                            );
+                        }
+                    }
+
+                    if (validMessages.length === 0) {
+                        this.logger.error(
+                            `[${dstChain.name}] Could not find any valid messages out of ${results.length} total. Skipping batch submission.`,
+                        );
+                        continue;
+                    }
+
+                    if (validMessages.length !== results.length) {
+                        this.logger.warn(
+                            `[${dstChain.name}] Submitting partial batch: ${validMessages.length}/${results.length} messages (${results.length - validMessages.length} messages could not be reconstructed)`,
+                        );
+                    }
+
+                    const submissionTxHash = await this.submitBatchToDestination(
+                        dstChain,
+                        reportSubmission,
+                        validMessages,
+                        validIndexes,
+                        validResults,
+                        totalGasLimit,
+                    );
+
+                    const messageIds = validResults.map(r => r.messageId);
+
+                    this.destinationChainFinalityMap.set(submissionTxHash, {
+                        chainName: dstChain.name,
+                        messageIds,
+                        reportSubmission,
+                        messages: validMessages,
+                        indexes: validIndexes,
+                        results: validResults,
+                        totalGasLimit,
+                    });
+
+                    this.txMonitor.ensureTxFinality(
+                        submissionTxHash,
+                        dstChain.name,
+                        this.onFinalityCallback.bind(this),
+                    );
+                } catch (err) {
+                    this.logger.error(
+                        `Failed to submit batch to ${dstChain.name}: ${
+                            err instanceof Error ? err.message : String(err)
+                        }`,
+                    );
+                }
+            }
+        } catch (err) {
+            this.logger.error(
+                `Error processing transaction ${txHash}: ${
+                    err instanceof Error ? err.message : String(err)
+                }. Stack: ${err instanceof Error && err.stack ? err.stack : 'No stack trace available'}`,
+            );
+        }
+    }
+
+    private async requestMessageReport(
+        decodedLog: DecodedLog,
         srcChainSelector: string,
     ): Promise<void> {
         try {
-            const verifierNetwork = this.networkManager.getVerifierNetwork();
-            const verifierAddress = await this.deploymentManager.getConceroVerifier();
-
-            const args = decodedLog.args as any;
+            const args = decodedLog.args;
             const { messageId, message, sender } = args;
 
-            if (!messageId || !message || !sender) {
-                this.logger.warn(`Missing required data in log: ${JSON.stringify(decodedLog)}`);
+            if (!messageId || !message || !sender || !decodedLog.blockNumber) {
+                this.logger.error(`Missing required data in log: ${JSON.stringify(decodedLog)}`);
                 return;
             }
 
@@ -318,170 +435,32 @@ export class Relayer extends ManagerBase {
                 ],
                 [
                     {
-                        blockNumber: BigInt(decodedLog.blockNumber || 0),
+                        blockNumber: BigInt(decodedLog.blockNumber),
                         sender,
                     },
                 ],
             );
 
-            const txHash = await this.txWriter.callContract(verifierNetwork as any, {
-                address: verifierAddress,
+            const txHash = await this.txWriter.callContract(this.verifierNetwork, {
+                address: this.verifierAddress,
                 abi: this.config.abi.CONCERO_VERIFIER,
                 functionName: 'requestMessageReport',
                 args: [messageId, keccak256(message), srcChainSelector, encodedSrcChainData],
-                chain: verifierNetwork.viemChain,
+                chain: this.verifierNetwork.viemChain,
             });
 
             if (txHash) {
                 eventEmitter.emit('requestMessageReport', {
                     txHash: txHash,
                 });
-                this.logger.info(`CLF message report requested with hash: ${txHash}`);
+                this.logger.info(`Report requested, tx: ${txHash}`);
             } else {
-                this.logger.error(`Failed to submit CLF message report request transaction`);
+                this.logger.error(`Failed to submit Report request`);
             }
         } catch (error) {
-            const messageId = (decodedLog.args as any)?.messageId;
-            const errorNetwork = this.networkManager.getVerifierNetwork();
+            const messageId = decodedLog.args?.messageId;
             this.logger.error(
-                `[${errorNetwork.name}] Error requesting CLF message report for messageId ${messageId || 'unknown'}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-            );
-        }
-    }
-
-    private async processMessageReportSubmission(logs: DecodedLog[]): Promise<void> {
-        const activeNetworks = this.networkManager.getActiveNetworks();
-        const activeNetworkNames = activeNetworks.map(network => network.name);
-
-        try {
-            const txHashToLogs = new Map<string, DecodedLog[]>();
-
-            for (const log of logs) {
-                const txHash = log.transactionHash!;
-                const existingLogs = txHashToLogs.get(txHash) || [];
-                existingLogs.push(log);
-                txHashToLogs.set(txHash, existingLogs);
-            }
-
-            const txProcessPromises = Array.from(txHashToLogs.entries()).map(
-                async ([txHash, txLogs]) => {
-                    try {
-                        const verifierNetwork = this.networkManager.getVerifierNetwork();
-                        const { publicClient: verifierPublicClient } =
-                            this.viemClientManager.getClients(verifierNetwork);
-
-                        const messageReportTx = await verifierPublicClient.getTransaction({
-                            hash: txHash as `0x${string}`,
-                        });
-
-                        const decodedCLFReport = decodeCLFReport(messageReportTx);
-
-                        const messageResults = await this.parseMessageResults(decodedCLFReport);
-
-                        if (messageResults.length === 0) {
-                            this.logger.warn(
-                                `No valid message results found in the report for transaction ${txHash}`,
-                            );
-                            return;
-                        }
-
-                        const messagesByDstChain = this.groupMessagesByDestination(messageResults);
-
-                        const reportSubmission = {
-                            context: decodedCLFReport.reportContext,
-                            report: decodedCLFReport.reportBytes,
-                            rs: decodedCLFReport.rs,
-                            ss: decodedCLFReport.ss,
-                            rawVs: decodedCLFReport.rawVs,
-                        };
-
-                        const dstChainProcessPromises = Array.from(
-                            messagesByDstChain.entries(),
-                        ).map(async ([dstChainSelector, { results, indexes }]) => {
-                            const dstChain =
-                                this.networkManager.getNetworkBySelector(dstChainSelector);
-
-                            if (!activeNetworkNames.includes(dstChain.name)) {
-                                this.logger.warn(
-                                    `${dstChain.name} is not active. Skipping message submission.`,
-                                );
-                                return;
-                            }
-
-                            const dstBlockManager = this.blockManagerRegistry.getBlockManager(
-                                dstChain.name,
-                            );
-                            if (!dstBlockManager) {
-                                this.logger.error(`No BlockManager for ${dstChain.name}`);
-                                return;
-                            }
-
-                            const messagePromises = results.map(result =>
-                                this.fetchOriginalMessage(result, activeNetworkNames),
-                            );
-
-                            const resolvedMessages = await Promise.all(messagePromises);
-
-                            const messages: string[] = [];
-                            let totalGasLimit = BigInt(0);
-
-                            for (const { message, gasLimit } of resolvedMessages) {
-                                if (message) {
-                                    messages.push(message);
-                                    totalGasLimit += gasLimit;
-                                }
-                            }
-
-                            if (messages.length !== results.length) {
-                                this.logger.error(
-                                    `[${dstChain.name}] Could only find ${messages.length}/${results.length} messages. Skipping batch submission.`,
-                                );
-                                return;
-                            }
-
-                            try {
-                                const txHash = await this.submitBatchToDestination(
-                                    dstChain,
-                                    reportSubmission,
-                                    messages,
-                                    indexes,
-                                    results,
-                                    totalGasLimit,
-                                );
-
-                                const messageIds = results.map(result => result.messageId);
-
-                                this.destinationChainFinalityMap.set(txHash, {
-                                    chainName: dstChain.name,
-                                    messageIds,
-                                    reportSubmission,
-                                    messages,
-                                    indexes,
-                                    results,
-                                    totalGasLimit,
-                                });
-
-                                this.addFinalityTracking(txHash, dstChain.name);
-                            } catch (error) {
-                                this.logger.error(
-                                    `Failed to submit batch to ${dstChain.name}: ${error instanceof Error ? error.message : String(error)}`,
-                                );
-                            }
-                        });
-
-                        await Promise.all(dstChainProcessPromises);
-                    } catch (error) {
-                        this.logger.error(
-                            `Error processing transaction ${txHash}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-                        );
-                    }
-                },
-            );
-
-            await Promise.all(txProcessPromises);
-        } catch (e) {
-            this.logger.error(
-                `Error when submitting clf report: ${e instanceof Error ? e.message : String(e)}. Stack: ${e instanceof Error && e.stack ? e.stack : 'No stack trace available'}`,
+                `[${this.verifierNetwork.name}] Error requesting CLF message report for messageId ${messageId || 'unknown'}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
             );
         }
     }
@@ -530,16 +509,17 @@ export class Relayer extends ManagerBase {
 
     private async fetchOriginalMessage(
         result: DecodedMessageReportResult,
-        activeNetworkNames: string[],
+        activeNetworks: { name: string }[],
     ): Promise<{ message: string | null; gasLimit: bigint }> {
         const { srcChainSelector, messageId, srcBlockNumber } = result;
         const srcChain = this.networkManager.getNetworkBySelector(srcChainSelector.toString());
 
-        if (!activeNetworkNames.includes(srcChain.name)) {
+        const srcIsActive = activeNetworks.some(n => n.name === srcChain.name);
+        if (!srcIsActive) {
             this.logger.warn(
                 `${srcChain.name} is not active. Skipping message with id ${messageId}`,
             );
-            return { message: null, gasLimit: BigInt(0) };
+            return { message: null, gasLimit: 0n };
         }
 
         const srcContractAddress = await this.deploymentManager.getRouterByChainName(srcChain.name);
@@ -550,39 +530,36 @@ export class Relayer extends ManagerBase {
                 event: getAbiItem({
                     abi: this.config.abi.CONCERO_ROUTER,
                     name: 'ConceroMessageSent',
-                }) as any,
-                args: {
-                    messageId,
-                },
-                fromBlock: srcBlockNumber - BigInt(1),
-                toBlock: srcBlockNumber + BigInt(1),
+                }),
+                args: { messageId },
+                fromBlock: srcBlockNumber - 1n,
+                toBlock: srcBlockNumber + 1n,
             },
-            srcChain as any,
+            srcChain,
         );
 
         if (decodedLogs.length === 0) {
             this.logger.warn(
                 `${srcChain.name}: No decodedLogs found for messageId ${messageId} around block ${srcBlockNumber}.`,
             );
-            return { message: null, gasLimit: BigInt(0) };
+            return { message: null, gasLimit: 0n };
         }
 
         const conceroMessageSentLog = decodedLogs.find(
             log =>
-                (log as any).eventName === 'ConceroMessageSent' &&
-                (log as any).args?.messageId?.toLowerCase() === messageId.toLowerCase(),
+                log.eventName === 'ConceroMessageSent' &&
+                log.args?.messageId?.toLowerCase() === messageId.toLowerCase(),
         );
 
         if (!conceroMessageSentLog) {
             this.logger.error(
                 `Could not find ConceroMessageSent event with messageId ${messageId}`,
             );
-            return { message: null, gasLimit: BigInt(0) };
+            return { message: null, gasLimit: 0n };
         }
 
-        const { message, dstChainData } = (conceroMessageSentLog as any).args;
+        const { message, dstChainData } = conceroMessageSentLog.args;
 
-        //todo:  use parseAbiItem
         const decodedDstChainData = decodeAbiParameters(
             [
                 {
@@ -594,7 +571,7 @@ export class Relayer extends ManagerBase {
                 },
             ],
             dstChainData,
-        )[0] as any;
+        )[0];
 
         return { message, gasLimit: decodedDstChainData.gasLimit };
     }
@@ -633,17 +610,11 @@ export class Relayer extends ManagerBase {
         }
 
         this.logger.info(
-            `[${dstChain.name}] CLF Report with ${messages.length} results submitted with hash: ${txHash}`,
+            `[${dstChain.name}] Report submitted with ${messages.length} msgs, tx: ${txHash}`,
         );
         this.logger.debug(`[${dstChain.name}] Message IDs in batch: ${messageIds}`);
 
         return txHash;
-    }
-
-    private addFinalityTracking(txHash: string, chainName: string): void {
-        this.txMonitor.ensureTxFinality(txHash, chainName, (txHash: string, isFinalized: boolean) =>
-            this.onFinalityCallback(txHash, chainName, isFinalized),
-        );
     }
 
     private async onFinalityCallback(
@@ -656,7 +627,7 @@ export class Relayer extends ManagerBase {
             const { decodedLog, chainSelector } = context;
 
             if (isFinalized) {
-                await this.processMessageReportRequest(decodedLog, chainSelector);
+                await this.requestMessageReport(decodedLog, chainSelector);
             } else {
                 this.logger.error(`Transaction ${txHash} failed to reach finality on ${chainName}`);
             }
@@ -697,7 +668,7 @@ export class Relayer extends ManagerBase {
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 this.logger.info(
-                    `[${chainName}] Retrying CLF Report submission (attempt ${attempt}/${maxAttempts}). Message IDs: ${context.messageIds.join(', ')}`,
+                    `[${chainName}] Retrying report submission (attempt ${attempt}/${maxAttempts}). Message IDs: ${context.messageIds.join(', ')}`,
                 );
 
                 const newTxHash = await this.submitBatchToDestination(
@@ -711,7 +682,11 @@ export class Relayer extends ManagerBase {
 
                 this.destinationChainFinalityMap.delete(originalTxHash);
                 this.destinationChainFinalityMap.set(newTxHash, context);
-                this.addFinalityTracking(newTxHash, dstChain.name);
+                this.txMonitor.ensureTxFinality(
+                    newTxHash,
+                    dstChain.name,
+                    this.onFinalityCallback.bind(this),
+                );
                 return;
             } catch (error) {
                 this.logger.error(

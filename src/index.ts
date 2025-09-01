@@ -1,10 +1,9 @@
-import { AppErrorEnum } from './constants';
-import { globalConfig } from './constants';
-import { AppError } from './utils';
+import './utils/configureDotEnv';
 
 import { BlockManagerRegistry } from '@concero/operator-utils';
+import { AppErrorEnum, globalConfig } from './constants';
+import { AppError } from './utils';
 
-import './utils/configureDotEnv';
 import { startHeapSnapshotCollection } from './utils/heapSnapshotCollector';
 import { initializeManagers } from './utils/initializeManagers';
 

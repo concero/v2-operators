@@ -1,12 +1,12 @@
-import { getRpcExtensions, getRpcOverrides } from './localRpcLoaders';
+import { getEnvBigint, getEnvBool, getEnvInt, getEnvString } from '../utils/getEnvVar';
 
-import { getGranularLogLevels } from '@concero/operator-utils';
 import { Abi } from 'viem';
+import { getGranularLogLevels } from '@concero/operator-utils';
+import { getRpcExtensions, getRpcOverrides } from './localRpcLoaders';
 
 import { abi as conceroRouterAbi } from '../abi/ConceroRouter.json';
 import { abi as conceroVerifierAbi } from '../abi/ConceroVerifier.json';
 import { type GlobalConfig } from '../types/GlobalConfig';
-import { getEnvBigint, getEnvBool, getEnvInt, getEnvString } from '../utils/getEnvVar';
 
 const networkMode = getEnvString('NETWORK_MODE', 'testnet');
 

@@ -1,6 +1,5 @@
-import { DecodedMessageReportResult } from './types';
-
 import { ByteArray, decodeAbiParameters, hexToBytes } from 'viem';
+import { DecodedMessageReportResult } from './types';
 
 export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessageReportResult {
     try {

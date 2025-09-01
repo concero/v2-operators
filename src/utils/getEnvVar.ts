@@ -1,11 +1,11 @@
-import { shorten } from './formatting';
+import { type env } from '../types/env';
+import { type EnvPrefixes } from '../types/envPrefixes';
 
 import process from 'process';
 import { Address } from 'viem';
+import { shorten } from './formatting';
 
 import { envPrefixes } from '../constants';
-import { type env } from '../types/env';
-import { type EnvPrefixes } from '../types/envPrefixes';
 
 export function getEnvVar<K extends keyof env>(key: K): env[K] {
     const value = process.env[key];

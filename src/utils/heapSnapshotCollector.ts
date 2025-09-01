@@ -1,10 +1,9 @@
 import { writeHeapSnapshot } from 'v8';
-
 import { Logger } from '@concero/operator-utils';
 
 export function startHeapSnapshotCollection(
     logDir: string,
-    intervalMs: number = 2 * 60 * 1000,
+    intervalMs: number = 10 * 60 * 1000,
     logger?: ReturnType<typeof Logger.prototype.getLogger>,
 ): () => void {
     const log = logger || console;

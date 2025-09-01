@@ -1,14 +1,19 @@
-import { ManagerBase } from './ManagerBase';
+import { getEnvVar } from '../utils/getEnvVar';
 
-import { IConceroNetworkManager, LoggerInterface } from '@concero/operator-utils';
-import { DeploymentFetcher, DeploymentPattern, ParsedDeployment } from '@concero/operator-utils';
-import { ConceroNetworkManager } from '@concero/operator-utils';
 import { Address } from 'viem';
+import {
+    ConceroNetworkManager,
+    DeploymentFetcher,
+    DeploymentPattern,
+    IConceroNetworkManager,
+    LoggerInterface,
+    ParsedDeployment,
+} from '@concero/operator-utils';
+import { ManagerBase } from './ManagerBase';
 
 import { ConceroNetwork } from '../types/ConceroNetwork';
 import { DeploymentManagerConfig } from '../types/ManagerConfigs';
 import { IMessagingDeploymentManager, NetworkUpdateListener } from '../types/managers';
-import { getEnvVar } from '../utils/getEnvVar';
 
 export class MessagingDeploymentManager
     extends ManagerBase

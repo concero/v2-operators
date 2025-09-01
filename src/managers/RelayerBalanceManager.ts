@@ -87,6 +87,6 @@ export class RelayerBalanceManager extends BalanceManager {
     }
 
     private registerNativeTokenWatch(network: ConceroNetwork): void {
-        this.registerToken(network, 'NATIVE', '0x0000000000000000000000000000000000000000' as any);
+        this.registerToken(network, 'NATIVE', '0x0000000000000000000000000000000000000000');
     }
 }

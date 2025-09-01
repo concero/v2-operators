@@ -1,5 +1,4 @@
-import { MessagingDeploymentManager } from './MessagingDeploymentManager';
-
+import { Address, getAbiItem, Hash } from 'viem';
 import type {
     ConceroNetwork,
     ITxWriter,
@@ -7,7 +6,7 @@ import type {
     LoggerInterface,
     NetworkManager,
 } from '@concero/operator-utils';
-import { Address, Hash, getAbiItem } from 'viem';
+import { MessagingDeploymentManager } from './MessagingDeploymentManager';
 
 import { RelayerSetupConfig } from '../types/ManagerConfigs';
 
@@ -206,13 +205,13 @@ export class RelayerSetup {
                         event: getAbiItem({
                             abi: this.config.abi.CONCERO_VERIFIER,
                             name: 'OperatorRegistered',
-                        }) as any,
+                        }),
                     });
 
                     const matchingLog = logs.find(
                         log =>
-                            (log as any).args?.operator?.toLowerCase() ===
-                                operatorAddress.toLowerCase() && log.transactionHash,
+                            log.args?.operator?.toLowerCase() === operatorAddress.toLowerCase() &&
+                            log.transactionHash,
                     );
 
                     if (matchingLog && matchingLog.transactionHash) {
