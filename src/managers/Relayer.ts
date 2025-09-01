@@ -266,146 +266,156 @@ export class Relayer extends ManagerBase {
 
         this.logger.debug(`Processing ${logs.length} MessageReport logs`);
 
+        const activeNetworks = this.networkManager.getActiveNetworks();
+
         try {
             const decodedLogs = decodeLogs(logs, this.config.abi.CONCERO_VERIFIER);
+            const txHashToLogs = new Map<string, DecodedLog[]>();
 
             for (const log of decodedLogs) {
-                const txHash = log.transactionHash;
-                if (!txHash) {
-                    this.logger.warn('MessageReport log without transactionHash. Skipping.');
-                    continue;
-                }
-
-                void this.handleMessageReport(txHash);
+                const txHash = log.transactionHash!;
+                const existingLogs = txHashToLogs.get(txHash) || [];
+                existingLogs.push(log);
+                txHashToLogs.set(txHash, existingLogs);
             }
+
+            const txProcessPromises = Array.from(txHashToLogs.entries()).map(
+                async ([txHash, txLogs]) => {
+                    try {
+                        const { publicClient: verifierPublicClient } =
+                            this.viemClientManager.getClients(this.verifierNetwork);
+
+                        const messageReportTx = await verifierPublicClient.getTransaction({
+                            hash: txHash as `0x${string}`,
+                        });
+                        const decodedCLFReport = decodeCLFReport(messageReportTx);
+
+                        const messageResults = await this.parseMessageResults(decodedCLFReport);
+                        if (messageResults.length === 0) {
+                            this.logger.warn(
+                                `No valid message results found in report for tx ${txHash}`,
+                            );
+                            return;
+                        }
+
+                        const messagesByDstChain = this.groupMessagesByDestination(messageResults);
+
+                        const reportSubmission = {
+                            context: decodedCLFReport.reportContext,
+                            report: decodedCLFReport.reportBytes,
+                            rs: decodedCLFReport.rs,
+                            ss: decodedCLFReport.ss,
+                            rawVs: decodedCLFReport.rawVs,
+                        };
+
+                        const dstChainProcessPromises = Array.from(
+                            messagesByDstChain.entries(),
+                        ).map(async ([dstChainSelector, { results, indexes }]) => {
+                            const dstChain =
+                                this.networkManager.getNetworkBySelector(dstChainSelector);
+
+                            const dstChainIsActive = activeNetworks.some(
+                                n => n.name === dstChain.name,
+                            );
+                            if (!dstChainIsActive) {
+                                this.logger.warn(
+                                    `${dstChain.name} is not active. Skipping message submission.`,
+                                );
+                                return;
+                            }
+
+                            try {
+                                const resolved = await Promise.allSettled(
+                                    results.map(r => this.fetchOriginalMessage(r, activeNetworks)),
+                                );
+
+                                const validMessages: string[] = [];
+                                const validIndexes: bigint[] = [];
+                                const validResults: any[] = [];
+                                let totalGasLimit = 0n;
+
+                                for (let i = 0; i < resolved.length; i++) {
+                                    const result = resolved[i];
+                                    if (result.status === 'fulfilled') {
+                                        const { message, gasLimit } = result.value;
+                                        if (message) {
+                                            validMessages.push(message);
+                                            validIndexes.push(indexes[i]);
+                                            validResults.push(results[i]);
+                                            totalGasLimit += gasLimit;
+                                        }
+                                    } else {
+                                        this.logger.warn(
+                                            `Failed to fetch original message for result ${i}: ${result.reason}`,
+                                        );
+                                    }
+                                }
+
+                                if (validMessages.length === 0) {
+                                    this.logger.error(
+                                        `[${dstChain.name}] Could not find any valid messages out of ${results.length} total. Skipping batch submission.`,
+                                    );
+                                    return;
+                                }
+
+                                if (validMessages.length !== results.length) {
+                                    this.logger.warn(
+                                        `[${dstChain.name}] Submitting partial batch: ${validMessages.length}/${results.length} messages (${results.length - validMessages.length} messages could not be reconstructed)`,
+                                    );
+                                }
+
+                                const submissionTxHash = await this.submitBatchToDestination(
+                                    dstChain,
+                                    reportSubmission,
+                                    validMessages,
+                                    validIndexes,
+                                    validResults,
+                                    totalGasLimit,
+                                );
+
+                                const messageIds = validResults.map(r => r.messageId);
+
+                                this.destinationChainFinalityMap.set(submissionTxHash, {
+                                    chainName: dstChain.name,
+                                    messageIds,
+                                    reportSubmission,
+                                    messages: validMessages,
+                                    indexes: validIndexes,
+                                    results: validResults,
+                                    totalGasLimit,
+                                });
+
+                                this.txMonitor.ensureTxFinality(
+                                    submissionTxHash,
+                                    dstChain.name,
+                                    this.onFinalityCallback.bind(this),
+                                );
+                            } catch (err) {
+                                this.logger.error(
+                                    `Failed to submit batch to ${dstChain.name}: ${
+                                        err instanceof Error ? err.message : String(err)
+                                    }`,
+                                );
+                            }
+                        });
+
+                        await Promise.all(dstChainProcessPromises);
+                    } catch (err) {
+                        this.logger.error(
+                            `Error processing transaction ${txHash}: ${
+                                err instanceof Error ? err.message : String(err)
+                            }. Stack: ${err instanceof Error && err.stack ? err.stack : 'No stack trace available'}`,
+                        );
+                    }
+                },
+            );
+
+            await Promise.all(txProcessPromises);
         } catch (e) {
             this.logger.error(
                 `Error when processing MessageReport logs: ${
                     e instanceof Error ? e.message : String(e)
                 }. Stack: ${e instanceof Error && e.stack ? e.stack : 'No stack trace available'}`,
-            );
-        }
-    }
-
-    private async handleMessageReport(txHash: `0x${string}`): Promise<void> {
-        try {
-            const activeNetworks = this.networkManager.getActiveNetworks();
-
-            const { publicClient: verifierPublicClient } = this.viemClientManager.getClients(
-                this.verifierNetwork,
-            );
-
-            const messageReportTx = await verifierPublicClient.getTransaction({
-                hash: txHash,
-            });
-            const decodedCLFReport = decodeCLFReport(messageReportTx);
-
-            const messageResults = await this.parseMessageResults(decodedCLFReport);
-            if (messageResults.length === 0) {
-                this.logger.warn(`No valid message results found in report for tx ${txHash}`);
-                return;
-            }
-
-            const messagesByDstChain = this.groupMessagesByDestination(messageResults);
-
-            const reportSubmission = {
-                context: decodedCLFReport.reportContext,
-                report: decodedCLFReport.reportBytes,
-                rs: decodedCLFReport.rs,
-                ss: decodedCLFReport.ss,
-                rawVs: decodedCLFReport.rawVs,
-            };
-
-            for (const [dstChainSelector, { results, indexes }] of messagesByDstChain.entries()) {
-                const dstChain = this.networkManager.getNetworkBySelector(dstChainSelector);
-
-                const dstChainIsActive = activeNetworks.some(n => n.name === dstChain.name);
-                if (!dstChainIsActive) {
-                    this.logger.warn(
-                        `${dstChain.name} is not active. Skipping message submission.`,
-                    );
-                    continue;
-                }
-
-                try {
-                    const resolved = await Promise.allSettled(
-                        results.map(r => this.fetchOriginalMessage(r, activeNetworks)),
-                    );
-
-                    const validMessages: string[] = [];
-                    const validIndexes: bigint[] = [];
-                    const validResults: any[] = [];
-                    let totalGasLimit = 0n;
-
-                    for (let i = 0; i < resolved.length; i++) {
-                        const result = resolved[i];
-                        if (result.status === 'fulfilled') {
-                            const { message, gasLimit } = result.value;
-                            if (message) {
-                                validMessages.push(message);
-                                validIndexes.push(indexes[i]);
-                                validResults.push(results[i]);
-                                totalGasLimit += gasLimit;
-                            }
-                        } else {
-                            this.logger.warn(
-                                `Failed to fetch original message for result ${i}: ${result.reason}`,
-                            );
-                        }
-                    }
-
-                    if (validMessages.length === 0) {
-                        this.logger.error(
-                            `[${dstChain.name}] Could not find any valid messages out of ${results.length} total. Skipping batch submission.`,
-                        );
-                        continue;
-                    }
-
-                    if (validMessages.length !== results.length) {
-                        this.logger.warn(
-                            `[${dstChain.name}] Submitting partial batch: ${validMessages.length}/${results.length} messages (${results.length - validMessages.length} messages could not be reconstructed)`,
-                        );
-                    }
-
-                    const submissionTxHash = await this.submitBatchToDestination(
-                        dstChain,
-                        reportSubmission,
-                        validMessages,
-                        validIndexes,
-                        validResults,
-                        totalGasLimit,
-                    );
-
-                    const messageIds = validResults.map(r => r.messageId);
-
-                    this.destinationChainFinalityMap.set(submissionTxHash, {
-                        chainName: dstChain.name,
-                        messageIds,
-                        reportSubmission,
-                        messages: validMessages,
-                        indexes: validIndexes,
-                        results: validResults,
-                        totalGasLimit,
-                    });
-
-                    this.txMonitor.ensureTxFinality(
-                        submissionTxHash,
-                        dstChain.name,
-                        this.onFinalityCallback.bind(this),
-                    );
-                } catch (err) {
-                    this.logger.error(
-                        `Failed to submit batch to ${dstChain.name}: ${
-                            err instanceof Error ? err.message : String(err)
-                        }`,
-                    );
-                }
-            }
-        } catch (err) {
-            this.logger.error(
-                `Error processing transaction ${txHash}: ${
-                    err instanceof Error ? err.message : String(err)
-                }. Stack: ${err instanceof Error && err.stack ? err.stack : 'No stack trace available'}`,
             );
         }
     }
