@@ -88,7 +88,7 @@ export async function waitForOperatorRegistration(
 ): Promise<Hash> {
     const logger = Logger.getInstance().getLogger('waitForOperatorRegistration');
     const viemClientManager = ViemClientManager.getInstance();
-    const { publicClient } = viemClientManager.getClients(network);
+    const { publicClient } = viemClientManager.getClients(network.name);
 
     const POLL_INTERVAL_MS = 3 * 1000;
     const MAX_RETRIES = 100;
@@ -188,7 +188,7 @@ export async function ensureOperatorIsRegistered(): Promise<void> {
     const deploymentManager = MessagingDeploymentManager.getInstance();
 
     const verifierNetwork = networkManager.getVerifierNetwork();
-    const { publicClient } = viemClientManager.getClients(verifierNetwork);
+    const { publicClient } = viemClientManager.getClients(verifierNetwork.name);
 
     const registered = await isOperatorRegistered(publicClient, networkManager, deploymentManager);
 

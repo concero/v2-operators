@@ -283,7 +283,7 @@ export class Relayer extends ManagerBase {
                 async ([txHash, txLogs]) => {
                     try {
                         const { publicClient: verifierPublicClient } =
-                            this.viemClientManager.getClients(this.verifierNetwork);
+                            this.viemClientManager.getClients(this.verifierNetwork.name);
 
                         const messageReportTx = await verifierPublicClient.getTransaction({
                             hash: txHash as `0x${string}`,

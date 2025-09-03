@@ -70,7 +70,7 @@ export class RelayerSetup {
         this.logger.info('Ensuring operator is registered...');
 
         const verifierNetwork = this.networkManager.getVerifierNetwork();
-        const { publicClient } = this.viemClientManager.getClients(verifierNetwork);
+        const { publicClient } = this.viemClientManager.getClients(verifierNetwork.name);
         const verifierAddress = (await this.deploymentManager.getConceroVerifier()) as Address;
 
         const isRegistered = (await publicClient.readContract({
@@ -115,7 +115,7 @@ export class RelayerSetup {
 
         const verifierNetwork = this.networkManager.getVerifierNetwork();
         const verifierAddress = (await this.deploymentManager.getConceroVerifier()) as Address;
-        const { publicClient } = this.viemClientManager.getClients(verifierNetwork);
+        const { publicClient } = this.viemClientManager.getClients(verifierNetwork.name);
 
         const requiredDeposit =
             ((await publicClient.readContract({
@@ -169,7 +169,7 @@ export class RelayerSetup {
         fromBlockNumber: bigint,
         operatorAddress: string,
     ): Promise<Hash> {
-        const { publicClient } = this.viemClientManager.getClients(network);
+        const { publicClient } = this.viemClientManager.getClients(network.name);
 
         const POLL_INTERVAL_MS = 3 * 1000;
         const MAX_RETRIES = 100;

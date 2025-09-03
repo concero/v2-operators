@@ -14,6 +14,7 @@ import {
 import { globalConfig } from '../constants';
 import { MessagingDeploymentManager, RelayerBalanceManager } from '../managers';
 import { Relayer } from '../managers/Relayer';
+import { createNonceManager } from 'viem';
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
@@ -141,7 +142,7 @@ export async function initializeManagers(): Promise<void> {
         {},
     );
 
-    const nonceManager = NonceManager.createInstance(logger.getLogger('NonceManager'), {});
+    const nonceManager = NonceManager.createInstance(logger.getLogger('NonceManager'), viemClientManager, {});
     await nonceManager.initialize();
 
     const txWriter = TxWriter.createInstance(

@@ -1,8 +1,7 @@
 import { getEnvBigint, getEnvBool, getEnvInt, getEnvString } from '../utils/getEnvVar';
 
 import { Abi } from 'viem';
-import { getGranularLogLevels } from '@concero/operator-utils';
-import { getRpcExtensions, getRpcOverrides } from './localRpcLoaders';
+import { getGranularLogLevels , safeRequireJson } from '@concero/operator-utils';
 
 import { abi as conceroRouterAbi } from '../abi/ConceroRouter.json';
 import { abi as conceroVerifierAbi } from '../abi/ConceroVerifier.json';
@@ -102,8 +101,8 @@ const globalConfig: GlobalConfig = {
         CONCERO_ROUTER: conceroRouterAbi as Abi,
     },
     RPC: {
-        OVERRIDE: getRpcOverrides(),
-        EXTENSION: getRpcExtensions(),
+        OVERRIDE: safeRequireJson('../../rpc.overrides.json'),
+        EXTENSION: safeRequireJson('../../rpc.extensions.json'),
     },
     TX_WRITER: {
         DRY_RUN: getEnvBool('TX_WRITER_DRY_RUN', false),

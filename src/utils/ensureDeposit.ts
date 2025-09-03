@@ -47,7 +47,7 @@ async function fetchDepositAndDepositIfNeeded() {
 
     const verifierNetwork = networkManager.getVerifierNetwork();
     const verifierAddress = await deploymentManager.getConceroVerifier();
-    const { publicClient } = viemClientManager.getClients(verifierNetwork);
+    const { publicClient } = viemClientManager.getClients(verifierNetwork.name);
 
     const requiredDeposit = (await getMinimumDeposit(publicClient, verifierAddress)) * 200n;
     const currentDeposit = await getCurrentOperatorDeposit(publicClient, verifierAddress);
