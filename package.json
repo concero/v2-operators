@@ -4,10 +4,8 @@
     "type": "module",
     "version": "1.0.0",
     "engines": {
-        "node": ">=22.0.0",
-        "bun": ">=1.0.0"
+        "node": ">=22.0.0"
     },
-    "engineStrict": true,
     "scripts": {
         "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm --packages=external",
         "build:cjs": "esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=cjs --out-extension=.js=.cjs --packages=external",
@@ -22,11 +20,11 @@
         "prisma:reset": "npx prisma migrate reset",
         "prisma:studio": "npx prisma studio --schema=prisma/schema.prisma",
         "prepare": "husky",
-        "test": "jest"
+        "test": "jest",
+        "preinstall": "sh validatePackageManager.sh bun"
     },
     "devDependencies": {
-        "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
-        "@trivago/prettier-plugin-sort-imports": "5.2.2",
+        "@ianvs/prettier-plugin-sort-imports": "4.7.0",
         "@typescript-eslint/eslint-plugin": "8.22.0",
         "@typescript-eslint/parser": "8.22.0",
         "esbuild": "0.25.6",

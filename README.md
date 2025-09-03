@@ -73,7 +73,7 @@ The Concero V2 relayer system follows a modular architecture designed for reliab
 │  ├── Network Manager                                       │
 │  ├── Deployment Manager                                    │
 │  ├── Viem Client Manager                                   │
-│  └── RPC Manager                                          │
+│  └── RPC_MANAGER Manager                                          │
 ├─────────────────────────────────────────────────────────────┤
 │  Infrastructure                                            │
 │  ├── DB Manager (Prisma)                                  │
@@ -132,7 +132,7 @@ Central transaction coordination layer providing:
 
 ### Viem Client Manager
 - Creates, retrieves, and disposes of Viem Fallback Clients
-- Manages RPC connections with fallback support
+- Manages RPC_MANAGER connections with fallback support
 - Optimizes client lifecycle management
 
 ### Nonce Manager
@@ -140,8 +140,8 @@ Central transaction coordination layer providing:
 - Prevents nonce-related transaction failures
 - Enables faster transaction processing
 
-### RPC Manager
-- Maintains updatable lists of RPC endpoints
+### RPC_MANAGER Manager
+- Maintains updatable lists of RPC_MANAGER endpoints
 - Monitors `@concero/rpcs` for endpoint updates
 - Provides failover and load balancing capabilities
 
@@ -224,8 +224,8 @@ The relayer automatically fetches network configurations from:
 - **Mainnet**: `@concero/v2-networks/networks/mainnet.json`
 - **Testnet**: `@concero/v2-networks/networks/testnet.json`
 
-### RPC Configuration
-RPC endpoints are managed via `@concero/rpcs` with automatic updates.
+### RPC_MANAGER Configuration
+RPC_MANAGER endpoints are managed via `@concero/rpcs` with automatic updates.
 
 ### Deployment Configuration
 Contract addresses are fetched from `@concero/v2-contracts` deployment files.
@@ -308,7 +308,7 @@ Structured logs are written to:
 
 ### Health Checks
 - **Database Connectivity**: Prisma connection status
-- **RPC Endpoints**: Network connectivity verification
+- **RPC_MANAGER Endpoints**: Network connectivity verification
 - **Contract Interactions**: Successful contract calls
 - **Balance Monitoring**: Sufficient gas and deposits
 
@@ -324,7 +324,7 @@ Structured logs are written to:
 - [Contract Utils](https://github.com/concero/contract-utils)
 - [Operator Utils](https://github.com/concero/operator-utils)
 - [V2 Networks](https://github.com/concero/v2-networks)
-- [RPC Service](https://github.com/concero/rpcs)
+- [RPC_MANAGER Service](https://github.com/concero/rpcs)
 
 ### API References
 - [Viem Documentation](https://viem.sh/)

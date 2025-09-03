@@ -1,5 +1,4 @@
 import {
-    AbiEvent,
     Address,
     decodeAbiParameters,
     encodeAbiParameters,
@@ -9,10 +8,10 @@ import {
 } from 'viem';
 import {
     BlockManagerRegistry,
+    ConceroNetworkManager,
     ITxMonitor,
     LoggerInterface,
     ManagerBase,
-    NetworkManager,
     TxReader,
     TxWriter,
     ViemClientManager,
@@ -30,7 +29,7 @@ import { DecodedMessageReportResult } from '../utils/decoders/types';
 export class Relayer extends ManagerBase {
     private static instance: Relayer | undefined;
     private readonly logger: LoggerInterface;
-    private readonly networkManager: NetworkManager;
+    private readonly networkManager: ConceroNetworkManager;
     private readonly blockManagerRegistry: BlockManagerRegistry;
     private readonly viemClientManager: ViemClientManager;
     private readonly deploymentManager: MessagingDeploymentManager;

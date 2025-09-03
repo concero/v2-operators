@@ -4,16 +4,11 @@ LABEL stage=app-builder
 
 WORKDIR /app
 
-# Install esbuild to use globally (docker on macos throws error because of architecture differences of esbuild package)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    nodejs \
-    npm
-
 COPY package.json bun.lockb* ./
 
 #COPY prisma ./prisma
 
-RUN bun install
+RUN bun install --ignore-scripts
 
 # Copy the rest of the application code to the container
 COPY . .
@@ -39,7 +34,7 @@ COPY --from=builder --chown=bunuser:bunuser /app/dist /app/dist
 COPY --from=builder --chown=bunuser:bunuser /app/node_modules /app/node_modules
 COPY --from=builder --chown=bunuser:bunuser /app/package.json /app/
 
-# Copy RPC configuration files
+# Copy RPC_MANAGER configuration files
 COPY --from=builder --chown=bunuser:bunuser /app/rpc.extensions.json /app/
 COPY --from=builder --chown=bunuser:bunuser /app/rpc.overrides.json /app/
 
