@@ -66,7 +66,7 @@ export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpo
             // );
         } catch (error) {
             this.logger.error(
-                `Upsert failed for network: ${networkName}, blockNumber: ${blockNumber.toString()}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
+                `Upsert failed for network: ${networkName}, blockNumber: ${blockNumber.toString()}: ${error}`,
             );
             throw error;
         }

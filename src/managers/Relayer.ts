@@ -3,6 +3,7 @@ import {
     decodeAbiParameters,
     encodeAbiParameters,
     getAbiItem,
+    Hash,
     keccak256,
     Log,
 } from 'viem';
@@ -180,7 +181,7 @@ export class Relayer extends ManagerBase {
                 this.logger.debug(`Created ConceroMessageSent watcher for ${network.name}`);
             } catch (error) {
                 this.logger.error(
-                    `Failed to set up router event listeners for ${network.name}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
+                    `Failed to set up router event listeners for ${network.name}: ${error}`,
                 );
             }
         }
@@ -212,9 +213,7 @@ export class Relayer extends ManagerBase {
             this.watcherIds.push(watcherId);
             this.logger.debug('Created MessageReport watcher for verifier');
         } catch (error) {
-            this.logger.error(
-                `Failed to set up verifier event listeners: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-            );
+            this.logger.error(`Failed to set up verifier event listeners: ${error}`);
         }
     }
 
@@ -254,9 +253,7 @@ export class Relayer extends ManagerBase {
                 void this.requestMessageReport(log, network.chainSelector); // @dev: not awaiting to avoid blocking
             }
         } catch (error) {
-            this.logger.error(
-                `Error processing logs from ${network.name}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-            );
+            this.logger.error(`Error processing logs from ${network.name}: ${error}`);
         }
     }
 
@@ -269,7 +266,7 @@ export class Relayer extends ManagerBase {
 
         try {
             const decodedLogs = decodeLogs(logs, this.config.abi.CONCERO_VERIFIER);
-            const txHashToLogs = new Map<string, DecodedLog[]>();
+            const txHashToLogs = new Map<Hash, DecodedLog[]>();
 
             for (const log of decodedLogs) {
                 const txHash = log.transactionHash!;
@@ -278,38 +275,36 @@ export class Relayer extends ManagerBase {
                 txHashToLogs.set(txHash, existingLogs);
             }
 
-            const txProcessPromises = Array.from(txHashToLogs.entries()).map(
-                async ([txHash, txLogs]) => {
-                    try {
-                        const { publicClient: verifierPublicClient } =
-                            this.viemClientManager.getClients(this.verifierNetwork.name);
+            const txProcessPromises = Array.from(txHashToLogs.entries()).map(async ([txHash]) => {
+                try {
+                    const { publicClient: verifierPublicClient } =
+                        this.viemClientManager.getClients(this.verifierNetwork.name);
 
-                        const messageReportTx = await verifierPublicClient.getTransaction({
-                            hash: txHash as `0x${string}`,
-                        });
-                        const decodedCLFReport = decodeCLFReport(messageReportTx);
+                    const messageReportTx = await verifierPublicClient.getTransaction({
+                        hash: txHash,
+                    });
+                    const decodedCLFReport = decodeCLFReport(messageReportTx);
 
-                        const messageResults = await this.parseMessageResults(decodedCLFReport);
-                        if (messageResults.length === 0) {
-                            this.logger.warn(
-                                `No valid message results found in report for tx ${txHash}`,
-                            );
-                            return;
-                        }
+                    const messageResults = await this.parseMessageResults(decodedCLFReport);
+                    if (messageResults.length === 0) {
+                        this.logger.warn(
+                            `No valid message results found in report for tx ${txHash}`,
+                        );
+                        return;
+                    }
 
-                        const messagesByDstChain = this.groupMessagesByDestination(messageResults);
+                    const messagesByDstChain = this.groupMessagesByDestination(messageResults);
 
-                        const reportSubmission = {
-                            context: decodedCLFReport.reportContext,
-                            report: decodedCLFReport.reportBytes,
-                            rs: decodedCLFReport.rs,
-                            ss: decodedCLFReport.ss,
-                            rawVs: decodedCLFReport.rawVs,
-                        };
+                    const reportSubmission = {
+                        context: decodedCLFReport.reportContext,
+                        report: decodedCLFReport.reportBytes,
+                        rs: decodedCLFReport.rs,
+                        ss: decodedCLFReport.ss,
+                        rawVs: decodedCLFReport.rawVs,
+                    };
 
-                        const dstChainProcessPromises = Array.from(
-                            messagesByDstChain.entries(),
-                        ).map(async ([dstChainSelector, { results, indexes }]) => {
+                    const dstChainProcessPromises = Array.from(messagesByDstChain.entries()).map(
+                        async ([dstChainSelector, { results, indexes }]) => {
                             const dstChain =
                                 this.networkManager.getNetworkBySelector(dstChainSelector);
 
@@ -396,18 +391,18 @@ export class Relayer extends ManagerBase {
                                     }`,
                                 );
                             }
-                        });
+                        },
+                    );
 
-                        await Promise.allSettled(dstChainProcessPromises);
-                    } catch (err) {
-                        this.logger.error(
-                            `Error processing transaction ${txHash}: ${
-                                err instanceof Error ? err.message : String(err)
-                            }. Stack: ${err instanceof Error && err.stack ? err.stack : 'No stack trace available'}`,
-                        );
-                    }
-                },
-            );
+                    await Promise.allSettled(dstChainProcessPromises);
+                } catch (err) {
+                    this.logger.error(
+                        `Error processing transaction ${txHash}: ${
+                            err instanceof Error ? err.message : String(err)
+                        }. Stack: ${err}`,
+                    );
+                }
+            });
 
             await Promise.allSettled(txProcessPromises);
         } catch (e) {
@@ -469,7 +464,7 @@ export class Relayer extends ManagerBase {
         } catch (error) {
             const messageId = decodedLog.args?.messageId;
             this.logger.error(
-                `[${this.verifierNetwork.name}] Error requesting CLF message report for messageId ${messageId || 'unknown'}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
+                `[${this.verifierNetwork.name}] Error requesting CLF message report for messageId ${messageId || 'unknown'}: ${error}`,
             );
         }
     }
@@ -484,9 +479,7 @@ export class Relayer extends ManagerBase {
                 const decodedResult = decodeMessageReportResult(decodedCLFReport.report.results[i]);
                 messageResults.push(decodedResult);
             } catch (error) {
-                this.logger.error(
-                    `Failed to decode result ${i}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-                );
+                this.logger.error(`Failed to decode result ${i}: ${error}`);
             }
         }
 
@@ -699,7 +692,7 @@ export class Relayer extends ManagerBase {
                 return;
             } catch (error) {
                 this.logger.error(
-                    `Error in destination submission attempt ${attempt}/${maxAttempts} for ${originalTxHash}: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
+                    `Error in destination submission attempt ${attempt}/${maxAttempts} for ${originalTxHash}: ${error}`,
                 );
             }
 

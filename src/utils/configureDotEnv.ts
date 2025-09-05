@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 
 import * as path from 'path';
 
-export const ENV_FILES = ['.env'] as string[];
+export const ENV_FILES: string[] = ['.env'];
 
 /**
  * Configures dotenv loading order:

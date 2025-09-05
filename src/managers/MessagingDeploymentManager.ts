@@ -59,9 +59,7 @@ export class MessagingDeploymentManager extends ManagerBase implements IMessagin
             // Initial fetch of deployments will happen on first network update
             this.logger.debug('Initialized');
         } catch (error) {
-            this.logger.error(
-                `Failed to initialize: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-            );
+            this.logger.error(`Failed to initialize: ${error}`);
             throw error;
         }
     }
@@ -135,9 +133,7 @@ export class MessagingDeploymentManager extends ManagerBase implements IMessagin
                 }
             }
         } catch (err) {
-            this.logger.error(
-                `Failed to update deployments after network update: ${err instanceof Error ? err.message : String(err)}. Stack: ${err instanceof Error && err.stack ? err.stack : 'No stack trace available'}`,
-            );
+            this.logger.error(`Failed to update deployments after network update: ${err}`);
             throw err;
         }
     }

@@ -1,6 +1,9 @@
-import { getEnvInt, getEnvString } from '../utils/getEnvVars';
-
-import { getEnvBigint, globalConfig as operatorUtilsGlobalConfig } from '@concero/operator-utils';
+import {
+    getEnvBigint,
+    getEnvInt,
+    getEnvString,
+    globalConfig as operatorUtilsGlobalConfig,
+} from '@concero/operator-utils';
 
 import { abi as conceroRouterAbi } from '../abi/ConceroRouter.json';
 import { abi as conceroVerifierAbi } from '../abi/ConceroVerifier.json';

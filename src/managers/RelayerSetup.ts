@@ -1,4 +1,4 @@
-import { Address, getAbiItem, Hash } from 'viem';
+import { Address, formatUnits, getAbiItem, Hash } from 'viem';
 import type {
     ConceroNetwork,
     ITxWriter,
@@ -53,13 +53,11 @@ export class RelayerSetup {
     }
 
     public async executeSetup(): Promise<void> {
-        this.logger.info('Starting relayer setup...');
-
         try {
             await this.ensureOperatorIsRegistered();
             await this.ensureOperatorDeposit();
 
-            this.logger.info('Relayer setup completed successfully');
+            this.logger.info('Relayer setup successful');
         } catch (error) {
             this.logger.error('Relayer setup failed:', error);
             throw error;
@@ -67,21 +65,19 @@ export class RelayerSetup {
     }
 
     private async ensureOperatorIsRegistered(): Promise<void> {
-        this.logger.info('Ensuring operator is registered...');
-
         const verifierNetwork = this.networkManager.getVerifierNetwork();
         const { publicClient } = this.viemClientManager.getClients(verifierNetwork.name);
-        const verifierAddress = (await this.deploymentManager.getConceroVerifier()) as Address;
+        const verifierAddress = await this.deploymentManager.getConceroVerifier();
 
-        const isRegistered = (await publicClient.readContract({
+        const isRegistered = await publicClient.readContract({
             address: verifierAddress,
             abi: this.config.abi.CONCERO_VERIFIER,
             functionName: 'isOperatorRegistered',
             args: [this.config.operatorAddress],
-        })) as boolean;
+        });
 
         if (isRegistered) {
-            this.logger.info('Operator already registered');
+            this.logger.info('Operator is registered');
             return;
         }
 
@@ -98,7 +94,7 @@ export class RelayerSetup {
 
         this.logger.info(`Requested operator registration with txHash ${txHash}`);
 
-        const transaction = await publicClient.getTransaction({ hash: txHash as `0x${string}` });
+        const transaction = await publicClient.getTransaction({ hash: txHash });
 
         const confirmedTxHash = await this.waitForOperatorRegistration(
             verifierNetwork,
@@ -111,29 +107,27 @@ export class RelayerSetup {
     }
 
     private async ensureOperatorDeposit(): Promise<void> {
-        this.logger.info('Ensuring operator deposit is sufficient...');
-
         const verifierNetwork = this.networkManager.getVerifierNetwork();
-        const verifierAddress = (await this.deploymentManager.getConceroVerifier()) as Address;
+        const verifierAddress = await this.deploymentManager.getConceroVerifier();
         const { publicClient } = this.viemClientManager.getClients(verifierNetwork.name);
 
         const requiredDeposit =
-            ((await publicClient.readContract({
+            (await publicClient.readContract({
                 address: verifierAddress,
                 abi: this.config.abi.CONCERO_VERIFIER,
                 functionName: 'getMinimumOperatorDeposit',
                 args: [],
-            })) as bigint) * 200n;
+            })) * 200n;
 
-        const currentDeposit = (await publicClient.readContract({
+        const currentDeposit = await publicClient.readContract({
             address: verifierAddress,
             abi: this.config.abi.CONCERO_VERIFIER,
             functionName: 'getOperatorDeposit',
             args: [this.config.operatorAddress],
-        })) as bigint;
+        });
 
         if (currentDeposit >= requiredDeposit) {
-            this.logger.info(`Sufficient deposit of ${currentDeposit} already exists`);
+            this.logger.info(`Deposit of ${formatUnits(currentDeposit, 18)} is sufficient`);
             return;
         }
 
@@ -146,21 +140,6 @@ export class RelayerSetup {
         });
 
         this.logger.info(`Deposited ${requiredDeposit} to ConceroVerifier with hash ${txHash}`);
-    }
-
-    public async validateSetup(): Promise<boolean> {
-        try {
-            this.logger.info('Validating relayer setup...');
-
-            // Add validation logic here if needed
-            // For example, check if operator is still registered, deposit is still sufficient, etc.
-
-            this.logger.info('Relayer setup validation completed');
-            return true;
-        } catch (error) {
-            this.logger.error('Setup validation failed:', error);
-            return false;
-        }
     }
 
     private async waitForOperatorRegistration(
