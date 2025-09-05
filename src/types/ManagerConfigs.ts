@@ -111,9 +111,6 @@ export interface RelayerSetupConfig extends BaseManagerConfig {
         CONCERO_ROUTER: any;
     };
     operatorAddress: string;
-    txWriter: {
-        dryRun: boolean;
-    };
 }
 
 /** Configuration for Relayer */
