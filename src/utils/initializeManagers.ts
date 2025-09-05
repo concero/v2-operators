@@ -18,7 +18,6 @@ import { Relayer } from '../managers/Relayer';
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
     const logger = Logger.createInstance(globalConfig.LOGGER);
-    await logger.initialize();
 
     const httpLoggerInstance = logger.getLogger('HttpClient');
     const httpClient = HttpClient.createInstance(httpLoggerInstance, globalConfig.HTTPCLIENT);

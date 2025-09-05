@@ -144,7 +144,7 @@ export class Relayer extends ManagerBase {
         await this.setup.executeSetup();
 
         await this.setupEventListeners();
-        this.logger.info('Relayer initialized');
+        this.logger.info('initialized');
     }
 
     private async setupEventListeners(): Promise<void> {
@@ -423,7 +423,7 @@ export class Relayer extends ManagerBase {
             const { messageId, message, sender } = args;
 
             if (!messageId || !message || !sender || !decodedLog.blockNumber) {
-                this.logger.error(`Missing required data in log: ${JSON.stringify(decodedLog)}`);
+                this.logger.error(`Missing required data in log: ${decodedLog}`);
                 return;
             }
 

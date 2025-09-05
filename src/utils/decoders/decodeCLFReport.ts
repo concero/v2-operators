@@ -51,7 +51,6 @@ export function decodeCLFReport(tx: GetTransactionReturnType) {
         reportBytes: reportBytes,
     };
 
-    // console.log("Decoded Report:", JSON.stringify(report, null, 2));
     return report;
 }
 
