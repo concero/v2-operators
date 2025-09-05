@@ -67,7 +67,7 @@ export class Relayer extends ManagerBase {
 
     private constructor(
         logger: LoggerInterface,
-        networkManager: NetworkManager,
+        networkManager: ConceroNetworkManager,
         blockManagerRegistry: BlockManagerRegistry,
         viemClientManager: ViemClientManager,
         deploymentManager: MessagingDeploymentManager,
@@ -102,7 +102,7 @@ export class Relayer extends ManagerBase {
 
     public static createInstance(
         logger: LoggerInterface,
-        networkManager: NetworkManager,
+        networkManager: ConceroNetworkManager,
         blockManagerRegistry: BlockManagerRegistry,
         viemClientManager: ViemClientManager,
         deploymentManager: MessagingDeploymentManager,

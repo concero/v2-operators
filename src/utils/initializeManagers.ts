@@ -87,7 +87,6 @@ export async function initializeManagers(): Promise<void> {
     );
     const txReader = TxReader.createInstance(
         logger.getLogger('TxReader'),
-        networkManager,
         viemClientManager,
         globalConfig.TX_READER,
     );
@@ -129,7 +128,7 @@ export async function initializeManagers(): Promise<void> {
         txReader,
         txWriter,
         txMonitor,
-        globalConfig.RELAYER
+        globalConfig.RELAYER,
     );
 
     await relayer.initialize();
