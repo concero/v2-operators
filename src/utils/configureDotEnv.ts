@@ -1,7 +1,8 @@
-import * as path from 'path';
 import * as dotenv from 'dotenv';
 
-export const ENV_FILES = ['.env'] as string[];
+import * as path from 'path';
+
+export const ENV_FILES: string[] = ['.env'];
 
 /**
  * Configures dotenv loading order:
@@ -14,20 +15,20 @@ export const ENV_FILES = ['.env'] as string[];
  * @param {string} [basePath='./'] - Base path where .env files are located.
  */
 export function configureDotEnv(basePath = './'): void {
-  const baseDir = basePath.endsWith(path.sep) ? basePath : `${basePath}${path.sep}`;
+    const baseDir = basePath.endsWith(path.sep) ? basePath : `${basePath}${path.sep}`;
 
-  const nodeEnvNormalized = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+    const nodeEnvNormalized = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 
-  for (const file of ENV_FILES) {
-    const p = path.resolve(baseDir, file);
-    dotenv.config({ path: p, override: false });
-  }
+    for (const file of ENV_FILES) {
+        const p = path.resolve(baseDir, file);
+        dotenv.config({ path: p, override: false });
+    }
 
-  const localFilePath = path.resolve(baseDir, '.env.local');
-  dotenv.config({ path: localFilePath, override: true });
+    const localFilePath = path.resolve(baseDir, '.env.local');
+    dotenv.config({ path: localFilePath, override: true });
 
-  const envFilePath = path.resolve(baseDir, `.env.${nodeEnvNormalized}`);
-  dotenv.config({ path: envFilePath, override: true });
+    const envFilePath = path.resolve(baseDir, `.env.${nodeEnvNormalized}`);
+    dotenv.config({ path: envFilePath, override: true });
 }
 
 configureDotEnv();

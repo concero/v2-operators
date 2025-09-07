@@ -1,4 +1,4 @@
-import { Abi, AbiEventSignatureNotFoundError, Log, decodeEventLog } from 'viem';
+import { Abi, AbiEventSignatureNotFoundError, decodeEventLog, Log } from 'viem';
 
 import { DecodedLog } from '../types/DecodedLog';
 

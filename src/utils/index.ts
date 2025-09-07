@@ -4,7 +4,4 @@ export { configureDotEnv } from './configureDotEnv';
 export { createViemChain } from './createViemChain';
 export { decodeCLFReport } from './decoders/decodeCLFReport';
 export { decodeMessageReportResult } from './decoders/decodeMessageReportResult';
-export * as formatting from './formatting';
-export { getEnvAddress, getEnvVar } from './getEnvVar';
-export { getOptionalEnvVar } from './getOptionalEnvVar';
 export { localhostViemChain } from './localhostViemChain';

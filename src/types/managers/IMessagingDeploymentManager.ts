@@ -1,6 +1,5 @@
-import { NetworkUpdateListener } from './NetworkUpdateListener';
-
 import { Address } from 'viem';
+import { NetworkUpdateListener } from '@concero/operator-utils';
 
 export interface IMessagingDeploymentManager extends NetworkUpdateListener {
     initialize(): Promise<void>;

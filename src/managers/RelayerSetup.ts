@@ -1,5 +1,4 @@
-import { MessagingDeploymentManager } from './MessagingDeploymentManager';
-
+import { Address, formatUnits, getAbiItem, Hash } from 'viem';
 import type {
     ConceroNetwork,
     ITxWriter,
@@ -7,9 +6,9 @@ import type {
     LoggerInterface,
     NetworkManager,
 } from '@concero/operator-utils';
-import { Address, Hash, getAbiItem } from 'viem';
+import { MessagingDeploymentManager } from './MessagingDeploymentManager';
 
-import { globalConfig } from '../constants';
+import { RelayerSetupConfig } from '../types/ManagerConfigs';
 
 export class RelayerSetup {
     private readonly logger: LoggerInterface;
@@ -17,6 +16,7 @@ export class RelayerSetup {
     private readonly viemClientManager: IViemClientManager;
     private readonly deploymentManager: MessagingDeploymentManager;
     private readonly txWriter: ITxWriter;
+    private readonly config: RelayerSetupConfig;
 
     constructor(
         logger: LoggerInterface,
@@ -24,12 +24,14 @@ export class RelayerSetup {
         viemClientManager: IViemClientManager,
         deploymentManager: MessagingDeploymentManager,
         txWriter: ITxWriter,
+        config: RelayerSetupConfig,
     ) {
         this.logger = logger;
         this.networkManager = networkManager;
         this.viemClientManager = viemClientManager;
         this.deploymentManager = deploymentManager;
         this.txWriter = txWriter;
+        this.config = config;
     }
 
     public static createInstance(
@@ -38,6 +40,7 @@ export class RelayerSetup {
         viemClientManager: IViemClientManager,
         deploymentManager: MessagingDeploymentManager,
         txWriter: ITxWriter,
+        config: RelayerSetupConfig,
     ): RelayerSetup {
         return new RelayerSetup(
             logger,
@@ -45,17 +48,16 @@ export class RelayerSetup {
             viemClientManager,
             deploymentManager,
             txWriter,
+            config,
         );
     }
 
     public async executeSetup(): Promise<void> {
-        this.logger.info('Starting relayer setup...');
-
         try {
             await this.ensureOperatorIsRegistered();
             await this.ensureOperatorDeposit();
 
-            this.logger.info('Relayer setup completed successfully');
+            this.logger.info('Relayer setup successful');
         } catch (error) {
             this.logger.error('Relayer setup failed:', error);
             throw error;
@@ -63,100 +65,81 @@ export class RelayerSetup {
     }
 
     private async ensureOperatorIsRegistered(): Promise<void> {
-        this.logger.info('Ensuring operator is registered...');
-
         const verifierNetwork = this.networkManager.getVerifierNetwork();
-        const { publicClient } = this.viemClientManager.getClients(verifierNetwork);
-        const verifierAddress = (await this.deploymentManager.getConceroVerifier()) as Address;
+        const { publicClient } = this.viemClientManager.getClients(verifierNetwork.name);
+        const verifierAddress = await this.deploymentManager.getConceroVerifier();
 
-        const isRegistered = (await publicClient.readContract({
+        const isRegistered = await publicClient.readContract({
             address: verifierAddress,
-            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            abi: this.config.abi.CONCERO_VERIFIER,
             functionName: 'isOperatorRegistered',
-            args: [globalConfig.OPERATOR_ADDRESS],
-        })) as boolean;
+            args: [this.config.operatorAddress],
+        });
 
         if (isRegistered) {
-            this.logger.info('Operator already registered');
+            this.logger.info('Operator is registered');
             return;
         }
 
         const chainTypes = [BigInt(0)]; // EVM = 0
         const operatorActions = [BigInt(1)]; // Register = 1
-        const operatorAddresses = [globalConfig.OPERATOR_ADDRESS];
+        const operatorAddresses = [this.config.operatorAddress];
 
         const txHash = await this.txWriter.callContract(verifierNetwork, {
             address: verifierAddress,
-            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            abi: this.config.abi.CONCERO_VERIFIER,
             functionName: 'requestOperatorRegistration',
             args: [chainTypes, operatorActions, operatorAddresses],
         });
 
         this.logger.info(`Requested operator registration with txHash ${txHash}`);
 
-        const transaction = await publicClient.getTransaction({ hash: txHash as `0x${string}` });
+        const transaction = await publicClient.getTransaction({ hash: txHash });
 
         const confirmedTxHash = await this.waitForOperatorRegistration(
             verifierNetwork,
             verifierAddress,
             transaction.blockNumber!,
-            globalConfig.OPERATOR_ADDRESS,
+            this.config.operatorAddress,
         );
 
         this.logger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
     }
 
     private async ensureOperatorDeposit(): Promise<void> {
-        this.logger.info('Ensuring operator deposit is sufficient...');
-
         const verifierNetwork = this.networkManager.getVerifierNetwork();
-        const verifierAddress = (await this.deploymentManager.getConceroVerifier()) as Address;
-        const { publicClient } = this.viemClientManager.getClients(verifierNetwork);
+        const verifierAddress = await this.deploymentManager.getConceroVerifier();
+        const { publicClient } = this.viemClientManager.getClients(verifierNetwork.name);
 
         const requiredDeposit =
-            ((await publicClient.readContract({
+            (await publicClient.readContract({
                 address: verifierAddress,
-                abi: globalConfig.ABI.CONCERO_VERIFIER,
+                abi: this.config.abi.CONCERO_VERIFIER,
                 functionName: 'getMinimumOperatorDeposit',
                 args: [],
-            })) as bigint) * 200n;
+            })) * 200n;
 
-        const currentDeposit = (await publicClient.readContract({
+        const currentDeposit = await publicClient.readContract({
             address: verifierAddress,
-            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            abi: this.config.abi.CONCERO_VERIFIER,
             functionName: 'getOperatorDeposit',
-            args: [globalConfig.OPERATOR_ADDRESS],
-        })) as bigint;
+            args: [this.config.operatorAddress],
+        });
 
         if (currentDeposit >= requiredDeposit) {
-            this.logger.info(`Sufficient deposit of ${currentDeposit} already exists`);
+            this.logger.info(`Deposit of ${formatUnits(currentDeposit, 18)} is sufficient`);
             return;
         }
 
         const txHash = await this.txWriter.callContract(verifierNetwork, {
             address: verifierAddress,
-            abi: globalConfig.ABI.CONCERO_VERIFIER,
+            abi: this.config.abi.CONCERO_VERIFIER,
             functionName: 'operatorDeposit',
-            args: [globalConfig.OPERATOR_ADDRESS],
+            args: [this.config.operatorAddress],
             value: requiredDeposit,
         });
 
         this.logger.info(`Deposited ${requiredDeposit} to ConceroVerifier with hash ${txHash}`);
-    }
-
-    public async validateSetup(): Promise<boolean> {
-        try {
-            this.logger.info('Validating relayer setup...');
-
-            // Add validation logic here if needed
-            // For example, check if operator is still registered, deposit is still sufficient, etc.
-
-            this.logger.info('Relayer setup validation completed');
-            return true;
-        } catch (error) {
-            this.logger.error('Setup validation failed:', error);
-            return false;
-        }
     }
 
     private async waitForOperatorRegistration(
@@ -165,7 +148,7 @@ export class RelayerSetup {
         fromBlockNumber: bigint,
         operatorAddress: string,
     ): Promise<Hash> {
-        const { publicClient } = this.viemClientManager.getClients(network);
+        const { publicClient } = this.viemClientManager.getClients(network.name);
 
         const POLL_INTERVAL_MS = 3 * 1000;
         const MAX_RETRIES = 100;
@@ -199,15 +182,15 @@ export class RelayerSetup {
                         fromBlock: fromBlockNumber,
                         toBlock: latestBlockNumber,
                         event: getAbiItem({
-                            abi: globalConfig.ABI.CONCERO_VERIFIER,
+                            abi: this.config.abi.CONCERO_VERIFIER,
                             name: 'OperatorRegistered',
-                        }) as any,
+                        }),
                     });
 
                     const matchingLog = logs.find(
                         log =>
-                            (log as any).args?.operator?.toLowerCase() ===
-                                operatorAddress.toLowerCase() && log.transactionHash,
+                            log.args?.operator?.toLowerCase() === operatorAddress.toLowerCase() &&
+                            log.transactionHash,
                     );
 
                     if (matchingLog && matchingLog.transactionHash) {

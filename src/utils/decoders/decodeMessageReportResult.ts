@@ -1,6 +1,5 @@
-import { DecodedMessageReportResult } from './types';
-
 import { ByteArray, decodeAbiParameters, hexToBytes } from 'viem';
+import { DecodedMessageReportResult } from './types';
 
 export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessageReportResult {
     try {
@@ -29,6 +28,8 @@ export function decodeMessageReportResult(resultBytes: ByteArray): DecodedMessag
                     components: [
                         { type: 'bytes32', name: 'messageId' },
                         { type: 'bytes32', name: 'messageHashSum' },
+                        //todo: after merging v2-contracts stage-updates into master, add txHash to result:
+                        // { type: 'bytes32', name: 'txHash' },
                         { type: 'bytes', name: 'messageSender' },
                         { type: 'uint24', name: 'srcChainSelector' },
                         { type: 'uint24', name: 'dstChainSelector' },

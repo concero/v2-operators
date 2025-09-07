@@ -12,63 +12,36 @@ import {
 } from '@concero/operator-utils';
 
 import { globalConfig } from '../constants';
-import {
-    MessagingDeploymentManager,
-    RelayerBalanceManager,
-} from '../managers';
+import { MessagingDeploymentManager, RelayerBalanceManager } from '../managers';
 import { Relayer } from '../managers/Relayer';
 
 /** Initialize all managers in the correct dependency order */
 export async function initializeManagers(): Promise<void> {
-    const logger = Logger.createInstance({
-        logDir: globalConfig.LOGGER.LOG_DIR,
-        logMaxSize: globalConfig.LOGGER.LOG_MAX_SIZE,
-        logMaxFiles: globalConfig.LOGGER.LOG_MAX_FILES,
-        logLevelDefault: globalConfig.LOGGER.LOG_LEVEL_DEFAULT,
-        logLevelsGranular: globalConfig.LOGGER.LOG_LEVELS_GRANULAR,
-        enableConsoleTransport: process.env.LOGGER_CONSOLE_ENABLED === "true",
-    });
-    await logger.initialize();
+    const logger = Logger.createInstance(globalConfig.LOGGER);
 
     const httpLoggerInstance = logger.getLogger('HttpClient');
-    const httpClient = HttpClient.createInstance(httpLoggerInstance, {
-        retryDelay: globalConfig.HTTPCLIENT.RETRY_DELAY,
-        maxRetries: globalConfig.HTTPCLIENT.MAX_RETRIES,
-        defaultTimeout: globalConfig.HTTPCLIENT.DEFAULT_TIMEOUT,
-    });
+    const httpClient = HttpClient.createInstance(httpLoggerInstance, globalConfig.HTTPCLIENT);
 
     await httpClient.initialize();
 
     const networkManager = ConceroNetworkManager.createInstance(
         logger.getLogger('NetworkManager'),
         httpClient,
-        {
-            networkMode: globalConfig.NETWORK_MODE as 'mainnet' | 'testnet' | 'localhost',
-            ignoredNetworkIds: globalConfig.IGNORED_NETWORK_IDS,
-            whitelistedNetworkIds: globalConfig.WHITELISTED_NETWORK_IDS,
-            defaultConfirmations: globalConfig.VIEM.TX_RECEIPT_OPTIONS.confirmations,
-            defaultFinalityConfirmations:
-                globalConfig.NETWORK_MANAGER.DEFAULT_FINALITY_CONFIRMATIONS,
-            mainnetUrl: globalConfig.URLS.V2_NETWORKS.MAINNET,
-            testnetUrl: globalConfig.URLS.V2_NETWORKS.TESTNET,
-        },
+        globalConfig.NETWORK_MANAGER,
     );
 
     // Core infrastructure managers
-    const rpcManager = RpcManager.createInstance(logger.getLogger('RpcManager'), networkManager, {
-        rpcOverrides: globalConfig.RPC.OVERRIDE,
-        rpcExtensions: globalConfig.RPC.EXTENSION,
-        conceroRpcsUrl: globalConfig.URLS.CONCERO_RPCS,
-        networkMode: globalConfig.NETWORK_MODE as 'mainnet' | 'testnet' | 'localhost',
-    });
+    const rpcManager = RpcManager.createInstance(
+        logger.getLogger('RpcManager'),
+        networkManager,
+        globalConfig.RPC_MANAGER,
+    );
     const viemClientManager = ViemClientManager.createInstance(
         logger.getLogger('ViemClientManager'),
         rpcManager,
-        {
-            httpTransportConfig: globalConfig.VIEM.HTTP_TRANSPORT_CONFIG,
-            fallbackTransportOptions: globalConfig.VIEM.FALLBACK_TRANSPORT_OPTIONS,
-        },
+        globalConfig.VIEM_CLIENT_MANAGER,
     );
+
     // const blockCheckpointManager = BlockCheckpointManager.createInstance(
     //     logger.getLogger('BlockCheckpointManager'),
     //     {
@@ -80,23 +53,13 @@ export async function initializeManagers(): Promise<void> {
         logger.getLogger('BlockManagerRegistry'),
         networkManager,
         viemClientManager,
-        rpcManager,
-        {
-            blockManagerConfig: {
-                pollingIntervalMs: globalConfig.BLOCK_MANAGER.POLLING_INTERVAL_MS,
-                catchupBatchSize: globalConfig.BLOCK_MANAGER.CATCHUP_BATCH_SIZE,
-                useCheckpoints: globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS,
-            },
-        },
+        globalConfig.BLOCK_MANAGER,
     );
 
     const messagingDeploymentManager = MessagingDeploymentManager.createInstance(
         logger.getLogger('MessagingDeploymentManager'),
         networkManager,
-        {
-            conceroDeploymentsUrl: globalConfig.URLS.CONCERO_DEPLOYMENTS,
-            networkMode: globalConfig.NETWORK_MODE as 'mainnet' | 'testnet' | 'localhost',
-        },
+        globalConfig.DEPLOYMENT_MANAGER,
     );
 
     await networkManager.initialize();
@@ -111,35 +74,27 @@ export async function initializeManagers(): Promise<void> {
     networkManager.registerUpdateListener(viemClientManager);
     networkManager.registerUpdateListener(blockManagerRegistry);
 
-    // Trigger initial updates sequentially for all registered listeners
-    // This ensures each manager has the data it needs before the next one initializes
-    await networkManager.triggerInitialUpdates();
-
-    setInterval(async () => {
-        try {
-            await networkManager.forceUpdate();
-        } catch (error) {
-            logger.getLogger('NetworkManager').error('Failed to update networks:', error);
-        }
-    }, globalConfig.NETWORK_MANAGER.NETWORK_UPDATE_INTERVAL_MS);
+    // Start polling for network updates which will also trigger initial updates
+    await networkManager.startPolling();
 
     const txMonitor = TxMonitor.createInstance(
         logger.getLogger('TxMonitor'),
         viemClientManager,
         blockManagerRegistry,
         networkManager,
-        {
-            maxInclusionAttempts: globalConfig.TX_MONITOR.MAX_INCLUSION_ATTEMPTS,
-        },
+        globalConfig.TX_MONITOR,
     );
     const txReader = TxReader.createInstance(
         logger.getLogger('TxReader'),
-        networkManager,
+        viemClientManager,
+        globalConfig.TX_READER,
+    );
+
+    const nonceManager = NonceManager.createInstance(
+        logger.getLogger('NonceManager'),
         viemClientManager,
         {},
     );
-
-    const nonceManager = NonceManager.createInstance(logger.getLogger('NonceManager'), {});
     await nonceManager.initialize();
 
     const txWriter = TxWriter.createInstance(
@@ -147,12 +102,7 @@ export async function initializeManagers(): Promise<void> {
         viemClientManager,
         txMonitor,
         nonceManager,
-        {
-            dryRun: globalConfig.TX_WRITER.DRY_RUN,
-            simulateTx: globalConfig.VIEM.SIMULATE_TX,
-            defaultGasLimit: globalConfig.TX_WRITER.GAS_LIMIT.DEFAULT,
-            txReceiptOptions: globalConfig.VIEM.TX_RECEIPT_OPTIONS,
-        },
+        globalConfig.TX_WRITER,
     );
 
     await txWriter.initialize();
@@ -162,11 +112,7 @@ export async function initializeManagers(): Promise<void> {
         logger.getLogger('RelayerBalanceManager'),
         viemClientManager,
         txReader,
-        {
-            defaultMinBalance: globalConfig.BALANCE_MANAGER.DEFAULT_MIN_BALANCE,
-            minBalances: globalConfig.BALANCE_MANAGER.MIN_BALANCES,
-            pollingIntervalMs: globalConfig.BALANCE_MANAGER.POLLING_INTERVAL_MS,
-        },
+        globalConfig.BALANCE_MANAGER,
     );
 
     relayerBalanceManager.setActiveNetworks(networkManager.getActiveNetworks());
@@ -181,8 +127,8 @@ export async function initializeManagers(): Promise<void> {
         txReader,
         txWriter,
         txMonitor,
+        globalConfig.RELAYER,
     );
-
 
     await relayer.initialize();
 }

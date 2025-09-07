@@ -1,19 +1,20 @@
-import { ManagerBase } from './ManagerBase';
-
-import { IConceroNetworkManager, LoggerInterface } from '@concero/operator-utils';
-import { DeploymentFetcher, DeploymentPattern, ParsedDeployment } from '@concero/operator-utils';
-import { ConceroNetworkManager } from '@concero/operator-utils';
 import { Address } from 'viem';
+import {
+    ConceroNetworkManager,
+    DeploymentFetcher,
+    DeploymentPattern,
+    getEnvString,
+    IConceroNetworkManager,
+    LoggerInterface,
+    ParsedDeployment,
+} from '@concero/operator-utils';
+import { ManagerBase } from './ManagerBase';
 
 import { ConceroNetwork } from '../types/ConceroNetwork';
 import { DeploymentManagerConfig } from '../types/ManagerConfigs';
-import { IMessagingDeploymentManager, NetworkUpdateListener } from '../types/managers';
-import { getEnvVar } from '../utils/getEnvVar';
+import { IMessagingDeploymentManager } from '../types/managers/IMessagingDeploymentManager';
 
-export class MessagingDeploymentManager
-    extends ManagerBase
-    implements IMessagingDeploymentManager, NetworkUpdateListener
-{
+export class MessagingDeploymentManager extends ManagerBase implements IMessagingDeploymentManager {
     private static instance: MessagingDeploymentManager;
 
     private conceroRoutersMapByChainName: Record<string, Address> = {};
@@ -58,9 +59,7 @@ export class MessagingDeploymentManager
             // Initial fetch of deployments will happen on first network update
             this.logger.debug('Initialized');
         } catch (error) {
-            this.logger.error(
-                `Failed to initialize: ${error instanceof Error ? error.message : String(error)}. Stack: ${error instanceof Error && error.stack ? error.stack : 'No stack trace available'}`,
-            );
+            this.logger.error(`Failed to initialize: ${error}`);
             throw error;
         }
     }
@@ -76,7 +75,7 @@ export class MessagingDeploymentManager
 
     async getRouterByChainName(chainName: string): Promise<Address> {
         if (this.config.networkMode === 'localhost') {
-            return getEnvVar('CONCERO_ROUTER_PROXY_LOCALHOST') as Address;
+            return getEnvString('CONCERO_ROUTER_PROXY_LOCALHOST') as Address;
         }
 
         const router = this.conceroRoutersMapByChainName[chainName];
@@ -91,7 +90,7 @@ export class MessagingDeploymentManager
     async getConceroRouters(): Promise<Record<string, Address>> {
         if (this.config.networkMode === 'localhost') {
             return {
-                [getEnvVar('LOCALHOST_FORK_CHAIN_ID')]: getEnvVar(
+                [getEnvString('LOCALHOST_FORK_CHAIN_ID')]: getEnvString(
                     'CONCERO_ROUTER_PROXY_LOCALHOST',
                 ) as Address,
             };
@@ -102,7 +101,7 @@ export class MessagingDeploymentManager
 
     async getConceroVerifier(): Promise<Address> {
         if (this.config.networkMode === 'localhost') {
-            return getEnvVar('CONCERO_VERIFIER_PROXY_LOCALHOST') as Address;
+            return getEnvString('CONCERO_VERIFIER_PROXY_LOCALHOST') as Address;
         }
 
         if (this.conceroVerifier !== undefined) return this.conceroVerifier;
@@ -134,9 +133,7 @@ export class MessagingDeploymentManager
                 }
             }
         } catch (err) {
-            this.logger.error(
-                `Failed to update deployments after network update: ${err instanceof Error ? err.message : String(err)}. Stack: ${err instanceof Error && err.stack ? err.stack : 'No stack trace available'}`,
-            );
+            this.logger.error(`Failed to update deployments after network update: ${err}`);
             throw err;
         }
     }

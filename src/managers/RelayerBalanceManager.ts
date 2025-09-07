@@ -1,3 +1,4 @@
+import { zeroAddress } from 'viem';
 import { BalanceManager } from '@concero/operator-utils';
 import type {
     BalanceManagerConfig,
@@ -7,15 +8,9 @@ import type {
     LoggerInterface,
 } from '@concero/operator-utils';
 
-interface RelayerBalanceManagerConfig extends BalanceManagerConfig {
-    defaultMinBalance: bigint;
-    minBalances?: Record<string, bigint>;
-}
+export interface RelayerBalanceManagerConfig extends BalanceManagerConfig {}
 
 export class RelayerBalanceManager extends BalanceManager {
-    private readonly defaultMinBalance: bigint;
-    private readonly minBalances: Record<string, bigint>;
-
     private constructor(
         logger: LoggerInterface,
         viemClientManager: IViemClientManager,
@@ -23,8 +18,6 @@ export class RelayerBalanceManager extends BalanceManager {
         config: RelayerBalanceManagerConfig,
     ) {
         super(logger, viemClientManager, txReader, config);
-        this.defaultMinBalance = config.defaultMinBalance;
-        this.minBalances = config.minBalances ?? {};
     }
 
     public static createInstance(
@@ -43,7 +36,6 @@ export class RelayerBalanceManager extends BalanceManager {
             this.registerNativeTokenWatch(network);
         }
 
-        // Wait for initial balances to be populated before starting watchers
         await this.initializeBalances();
         this.beginWatching();
     }
@@ -63,7 +55,6 @@ export class RelayerBalanceManager extends BalanceManager {
             this.registerNativeTokenWatch(network);
         }
 
-        // Initialize balances asynchronously without blocking
         this.initializeBalances().catch(error => {
             this.logger.error(`Failed to initialize balances during network update: ${error}`);
         });
@@ -71,22 +62,7 @@ export class RelayerBalanceManager extends BalanceManager {
         this.beginWatching();
     }
 
-    public hasMinBalance(networkName: string): boolean {
-        const currentBalance = this.getNativeBalances().get(networkName) ?? 0n;
-        const minRequired = this.getMinBalanceForNetwork(networkName);
-
-        return currentBalance >= minRequired;
-    }
-
-    public getMinBalanceForNetwork(networkName: string): bigint {
-        return this.minBalances[networkName] ?? this.defaultMinBalance;
-    }
-
-    public getNativeBalance(networkName: string): bigint {
-        return this.getNativeBalances().get(networkName) ?? 0n;
-    }
-
     private registerNativeTokenWatch(network: ConceroNetwork): void {
-        this.registerToken(network, 'NATIVE', '0x0000000000000000000000000000000000000000' as any);
+        this.registerToken(network, 'NATIVE', zeroAddress);
     }
 }
