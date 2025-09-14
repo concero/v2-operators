@@ -600,7 +600,7 @@ export class Relayer extends ManagerBase {
                     totalGasLimit +
                     BigInt(messages.length) * this.config.gasLimit.submitMessageReportOverhead,
             },
-            true,
+            false,
         );
 
         const messageIds = results.map(result => result.messageId).join(', ');
