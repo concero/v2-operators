@@ -12,7 +12,7 @@
         "lint": "eslint --config .eslint.config.mjs",
         "format": "prettier --config .prettierrc.json --write \"**/*.{ts,json}\"",
         "start": "bun run start:dev",
-        "start:node": "NODE_ENV=development node --env-file=.env --inspect ./dist/index.js",
+        "start:node": "NODE_ENV=development node --env-file=.env ./dist/index.js",
         "start:dev": "NODE_ENV=development bun ./src/index.ts",
         "start:prod": "NODE_ENV=production bun ./dist/index.js",
         "start:relayerA": "bun ./src/index.ts",
