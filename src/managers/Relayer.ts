@@ -369,15 +369,15 @@ export class Relayer extends ManagerBase {
 
                                 const messageIds = validResults.map(r => r.messageId);
 
-                                this.destinationChainFinalityMap.set(submissionTxHash, {
-                                    chainName: dstChain.name,
-                                    messageIds,
-                                    reportSubmission,
-                                    messages: validMessages,
-                                    indexes: validIndexes,
-                                    results: validResults,
-                                    totalGasLimit,
-                                });
+                                // this.destinationChainFinalityMap.set(submissionTxHash, {
+                                //     chainName: dstChain.name,
+                                //     messageIds,
+                                //     reportSubmission,
+                                //     messages: validMessages,
+                                //     indexes: validIndexes,
+                                //     results: validResults,
+                                //     totalGasLimit,
+                                // });
 
                                 this.txMonitor.ensureTxFinality(
                                     submissionTxHash,
