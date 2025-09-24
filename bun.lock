@@ -112,7 +112,7 @@
 
     "@colors/colors": ["@colors/colors@1.6.0", "", {}, "sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA=="],
 
-    "@concero/contract-utils": ["@concero/contract-utils@github:concero/contract-utils#15dfd99", { "dependencies": { "viem": "2.26.2" } }, "concero-contract-utils-15dfd99"],
+    "@concero/contract-utils": ["@concero/contract-utils@github:concero/contract-utils#c3d06b5", { "dependencies": { "viem": "2.26.2" } }, "concero-contract-utils-c3d06b5"],
 
     "@concero/operator-utils": ["@concero/operator-utils@github:concero/operator-utils#2c59112", { "dependencies": { "async-mutex": "0.5.0", "axios": "1.11.0", "uuid": "11.1.0", "viem": "2.37.6", "winston": "3.17.0", "winston-daily-rotate-file": "5.0.0" } }, "concero-operator-utils-2c59112"],
 
