@@ -1,25 +1,21 @@
-// import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../generated/prisma';
 
-// Facilitates interactions with database through Prisma Client
-class DbManager {
-    // private static instance: PrismaClient | null = null;
+export class DbManager {
+    private static dbClient: PrismaClient | null = null;
 
     private constructor() {}
 
     public static getClient() {
-        // if (!DbManager.instance) {
-        //     DbManager.instance = new PrismaClient();
-        // }
-        // return DbManager.instance;
-        return null;
+        if (!DbManager.dbClient) {
+            DbManager.dbClient = new PrismaClient();
+        }
+        return DbManager.dbClient;
     }
 
-    public static async disconnect(): Promise<void> {
-        // if (DbManager.instance) {
-        //     await DbManager.instance.$disconnect();
-        //     DbManager.instance = null;
-        // }
+    public static async disconnect() {
+        if (DbManager.dbClient) {
+            await DbManager.dbClient.$disconnect();
+            DbManager.dbClient = null;
+        }
     }
 }
-
-export { DbManager };

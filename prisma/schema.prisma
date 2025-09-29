@@ -1,16 +1,19 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
-  binaryTargets = ["native", "linux-arm64-openssl-3.0.x", "linux-arm64-openssl-1.1.x"]
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./block-checkpoints.db"
+  url      = env("DATABASE_URL")
 }
 
 model BlockCheckpoint {
-  id          Int      @id @default(autoincrement())
-  network     String   @unique
+  id          Int   @id @default(autoincrement())
+  network     Int   @unique
   blockNumber BigInt
   timestamp   DateTime @default(now())
 }

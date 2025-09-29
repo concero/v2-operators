@@ -34,4 +34,5 @@ rpc.extensions.json
 
 # Prisma/SQLite databases
 prisma/*.db
-prisma/migrations/*
+/generated
+prisma/*.db-journal

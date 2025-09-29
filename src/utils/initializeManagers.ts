@@ -12,11 +12,11 @@ import {
 } from '@concero/operator-utils';
 
 import { globalConfig } from '../constants';
-import { MessagingDeploymentManager, RelayerBalanceManager } from '../managers';
+import { DbManager, MessagingDeploymentManager, RelayerBalanceManager } from '../managers';
 import { Relayer } from '../managers/Relayer';
 
 /** Initialize all managers in the correct dependency order */
-export async function initializeManagers(): Promise<void> {
+export async function initializeManagers() {
     const logger = Logger.createInstance(globalConfig.LOGGER);
 
     const httpLoggerInstance = logger.getLogger('HttpClient');
@@ -29,6 +29,8 @@ export async function initializeManagers(): Promise<void> {
         httpClient,
         globalConfig.NETWORK_MANAGER,
     );
+
+    const dbClient = DbManager.getClient();
 
     // Core infrastructure managers
     const rpcManager = RpcManager.createInstance(
