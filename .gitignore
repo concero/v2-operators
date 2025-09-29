@@ -33,6 +33,6 @@ rpc.overrides.json
 rpc.extensions.json
 
 # Prisma/SQLite databases
-prisma/*.db
+*.db
 /generated
 prisma/*.db-journal
