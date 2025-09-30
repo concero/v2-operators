@@ -13,7 +13,7 @@ datasource db {
 
 model BlockCheckpoint {
   id          Int   @id @default(autoincrement())
-  network     Int   @unique
+  chainSelector     Int   @unique
   blockNumber BigInt
   timestamp   DateTime @default(now())
 }

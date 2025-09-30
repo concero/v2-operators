@@ -12,7 +12,12 @@ import {
 } from '@concero/operator-utils';
 
 import { globalConfig } from '../constants';
-import { DbManager, MessagingDeploymentManager, RelayerBalanceManager } from '../managers';
+import {
+    BlockCheckpointManager,
+    DbManager,
+    MessagingDeploymentManager,
+    RelayerBalanceManager,
+} from '../managers';
 import { Relayer } from '../managers/Relayer';
 
 /** Initialize all managers in the correct dependency order */
@@ -38,18 +43,18 @@ export async function initializeManagers() {
         networkManager,
         globalConfig.RPC_MANAGER,
     );
+
     const viemClientManager = ViemClientManager.createInstance(
         logger.getLogger('ViemClientManager'),
         rpcManager,
         globalConfig.VIEM_CLIENT_MANAGER,
     );
 
-    // const blockCheckpointManager = BlockCheckpointManager.createInstance(
-    //     logger.getLogger('BlockCheckpointManager'),
-    //     {
-    //         useCheckpoints: globalConfig.BLOCK_MANAGER.USE_CHECKPOINTS,
-    //     },
-    // );
+    const blockCheckpointManager = new BlockCheckpointManager(
+        logger.getLogger('BlockCheckpointManager'),
+        dbClient,
+        globalConfig.BLOCK_MANAGER,
+    );
 
     const blockManagerRegistry = BlockManagerRegistry.createInstance(
         logger.getLogger('BlockManagerRegistry'),

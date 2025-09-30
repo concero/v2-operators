@@ -1,86 +1,50 @@
 import { LoggerInterface } from '@concero/operator-utils';
-import { DbManager } from './DbManager';
-import { ManagerBase } from './ManagerBase';
 
-import { ConceroNetwork } from '../types/ConceroNetwork';
+import { PrismaClient } from '../../generated/prisma';
+import { Nullable } from '../types/common';
 import { BlockCheckpointManagerConfig } from '../types/ManagerConfigs';
-import { IBlockCheckpointManager } from '../types/managers';
 
-export class BlockCheckpointManager extends ManagerBase implements IBlockCheckpointManager {
-    private static instance: BlockCheckpointManager;
-    private prisma = DbManager.getClient();
-    private logger: LoggerInterface;
+export class BlockCheckpointManager implements IBlockCheckpointManager {
     private config: BlockCheckpointManagerConfig;
 
-    private constructor(logger: LoggerInterface, config: BlockCheckpointManagerConfig) {
-        super();
+    constructor(
+        config: BlockCheckpointManagerConfig,
+        private logger: LoggerInterface,
+        private dbClient: Nullable<PrismaClient>,
+    ) {
         this.logger = logger;
         this.config = config;
     }
 
-    public static createInstance(
-        logger: LoggerInterface,
-        config: BlockCheckpointManagerConfig,
-    ): BlockCheckpointManager {
-        BlockCheckpointManager.instance = new BlockCheckpointManager(logger, config);
-        return BlockCheckpointManager.instance;
-    }
-    public static getInstance(): BlockCheckpointManager {
-        if (!BlockCheckpointManager.instance) {
-            throw new Error(
-                'BlockCheckpointManager is not initialized. Call createInstance() first.',
-            );
-        }
-        return BlockCheckpointManager.instance;
-    }
+    async getCheckpoint(chainSelector: number): Promise<bigint | undefined> {
+        if (!this.dbClient) return undefined;
 
-    async getCheckpoint(network: ConceroNetwork): Promise<bigint | undefined> {
-        const checkpoint = await this.prisma.blockCheckpoint.findUnique({
-            where: { network: network.name },
+        const checkpoint = await this.dbClient.blockCheckpoint.findUnique({
+            where: { chainSelector: chainSelector },
         });
 
         if (checkpoint) {
-            this.logger.debug(
-                `Found checkpoint at block ${checkpoint} for network ${network.name}`,
-            );
-            return BigInt(checkpoint.blockNumber.toString());
+            return checkpoint.blockNumber;
         } else {
-            this.logger.debug(`No checkpoint found for network ${network.name}`);
+            this.logger.debug(`No checkpoint found for network ${chainSelector}`);
         }
     }
 
-    async updateLastProcessedBlock(networkName: string, blockNumber: bigint): Promise<void> {
+    async updateLastProcessedBlock(chainSelector: number, blockNumber: bigint) {
+        if (!this.dbClient) return;
         if (!this.config.useCheckpoints) return;
 
         try {
-            await this.prisma.blockCheckpoint.upsert({
-                where: { network: networkName },
+            await this.dbClient.blockCheckpoint.upsert({
+                where: { chainSelector },
                 update: { blockNumber },
-                create: {
-                    network: networkName,
-                    blockNumber,
-                },
+                create: { chainSelector, blockNumber },
             });
-            // this.logger.debug(
-            //     `Upsert successful for network: ${networkName}, blockNumber: ${blockNumber.toString()}`,
-            // );
         } catch (error) {
             this.logger.error(
-                `Upsert failed for network: ${networkName}, blockNumber: ${blockNumber.toString()}: ${error}`,
+                `Upsert failed for network: ${chainSelector}, blockNumber: ${blockNumber.toString()}: ${error}`,
             );
             throw error;
         }
-    }
-
-    public async initialize(): Promise<void> {
-        if (this.initialized) return;
-
-        await super.initialize();
-        this.logger.debug('Initialized');
-    }
-
-    public override dispose(): void {
-        super.dispose();
-        this.logger.debug('Disposed');
     }
 }
