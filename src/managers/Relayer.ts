@@ -170,7 +170,7 @@ export class Relayer extends ManagerBase {
             }
 
             try {
-                const watcherId = this.txReader.logWatcher.create(
+                const watcherId = await this.txReader.logWatcher.create(
                     routerAddress,
                     network,
                     handleMessageSentLogs,
@@ -203,7 +203,7 @@ export class Relayer extends ManagerBase {
                 name: 'MessageReport',
             });
 
-            const watcherId = this.txReader.logWatcher.create(
+            const watcherId = await this.txReader.logWatcher.create(
                 this.verifierAddress,
                 this.verifierNetwork,
                 handleMessageReportLogs,

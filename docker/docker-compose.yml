@@ -11,15 +11,14 @@ services:
       - ./../.env.production
     volumes:
       - relayer_logs:/app/logs
+      - relayer_db:/app/prisma/db
     environment:
       NODE_ENV: production
     restart: always
-  adminer:
-    image: adminer:5.4.0-fastcgi
-    ports:
-      - ${DB_ADMINER_PORT}:8080
 
 
 volumes:
   relayer_logs:
     name: relayer_logs
+  relayer_db:
+    name: relayer_db

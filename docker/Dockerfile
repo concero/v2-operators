@@ -1,43 +1,37 @@
+########################
 # Stage 1: Builder
-FROM oven/bun:canary-debian AS builder
-LABEL stage=app-builder
-
+########################
+FROM oven/bun:1.1.30-debian AS builder
 WORKDIR /app
 
 COPY package.json bun.lockb* ./
+COPY prisma ./prisma
+RUN bun install
 
-#COPY prisma ./prisma
-
-RUN bun install --ignore-scripts
-
-# Copy the rest of the application code to the container
-COPY . .
-
+COPY src ./src
+COPY tsconfig.json ./
 RUN bun run build
 
+########################
 # Stage 2: Runner
-FROM oven/bun:canary-debian AS runner
-
+########################
+FROM oven/bun:1.1.30-debian AS runner
 WORKDIR /app
 
-# Create a non-root user and set permissions
-RUN groupadd -r bunuser && useradd -r -g bunuser bunuser && \
-    mkdir -p /app/logs && \
-    chown -R bunuser:bunuser /app && \
-    chmod -R 755 /app/logs
+COPY ./docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod 0755 /app/entrypoint.sh
 
-# Switch to a non-root user
+RUN groupadd -r bunuser && useradd -r -g bunuser bunuser && \
+    mkdir -p /app/logs && chown -R bunuser:bunuser /app && chmod -R 755 /app/logs
 USER bunuser
 
-# Copy files from the builder stage
-COPY --from=builder --chown=bunuser:bunuser /app/dist /app/dist
-COPY --from=builder --chown=bunuser:bunuser /app/node_modules /app/node_modules
-COPY --from=builder --chown=bunuser:bunuser /app/package.json /app/
+COPY --from=builder --chown=bunuser:bunuser /app/dist          /app/dist
+COPY --from=builder --chown=bunuser:bunuser /app/node_modules   /app/node_modules
+COPY --from=builder --chown=bunuser:bunuser /app/package.json   /app/
+COPY --from=builder --chown=bunuser:bunuser /app/prisma         /app/prisma
 
-# Copy RPC_MANAGER configuration files
-COPY --from=builder --chown=bunuser:bunuser /app/rpc.extensions.json /app/
-COPY --from=builder --chown=bunuser:bunuser /app/rpc.overrides.json /app/
+COPY --chown=bunuser:bunuser ./rpc.extensions.json /app/
+COPY --chown=bunuser:bunuser ./rpc.overrides.json /app/
 
-#COPY --from=builder --chown=bunuser:bunuser /app/prisma /app/prisma
-
-CMD ["bun", "run", "start:prod"]
+ENV NODE_ENV=production
+ENTRYPOINT ["/app/entrypoint.sh"]

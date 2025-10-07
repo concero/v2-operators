@@ -6,6 +6,7 @@
     "engines": {
         "node": ">=22.0.0"
     },
+    "packageManager": "bun",
     "scripts": {
         "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm --packages=external",
         "build:cjs": "esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=cjs --out-extension=.js=.cjs --packages=external",
@@ -23,7 +24,6 @@
         "prisma:studio": "prisma studio --schema=prisma/schema.prisma",
         "prisma:migrate:dev": "prisma migrate dev",
         "prisma:generate": "prisma generate",
-        "preinstall": "sh validatePackageManager.sh bun",
         "postinstall": "bun run prisma:generate"
     },
     "devDependencies": {
@@ -38,21 +38,20 @@
         "prettier-plugin-organize-imports": "4.1.0",
         "swc": "1.0.11",
         "typescript": "5.9.2",
-        "prisma": "6.16.2"
+        "prisma": "6.16.2",
+        "jest": "29.7.0"
     },
     "peerDependencies": {
         "typescript": "5.0.0"
     },
     "dependencies": {
-        "@concero/contract-utils": "github:concero/contract-utils",
-        "@concero/operator-utils": "https://github.com/concero/operator-utils.git",
+        "@concero/operator-utils": "https://github.com/concero/operator-utils.git#feature/add-block-checkpoints",
         "@prisma/client": "6.16.2",
         "@slack/web-api": "7.9.1",
         "@types/jest": "29.5.14",
         "async-mutex": "0.5.0",
         "axios": "1.8.4",
         "dotenv": "16.4.7",
-        "jest": "29.7.0",
         "ts-jest": "29.3.2",
         "uuid": "11.1.0",
         "viem": "2.37.6",

@@ -6,3 +6,6 @@ logs
 .gitignore
 .env
 *.log
+*.db
+./prisma/db/*
+./prisma/generated

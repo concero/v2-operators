@@ -38,10 +38,7 @@ export async function main() {
 
     await initializeManagers();
 
-    const blockManagerRegistry = BlockManagerRegistry.getInstance();
-    for (const blockManager of blockManagerRegistry.getAllBlockManagers()) {
-        await blockManager.startPolling();
-    }
+    BlockManagerRegistry.getInstance().startPolling();
 }
 
 main().catch(globalErrorHandler);

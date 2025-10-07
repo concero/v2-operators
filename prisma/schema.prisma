@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -11,9 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model BlockCheckpoint {
+model logsListenerBlockCheckpoints {
   id          Int   @id @default(autoincrement())
-  chainSelector     Int   @unique
+  chainSelector     Int
+  contractAddress String
   blockNumber BigInt
   timestamp   DateTime @default(now())
+
+  @@unique([chainSelector, contractAddress])
+  @@index([chainSelector, contractAddress])
 }

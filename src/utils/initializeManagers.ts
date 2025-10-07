@@ -13,10 +13,9 @@ import {
 
 import { globalConfig } from '../constants';
 import {
-    BlockCheckpointManager,
     DbManager,
+    LogsListenerBlockCheckpointStore,
     MessagingDeploymentManager,
-    RelayerBalanceManager,
 } from '../managers';
 import { Relayer } from '../managers/Relayer';
 
@@ -37,6 +36,11 @@ export async function initializeManagers() {
 
     const dbClient = DbManager.getClient();
 
+    const logsListenerBlockCheckpointStore = new LogsListenerBlockCheckpointStore(
+        logger.getLogger('LogsListenerBlockCheckpointStore'),
+        dbClient,
+    );
+
     // Core infrastructure managers
     const rpcManager = RpcManager.createInstance(
         logger.getLogger('RpcManager'),
@@ -50,17 +54,11 @@ export async function initializeManagers() {
         globalConfig.VIEM_CLIENT_MANAGER,
     );
 
-    const blockCheckpointManager = new BlockCheckpointManager(
-        logger.getLogger('BlockCheckpointManager'),
-        dbClient,
-        globalConfig.BLOCK_MANAGER,
-    );
-
     const blockManagerRegistry = BlockManagerRegistry.createInstance(
+        globalConfig.BLOCK_MANAGER,
         logger.getLogger('BlockManagerRegistry'),
         networkManager,
         viemClientManager,
-        globalConfig.BLOCK_MANAGER,
     );
 
     const messagingDeploymentManager = MessagingDeploymentManager.createInstance(
@@ -92,9 +90,10 @@ export async function initializeManagers() {
         globalConfig.TX_MONITOR,
     );
     const txReader = TxReader.createInstance(
+        globalConfig.TX_READER,
         logger.getLogger('TxReader'),
         viemClientManager,
-        globalConfig.TX_READER,
+        logsListenerBlockCheckpointStore,
     );
 
     const nonceManager = NonceManager.createInstance(
@@ -115,15 +114,15 @@ export async function initializeManagers() {
     await txWriter.initialize();
     await txReader.initialize();
 
-    const relayerBalanceManager = RelayerBalanceManager.createInstance(
-        logger.getLogger('RelayerBalanceManager'),
-        viemClientManager,
-        txReader,
-        globalConfig.BALANCE_MANAGER,
-    );
-
-    relayerBalanceManager.setActiveNetworks(networkManager.getActiveNetworks());
-    await relayerBalanceManager.initialize();
+    // const relayerBalanceManager = RelayerBalanceManager.createInstance(
+    //     logger.getLogger('RelayerBalanceManager'),
+    //     viemClientManager,
+    //     txReader,
+    //     globalConfig.BALANCE_MANAGER,
+    // );
+    //
+    // relayerBalanceManager.setActiveNetworks(networkManager.getActiveNetworks());
+    // await relayerBalanceManager.initialize();
 
     const relayer = Relayer.createInstance(
         logger.getLogger('Relayer'),

@@ -1,5 +1,5 @@
 export { initializeManagers } from '../utils/initializeManagers';
-export { BlockCheckpointManager } from './BlockCheckpointManager';
+export { LogsListenerBlockCheckpointStore } from './LogsListenerBlockCheckpointStore';
 export { DbManager } from './DbManager';
 export { ManagerBase } from './ManagerBase';
 export { MessagingDeploymentManager } from './MessagingDeploymentManager';
