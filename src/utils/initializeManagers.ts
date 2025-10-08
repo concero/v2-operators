@@ -12,11 +12,7 @@ import {
 } from '@concero/operator-utils';
 
 import { globalConfig } from '../constants';
-import {
-    DbManager,
-    LogsListenerBlockCheckpointStore,
-    MessagingDeploymentManager,
-} from '../managers';
+import { DbManager, LogsListenerStore, MessagingDeploymentManager } from '../managers';
 import { Relayer } from '../managers/Relayer';
 
 /** Initialize all managers in the correct dependency order */
@@ -36,7 +32,7 @@ export async function initializeManagers() {
 
     const dbClient = DbManager.getClient();
 
-    const logsListenerBlockCheckpointStore = new LogsListenerBlockCheckpointStore(
+    const logsListenerBlockCheckpointStore = new LogsListenerStore(
         logger.getLogger('LogsListenerBlockCheckpointStore'),
         dbClient,
     );

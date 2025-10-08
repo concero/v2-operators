@@ -10,13 +10,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model logsListenerBlockCheckpoints {
-  id          Int   @id @default(autoincrement())
-  chainSelector     Int
+model LogsListenerBlockCheckpoints {
+  id              Int      @id @default(autoincrement())
+  chainSelector   Int
   contractAddress String
-  blockNumber BigInt
-  timestamp   DateTime @default(now())
+  blockNumber     BigInt
+  timestamp       DateTime @default(now())
 
   @@unique([chainSelector, contractAddress])
   @@index([chainSelector, contractAddress])
+  @@map("logsListener_blockCheckpoints")
 }

@@ -1,11 +1,11 @@
 import { Address } from 'viem';
 import { LoggerInterface } from '@concero/operator-utils';
-import { ILogsListenerBlockCheckpointStore } from '@concero/operator-utils/dist/types/managers/ILogsListenerBlockCheckpointStore';
+import { ILogsListenerStore } from '@concero/operator-utils/dist/types/managers/ILogsListenerStore';
 import { PrismaClient } from '@prisma/client';
 
 import { Nullable } from '../types/common';
 
-export class LogsListenerBlockCheckpointStore implements ILogsListenerBlockCheckpointStore {
+export class LogsListenerStore implements ILogsListenerStore {
     constructor(
         private logger: LoggerInterface,
         private dbClient: Nullable<PrismaClient>,
@@ -37,7 +37,7 @@ export class LogsListenerBlockCheckpointStore implements ILogsListenerBlockCheck
         try {
             await this.dbClient.logsListenerBlockCheckpoints.upsert({
                 where: { chainSelector_contractAddress: { chainSelector, contractAddress } },
-                update: { blockNumber },
+                update: { blockNumber, timestamp: new Date() },
                 create: { chainSelector, blockNumber, contractAddress },
             });
         } catch (error) {
