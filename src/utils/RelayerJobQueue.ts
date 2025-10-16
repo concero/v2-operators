@@ -27,7 +27,7 @@ export class RelayerJobQueue {
   }
 
   async markFailed(id: number, attempts: number) {
-    const delaySec = Math.min(60 * Math.pow(2, attempts), 600); // максимум 10 минут
+    const delaySec = Math.min(60 * Math.pow(2, attempts), 600); // 10 minutes max
     const next = new Date(Date.now() + delaySec * 1000);
     await this.prisma.relayerJob.update({
       where: { id },
