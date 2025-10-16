@@ -26,6 +26,9 @@ import { DecodedLog } from '../types/DecodedLog';
 import { RelayerConfig } from '../types/ManagerConfigs';
 import { decodeCLFReport, decodeMessageReportResult } from '../utils';
 import { DecodedMessageReportResult } from '../utils/decoders/types';
+import { PrismaClient } from "@prisma/client";
+import { RelayerJobQueue } from "../utils/RelayerJobQueue";
+
 
 export class Relayer extends ManagerBase {
     private static instance: Relayer | undefined;
@@ -39,6 +42,9 @@ export class Relayer extends ManagerBase {
     private readonly txMonitor: ITxMonitor;
     private readonly setup: RelayerSetup;
     private readonly config: RelayerConfig;
+    private prisma = new PrismaClient();
+    private jobQueue = new RelayerJobQueue(this.prisma);
+
 
     private verifierNetwork!: ConceroNetwork;
     private verifierAddress!: Address;
@@ -144,6 +150,47 @@ export class Relayer extends ManagerBase {
         await this.setup.executeSetup();
 
         await this.setupEventListeners();
+        setInterval(async () => {
+            const jobs = await this.jobQueue.getDue(5);
+            for (const job of jobs) {
+                const ctx = JSON.parse(job.payload);
+                if (job.jobType === "report-request") {
+                    try {
+                      this.logger.info(`[${ctx.srcChainSelector}] Retrying report request...`);
+                      await this.requestMessageReport(ctx.decodedLog, ctx.srcChainSelector);
+                      await this.jobQueue.markSuccess(job.id);
+                    } catch (err) {
+                      this.logger.error(`[${ctx.srcChainSelector}] Report retry error: ${err}`);
+                      await this.jobQueue.markFailed(job.id, job.attempts + 1);
+                    }
+                    continue;
+                  }
+                const { chainName, reportSubmission, messages, indexes, results, totalGasLimit } = ctx;
+                const dstChain = this.networkManager.getNetworkByName(chainName);
+              if (!dstChain) {
+                this.logger.error(`[${chainName}] Retry failed: no network`);
+                await this.jobQueue.markFailed(job.id, job.attempts);
+                continue;
+              }
+          
+              try {
+                this.logger.info(`[${chainName}] Retrying job ${job.id} (attempt ${job.attempts + 1})`);
+                const newTxHash = await this.submitBatchToDestination(
+                  dstChain,
+                  reportSubmission,
+                  messages,
+                  indexes,
+                  results,
+                  totalGasLimit,
+                );
+                this.logger.info(`[${chainName}] Retry success: ${newTxHash}`);
+                await this.jobQueue.markSuccess(job.id);
+              } catch (err) {
+                this.logger.error(`[${chainName}] Retry error: ${err}`);
+                await this.jobQueue.markFailed(job.id, job.attempts + 1);
+              }
+            }
+          }, 15_000);
         this.logger.info('initialized');
     }
 
@@ -464,7 +511,14 @@ export class Relayer extends ManagerBase {
         } catch (error) {
             const messageId = decodedLog.args?.messageId;
             this.logger.error(
-                `[${this.verifierNetwork.name}] Error requesting CLF message report for messageId ${messageId || 'unknown'}: ${error}`,
+              `[${this.verifierNetwork.name}] Error requesting CLF message report for messageId ${messageId || 'unknown'}: ${error}`,
+            );
+          
+            await this.jobQueue.add(
+              "report-request",
+              null,
+              this.verifierNetwork.name,
+              { decodedLog, srcChainSelector }
             );
         }
     }
@@ -642,7 +696,7 @@ export class Relayer extends ManagerBase {
             if (isFinalized) {
                 this.destinationChainFinalityMap.delete(txHash);
             } else {
-                this.retryDestinationSubmission(txHash);
+                this.retryDestinationSubmissionWithQueue(txHash);
             }
             return;
         }
@@ -707,4 +761,17 @@ export class Relayer extends ManagerBase {
         );
         this.destinationChainFinalityMap.delete(originalTxHash);
     }
+
+    private async retryDestinationSubmissionWithQueue(originalTxHash: string): Promise<void> {
+        const context = this.destinationChainFinalityMap.get(originalTxHash);
+        if (!context) {
+          this.logger.error(`Cannot retry: no context for ${originalTxHash}`);
+          return;
+        }
+      
+        const { chainName } = context;
+        await this.jobQueue.add(chainName, originalTxHash, context);
+        this.logger.info(`[${chainName}] Queued failed tx ${originalTxHash} for retry`);
+      }
+      
 }
