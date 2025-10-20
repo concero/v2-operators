@@ -45,7 +45,9 @@ function sanitizeEthAddress(raw: string | undefined): `0x${string}` {
  * 3) .env.development or .env.production (last, always loaded with override)
  *
  * Any other NODE_ENV values are coerced to "development".
- */
+ *
+ * @param {string} [basePath='./'] - Base path where .env files are located.
+ * */
 export function configureDotEnv(basePath = './'): void {
     const baseDir = basePath.endsWith(path.sep) ? basePath : `${basePath}${path.sep}`;
     const nodeEnvNormalized = process.env.NODE_ENV === 'production' ? 'production' : 'development';
