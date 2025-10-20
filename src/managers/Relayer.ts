@@ -1,5 +1,6 @@
 import {
     Address,
+    ByteArray,
     decodeAbiParameters,
     encodeAbiParameters,
     getAbiItem,
@@ -18,6 +19,7 @@ import {
     ViemClientManager,
 } from '@concero/operator-utils';
 import { MessagingDeploymentManager, RelayerSetup } from './index';
+import { PrismaClient } from '@prisma/client';
 
 import { eventEmitter } from '../constants';
 import { decodeLogs } from '../eventListener/decodeLogs';
@@ -26,9 +28,7 @@ import { DecodedLog } from '../types/DecodedLog';
 import { RelayerConfig } from '../types/ManagerConfigs';
 import { decodeCLFReport, decodeMessageReportResult } from '../utils';
 import { DecodedMessageReportResult } from '../utils/decoders/types';
-import { PrismaClient } from "@prisma/client";
-import { RelayerJobQueue } from "../utils/RelayerJobQueue";
-
+import { RelayerJobQueue } from '../utils/RelayerJobQueue';
 
 export class Relayer extends ManagerBase {
     private static instance: Relayer | undefined;
@@ -44,7 +44,6 @@ export class Relayer extends ManagerBase {
     private readonly config: RelayerConfig;
     private prisma = new PrismaClient();
     private jobQueue = new RelayerJobQueue(this.prisma);
-
 
     private verifierNetwork!: ConceroNetwork;
     private verifierAddress!: Address;
@@ -151,46 +150,55 @@ export class Relayer extends ManagerBase {
 
         await this.setupEventListeners();
         setInterval(async () => {
-            const jobs = await this.jobQueue.getDue(5);
+            const jobs = await this.jobQueue.getDue(10);
+
             for (const job of jobs) {
-                const ctx = JSON.parse(job.payload);
-                if (job.jobType === "report-request") {
+                if (job.jobType === 'report-request') {
                     try {
-                      this.logger.info(`[${ctx.srcChainSelector}] Retrying report request...`);
-                      await this.requestMessageReport(ctx.decodedLog, ctx.srcChainSelector);
-                      await this.jobQueue.markSuccess(job.id);
+                        const ctx = JSON.parse(job.payload);
+                        this.logger.info(
+                            `[report-request] retry #${job.attempts + 1} for messageId=${job.txHash}`,
+                        );
+                        await this.requestMessageReport(ctx.decodedLog, ctx.srcChainSelector);
                     } catch (err) {
-                      this.logger.error(`[${ctx.srcChainSelector}] Report retry error: ${err}`);
-                      await this.jobQueue.markFailed(job.id, job.attempts + 1);
+                        this.logger.error(`[report-request] error: ${err}`);
+                    } finally {
+                        await this.jobQueue.rescheduleReportRequest(job.id, job.attempts);
                     }
                     continue;
-                  }
-                const { chainName, reportSubmission, messages, indexes, results, totalGasLimit } = ctx;
+                }
+
+                const ctx = JSON.parse(job.payload);
+                const { chainName, reportSubmission, messages, indexes, results, totalGasLimit } =
+                    ctx;
                 const dstChain = this.networkManager.getNetworkByName(chainName);
-              if (!dstChain) {
-                this.logger.error(`[${chainName}] Retry failed: no network`);
-                await this.jobQueue.markFailed(job.id, job.attempts);
-                continue;
-              }
-          
-              try {
-                this.logger.info(`[${chainName}] Retrying job ${job.id} (attempt ${job.attempts + 1})`);
-                const newTxHash = await this.submitBatchToDestination(
-                  dstChain,
-                  reportSubmission,
-                  messages,
-                  indexes,
-                  results,
-                  totalGasLimit,
-                );
-                this.logger.info(`[${chainName}] Retry success: ${newTxHash}`);
-                await this.jobQueue.markSuccess(job.id);
-              } catch (err) {
-                this.logger.error(`[${chainName}] Retry error: ${err}`);
-                await this.jobQueue.markFailed(job.id, job.attempts + 1);
-              }
+                if (!dstChain) {
+                    this.logger.error(`[${chainName}] Retry failed: no network`);
+                    await this.jobQueue.markFailed(job.id, job.attempts);
+                    continue;
+                }
+
+                try {
+                    this.logger.info(
+                        `[${chainName}] Retrying job ${job.id} (attempt ${job.attempts + 1})`,
+                    );
+                    const newTxHash = await this.submitBatchToDestination(
+                        dstChain,
+                        reportSubmission,
+                        messages,
+                        indexes,
+                        results,
+                        totalGasLimit,
+                    );
+                    this.logger.info(`[${chainName}] Retry success: ${newTxHash}`);
+                    await this.jobQueue.markSuccess(job.id);
+                } catch (err) {
+                    this.logger.error(`[${chainName}] Retry error: ${err}`);
+                    await this.jobQueue.markFailed(job.id, job.attempts + 1);
+                }
             }
-          }, 15_000);
+        }, 15_000);
+
         this.logger.info('initialized');
     }
 
@@ -275,11 +283,11 @@ export class Relayer extends ManagerBase {
             const decodedLogs = decodeLogs(logs, this.config.abi.CONCERO_ROUTER);
 
             const immediateProcessLogs = decodedLogs.filter(
-                log => log.args.shouldFinaliseSrc === false,
+                log => log.args?.shouldFinaliseSrc === false,
             );
 
             const finalityRequiredLogs = decodedLogs.filter(
-                log => log.args.shouldFinaliseSrc === true,
+                log => log.args?.shouldFinaliseSrc === true,
             );
 
             finalityRequiredLogs.forEach(decodedLog => {
@@ -339,6 +347,10 @@ export class Relayer extends ManagerBase {
                         );
                         return;
                     }
+                    const allMessageIds = messageResults.map(r => r.messageId);
+                    await Promise.allSettled(
+                        allMessageIds.map(id => this.jobQueue.cancelReportRequest(id)),
+                    );
 
                     const messagesByDstChain = this.groupMessagesByDestination(messageResults);
 
@@ -371,7 +383,7 @@ export class Relayer extends ManagerBase {
                                 );
 
                                 const validMessages: string[] = [];
-                                const validIndexes: bigint[] = [];
+                                const validIndexes: number[] = [];
                                 const validResults: any[] = [];
                                 let totalGasLimit = 0n;
 
@@ -416,15 +428,15 @@ export class Relayer extends ManagerBase {
 
                                 const messageIds = validResults.map(r => r.messageId);
 
-                                // this.destinationChainFinalityMap.set(submissionTxHash, {
-                                //     chainName: dstChain.name,
-                                //     messageIds,
-                                //     reportSubmission,
-                                //     messages: validMessages,
-                                //     indexes: validIndexes,
-                                //     results: validResults,
-                                //     totalGasLimit,
-                                // });
+                                this.destinationChainFinalityMap.set(submissionTxHash, {
+                                    chainName: dstChain.name,
+                                    messageIds,
+                                    reportSubmission,
+                                    messages: validMessages,
+                                    indexes: validIndexes,
+                                    results: validResults,
+                                    totalGasLimit,
+                                });
 
                                 this.txMonitor.ensureTxFinality(
                                     submissionTxHash,
@@ -467,8 +479,11 @@ export class Relayer extends ManagerBase {
     ): Promise<void> {
         try {
             const args = decodedLog.args;
-            const { messageId, message, sender } = args;
-
+            const { messageId, message, sender } = args as unknown as {
+                messageId: string;
+                message: Hash | ByteArray;
+                sender: Hash;
+            };
             if (!messageId || !message || !sender || !decodedLog.blockNumber) {
                 this.logger.error(`Missing required data in log: ${decodedLog}`);
                 return;
@@ -484,12 +499,7 @@ export class Relayer extends ManagerBase {
                         ],
                     },
                 ],
-                [
-                    {
-                        blockNumber: BigInt(decodedLog.blockNumber),
-                        sender,
-                    },
-                ],
+                [{ blockNumber: BigInt(decodedLog.blockNumber), sender }],
             );
 
             const txHash = await this.txWriter.callContract(this.verifierNetwork, {
@@ -500,25 +510,29 @@ export class Relayer extends ManagerBase {
                 chain: this.verifierNetwork.viemChain,
             });
 
-            if (txHash) {
-                eventEmitter.emit('requestMessageReport', {
-                    txHash: txHash,
-                });
-                this.logger.info(`Report requested, tx: ${txHash}`);
-            } else {
-                this.logger.error(`Failed to submit Report request`);
-            }
+            await this.jobQueue.upsertReportRequest(
+                messageId,
+                this.verifierNetwork.name,
+                { decodedLog, srcChainSelector },
+                5,
+            );
+
+            eventEmitter.emit('requestMessageReport', { txHash });
+            this.logger.info(`Report requested, tx: ${txHash}`);
         } catch (error) {
             const messageId = decodedLog.args?.messageId;
             this.logger.error(
-              `[${this.verifierNetwork.name}] Error requesting CLF message report for messageId ${messageId || 'unknown'}: ${error}`,
+                `[${this.verifierNetwork.name}] Error requesting report for messageId ${messageId || 'unknown'}: ${error}`,
             );
-          
-            await this.jobQueue.add(
-              "report-request",
-              null,
-              this.verifierNetwork.name,
-              { decodedLog, srcChainSelector }
+
+            await this.jobQueue.upsertReportRequest(
+                decodedLog.args?.messageId ?? 'unknown',
+                this.verifierNetwork.name,
+                {
+                    decodedLog,
+                    srcChainSelector,
+                },
+                10,
             );
         }
     }
@@ -614,7 +628,10 @@ export class Relayer extends ManagerBase {
             return { message: null, gasLimit: 0n };
         }
 
-        const { message, dstChainData } = conceroMessageSentLog.args;
+        const { message, dstChainData } = conceroMessageSentLog.args as {
+            message: string;
+            dstChainData: Hash | ByteArray;
+        };
 
         const decodedDstChainData = decodeAbiParameters(
             [
@@ -636,10 +653,10 @@ export class Relayer extends ManagerBase {
         dstChain: ConceroNetwork,
         reportSubmission: any,
         messages: string[],
-        indexes: number[],
+        indexes: number[] | bigint[],
         results: DecodedMessageReportResult[],
         totalGasLimit: bigint,
-    ): Promise<string> {
+    ): Promise<Hash> {
         const dstConceroRouter = await this.deploymentManager.getRouterByChainName(dstChain.name);
 
         const txHash = await this.txWriter.callContract(
@@ -704,74 +721,19 @@ export class Relayer extends ManagerBase {
         this.logger.error(`No context found for transaction ${txHash} on chain ${chainName}`);
     }
 
-    private async retryDestinationSubmission(originalTxHash: string): Promise<void> {
-        const context = this.destinationChainFinalityMap.get(originalTxHash);
-        if (!context) {
-            this.logger.error(`Cannot retry: no context found for ${originalTxHash}`);
-            return;
-        }
-
-        const { chainName, reportSubmission, messages, indexes, results, totalGasLimit } = context;
-
-        const dstChain = this.networkManager.getNetworkByName(chainName);
-        if (!dstChain) {
-            this.logger.error(`Cannot retry: network ${chainName} not found`);
-            this.destinationChainFinalityMap.delete(originalTxHash);
-            return;
-        }
-
-        const maxAttempts = 3;
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-            try {
-                this.logger.info(
-                    `[${chainName}] Retrying report submission (attempt ${attempt}/${maxAttempts}). Message IDs: ${context.messageIds.join(', ')}`,
-                );
-
-                const newTxHash = await this.submitBatchToDestination(
-                    dstChain,
-                    reportSubmission,
-                    messages,
-                    indexes,
-                    results,
-                    totalGasLimit,
-                );
-
-                this.destinationChainFinalityMap.delete(originalTxHash);
-                this.destinationChainFinalityMap.set(newTxHash, context);
-                this.txMonitor.ensureTxFinality(
-                    newTxHash,
-                    dstChain.name,
-                    this.onFinalityCallback.bind(this),
-                );
-                return;
-            } catch (error) {
-                this.logger.error(
-                    `Error in destination submission attempt ${attempt}/${maxAttempts} for ${originalTxHash}: ${error}`,
-                );
-            }
-
-            if (attempt < maxAttempts) {
-                await new Promise(resolve => setTimeout(resolve, 5000));
-            }
-        }
-
-        // All attempts threw exceptions, clean up the original failed tx
-        this.logger.error(
-            `[${chainName}] All ${maxAttempts} submission attempts threw exceptions. Giving up. Message IDs: ${context.messageIds.join(', ')}`,
-        );
-        this.destinationChainFinalityMap.delete(originalTxHash);
-    }
-
     private async retryDestinationSubmissionWithQueue(originalTxHash: string): Promise<void> {
         const context = this.destinationChainFinalityMap.get(originalTxHash);
         if (!context) {
-          this.logger.error(`Cannot retry: no context for ${originalTxHash}`);
-          return;
+            this.logger.error(`Cannot retry: no context for ${originalTxHash}`);
+            return;
         }
-      
+
         const { chainName } = context;
-        await this.jobQueue.add(chainName, originalTxHash, context);
+
+        await this.jobQueue.add('tx-submit', chainName, originalTxHash, context);
+
+        this.destinationChainFinalityMap.delete(originalTxHash);
+
         this.logger.info(`[${chainName}] Queued failed tx ${originalTxHash} for retry`);
-      }
-      
+    }
 }

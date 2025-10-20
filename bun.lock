@@ -4,7 +4,7 @@
     "": {
       "name": "concero-v2-operators",
       "dependencies": {
-        "@concero/operator-utils": "https://github.com/concero/operator-utils.git#feature/add-block-checkpoints",
+        "@concero/operator-utils": "https://github.com/concero/operator-utils.git#feature/restart-failed-transaction",
         "@prisma/client": "6.16.2",
         "@slack/web-api": "7.9.1",
         "@types/jest": "29.5.14",

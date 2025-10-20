@@ -33,5 +33,6 @@ COPY --from=builder --chown=bunuser:bunuser /app/prisma         /app/prisma
 COPY --chown=bunuser:bunuser ./rpc.extensions.json /app/
 COPY --chown=bunuser:bunuser ./rpc.overrides.json /app/
 
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    DATABASE_URL=file:/app/data/concero.sqlite
 ENTRYPOINT ["/app/entrypoint.sh"]

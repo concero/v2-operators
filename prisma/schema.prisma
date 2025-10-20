@@ -25,8 +25,8 @@ model LogsListenerBlockCheckpoints {
 model RelayerJob {
   id            Int      @id @default(autoincrement())
   jobType       String   @default("tx-submit") // tx-submit | report-request
-  txHash        String?
   chainName     String
+  txHash        String?
   payload       String   
   status        String   @default("pending") // pending | processing | done | failed
   attempts      Int      @default(0)
@@ -35,4 +35,5 @@ model RelayerJob {
   updatedAt     DateTime @updatedAt
 
   @@index([status, nextRetryAt])
+  @@unique([jobType, txHash])
 }

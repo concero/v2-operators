@@ -9,3 +9,6 @@ logs
 *.db
 ./prisma/db/*
 ./prisma/generated
+prisma/dev.db
+*.sqlite
+*.sqlite-journal
