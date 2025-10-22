@@ -516,7 +516,7 @@ export class Relayer extends ManagerBase {
                 messageId,
                 this.verifierNetwork.name,
                 { decodedLog, srcChainSelector },
-                5,
+                60,
             );
 
             eventEmitter.emit('requestMessageReport', { txHash });
@@ -534,7 +534,7 @@ export class Relayer extends ManagerBase {
                     decodedLog,
                     srcChainSelector,
                 },
-                10,
+                60,
             );
         }
     }
@@ -690,52 +690,5 @@ export class Relayer extends ManagerBase {
         this.logger.debug(`[${dstChain.name}] Message IDs in batch: ${messageIds}`);
 
         return txHash;
-    }
-
-    private async onFinalityCallback(
-        txHash: string,
-        chainName: string,
-        isFinalized: boolean,
-    ): Promise<void> {
-        if (this.sourceChainFinalityMap.has(txHash)) {
-            const context = this.sourceChainFinalityMap.get(txHash)!;
-            const { decodedLog, chainSelector } = context;
-
-            if (isFinalized) {
-                await this.requestMessageReport(decodedLog, chainSelector);
-            } else {
-                this.logger.error(`Transaction ${txHash} failed to reach finality on ${chainName}`);
-            }
-
-            this.sourceChainFinalityMap.delete(txHash);
-            return;
-        }
-
-        if (this.destinationChainFinalityMap.has(txHash)) {
-            if (isFinalized) {
-                this.destinationChainFinalityMap.delete(txHash);
-            } else {
-                this.retryDestinationSubmissionWithQueue(txHash);
-            }
-            return;
-        }
-
-        this.logger.error(`No context found for transaction ${txHash} on chain ${chainName}`);
-    }
-
-    private async retryDestinationSubmissionWithQueue(originalTxHash: string): Promise<void> {
-        const context = this.destinationChainFinalityMap.get(originalTxHash);
-        if (!context) {
-            this.logger.error(`Cannot retry: no context for ${originalTxHash}`);
-            return;
-        }
-
-        const { chainName } = context;
-
-        await this.jobQueue.add('tx-submit', chainName, originalTxHash, context);
-
-        this.destinationChainFinalityMap.delete(originalTxHash);
-
-        this.logger.info(`[${chainName}] Queued failed tx ${originalTxHash} for retry`);
     }
 }

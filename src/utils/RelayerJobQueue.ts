@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 const DELAYS = [5, 10, 30, 120, 300, 600, 1200, 3600];
 const nextDelay = (attempts: number) =>
     attempts < DELAYS.length ? DELAYS[attempts] : DELAYS[DELAYS.length - 1];
+const REPORT_RETRY_1M_COUNT = 4;
+const reportDelaySec = (attempts: number) => (attempts < REPORT_RETRY_1M_COUNT ? 60 : 300);
 
 export class RelayerJobQueue {
     constructor(private prisma: PrismaClient) {}
@@ -43,41 +45,41 @@ export class RelayerJobQueue {
         messageId: string,
         chainName: string,
         payload: any,
-        initialDelaySec = 5,
+        firstDelaySec = 60,
     ) {
-        const next = new Date(Date.now() + initialDelaySec * 1000);
+        const next = new Date(Date.now() + firstDelaySec * 1000);
         await this.prisma.relayerJob.upsert({
-            where: { jobType_txHash: { jobType: 'report-request', txHash: messageId } },
-            update: {
-                chainName,
-                payload: JSON.stringify(payload, (_, v) => typeof v === 'bigint' ? v.toString() : v),
-                status: 'pending',
-                nextRetryAt: next,
-            },
-            create: {
-                jobType: 'report-request',
-                chainName,
-                txHash: messageId,
-                payload: JSON.stringify(payload, (_, v) => typeof v === 'bigint' ? v.toString() : v),
-                status: 'pending',
-                attempts: 0,
-                nextRetryAt: next,
-            },
+          where: { jobType_txHash: { jobType: 'report-request', txHash: messageId } },
+          update: {
+            chainName,
+            payload: JSON.stringify(payload),
+            status: 'pending',
+            nextRetryAt: next,
+          },
+          create: {
+            jobType: 'report-request',
+            chainName,
+            txHash: messageId,
+            payload: JSON.stringify(payload),
+            status: 'pending',
+            attempts: 0,
+            nextRetryAt: next,
+          },
         });
     }
 
     async rescheduleReportRequest(id: number, attempts: number) {
-        const delay = nextDelay(attempts);
+        const delay = reportDelaySec(attempts);
         const next = new Date(Date.now() + delay * 1000);
         await this.prisma.relayerJob.update({
-            where: { id },
-            data: { attempts: { increment: 1 }, nextRetryAt: next },
+          where: { id },
+          data: { attempts: { increment: 1 }, nextRetryAt: next },
         });
-    }
-
-    async cancelReportRequest(messageId: string) {
+      }
+    
+      async cancelReportRequest(messageId: string) {
         await this.prisma.relayerJob.deleteMany({
-            where: { jobType: 'report-request', txHash: messageId },
+          where: { jobType: 'report-request', txHash: messageId },
         });
-    }
+      }
 }
