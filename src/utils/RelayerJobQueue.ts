@@ -34,7 +34,7 @@ export class RelayerJobQueue {
                 jobType,
                 chainName,
                 txHash,
-                payload: JSON.stringify(payload),
+                payload: JSON.stringify(payload, (_, v) => typeof v === 'bigint' ? v.toString() : v),
             },
         });
     }
