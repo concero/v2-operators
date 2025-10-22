@@ -50,7 +50,7 @@ export class RelayerJobQueue {
             where: { jobType_txHash: { jobType: 'report-request', txHash: messageId } },
             update: {
                 chainName,
-                payload: JSON.stringify(payload),
+                payload: JSON.stringify(payload, (_, v) => typeof v === 'bigint' ? v.toString() : v),
                 status: 'pending',
                 nextRetryAt: next,
             },
@@ -58,7 +58,7 @@ export class RelayerJobQueue {
                 jobType: 'report-request',
                 chainName,
                 txHash: messageId,
-                payload: JSON.stringify(payload),
+                payload: JSON.stringify(payload, (_, v) => typeof v === 'bigint' ? v.toString() : v),
                 status: 'pending',
                 attempts: 0,
                 nextRetryAt: next,
