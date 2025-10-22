@@ -36,7 +36,9 @@ export class RelayerJobQueue {
                 jobType,
                 chainName,
                 txHash,
-                payload: JSON.stringify(payload, (_, v) => typeof v === 'bigint' ? v.toString() : v),
+                payload: JSON.stringify(payload, (_, v) =>
+                    typeof v === 'bigint' ? v.toString() : v,
+                ),
             },
         });
     }
@@ -49,22 +51,26 @@ export class RelayerJobQueue {
     ) {
         const next = new Date(Date.now() + firstDelaySec * 1000);
         await this.prisma.relayerJob.upsert({
-          where: { jobType_txHash: { jobType: 'report-request', txHash: messageId } },
-          update: {
-            chainName,
-            payload: JSON.stringify(payload),
-            status: 'pending',
-            nextRetryAt: next,
-          },
-          create: {
-            jobType: 'report-request',
-            chainName,
-            txHash: messageId,
-            payload: JSON.stringify(payload),
-            status: 'pending',
-            attempts: 0,
-            nextRetryAt: next,
-          },
+            where: { jobType_txHash: { jobType: 'report-request', txHash: messageId } },
+            update: {
+                chainName,
+                payload: JSON.stringify(payload, (_, v) =>
+                    typeof v === 'bigint' ? v.toString() : v,
+                ),
+                status: 'pending',
+                nextRetryAt: next,
+            },
+            create: {
+                jobType: 'report-request',
+                chainName,
+                txHash: messageId,
+                payload: JSON.stringify(payload, (_, v) =>
+                    typeof v === 'bigint' ? v.toString() : v,
+                ),
+                status: 'pending',
+                attempts: 0,
+                nextRetryAt: next,
+            },
         });
     }
 
@@ -72,14 +78,14 @@ export class RelayerJobQueue {
         const delay = reportDelaySec(attempts);
         const next = new Date(Date.now() + delay * 1000);
         await this.prisma.relayerJob.update({
-          where: { id },
-          data: { attempts: { increment: 1 }, nextRetryAt: next },
+            where: { id },
+            data: { attempts: { increment: 1 }, nextRetryAt: next },
         });
-      }
-    
-      async cancelReportRequest(messageId: string) {
+    }
+
+    async cancelReportRequest(messageId: string) {
         await this.prisma.relayerJob.deleteMany({
-          where: { jobType: 'report-request', txHash: messageId },
+            where: { jobType: 'report-request', txHash: messageId },
         });
-      }
+    }
 }
