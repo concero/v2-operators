@@ -297,10 +297,11 @@ export class Relayer extends ManagerBase {
                     chainSelector: network.chainSelector,
                 });
 
-                this.txMonitor.ensureTxFinality(
+                this.txMonitor.trackTxFinality(
                     txHash,
                     network.name,
-                    this.onFinalityCallback.bind(this),
+                    //todo
+                    'relayer'
                 );
             });
 
@@ -438,10 +439,11 @@ export class Relayer extends ManagerBase {
                                     totalGasLimit,
                                 });
 
-                                this.txMonitor.ensureTxFinality(
+                                this.txMonitor.trackTxFinality(
                                     submissionTxHash,
                                     dstChain.name,
-                                    this.onFinalityCallback.bind(this),
+                                    //todo
+                                    'relayer'
                                 );
                             } catch (err) {
                                 this.logger.error(

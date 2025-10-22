@@ -54,7 +54,7 @@ export function configureDotEnv(basePath = './'): void {
 
     for (const file of ENV_FILES) {
         const p = path.resolve(baseDir, file);
-        dotenv.config({ path: p, override: false });
+        dotenv.config({ path: p, override: true });
     }
 
     dotenv.config({ path: path.resolve(baseDir, '.env.local'), override: true });
