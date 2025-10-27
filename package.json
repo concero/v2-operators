@@ -23,8 +23,7 @@
         "prisma:reset": "prisma migrate reset",
         "prisma:studio": "prisma studio --schema=prisma/schema.prisma",
         "prisma:migrate:dev": "prisma migrate dev",
-        "prisma:generate": "prisma generate",
-        "postinstall": "bunx run prisma:generate"
+        "prisma:generate": "prisma generate"
     },
     "devDependencies": {
         "@ianvs/prettier-plugin-sort-imports": "4.7.0",
