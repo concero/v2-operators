@@ -45,7 +45,7 @@
         "typescript": "5.0.0"
     },
     "dependencies": {
-        "@concero/operator-utils": "https://github.com/concero/operator-utils.git#development",
+        "@concero/operator-utils": "https://github.com/concero/operator-utils.git#feature/add-messaging-converter",
         "@prisma/client": "6.16.2",
         "@slack/web-api": "7.9.1",
         "@types/jest": "29.5.14",

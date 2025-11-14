@@ -1,3 +1,4 @@
+import { Abi } from 'viem';
 import {
     getEnvBigint,
     getEnvInt,
@@ -19,8 +20,8 @@ export const relayerConfig: RelayerGlobalConfig = {
             ),
         },
         abi: {
-            CONCERO_VERIFIER: conceroVerifierAbi,
-            CONCERO_ROUTER: conceroRouterAbi,
+            CONCERO_VERIFIER: conceroVerifierAbi as Abi,
+            CONCERO_ROUTER: conceroRouterAbi as Abi,
         },
     },
     NOTIFICATIONS: {

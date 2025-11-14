@@ -1,4 +1,9 @@
-import { Log } from 'viem';
-import { DecodeEventLogReturnType } from 'viem/utils/abi/decodeEventLog';
+import { Hex } from 'viem';
 
-export type DecodedLog = Log & DecodeEventLogReturnType;
+export type DecodedLog<Data = unknown> = {
+    eventHash: Hex;
+    eventName: string;
+    data: Data;
+    transactionHash: Hex;
+    blockNumber: bigint;
+};

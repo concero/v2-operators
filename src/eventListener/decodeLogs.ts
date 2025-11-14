@@ -3,7 +3,7 @@ import { Abi, AbiEventSignatureNotFoundError, decodeEventLog, Log } from 'viem';
 import { DecodedLog } from '../types/DecodedLog';
 
 export function decodeLogs(logs: Log[], abi: Abi): DecodedLog[] {
-    const decodedLogs: any[] = [];
+    const decodedLogs: DecodedLog[] = [];
 
     logs.forEach(log => {
         try {
@@ -13,8 +13,8 @@ export function decodeLogs(logs: Log[], abi: Abi): DecodedLog[] {
                 topics: log.topics,
                 strict: true,
             });
-
-            decodedLogs.push({ ...log, ...decodedLog });
+            // @todo: fix decodeLogs type
+            decodedLogs.push({ ...log, ...decodedLog } as unknown as DecodedLog);
         } catch (error) {
             if (error instanceof AbiEventSignatureNotFoundError) {
                 return; // Skip logs outside of ABI

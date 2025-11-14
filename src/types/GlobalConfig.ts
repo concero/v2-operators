@@ -5,7 +5,7 @@ export type RelayerGlobalConfig = OperatorUtilsGlobalConfig & {
     RELAYER: {
         operatorAddress: Address;
         gasLimit: {
-            submitMessageReportOverhead: BigInt;
+            submitMessageReportOverhead: bigint;
         };
         abi: {
             CONCERO_VERIFIER: Abi;

@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { RelayerContext } from '../relayer-context';
+import { Context } from '../types';
 
 const DELAYS = [5, 10, 30, 120, 300, 600, 1200, 3600];
 const nextDelay = (attempts: number) =>
@@ -11,25 +12,27 @@ const saveJsonStringify = (object: Record<string, unknown>): string => {
 
 const jobType = 'request_report';
 
-export class RelayerJobQueue {
-    constructor(private prisma: PrismaClient) {}
+export class ReportJobQueue extends RelayerContext {
+    constructor(context: Context) {
+        super('ReportJobQueue', context);
+    }
 
     async getDue(limit = 10) {
-        return this.prisma.job.findMany({
-            where: { status: 'pending', nextRetryAt: { lte: new Date() } },
+        return this.context.dbClient.job.findMany({
+            where: { nextRetryAt: { lte: new Date() } },
             orderBy: { id: 'asc' },
             take: limit,
         });
     }
 
     async markSuccess(id: number) {
-        await this.prisma.job.delete({ where: { id } });
+        await this.context.dbClient.job.delete({ where: { id } });
     }
 
     async markFailed(id: number, attempts: number) {
         const delay = nextDelay(attempts);
         const next = new Date(Date.now() + delay * 1000);
-        await this.prisma.job.update({
+        await this.context.dbClient.job.update({
             where: { id },
             data: { attempts: { increment: 1 }, nextRetryAt: next },
         });
@@ -37,12 +40,11 @@ export class RelayerJobQueue {
 
     async add(messageId: string, chainName: string, payload: any, firstDelaySec = 60) {
         const next = new Date(Date.now() + firstDelaySec * 1000);
-        await this.prisma.job.upsert({
+        await this.context.dbClient.job.upsert({
             where: { jobType_messageId: { jobType, messageId } },
             update: {
                 chainName,
                 payload: saveJsonStringify(payload),
-                status: 'pending',
                 nextRetryAt: next,
             },
             create: {
@@ -59,14 +61,14 @@ export class RelayerJobQueue {
     async reschedule(id: number, attempts: number) {
         const delay = reportDelaySec(attempts);
         const next = new Date(Date.now() + delay * 1000);
-        await this.prisma.job.update({
+        await this.context.dbClient.job.update({
             where: { id },
             data: { attempts: { increment: 1 }, nextRetryAt: next },
         });
     }
 
     async cancelByMessageIds(messageIds: string[]) {
-        await this.prisma.job.deleteMany({
+        await this.context.dbClient.job.deleteMany({
             where: {
                 jobType,
                 messageId: {

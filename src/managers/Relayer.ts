@@ -48,29 +48,6 @@ export class Relayer extends ManagerBase {
     private verifierNetwork!: ConceroNetwork;
     private verifierAddress!: Address;
 
-    private watcherIds: string[] = [];
-
-    private sourceChainFinalityMap: Map<
-        string,
-        {
-            decodedLog: any;
-            chainSelector: string;
-        }
-    > = new Map();
-
-    private destinationChainFinalityMap: Map<
-        string,
-        {
-            chainName: string;
-            messageIds: string[];
-            reportSubmission: any;
-            messages: string[];
-            indexes: number[];
-            results: DecodedMessageReportResult[];
-            totalGasLimit: bigint;
-        }
-    > = new Map();
-
     private constructor(
         logger: LoggerInterface,
         networkManager: ConceroNetworkManager,
@@ -133,13 +110,6 @@ export class Relayer extends ManagerBase {
         return Relayer.instance;
     }
 
-    public static getInstance(): Relayer {
-        if (!Relayer.instance) {
-            throw new Error('Relayer is not initialized. Call createInstance() first.');
-        }
-        return Relayer.instance;
-    }
-
     public async initialize(): Promise<void> {
         if (this.initialized) return;
 
@@ -157,13 +127,13 @@ export class Relayer extends ManagerBase {
                     try {
                         const ctx = JSON.parse(job.payload);
                         this.logger.info(
-                            `[report-request] retry #${job.attempts + 1} for messageId=${job.txHash}`,
+                            `Job retry #${job.attempts + 1} for messageId=${job.messageId}`,
                         );
                         await this.requestMessageReport(ctx.decodedLog, ctx.srcChainSelector);
                     } catch (err) {
                         this.logger.error(`[report-request] error: ${err}`);
                     } finally {
-                        await this.jobQueue.rescheduleReportRequest(job.id, job.attempts);
+                        await this.jobQueue.reschedule(job.id, job.attempts);
                     }
                     continue;
                 }
@@ -232,7 +202,6 @@ export class Relayer extends ManagerBase {
                     sentEventAbi,
                     blockManager,
                 );
-                this.watcherIds.push(watcherId);
                 this.logger.debug(`Created ConceroMessageSent watcher for ${network.name}`);
             } catch (error) {
                 this.logger.error(
@@ -265,7 +234,6 @@ export class Relayer extends ManagerBase {
                 messageReportEventAbi,
                 verifierBlockManager,
             );
-            this.watcherIds.push(watcherId);
             this.logger.debug('Created MessageReport watcher for verifier');
         } catch (error) {
             this.logger.error(`Failed to set up verifier event listeners: ${error}`);
@@ -292,16 +260,12 @@ export class Relayer extends ManagerBase {
 
             finalityRequiredLogs.forEach(decodedLog => {
                 const txHash = decodedLog.transactionHash!;
-                this.sourceChainFinalityMap.set(txHash, {
-                    decodedLog,
-                    chainSelector: network.chainSelector,
-                });
 
                 this.txMonitor.trackTxFinality(
                     txHash,
                     network.name,
                     //todo
-                    'relayer'
+                    'relayer',
                 );
             });
 
@@ -349,9 +313,7 @@ export class Relayer extends ManagerBase {
                         return;
                     }
                     const allMessageIds = messageResults.map(r => r.messageId);
-                    await Promise.allSettled(
-                        allMessageIds.map(id => this.jobQueue.cancelReportRequest(id)),
-                    );
+                    await this.jobQueue.cancelByMessageIds(allMessageIds);
 
                     const messagesByDstChain = this.groupMessagesByDestination(messageResults);
 
@@ -429,21 +391,11 @@ export class Relayer extends ManagerBase {
 
                                 const messageIds = validResults.map(r => r.messageId);
 
-                                this.destinationChainFinalityMap.set(submissionTxHash, {
-                                    chainName: dstChain.name,
-                                    messageIds,
-                                    reportSubmission,
-                                    messages: validMessages,
-                                    indexes: validIndexes,
-                                    results: validResults,
-                                    totalGasLimit,
-                                });
-
                                 this.txMonitor.trackTxFinality(
                                     submissionTxHash,
                                     dstChain.name,
                                     //todo
-                                    'relayer'
+                                    'relayer',
                                 );
                             } catch (err) {
                                 this.logger.error(
@@ -512,7 +464,7 @@ export class Relayer extends ManagerBase {
                 chain: this.verifierNetwork.viemChain,
             });
 
-            await this.jobQueue.upsertReportRequest(
+            await this.jobQueue.add(
                 messageId,
                 this.verifierNetwork.name,
                 { decodedLog, srcChainSelector },

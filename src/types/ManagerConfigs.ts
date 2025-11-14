@@ -1,3 +1,5 @@
+import { Abi } from 'viem';
+
 /** Base configuration interface for all managers */
 export interface BaseManagerConfig {}
 
@@ -107,18 +109,20 @@ export interface HttpClientConfig extends BaseManagerConfig {
 /** Configuration for RelayerSetup */
 export interface RelayerSetupConfig extends BaseManagerConfig {
     abi: {
-        CONCERO_VERIFIER: any;
-        CONCERO_ROUTER: any;
+        CONCERO_VERIFIER: Abi;
+        CONCERO_ROUTER: Abi;
     };
+    // @todo: remove operator address
     operatorAddress: string;
 }
 
 /** Configuration for Relayer */
 export interface RelayerConfig extends BaseManagerConfig {
     abi: {
-        CONCERO_VERIFIER: any;
-        CONCERO_ROUTER: any;
+        CONCERO_VERIFIER: Abi;
+        CONCERO_ROUTER: Abi;
     };
+    // @todo: remove operator address
     operatorAddress: string;
     gasLimit: {
         submitMessageReportOverhead: bigint;
