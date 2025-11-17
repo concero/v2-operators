@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { Abi, AbiEvent, Address } from 'viem';
+import { Abi, AbiEvent, Address, Hex } from 'viem';
 import {
     BlockManagerRegistry,
     ConceroNetwork,
@@ -42,4 +42,9 @@ export type Context = {
     txWriter: TxWriter;
     verifierNetwork: ConceroNetwork;
     verifierAddress: Address;
+};
+
+export type MessageSentLogData = {
+    messageId: Hex;
+    messageReceipt: Hex;
 };

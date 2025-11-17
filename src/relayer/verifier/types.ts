@@ -1,8 +1,8 @@
 import { Address, Hex } from 'viem';
 
 export enum VerifierType {
+    Empty = 'empty',
     CRE = 'cre',
-    CLF = 'clf',
 }
 
 export interface VerifierAdapter {

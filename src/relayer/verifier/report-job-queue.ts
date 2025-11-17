@@ -1,4 +1,4 @@
-import { RelayerContext } from '../relayer-context';
+import { ContextService } from '../services';
 import { Context } from '../types';
 
 const DELAYS = [5, 10, 30, 120, 300, 600, 1200, 3600];
@@ -10,9 +10,7 @@ const saveJsonStringify = (object: Record<string, unknown>): string => {
     return JSON.stringify(object, (_, v) => (typeof v === 'bigint' ? v.toString() : v));
 };
 
-const jobType = 'request_report';
-
-export class ReportJobQueue extends RelayerContext {
+export class ReportJobQueue extends ContextService {
     constructor(context: Context) {
         super('ReportJobQueue', context);
     }
@@ -41,14 +39,13 @@ export class ReportJobQueue extends RelayerContext {
     async add(messageId: string, chainName: string, payload: any, firstDelaySec = 60) {
         const next = new Date(Date.now() + firstDelaySec * 1000);
         await this.context.dbClient.job.upsert({
-            where: { jobType_messageId: { jobType, messageId } },
+            where: { messageId },
             update: {
                 chainName,
                 payload: saveJsonStringify(payload),
                 nextRetryAt: next,
             },
             create: {
-                jobType,
                 chainName,
                 messageId,
                 payload: saveJsonStringify(payload),
@@ -70,7 +67,6 @@ export class ReportJobQueue extends RelayerContext {
     async cancelByMessageIds(messageIds: string[]) {
         await this.context.dbClient.job.deleteMany({
             where: {
-                jobType,
                 messageId: {
                     in: messageIds,
                 },

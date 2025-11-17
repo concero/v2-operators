@@ -1,10 +1,10 @@
 import { Abi, decodeEventLog, Hex, Log } from 'viem';
+import { ContextService } from './context.service';
 
-import { DecodedLog } from '../../types/DecodedLog';
-import { RelayerContext } from '../relayer-context';
+import { DecodedLog } from '../../types';
 import { Context } from '../types';
 
-export class LogParserService extends RelayerContext {
+export class LogParserService extends ContextService {
     constructor(context: Context) {
         super('LogParserService', context);
     }

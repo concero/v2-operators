@@ -1,7 +1,8 @@
 import { LoggerInterface } from '@concero/operator-utils';
-import { Context } from './types';
 
-export abstract class RelayerContext {
+import { Context } from '../types';
+
+export abstract class ContextService {
     protected readonly logger: LoggerInterface;
     protected readonly context: Context;
 

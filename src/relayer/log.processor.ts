@@ -1,15 +1,50 @@
-import { Hex, Log } from 'viem';
+import { Log } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
-import { BaseLogStrategy } from './base-log.strategy';
-import { LogStrategy } from './types';
+import { LogParserService } from './services';
+import { Context, MessageSentLogData } from './types';
+import { VerifierProcessor, VerifierType } from './verifier';
 
-import { MessagingCodec } from '../../utils';
-import { Context } from '../types';
-import { VerifierProcessor, VerifierType } from '../verifiers';
+import { MessagingCodec } from '../utils';
+import { ContextService } from './services/context.service';
 
-export class MessageSentLogStrategy extends BaseLogStrategy implements LogStrategy {
+export class LogProcessor extends ContextService {
+    private readonly parser: LogParserService;
+
     constructor(context: Context) {
-        super('MessageSentLogStrategy', context);
+        super('LogProcessor', context);
+        this.parser = new LogParserService(context);
+    }
+
+    async setup() {
+        const activeNetworks: ConceroNetwork[] = this.context.network.getActiveNetworks();
+        for (const network of activeNetworks) {
+            const routerBlockManager = this.context.blockRegistry.getBlockManager(network.name);
+
+            if (!routerBlockManager) {
+                this.logger.warn(
+                    `No block manager available for ${network.name}, skipping event setup`,
+                );
+                continue;
+            }
+
+            try {
+                const routerAddress = await this.context.messagingDeployment.getRouterByChainName(
+                    network.name,
+                );
+
+                const onLogs = this.onLogs.bind(this);
+                await this.context.txReader.logWatcher.create(
+                    routerAddress,
+                    network,
+                    onLogs,
+                    this.context.config.event.messageSent,
+                    routerBlockManager,
+                );
+                this.logger.debug(`Created MessageSent watcher for ${network.name}`);
+            } catch (error) {
+                this.logger.error(`Failed to set up router listener for ${network.name}: ${error}`);
+            }
+        }
     }
 
     async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
@@ -22,7 +57,7 @@ export class MessageSentLogStrategy extends BaseLogStrategy implements LogStrate
                 `Processing ${logs.length} ConceroMessageSent events from ${network.name}`,
             );
 
-            const parsedLogs = this.logParser.parseLogs<MessageSentLogStrategy.MessageSentData>(
+            const parsedLogs = this.parser.parseLogs<MessageSentLogData>(
                 logs,
                 this.context.config.contract.router,
             );
@@ -56,11 +91,4 @@ export class MessageSentLogStrategy extends BaseLogStrategy implements LogStrate
             this.logger.error(`Error processing logs from ${network.name}: ${error}`);
         }
     }
-}
-
-export namespace MessageSentLogStrategy {
-    export type MessageSentData = {
-        messageId: Hex;
-        messageReceipt: Hex;
-    };
 }
