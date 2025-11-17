@@ -1,4 +1,5 @@
-import { ContextProvider } from '../services';
+import { ContextProvider } from './index';
+
 import { Context } from '../types';
 
 const REPORT_RETRY_1M_COUNT = 4;
@@ -7,7 +8,7 @@ const saveJsonStringify = (object: Record<string, unknown>): string => {
     return JSON.stringify(object, (_, v) => (typeof v === 'bigint' ? v.toString() : v));
 };
 
-export class RetryQueue extends ContextProvider {
+export class RetryQueueService extends ContextProvider {
     constructor(context: Context) {
         super('ReportJobQueue', context);
     }

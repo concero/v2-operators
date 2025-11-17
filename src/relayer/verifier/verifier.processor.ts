@@ -1,18 +1,17 @@
 import { CREVerifierAdapter } from './cre-verifier.adapter';
 import { EmptyVerifierAdapter } from './empty-verifier.adapter';
-import { RetryQueue } from './retry-queue';
 import { VerifierAdapter, VerifierType } from './types';
 
-import { ContextProvider } from '../services';
+import { ContextProvider, RetryQueueService } from '../services';
 import { Context } from '../types';
 
 export class VerifierProcessor extends ContextProvider {
-    private readonly retryQueue: RetryQueue;
+    private readonly retryQueue: RetryQueueService;
     private readonly adapters: Record<VerifierType, VerifierAdapter>;
 
     constructor(context: Context) {
         super('VerifierProcessor', context);
-        this.retryQueue = new RetryQueue(this.context);
+        this.retryQueue = new RetryQueueService(this.context);
         this.adapters = {
             [VerifierType.Empty]: new EmptyVerifierAdapter(this.context, this.retryQueue),
             [VerifierType.CRE]: new CREVerifierAdapter(this.context, this.retryQueue),
