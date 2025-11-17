@@ -3,10 +3,10 @@ import { EmptyVerifierAdapter } from './empty-verifier.adapter';
 import { ReportJobQueue } from './report-job-queue';
 import { VerifierAdapter, VerifierType } from './types';
 
-import { ContextService } from '../services';
+import { ContextProvider } from '../services';
 import { Context } from '../types';
 
-export class VerifierProcessor extends ContextService {
+export class VerifierProcessor extends ContextProvider {
     private readonly reportJobQueue: ReportJobQueue;
     private readonly adapters: Record<VerifierType, VerifierAdapter>;
 
@@ -23,7 +23,7 @@ export class VerifierProcessor extends ContextService {
         this.context.eventEmitter.on(
             VerifierProcessor.RequestMessageReport.command,
             (payload: VerifierProcessor.RequestMessageReport.Payload) =>
-                this.adapters[payload.type].requestMessageReport(payload),
+                this.adapters[payload.type].process(payload),
         );
     }
 
@@ -40,7 +40,7 @@ export class VerifierProcessor extends ContextService {
                     this.logger.info(
                         `Job retry #${job.attempts + 1} for messageId=${job.messageId}`,
                     );
-                    void this.adapters[payload.type].requestMessageReport(payload);
+                    void this.adapters[payload.type].process(payload);
                 } catch (err) {
                     this.logger.error(`[report-request] error: ${err}`);
                     await this.reportJobQueue.reschedule(job.id, job.attempts);

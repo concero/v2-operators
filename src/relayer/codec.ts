@@ -1,4 +1,5 @@
 import { toHex } from 'viem';
+import { DecodedMessageLogReceipt } from './types';
 
 function readUint24(data: Uint8Array, offset: number): number {
     return (data[offset] << 16) | (data[offset + 1] << 8) | data[offset + 2];
@@ -42,30 +43,8 @@ function readFlatBytesAt(
     return { items: res, nextOffset: offset };
 }
 
-export type DecodedMessageReceipt = {
-    version: number;
-    srcChainSelector: number;
-    dstChainSelector: number;
-    nonce: bigint;
-
-    msgSender: string;
-    srcBlockConfirmations: bigint;
-
-    dstChainData: Uint8Array;
-    dstRelayerLib: Uint8Array;
-
-    relayerConfig: Uint8Array;
-    dstValidatorLibs: Uint8Array[];
-
-    validatorConfigs: Uint8Array[];
-    validationRpcs: Uint8Array[];
-    deliveryRpcs: Uint8Array[];
-
-    payload: Uint8Array;
-};
-
 export namespace MessagingCodec {
-    export function decodeReceipt(receipt: Uint8Array): DecodedMessageReceipt {
+    export function decodeReceipt(receipt: Uint8Array): DecodedMessageLogReceipt {
         let offset = 0;
 
         // version (uint8)

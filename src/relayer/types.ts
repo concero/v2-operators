@@ -48,3 +48,24 @@ export type MessageSentLogData = {
     messageId: Hex;
     messageReceipt: Hex;
 };
+export type DecodedMessageLogReceipt = {
+    version: number;
+    srcChainSelector: number;
+    dstChainSelector: number;
+    nonce: bigint;
+
+    msgSender: string;
+    srcBlockConfirmations: bigint;
+
+    dstChainData: Uint8Array;
+    dstRelayerLib: Uint8Array;
+
+    relayerConfig: Uint8Array;
+    dstValidatorLibs: Uint8Array[];
+
+    validatorConfigs: Uint8Array[];
+    validationRpcs: Uint8Array[];
+    deliveryRpcs: Uint8Array[];
+
+    payload: Uint8Array;
+};

@@ -1,13 +1,11 @@
 import { Log } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
-import { LogParserService } from './services';
+import { MessagingCodec } from './codec';
+import { ContextProvider, LogParserService } from './services';
 import { Context, MessageSentLogData } from './types';
 import { VerifierProcessor, VerifierType } from './verifier';
 
-import { MessagingCodec } from '../utils';
-import { ContextService } from './services/context.service';
-
-export class LogProcessor extends ContextService {
+export class LogProcessor extends ContextProvider {
     private readonly parser: LogParserService;
 
     constructor(context: Context) {
@@ -63,11 +61,11 @@ export class LogProcessor extends ContextService {
             );
 
             for (const parsedLog of parsedLogs) {
-                const parsedLogReceipt = MessagingCodec.decodeReceipt(
+                const parsedReceipt = MessagingCodec.decodeReceipt(
                     Buffer.from(parsedLog.data.messageReceipt),
                 );
 
-                const shouldFinaliseSrc = parsedLogReceipt.srcBlockConfirmations !== 0n;
+                const shouldFinaliseSrc = parsedReceipt.srcBlockConfirmations !== 0n;
                 if (shouldFinaliseSrc) {
                     this.context.txMonitor.trackTxFinality(
                         parsedLog.transactionHash,
@@ -77,13 +75,9 @@ export class LogProcessor extends ContextService {
                     );
                 } else {
                     this.context.eventEmitter.emit(VerifierProcessor.RequestMessageReport.command, {
-                        messageId: parsedLog.data.messageId,
-                        sender: parsedLogReceipt.msgSender,
-                        blockNumber: parsedLog.blockNumber,
-                        chainSelector: network.chainSelector,
-                        chainName: network.viemChain.name,
-                        data: parsedLogReceipt.payload.toString(),
-                        type: VerifierType.CRE,
+                        ...parsedLog,
+                        parsedReceipt,
+                        type: VerifierType.Empty,
                     } as VerifierProcessor.RequestMessageReport.Payload);
                 }
             }

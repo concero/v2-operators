@@ -2,7 +2,7 @@ import { LoggerInterface } from '@concero/operator-utils';
 
 import { Context } from '../types';
 
-export abstract class ContextService {
+export abstract class ContextProvider {
     protected readonly logger: LoggerInterface;
     protected readonly context: Context;
 

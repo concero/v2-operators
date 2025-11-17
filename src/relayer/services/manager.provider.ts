@@ -14,13 +14,13 @@ import {
     TxWriter,
     ViemClientManager,
 } from '@concero/operator-utils';
-import { Config, Context } from './types';
 import { PrismaClient } from '@prisma/client';
 
-import { globalConfig } from '../constants';
-import { DbManager, LogsListenerStore, MessagingDeploymentManager } from '../managers';
+import { globalConfig } from '../../constants';
+import { DbManager, LogsListenerStore, MessagingDeploymentManager } from '../../managers';
+import { Config, Context } from '../types';
 
-export class RelayerSetup {
+export abstract class ManagerProvider {
     private readonly config: Config;
     private readonly loggerBuilder: Logger;
     private readonly eventEmitter;
@@ -118,7 +118,7 @@ export class RelayerSetup {
             .then(address => (this.verifierAddress = address));
     }
 
-    get context(): Context {
+    protected get context(): Context {
         return {
             logger: this.loggerBuilder,
             config: this.config,
@@ -138,7 +138,7 @@ export class RelayerSetup {
         };
     }
 
-    async initialize() {
+    protected async initialize() {
         await this.networkManager.initialize();
         await this.rpcManager.initialize();
         await this.messagingDeploymentManager.initialize();

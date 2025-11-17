@@ -9,5 +9,5 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         super('CREVerifierAdapter', ctx, reportJobQueue);
     }
 
-    async requestMessageReport(payload: VerifierAdapter.Payload) {}
+    async process(payload: VerifierAdapter.Payload) {}
 }

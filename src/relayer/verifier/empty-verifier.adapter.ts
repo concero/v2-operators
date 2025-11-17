@@ -9,5 +9,5 @@ export class EmptyVerifierAdapter extends BaseVerifierAdapter implements Verifie
         super('EmptyRelayerAdapter', context, reportJobQueue);
     }
 
-    async requestMessageReport(payload: VerifierAdapter.Payload): Promise<void> {}
+    async process(payload: VerifierAdapter.Payload): Promise<void> {}
 }

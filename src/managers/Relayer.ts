@@ -22,11 +22,11 @@ import { MessagingDeploymentManager, RelayerSetup } from './index';
 import { PrismaClient } from '@prisma/client';
 
 import { eventEmitter } from '../constants';
-import { decodeLogs } from '../eventListener/decodeLogs';
+import { DecodedLog } from '../types';
 import { ConceroNetwork } from '../types/ConceroNetwork';
-import { DecodedLog } from '../types/DecodedLog';
 import { RelayerConfig } from '../types/ManagerConfigs';
 import { decodeCLFReport, decodeMessageReportResult } from '../utils';
+import { decodeLogs } from '../utils/decodeLogs';
 import { DecodedMessageReportResult } from '../utils/decoders/types';
 import { RelayerJobQueue } from '../utils/RelayerJobQueue';
 

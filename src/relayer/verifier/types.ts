@@ -1,4 +1,5 @@
-import { Address, Hex } from 'viem';
+import { DecodedLog } from '../../types';
+import { DecodedMessageLogReceipt, MessageSentLogData } from '../types';
 
 export enum VerifierType {
     Empty = 'empty',
@@ -6,16 +7,11 @@ export enum VerifierType {
 }
 
 export interface VerifierAdapter {
-    requestMessageReport(payload: VerifierAdapter.Payload): Promise<void>;
+    process(payload: VerifierAdapter.Payload): Promise<void>;
 }
 
 export namespace VerifierAdapter {
-    export type Payload = {
-        chainName: string;
-        chainSelector: string;
-        messageId: Hex;
-        sender: Address;
-        blockNumber: bigint;
-        data: string;
+    export type Payload = DecodedLog<MessageSentLogData> & {
+        parsedReceipt: DecodedMessageLogReceipt;
     };
 }

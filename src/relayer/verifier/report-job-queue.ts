@@ -1,4 +1,4 @@
-import { ContextService } from '../services';
+import { ContextProvider } from '../services';
 import { Context } from '../types';
 
 const DELAYS = [5, 10, 30, 120, 300, 600, 1200, 3600];
@@ -10,7 +10,7 @@ const saveJsonStringify = (object: Record<string, unknown>): string => {
     return JSON.stringify(object, (_, v) => (typeof v === 'bigint' ? v.toString() : v));
 };
 
-export class ReportJobQueue extends ContextService {
+export class ReportJobQueue extends ContextProvider {
     constructor(context: Context) {
         super('ReportJobQueue', context);
     }

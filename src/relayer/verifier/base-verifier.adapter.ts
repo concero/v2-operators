@@ -1,9 +1,9 @@
 import { ReportJobQueue } from './report-job-queue';
 
-import { ContextService } from '../services';
+import { ContextProvider } from '../services';
 import { Context } from '../types';
 
-export abstract class BaseVerifierAdapter extends ContextService {
+export abstract class BaseVerifierAdapter extends ContextProvider {
     protected readonly reportJobQueue: ReportJobQueue;
 
     protected constructor(name: string, context: Context, reportJobQueue: ReportJobQueue) {
