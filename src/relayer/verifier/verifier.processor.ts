@@ -65,7 +65,7 @@ export class VerifierProcessor extends ContextProvider {
         }, 15_000);
     }
 
-    setup() {
+    init() {
         this.startPolling();
         this.startListener();
     }

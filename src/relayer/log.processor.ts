@@ -13,7 +13,7 @@ export class LogProcessor extends ContextProvider {
         this.parser = new LogParserService(context);
     }
 
-    async setup() {
+    async init() {
         const onLogs = this.onLogs.bind(this);
         const activeNetworks: ConceroNetwork[] = this.context.network.getActiveNetworks();
 
