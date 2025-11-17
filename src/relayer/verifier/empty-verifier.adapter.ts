@@ -1,11 +1,11 @@
 import { BaseVerifierAdapter } from './base-verifier.adapter';
-import { ReportJobQueue } from './report-job-queue';
+import { RetryQueue } from './retry-queue';
 import { VerifierAdapter } from './types';
 
 import { Context } from '../types';
 
 export class EmptyVerifierAdapter extends BaseVerifierAdapter implements VerifierAdapter {
-    constructor(context: Context, reportJobQueue: ReportJobQueue) {
+    constructor(context: Context, reportJobQueue: RetryQueue) {
         super('EmptyRelayerAdapter', context, reportJobQueue);
     }
 

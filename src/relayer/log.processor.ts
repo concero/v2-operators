@@ -14,7 +14,9 @@ export class LogProcessor extends ContextProvider {
     }
 
     async setup() {
+        const onLogs = this.onLogs.bind(this);
         const activeNetworks: ConceroNetwork[] = this.context.network.getActiveNetworks();
+
         for (const network of activeNetworks) {
             const routerBlockManager = this.context.blockRegistry.getBlockManager(network.name);
 
@@ -30,7 +32,6 @@ export class LogProcessor extends ContextProvider {
                     network.name,
                 );
 
-                const onLogs = this.onLogs.bind(this);
                 await this.context.txReader.logWatcher.create(
                     routerAddress,
                     network,
@@ -45,7 +46,7 @@ export class LogProcessor extends ContextProvider {
         }
     }
 
-    async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
+    private async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
         try {
             if (logs.length === 0) {
                 return;
@@ -74,11 +75,14 @@ export class LogProcessor extends ContextProvider {
                         'relayer',
                     );
                 } else {
-                    this.context.eventEmitter.emit(VerifierProcessor.RequestMessageReport.command, {
+                    this.context.eventEmitter.emit(VerifierProcessor.command, {
                         ...parsedLog,
-                        parsedReceipt,
+                        data: {
+                            ...parsedLog.data,
+                            parsedReceipt,
+                        },
                         type: VerifierType.Empty,
-                    } as VerifierProcessor.RequestMessageReport.Payload);
+                    } as VerifierProcessor.Payload);
                 }
             }
         } catch (error) {

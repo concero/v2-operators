@@ -1,11 +1,11 @@
 import { BaseVerifierAdapter } from './base-verifier.adapter';
-import { ReportJobQueue } from './report-job-queue';
+import { RetryQueue } from './retry-queue';
 import { VerifierAdapter } from './types';
 
 import { Context } from '../types';
 
 export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierAdapter {
-    constructor(ctx: Context, reportJobQueue: ReportJobQueue) {
+    constructor(ctx: Context, reportJobQueue: RetryQueue) {
         super('CREVerifierAdapter', ctx, reportJobQueue);
     }
 

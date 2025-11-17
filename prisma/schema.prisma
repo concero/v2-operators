@@ -24,7 +24,7 @@ model LogsListenerBlockCheckpoints {
 
 model Job {
   id          Int      @id @default(autoincrement())
-  chainName   String // @todo: avoid names, use selector
+  chainSelector   Int 
   messageId   String   @unique
   payload     String
   attempts    Int      @default(0)

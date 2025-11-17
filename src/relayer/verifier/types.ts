@@ -11,7 +11,9 @@ export interface VerifierAdapter {
 }
 
 export namespace VerifierAdapter {
-    export type Payload = DecodedLog<MessageSentLogData> & {
-        parsedReceipt: DecodedMessageLogReceipt;
-    };
+    export type Payload = DecodedLog<
+        MessageSentLogData & {
+            parsedReceipt: DecodedMessageLogReceipt;
+        }
+    >;
 }
