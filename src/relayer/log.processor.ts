@@ -16,6 +16,7 @@ export class LogProcessor extends ContextProvider {
     async init() {
         const onLogs = this.onLogs.bind(this);
         const activeNetworks: ConceroNetwork[] = this.context.network.getActiveNetworks();
+        this.logger.debug(`Got ${activeNetworks.length}`);
 
         for (const network of activeNetworks) {
             const routerBlockManager = this.context.blockRegistry.getBlockManager(network.name);
@@ -48,6 +49,8 @@ export class LogProcessor extends ContextProvider {
 
     private async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
         try {
+            this.logger.debug(`Found ${logs.length} logs`);
+
             if (logs.length === 0) {
                 return;
             }

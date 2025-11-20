@@ -2,7 +2,6 @@ import { Hash, Hex } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 import { BaseVerifierAdapter } from './base-verifier.adapter';
 import { VerifierAdapter } from './types';
-import axios from 'axios';
 
 import { RetryQueueService } from '../services';
 import { Context } from '../types';
@@ -38,10 +37,16 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
     private async flush() {
         this.isFlushing = true;
         const batch = Array.from(this.stack);
-        const result = await axios.post<CREVerifierAdapter.Response>('url', { batch });
+        const result = await this.context.http.post<CREVerifierAdapter.Response>(
+            'https://google.com',
+            {
+                batch,
+            },
+        );
+
         for (let i = 0; i < batch.length; i++) {
             const batchItem = batch[i];
-            const reportItem = result.data.batch[i];
+            const reportItem = result.batch[i];
 
             const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
                 batchItem.srcChainSelector,

@@ -14,7 +14,8 @@
         "format": "prettier --config .prettierrc.json --write \"**/*.{ts,json}\"",
         "start": "bun run start:dev",
         "start:node": "NODE_ENV=development node --env-file=.env ./dist/index.js",
-        "start:dev": "NODE_ENV=development bun ./src/index.ts",
+        "start:dev": "bun ./src/index.ts",
+        "start:new:dev": "bun ./src/main.ts",
         "start:prod": "NODE_ENV=production bun ./dist/index.js",
         "start:relayerA": "bun ./src/index.ts",
         "check-updates": "bun npm-check-updates",
@@ -45,12 +46,11 @@
         "typescript": "5.0.0"
     },
     "dependencies": {
-        "@concero/operator-utils": "https://github.com/concero/operator-utils.git#feature/add-messaging-converter",
+        "@concero/operator-utils": "https://github.com/concero/operator-utils.git#development",
         "@prisma/client": "6.16.2",
         "@slack/web-api": "7.9.1",
         "@types/jest": "29.5.14",
         "async-mutex": "0.5.0",
-        "axios": "1.8.4",
         "dotenv": "16.4.7",
         "ts-jest": "29.3.2",
         "uuid": "11.1.0",

@@ -9,12 +9,12 @@ export class RelayerApp extends ManagerProvider {
 
     constructor(config: Config) {
         super(config);
+        this.initManagers();
         this.logProcessor = new LogProcessor(this.context);
         this.verifierProcessor = new VerifierProcessor(this.context);
     }
 
     async init(): Promise<void> {
-        this.initialize();
         this.logProcessor.init();
         this.verifierProcessor.init();
     }

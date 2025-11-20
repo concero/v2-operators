@@ -1,8 +1,6 @@
 import { EventEmitter } from 'node:events';
-import { Address } from 'viem';
 import {
     BlockManagerRegistry,
-    ConceroNetwork,
     ConceroNetworkManager,
     HttpClient,
     Logger,
@@ -21,36 +19,57 @@ import { DbManager, LogsListenerStore, MessagingDeploymentManager } from '../../
 import { Config, Context } from '../types';
 
 export abstract class ManagerProvider {
-    private readonly config: Config;
-    private readonly loggerBuilder: Logger;
-    private readonly eventEmitter;
-    private readonly networkManager: NetworkManager;
-    private readonly nonceManager: NonceManager;
-    private readonly rpcManager: RpcManager;
-    private readonly dbClient: PrismaClient;
-    private readonly viemClientManager: ViemClientManager;
-    private readonly blockManagerRegistry: BlockManagerRegistry;
-    private readonly messagingDeploymentManager: MessagingDeploymentManager;
-    private readonly logsListenerStore: LogsListenerStore;
-    private readonly txMonitor: TxMonitor;
-    private readonly txReader: TxReader;
-    private readonly txWriter: TxWriter;
-    private readonly verifierNetwork: ConceroNetwork;
-    private verifierAddress: Address = '0x0';
+    private config: Config;
+    private loggerBuilder!: Logger;
+    private eventEmitter!: EventEmitter;
+    private networkManager!: NetworkManager;
+    private nonceManager!: NonceManager;
+    private rpcManager!: RpcManager;
+    private dbClient!: PrismaClient;
+    private viemClientManager!: ViemClientManager;
+    private blockManagerRegistry!: BlockManagerRegistry;
+    private messagingDeploymentManager!: MessagingDeploymentManager;
+    private logsListenerStore!: LogsListenerStore;
+    private txMonitor!: TxMonitor;
+    private txReader!: TxReader;
+    private txWriter!: TxWriter;
+    private httpClient!: HttpClient;
 
     protected constructor(config: Config) {
-        this.loggerBuilder = Logger.createInstance(globalConfig.LOGGER as any);
         this.config = config;
+    }
+
+    protected get context(): Context {
+        return {
+            logger: this.loggerBuilder,
+            config: this.config,
+            eventEmitter: this.eventEmitter,
+            network: this.networkManager,
+            rpc: this.rpcManager,
+            dbClient: this.dbClient,
+            viemClient: this.viemClientManager,
+            blockRegistry: this.blockManagerRegistry,
+            messagingDeployment: this.messagingDeploymentManager,
+            logsListener: this.logsListenerStore,
+            txMonitor: this.txMonitor,
+            txReader: this.txReader,
+            txWriter: this.txWriter,
+            http: this.httpClient,
+        };
+    }
+
+    protected async initManagers() {
+        this.loggerBuilder = Logger.createInstance(globalConfig.LOGGER as any);
         this.eventEmitter = new EventEmitter();
 
         const httpLoggerInstance = this.loggerBuilder.getLogger('HttpClient');
-        const httpClient = HttpClient.createInstance(httpLoggerInstance, globalConfig.HTTPCLIENT);
+        this.httpClient = HttpClient.createInstance(httpLoggerInstance, globalConfig.HTTPCLIENT);
 
-        void httpClient.initialize();
+        await this.httpClient.initialize();
 
         this.networkManager = ConceroNetworkManager.createInstance(
             this.loggerBuilder.getLogger('NetworkManager'),
-            httpClient,
+            this.httpClient,
             globalConfig.NETWORK_MANAGER,
         );
 
@@ -84,6 +103,21 @@ export abstract class ManagerProvider {
             globalConfig.DEPLOYMENT_MANAGER,
         );
 
+        await this.networkManager.initialize();
+        await this.rpcManager.initialize();
+        await this.messagingDeploymentManager.initialize();
+        await this.viemClientManager.initialize();
+        await this.blockManagerRegistry.initialize();
+
+        // Register network update listeners after all managers are initialized
+        this.networkManager.registerUpdateListener(this.rpcManager);
+        this.networkManager.registerUpdateListener(this.messagingDeploymentManager);
+        this.networkManager.registerUpdateListener(this.viemClientManager);
+        this.networkManager.registerUpdateListener(this.blockManagerRegistry);
+
+        // Start polling for network updates which will also trigger initial updates
+        await this.networkManager.startPolling();
+
         this.txMonitor = TxMonitor.createInstance(
             this.loggerBuilder.getLogger('TxMonitor'),
             this.viemClientManager,
@@ -103,6 +137,7 @@ export abstract class ManagerProvider {
             this.viemClientManager,
             {},
         );
+        await this.nonceManager.initialize();
 
         this.txWriter = TxWriter.createInstance(
             this.loggerBuilder.getLogger('TxWriter'),
@@ -111,49 +146,6 @@ export abstract class ManagerProvider {
             this.nonceManager,
             globalConfig.TX_WRITER,
         );
-
-        this.verifierNetwork = this.networkManager.getVerifierNetwork() as ConceroNetwork;
-        this.messagingDeploymentManager
-            .getConceroVerifier()
-            .then(address => (this.verifierAddress = address));
-    }
-
-    protected get context(): Context {
-        return {
-            logger: this.loggerBuilder,
-            config: this.config,
-            eventEmitter: this.eventEmitter,
-            network: this.networkManager,
-            rpc: this.rpcManager,
-            dbClient: this.dbClient,
-            viemClient: this.viemClientManager,
-            blockRegistry: this.blockManagerRegistry,
-            messagingDeployment: this.messagingDeploymentManager,
-            logsListener: this.logsListenerStore,
-            txMonitor: this.txMonitor,
-            txReader: this.txReader,
-            txWriter: this.txWriter,
-            verifierNetwork: this.verifierNetwork,
-            verifierAddress: this.verifierAddress,
-        };
-    }
-
-    protected async initialize() {
-        await this.networkManager.initialize();
-        await this.rpcManager.initialize();
-        await this.messagingDeploymentManager.initialize();
-        await this.viemClientManager.initialize();
-        await this.blockManagerRegistry.initialize();
-
-        // Register network update listeners after all managers are initialized
-        this.networkManager.registerUpdateListener(this.rpcManager);
-        this.networkManager.registerUpdateListener(this.messagingDeploymentManager);
-        this.networkManager.registerUpdateListener(this.viemClientManager);
-        this.networkManager.registerUpdateListener(this.blockManagerRegistry);
-
-        // Start polling for network updates which will also trigger initial updates
-        await this.networkManager.startPolling();
-        await this.nonceManager.initialize();
 
         await this.txWriter.initialize();
         await this.txReader.initialize();

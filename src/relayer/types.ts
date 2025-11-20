@@ -1,8 +1,8 @@
 import { EventEmitter } from 'node:events';
-import { Abi, AbiEvent, Address, Hex } from 'viem';
+import { Abi, AbiEvent, Hex } from 'viem';
 import {
     BlockManagerRegistry,
-    ConceroNetwork,
+    HttpClient,
     Logger,
     NetworkManager,
     RpcManager,
@@ -22,13 +22,13 @@ export type Config = {
     };
     event: {
         messageSent: AbiEvent;
-        messageReport: AbiEvent;
     };
 };
 
 export type Context = {
     logger: Logger;
     config: Config;
+    http: HttpClient;
     eventEmitter: EventEmitter;
     network: NetworkManager;
     rpc: RpcManager;
@@ -40,8 +40,6 @@ export type Context = {
     txMonitor: TxMonitor;
     txReader: TxReader;
     txWriter: TxWriter;
-    verifierNetwork: ConceroNetwork;
-    verifierAddress: Address;
 };
 
 export type MessageSentLogData = {

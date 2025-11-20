@@ -33,5 +33,7 @@ export class EmptyVerifierAdapter extends BaseVerifierAdapter implements Verifie
             abi: this.context.config.contract.router,
             args: [payload.data.messageReceipt, [], [], 'unknown'],
         });
+
+        this.logger.debug(`submittedMessage on ${dstNetwork.name} ${payload.data.messageId}`);
     }
 }

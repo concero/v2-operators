@@ -1,6 +1,6 @@
 import './utils/configureDotEnv';
 
-import { Abi } from 'viem';
+import { Abi, AbiEvent, getAbiItem } from 'viem';
 import { AppErrorEnum, globalConfig } from './constants';
 import { RelayerApp } from './relayer';
 import { AppError } from './utils';
@@ -38,13 +38,19 @@ export async function main() {
         startHeapSnapshotCollection(globalConfig.LOGGER.logDir);
     }
 
+    const router = require('./abi/ConceroRouter.json')['abi'] as Abi;
+    const verifier = require('./abi/ConceroVerifier.json')['abi'] as Abi;
     const app = new RelayerApp({
         contract: {
-            router: require('./abi/ConceroRouter.json') as Abi,
-            verifier: require('./abi/ConceroRouter.json') as Abi,
+            router,
+            verifier,
         },
-        // @todo: fix eventAbi
-        event: { messageSent: 1 as any, messageReport: 2 as any },
+        event: {
+            messageSent: getAbiItem({
+                abi: router,
+                name: 'ConceroMessageSent',
+            }) as AbiEvent,
+        },
     });
 
     await app.init();
