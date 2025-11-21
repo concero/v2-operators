@@ -1,4 +1,4 @@
-import { ContextProvider } from './index';
+import { ContextProvider } from './context.provider';
 
 import { Context } from '../types';
 

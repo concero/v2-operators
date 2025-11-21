@@ -1,9 +1,11 @@
 import { Log } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 import { MessagingCodec } from './codec';
-import { ContextProvider, LogParserService } from './services';
+import { LogParserService } from './services';
 import { Context, MessageSentLogData } from './types';
 import { VerifierType } from './verifier';
+
+import { ContextProvider } from './services/context.provider';
 
 export class LogProcessor extends ContextProvider {
     private readonly parser: LogParserService;
