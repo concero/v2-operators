@@ -7,7 +7,7 @@ export enum VerifierType {
 }
 
 export interface VerifierAdapter {
-    process(payload: VerifierAdapter.Payload): Promise<void>;
+    requestVerification(payload: VerifierAdapter.Payload): Promise<void>;
 }
 
 export namespace VerifierAdapter {

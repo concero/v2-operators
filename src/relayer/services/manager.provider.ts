@@ -1,4 +1,3 @@
-import { EventEmitter } from 'node:events';
 import {
     BlockManagerRegistry,
     ConceroNetworkManager,
@@ -12,6 +11,7 @@ import {
     TxWriter,
     ViemClientManager,
 } from '@concero/operator-utils';
+import { EventBusService } from './event-bus.service';
 import { PrismaClient } from '@prisma/client';
 
 import { globalConfig } from '../../constants';
@@ -21,7 +21,7 @@ import { Config, Context } from '../types';
 export abstract class ManagerProvider {
     private config: Config;
     private loggerBuilder!: Logger;
-    private eventEmitter!: EventEmitter;
+    private eventBus!: EventBusService;
     private networkManager!: NetworkManager;
     private nonceManager!: NonceManager;
     private rpcManager!: RpcManager;
@@ -43,7 +43,7 @@ export abstract class ManagerProvider {
         return {
             logger: this.loggerBuilder,
             config: this.config,
-            eventEmitter: this.eventEmitter,
+            eventBus: this.eventBus,
             network: this.networkManager,
             rpc: this.rpcManager,
             dbClient: this.dbClient,
@@ -60,7 +60,7 @@ export abstract class ManagerProvider {
 
     protected async initManagers() {
         this.loggerBuilder = Logger.createInstance(globalConfig.LOGGER as any);
-        this.eventEmitter = new EventEmitter();
+        this.eventBus = new EventBusService();
 
         const httpLoggerInstance = this.loggerBuilder.getLogger('HttpClient');
         this.httpClient = HttpClient.createInstance(httpLoggerInstance, globalConfig.HTTPCLIENT);

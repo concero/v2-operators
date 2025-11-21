@@ -3,7 +3,7 @@ import { ConceroNetwork } from '@concero/operator-utils';
 import { MessagingCodec } from './codec';
 import { ContextProvider, LogParserService } from './services';
 import { Context, MessageSentLogData } from './types';
-import { VerifierProcessor, VerifierType } from './verifier';
+import { VerifierType } from './verifier';
 
 export class LogProcessor extends ContextProvider {
     private readonly parser: LogParserService;
@@ -79,14 +79,14 @@ export class LogProcessor extends ContextProvider {
                     );
                 } else {
                     const isCRE = parsedLog.data.validatorLibs.length > 0;
-                    this.context.eventEmitter.emit(VerifierProcessor.command, {
+                    this.context.eventBus.requestVerify({
                         ...parsedLog,
                         data: {
                             ...parsedLog.data,
                             parsedReceipt,
                         },
                         type: isCRE ? VerifierType.CRE : VerifierType.Empty,
-                    } as VerifierProcessor.Payload);
+                    });
                 }
             }
         } catch (error) {

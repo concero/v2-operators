@@ -10,12 +10,8 @@ import { Context } from '../types';
 const MAX_STACK_SIZE = 10;
 
 export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierAdapter {
-    private stack: (CREVerifierAdapter.Request.Item & {
-        dstChainSelector: number;
-        messageReceipt: Hex;
-        validatorLibs: Address[];
-        relayerLib: Address;
-    })[] = [];
+    private requestVerificationStack: CREVerifierAdapter.Item[] = [];
+    private confirmVerificationStack: { [messageId: string]: CREVerifierAdapter.Item } = {};
     private isFlushing = false;
 
     constructor(ctx: Context, reportJobQueue: RetryQueueService) {
@@ -23,8 +19,8 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         setInterval(() => this.flush(), 1000);
     }
 
-    async process(payload: VerifierAdapter.Payload) {
-        this.stack.push({
+    async requestVerification(payload: VerifierAdapter.Payload) {
+        this.requestVerificationStack.push({
             messageId: payload.data.messageId,
             blockNumber: payload.blockNumber.toString(),
             srcChainSelector: payload.data.parsedReceipt.srcChainSelector,
@@ -34,7 +30,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
             validatorLibs: payload.data.validatorLibs,
         });
 
-        if (this.stack.length > MAX_STACK_SIZE) {
+        if (this.requestVerificationStack.length > MAX_STACK_SIZE) {
             await this.flush();
         }
     }
@@ -46,8 +42,10 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
 
         this.isFlushing = true;
 
-        const batch = Array.from(this.stack);
-        const creRequestBody: CRERequestBody<CREVerifierAdapter.Request> = {
+        const batchSize = Math.min(MAX_STACK_SIZE, this.requestVerificationStack.length);
+        const batch = Array.from(this.requestVerificationStack.slice(0, batchSize));
+
+        const requestBody: CRERequestBody<CREVerifierAdapter.RequestVerify> = {
             jsonrpc: '2.0',
             id: crypto.randomUUID(),
             method: 'POST',
@@ -56,14 +54,11 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
                 input: { batch },
             },
         };
-        const token = await createCREJWT(
-            creRequestBody,
-            process.env.CRE_REQUESTER_PRIVATE_KEY as Hex,
-        );
-        const result = await this.context.http.post<CREVerifierAdapter.Response>(
+        const token = await createCREJWT(requestBody, process.env.CRE_REQUESTER_PRIVATE_KEY as Hex);
+        await this.context.http.post(
             // @todo: fix types
             process.env.CRE_BASE_URL! as string,
-            creRequestBody,
+            requestBody,
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -72,10 +67,20 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
             },
         );
 
-        for (const [messageId, reportItem] of Object.entries(result)) {
-            const batchItem = batch.find(i => i.messageId === messageId);
+        // @todo: move to cache
+        for (const i of batch) {
+            this.confirmVerificationStack[i.messageId] = i;
+        }
+
+        this.requestVerificationStack = this.requestVerificationStack.slice(batchSize);
+        this.isFlushing = false;
+    }
+
+    async confirmVerification(payload: CREVerifierAdapter.ConfirmResponse) {
+        for (const [messageId, reportItem] of Object.entries(payload)) {
+            const batchItem = this.confirmVerificationStack[messageId];
             if (!batchItem) {
-                throw new Error(`BatchItem not found [messageId=${messageId}]`);
+                throw new Error(`ConfirmVerify not found [messageId=${messageId}]`);
             }
 
             const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
@@ -106,17 +111,21 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
                 ],
             });
         }
-
-        this.stack = [];
-        this.isFlushing = false;
     }
 }
 
 export namespace CREVerifierAdapter {
-    export type Request = {
-        batch: Request.Item[];
+    export type Item = RequestVerify.Item & {
+        dstChainSelector: number;
+        messageReceipt: Hex;
+        validatorLibs: Address[];
+        relayerLib: Address;
     };
-    export namespace Request {
+
+    export type RequestVerify = {
+        batch: RequestVerify.Item[];
+    };
+    export namespace RequestVerify {
         export type Item = {
             messageId: Hash;
             srcChainSelector: number;
@@ -124,8 +133,8 @@ export namespace CREVerifierAdapter {
         };
     }
 
-    export type Response = Record<string, Response.Item>;
-    export namespace Response {
+    export type ConfirmResponse = Record<string, ConfirmResponse.Item>;
+    export namespace ConfirmResponse {
         export type Item = {
             rawReport: string;
             reportContext: string;

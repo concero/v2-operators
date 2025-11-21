@@ -10,7 +10,7 @@ export class EmptyVerifierAdapter extends BaseVerifierAdapter implements Verifie
         super('EmptyRelayerAdapter', context, reportJobQueue);
     }
 
-    async process(payload: VerifierAdapter.Payload): Promise<void> {
+    async requestVerification(payload: VerifierAdapter.Payload): Promise<void> {
         const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
             payload.data.parsedReceipt.dstChainSelector,
         );

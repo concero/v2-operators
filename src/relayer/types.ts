@@ -1,4 +1,3 @@
-import { EventEmitter } from 'node:events';
 import { Abi, AbiEvent, Address, Hex } from 'viem';
 import {
     BlockManagerRegistry,
@@ -11,6 +10,7 @@ import {
     TxWriter,
     ViemClientManager,
 } from '@concero/operator-utils';
+import { EventBusService } from './services';
 import { PrismaClient } from '@prisma/client';
 
 import { LogsListenerStore, MessagingDeploymentManager } from '../managers';
@@ -29,7 +29,7 @@ export type Context = {
     logger: Logger;
     config: Config;
     http: HttpClient;
-    eventEmitter: EventEmitter;
+    eventBus: EventBusService;
     network: NetworkManager;
     rpc: RpcManager;
     dbClient: PrismaClient;
