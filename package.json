@@ -9,6 +9,7 @@
     "packageManager": "bun",
     "scripts": {
         "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm --packages=external",
+        "build:new": "esbuild src/main.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm --packages=external",
         "build:cjs": "esbuild src/index.ts --bundle --platform=node --target=node22 --outdir=dist --format=cjs --out-extension=.js=.cjs --packages=external",
         "lint": "eslint --config .eslint.config.mjs",
         "format": "prettier --config .prettierrc.json --write \"**/*.{ts,json}\"",
@@ -16,6 +17,7 @@
         "start:node": "NODE_ENV=development node --env-file=.env ./dist/index.js",
         "start:dev": "bun ./src/index.ts",
         "start:new:dev": "bun ./src/main.ts",
+        "start:new:prod": "bun ./dist/main.js",
         "start:prod": "NODE_ENV=production bun ./dist/index.js",
         "start:relayerA": "bun ./src/index.ts",
         "check-updates": "bun npm-check-updates",

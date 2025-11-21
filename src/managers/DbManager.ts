@@ -3,8 +3,6 @@ import { PrismaClient } from '@prisma/client';
 export class DbManager {
     private static dbClient: PrismaClient | null = null;
 
-    private constructor() {}
-
     public static getClient() {
         if (!DbManager.dbClient) {
             DbManager.dbClient = new PrismaClient();

@@ -74,6 +74,7 @@ export abstract class ManagerProvider {
         );
 
         this.dbClient = DbManager.getClient();
+        await this.dbClient.$connect();
 
         this.logsListenerStore = new LogsListenerStore(
             this.loggerBuilder.getLogger('LogsListenerBlockCheckpointStore'),

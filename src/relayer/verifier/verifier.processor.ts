@@ -53,6 +53,7 @@ export class VerifierProcessor extends ContextProvider {
         const requestVerification = this.requestVerification.bind(this);
 
         setInterval(async () => {
+            console.log(this.context);
             const jobs = await this.retryQueue.getDue(10);
 
             for (const job of jobs) {
@@ -77,7 +78,7 @@ export class VerifierProcessor extends ContextProvider {
             }
             res.send('ok');
         });
-        this.app.listen({ port: 3000, host: '0.0.0.0' }).catch(console.error);
+        this.app.listen({ port: 5000, host: '0.0.0.0' }).catch(console.error);
     }
 
     init() {

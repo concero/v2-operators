@@ -1,4 +1,5 @@
-import { ContextProvider, RetryQueueService } from '../services';
+import { RetryQueueService } from '../services';
+import { ContextProvider } from '../services/context.provider';
 import { Context } from '../types';
 
 export abstract class BaseVerifierAdapter extends ContextProvider {
