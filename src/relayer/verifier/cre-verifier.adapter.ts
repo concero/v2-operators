@@ -36,6 +36,10 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
     }
 
     private async flush() {
+        if (this.requestVerificationStack.length === 0) {
+            return;
+        }
+
         if (this.isFlushing) {
             return;
         }
@@ -47,7 +51,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
 
         const requestBody: CRERequestBody<CREVerifierAdapter.RequestVerify> = {
             jsonrpc: '2.0',
-            id: crypto.randomUUID(),
+            id: Date.now().toString(),
             method: 'POST',
             params: {
                 workflow: { workflowID: process.env.CRE_WORKFLOW_ID as string },
@@ -58,7 +62,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         await this.context.http.post(
             // @todo: fix types
             process.env.CRE_BASE_URL! as string,
-            requestBody,
+            JSON.stringify(requestBody),
             {
                 headers: {
                     'Content-Type': 'application/json',
