@@ -3,7 +3,7 @@ import { DecodedMessageLogReceipt, MessageSentLogData } from '../types';
 
 export enum VerifierType {
     Empty = 'empty',
-    // CRE = 'cre',
+    CRE = 'cre',
 }
 
 export interface VerifierAdapter {

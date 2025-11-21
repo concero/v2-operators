@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { Abi, AbiEvent, Hex } from 'viem';
+import { Abi, AbiEvent, Address, Hex } from 'viem';
 import {
     BlockManagerRegistry,
     HttpClient,
@@ -45,6 +45,8 @@ export type Context = {
 export type MessageSentLogData = {
     messageId: Hex;
     messageReceipt: Hex;
+    validatorLibs: Address[];
+    relayerLib: Address;
 };
 export type DecodedMessageLogReceipt = {
     version: number;

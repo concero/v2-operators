@@ -1,3 +1,4 @@
+import { CREVerifierAdapter } from './cre-verifier.adapter';
 import { EmptyVerifierAdapter } from './empty-verifier.adapter';
 import { VerifierAdapter, VerifierType } from './types';
 
@@ -13,7 +14,7 @@ export class VerifierProcessor extends ContextProvider {
         this.retryQueue = new RetryQueueService(this.context);
         this.adapters = {
             [VerifierType.Empty]: new EmptyVerifierAdapter(this.context, this.retryQueue),
-            // [VerifierType.CRE]: new CREVerifierAdapter(this.context, this.retryQueue),
+            [VerifierType.CRE]: new CREVerifierAdapter(this.context, this.retryQueue),
         };
     }
 

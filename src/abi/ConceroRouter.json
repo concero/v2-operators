@@ -326,6 +326,18 @@
           "internalType": "bytes",
           "name": "messageReceipt",
           "type": "bytes"
+        },
+        {
+          "indexed": false,
+          "internalType": "address[]",
+          "name": "validatorLibs",
+          "type": "address[]"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "relayerLib",
+          "type": "address"
         }
       ],
       "name": "ConceroMessageSent",

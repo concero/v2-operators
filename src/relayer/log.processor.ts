@@ -78,13 +78,14 @@ export class LogProcessor extends ContextProvider {
                         'relayer',
                     );
                 } else {
+                    const isCRE = parsedLog.data.validatorLibs.length > 0;
                     this.context.eventEmitter.emit(VerifierProcessor.command, {
                         ...parsedLog,
                         data: {
                             ...parsedLog.data,
                             parsedReceipt,
                         },
-                        type: VerifierType.Empty,
+                        type: isCRE ? VerifierType.CRE : VerifierType.Empty,
                     } as VerifierProcessor.Payload);
                 }
             }
