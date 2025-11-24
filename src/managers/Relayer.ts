@@ -184,7 +184,7 @@ export class Relayer extends ManagerBase {
         });
 
         for (const network of activeNetworks) {
-            const routerAddress = await this.deploymentManager.getRouterByChainName(network.name);
+            const routerAddress = this.deploymentManager.getRouterByChainName(network.name);
             const blockManager = this.blockManagerRegistry.getBlockManager(network.name);
 
             if (!blockManager) {
@@ -546,7 +546,7 @@ export class Relayer extends ManagerBase {
             return { message: null, gasLimit: 0n };
         }
 
-        const srcContractAddress = await this.deploymentManager.getRouterByChainName(srcChain.name);
+        const srcContractAddress = this.deploymentManager.getRouterByChainName(srcChain.name);
 
         const decodedLogs = await this.txReader.getLogs(
             {

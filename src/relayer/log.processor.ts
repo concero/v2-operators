@@ -18,7 +18,9 @@ export class LogProcessor extends ContextProvider {
     async init() {
         const onLogs = this.onLogs.bind(this);
         const activeNetworks: ConceroNetwork[] = this.context.network.getActiveNetworks();
-        this.logger.debug(`Got ${activeNetworks.length}`);
+        this.logger.debug(
+            `Got ${activeNetworks.length} active networks: ${activeNetworks.map(i => i.name).join(', ')}`,
+        );
 
         for (const network of activeNetworks) {
             const routerBlockManager = this.context.blockRegistry.getBlockManager(network.name);
@@ -31,10 +33,9 @@ export class LogProcessor extends ContextProvider {
             }
 
             try {
-                const routerAddress = await this.context.messagingDeployment.getRouterByChainName(
+                const routerAddress = this.context.messagingDeployment.getRouterByChainName(
                     network.name,
                 );
-
                 await this.context.txReader.logWatcher.create(
                     routerAddress,
                     network,

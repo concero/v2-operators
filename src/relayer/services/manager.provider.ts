@@ -62,8 +62,10 @@ export abstract class ManagerProvider {
         this.loggerBuilder = Logger.createInstance(globalConfig.LOGGER as any);
         this.eventBus = new EventBusService();
 
-        const httpLoggerInstance = this.loggerBuilder.getLogger('HttpClient');
-        this.httpClient = HttpClient.createInstance(httpLoggerInstance, globalConfig.HTTPCLIENT);
+        this.httpClient = HttpClient.createInstance(
+            this.loggerBuilder.getLogger('HttpClient'),
+            globalConfig.HTTPCLIENT,
+        );
 
         await this.httpClient.initialize();
 

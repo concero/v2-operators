@@ -73,7 +73,7 @@ export class MessagingDeploymentManager extends ManagerBase implements IMessagin
         return MessagingDeploymentManager.instance;
     }
 
-    async getRouterByChainName(chainName: string): Promise<Address> {
+    getRouterByChainName(chainName: string): Address {
         if (this.config.networkMode === 'localhost') {
             return getEnvString('CONCERO_ROUTER_PROXY_LOCALHOST') as Address;
         }
@@ -120,6 +120,7 @@ export class MessagingDeploymentManager extends ManagerBase implements IMessagin
                 this.config.conceroDeploymentsUrl,
                 patterns,
             );
+            this.logger.debug(`Found deployments ${JSON.stringify(deployments)}`);
             await this.processDeployments(deployments, networks);
 
             if (this.config.networkMode !== 'localhost') {
@@ -184,17 +185,6 @@ export class MessagingDeploymentManager extends ManagerBase implements IMessagin
             return true; // localhost always valid
         }
 
-        // Check if router exists for this network
-        const router = this.conceroRoutersMapByChainName[networkName];
-        if (!router) {
-            return false;
-        }
-
-        // Check if verifier exists (only check main verifier, not per-network)
-        if (this.conceroVerifier === undefined) {
-            return false;
-        }
-
-        return true;
+        return Boolean(this.conceroRoutersMapByChainName[networkName]);
     }
 }
