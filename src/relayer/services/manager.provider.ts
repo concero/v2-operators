@@ -111,6 +111,7 @@ export abstract class ManagerProvider {
         await this.messagingDeploymentManager.initialize();
         await this.viemClientManager.initialize();
         await this.blockManagerRegistry.initialize();
+        this.blockManagerRegistry.startPolling();
 
         // Register network update listeners after all managers are initialized
         this.networkManager.registerUpdateListener(this.rpcManager);
