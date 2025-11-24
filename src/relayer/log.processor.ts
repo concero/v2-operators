@@ -23,9 +23,9 @@ export class LogProcessor extends ContextProvider {
         );
 
         for (const network of activeNetworks) {
-            const routerBlockManager = this.context.blockRegistry.getBlockManager(network.name);
+            const blockManager = this.context.blockRegistry.getBlockManager(network.name);
 
-            if (!routerBlockManager) {
+            if (!blockManager) {
                 this.logger.warn(
                     `No block manager available for ${network.name}, skipping event setup`,
                 );
@@ -41,8 +41,10 @@ export class LogProcessor extends ContextProvider {
                     network,
                     onLogs,
                     this.context.config.event.messageSent,
-                    routerBlockManager,
+                    blockManager,
                 );
+
+                await blockManager.startPolling();
                 this.logger.debug(`Created MessageSent watcher for ${network.name}`);
             } catch (error) {
                 this.logger.error(`Failed to set up router listener for ${network.name}: ${error}`);
@@ -68,11 +70,8 @@ export class LogProcessor extends ContextProvider {
             );
 
             for (const parsedLog of parsedLogs) {
-                const parsedReceipt = MessagingCodec.decodeReceipt(
-                    Buffer.from(parsedLog.data.messageReceipt),
-                );
-
-                const shouldFinaliseSrc = parsedReceipt.srcBlockConfirmations !== 0n;
+                const parsedReceipt = MessagingCodec.decodeReceipt(parsedLog.data.messageReceipt);
+                const shouldFinaliseSrc = parsedReceipt.srcChainData.blockConfirmations !== 0n;
                 if (shouldFinaliseSrc) {
                     this.context.txMonitor.trackTxFinality(
                         parsedLog.transactionHash,

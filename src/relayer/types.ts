@@ -54,18 +54,18 @@ export type DecodedMessageLogReceipt = {
     dstChainSelector: number;
     nonce: bigint;
 
-    msgSender: string;
-    srcBlockConfirmations: bigint;
+    srcChainData: {
+        sender: Address;
+        blockConfirmations: bigint;
+    };
 
-    dstChainData: Uint8Array;
-    dstRelayerLib: Uint8Array;
+    dstChainData: {
+        raw: Hex;
+        receiver: Address | null;
+        gasLimit: number | null;
+    };
 
-    relayerConfig: Uint8Array;
-    dstValidatorLibs: Uint8Array[];
-
-    validatorConfigs: Uint8Array[];
-    validationRpcs: Uint8Array[];
-    deliveryRpcs: Uint8Array[];
-
-    payload: Uint8Array;
+    relayerLib: Hex;
+    validatorLibs: Hex[];
+    payload: Hex;
 };
