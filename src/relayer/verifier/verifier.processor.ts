@@ -68,8 +68,9 @@ export class VerifierProcessor extends ContextProvider {
     }
 
     private setupApi() {
-        this.app.get('/api/v1/callback/cre', async (req, res) => {
+        this.app.post('/api/v1/callback/cre', async (req, res) => {
             try {
+                this.logger.info(`CRE Got: ${JSON.stringify(req.body)}`);
                 await (this.adapters.cre as CREVerifierAdapter).confirmVerification(
                     req.body as CREVerifierAdapter.ConfirmResponse,
                 );
