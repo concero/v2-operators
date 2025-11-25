@@ -55,7 +55,13 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
             method: 'POST',
             params: {
                 workflow: { workflowID: process.env.CRE_WORKFLOW_ID as string },
-                input: { batch },
+                input: {
+                    batch: batch.map(i => ({
+                        messageId: i.messageId,
+                        blockNumber: i.blockNumber.toString(),
+                        srcChainSelector: i.srcChainSelector,
+                    })),
+                },
             },
         };
         const token = await createCREJWT(requestBody, process.env.CRE_REQUESTER_PRIVATE_KEY as Hex);
