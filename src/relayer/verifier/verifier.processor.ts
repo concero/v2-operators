@@ -70,14 +70,17 @@ export class VerifierProcessor extends ContextProvider {
     private setupApi() {
         this.app.post('/api/v1/callback/cre', async (req, res) => {
             try {
-                this.logger.info(`CRE Got: ${JSON.stringify(req.body)}`);
+                this.logger.info(`CRE Callback Got: ${JSON.stringify(req.body)}`);
                 await (this.adapters.cre as CREVerifierAdapter).confirmVerification(
                     req.body as CREVerifierAdapter.ConfirmResponse,
                 );
             } catch (e) {
-                res.send('error');
+                this.logger.error(
+                    `CRE Callback Failed: ${e.toString()} ${JSON.stringify(req.body)}`,
+                );
             }
-            res.send('ok');
+
+            return res.send('check');
         });
         this.app.listen({ port: 5000, host: '0.0.0.0' }).catch(console.error);
     }
