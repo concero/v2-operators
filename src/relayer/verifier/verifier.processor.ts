@@ -76,11 +76,11 @@ export class VerifierProcessor extends ContextProvider {
                 );
             } catch (e) {
                 this.logger.error(
-                    `CRE Callback Failed: ${e.toString()} ${JSON.stringify(req.body)}`,
+                    `CRE Callback Failed: ${e?.toString()} ${JSON.stringify(req.body)}`,
                 );
             }
 
-            return res.send('check');
+            return res.status(200).send({ statusCode: 200, ok: true });
         });
         this.app.listen({ port: 5000, host: '0.0.0.0' }).catch(console.error);
     }
