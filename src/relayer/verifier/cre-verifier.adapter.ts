@@ -94,7 +94,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
             }
 
             const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
-                batchItem.srcChainSelector,
+                String(batchItem.dstChainSelector),
             );
             if (!dstNetwork) {
                 throw new Error(
@@ -102,7 +102,9 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
                 );
             }
 
-            const routerAddress = dstNetwork.addresses?.conceroRouter;
+            const routerAddress = this.context.messagingDeployment.getRouterByChainName(
+                dstNetwork.name,
+            );
             if (!routerAddress) {
                 throw new Error(
                     `DstRouterAddress not found [chainSelector=${batchItem.dstChainSelector}]`,
