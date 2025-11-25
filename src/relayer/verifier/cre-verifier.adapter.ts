@@ -52,9 +52,8 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         const requestBody: CRERequestBody<CREVerifierAdapter.RequestVerify> = {
             jsonrpc: '2.0',
             id: Date.now().toString(),
-            method: 'POST',
+            method: 'workflows.execute',
             params: {
-                workflow: { workflowID: process.env.CRE_WORKFLOW_ID as string },
                 input: {
                     batch: batch.map(i => ({
                         messageId: i.messageId,
@@ -62,13 +61,14 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
                         srcChainSelector: i.srcChainSelector,
                     })),
                 },
+                workflow: { workflowID: process.env.CRE_WORKFLOW_ID as string },
             },
         };
         const token = await createCREJWT(requestBody, process.env.CRE_REQUESTER_PRIVATE_KEY as Hex);
         await this.context.http.post(
             // @todo: fix types
-            process.env.CRE_BASE_URL! as string,
-            JSON.stringify(requestBody),
+            process.env.CRE_BASE_URL as string,
+            requestBody,
             {
                 headers: {
                     'Content-Type': 'application/json',
