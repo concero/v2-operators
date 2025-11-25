@@ -122,6 +122,8 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
                     batchItem.relayerLib,
                 ],
             });
+
+            delete this.confirmVerificationStack[messageId];
         }
     }
 }
