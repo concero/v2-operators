@@ -116,10 +116,16 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
     private async processConfirmations() {
         const messagesToConfirm = Object.entries(this.verifierConfirmCallback)
             .map(([messageId, verifierResponses]) => {
+                this.logger.debug(
+                    `For messageId=${messageId} got responses count ${verifierResponses.length}`,
+                );
                 if (verifierResponses.length === 10) {
                     return null;
                 }
                 const item = this.pendingVerifierConfirmStack[messageId];
+                this.logger.debug(
+                    `For messageId=${messageId} found item ${item ? 'true' : 'false'}`,
+                );
                 if (!item) {
                     return null;
                 }
