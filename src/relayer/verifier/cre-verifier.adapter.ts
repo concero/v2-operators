@@ -187,7 +187,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
             [
                 reportContext as Hex,
                 rawReport as Hex,
-                encodeAbiParameters([{ type: 'bytes32[]', name: 'signatures' }], [signatures]),
+                encodeAbiParameters([{ type: 'bytes[]', name: 'signatures' }], [signatures]),
             ],
         );
     }
