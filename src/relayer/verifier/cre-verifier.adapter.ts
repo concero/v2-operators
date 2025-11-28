@@ -119,7 +119,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
                 this.logger.debug(
                     `For messageId=${messageId} got responses count ${verifierResponses.length}`,
                 );
-                if (verifierResponses.length === 10) {
+                if (verifierResponses.length !== 10) {
                     return null;
                 }
                 const item = this.pendingVerifierConfirmStack[messageId];
