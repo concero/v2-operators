@@ -1,4 +1,4 @@
-import { Address, Hash, Hex } from 'viem';
+import { Address, encodeAbiParameters, encodePacked, Hash, Hex } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 import { BaseVerifierAdapter } from './base-verifier.adapter';
 import { VerifierAdapter } from './types';
@@ -10,17 +10,21 @@ import { Context } from '../types';
 const MAX_STACK_SIZE = 10;
 
 export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierAdapter {
-    private requestVerificationStack: CREVerifierAdapter.Item[] = [];
-    private confirmVerificationStack: { [messageId: string]: CREVerifierAdapter.Item } = {};
+    private pendingVerifierRequestStack: CREVerifierAdapter.Item[] = [];
+    private pendingVerifierConfirmStack: { [messageId: string]: CREVerifierAdapter.Item } = {};
+    private verifierConfirmCallback: {
+        [messageId: string]: CREVerifierAdapter.ConfirmResponse.Item[];
+    } = {};
     private isFlushing = false;
 
     constructor(ctx: Context, reportJobQueue: RetryQueueService) {
         super('CREVerifierAdapter', ctx, reportJobQueue);
         setInterval(() => this.flush(), 1000);
+        setInterval(() => this.processConfirmations(), 1000);
     }
 
     async requestVerification(payload: VerifierAdapter.Payload) {
-        this.requestVerificationStack.push({
+        this.pendingVerifierRequestStack.push({
             messageId: payload.data.messageId,
             blockNumber: payload.blockNumber.toString(),
             srcChainSelector: payload.data.parsedReceipt.srcChainSelector,
@@ -30,13 +34,24 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
             validatorLibs: payload.data.validatorLibs,
         });
 
-        if (this.requestVerificationStack.length > MAX_STACK_SIZE) {
+        if (this.pendingVerifierRequestStack.length > MAX_STACK_SIZE) {
             await this.flush();
         }
     }
 
+    async addConfirmationCallback(payload: CREVerifierAdapter.ConfirmResponse) {
+        for (const [messageId, callbackItem] of Object.entries(payload)) {
+            if (this.verifierConfirmCallback[messageId]) {
+                this.verifierConfirmCallback[messageId] =
+                    this.verifierConfirmCallback[messageId].concat(callbackItem);
+            } else {
+                this.verifierConfirmCallback[messageId] = [callbackItem];
+            }
+        }
+    }
+
     private async flush() {
-        if (this.requestVerificationStack.length === 0) {
+        if (this.pendingVerifierRequestStack.length === 0) {
             return;
         }
 
@@ -44,87 +59,121 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
             return;
         }
 
-        this.isFlushing = true;
+        try {
+            this.isFlushing = true;
 
-        const batchSize = Math.min(MAX_STACK_SIZE, this.requestVerificationStack.length);
-        const batch = Array.from(this.requestVerificationStack.slice(0, batchSize));
+            const batchSize = Math.min(MAX_STACK_SIZE, this.pendingVerifierRequestStack.length);
+            const batch = Array.from(this.pendingVerifierRequestStack.slice(0, batchSize));
 
-        const requestBody: CRERequestBody<CREVerifierAdapter.RequestVerify> = {
-            jsonrpc: '2.0',
-            id: Date.now().toString(),
-            method: 'workflows.execute',
-            params: {
-                input: {
-                    batch: batch.map(i => ({
-                        messageId: i.messageId,
-                        blockNumber: i.blockNumber.toString(),
-                        srcChainSelector: i.srcChainSelector,
-                    })),
+            const requestBody: CRERequestBody<CREVerifierAdapter.RequestVerify> = {
+                jsonrpc: '2.0',
+                id: Date.now().toString(),
+                method: 'workflows.execute',
+                params: {
+                    input: {
+                        batch: batch.map(i => ({
+                            messageId: i.messageId,
+                            blockNumber: i.blockNumber.toString(),
+                            srcChainSelector: i.srcChainSelector,
+                        })),
+                    },
+                    workflow: { workflowID: process.env.CRE_WORKFLOW_ID as string },
                 },
-                workflow: { workflowID: process.env.CRE_WORKFLOW_ID as string },
-            },
-        };
-        const token = await createCREJWT(requestBody, process.env.CRE_REQUESTER_PRIVATE_KEY as Hex);
-        await this.context.http.post(
-            // @todo: fix types
-            process.env.CRE_BASE_URL as string,
-            requestBody,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
+            };
+            const token = await createCREJWT(
+                requestBody,
+                process.env.CRE_REQUESTER_PRIVATE_KEY as Hex,
+            );
+            await this.context.http.post(
+                // @todo: fix types
+                process.env.CRE_BASE_URL as string,
+                requestBody,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
                 },
-            },
-        );
+            );
 
-        // @todo: move to cache
-        for (const i of batch) {
-            this.confirmVerificationStack[i.messageId] = i;
+            // @todo: move to cache
+            for (const i of batch) {
+                this.pendingVerifierConfirmStack[i.messageId] = i;
+            }
+            this.pendingVerifierRequestStack = this.pendingVerifierRequestStack.slice(batchSize);
+        } catch (e) {
+            throw e;
+        } finally {
+            this.isFlushing = false;
         }
-
-        this.requestVerificationStack = this.requestVerificationStack.slice(batchSize);
-        this.isFlushing = false;
     }
 
-    async confirmVerification(payload: CREVerifierAdapter.ConfirmResponse) {
-        for (const [messageId, reportItem] of Object.entries(payload)) {
-            const batchItem = this.confirmVerificationStack[messageId];
-            if (!batchItem) {
-                throw new Error(`ConfirmVerify not found [messageId=${messageId}]`);
+    private async processConfirmations() {
+        const messagesToConfirm = Object.entries(this.verifierConfirmCallback)
+            .map(([messageId, verifierResponses]) => {
+                if (verifierResponses.length === 10) {
+                    return null;
+                }
+                const item = this.pendingVerifierConfirmStack[messageId];
+                if (!item) {
+                    return null;
+                }
+
+                return { item, confirmations: verifierResponses, messageId };
+            })
+            .filter(Boolean);
+
+        for (const message of messagesToConfirm) {
+            if (!message) {
+                return;
             }
 
             const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
-                String(batchItem.dstChainSelector),
+                String(message.item.dstChainSelector),
             );
             if (!dstNetwork) {
-                throw new Error(
-                    `DstNetwork not found [chainSelector=${batchItem.dstChainSelector}]`,
+                this.logger.error(
+                    `DstNetwork not found [chainSelector=${message.item.dstChainSelector}]`,
                 );
+                return;
             }
 
             const routerAddress = this.context.messagingDeployment.getRouterByChainName(
                 dstNetwork.name,
             );
             if (!routerAddress) {
-                throw new Error(
-                    `DstRouterAddress not found [chainSelector=${batchItem.dstChainSelector}]`,
+                this.logger.error(
+                    `DstRouterAddress not found [chainSelector=${message.item.dstChainSelector}]`,
                 );
+                return;
             }
 
+            const confirmations = this.packConfirmations(message.confirmations);
             await this.context.txWriter.callContract(dstNetwork, {
                 address: routerAddress,
                 functionName: 'submitMessage',
                 abi: this.context.config.contract.router,
                 args: [
-                    batchItem.messageReceipt,
-                    reportItem ? [Buffer.from(JSON.stringify(reportItem)).toString('hex')] : [],
-                    batchItem.validatorLibs,
-                    batchItem.relayerLib,
+                    message.item.messageReceipt,
+                    confirmations,
+                    message.item.validatorLibs,
+                    message.item.relayerLib,
                 ],
             });
-
-            delete this.confirmVerificationStack[messageId];
         }
+    }
+
+    private packConfirmations(creCallbacks: CREVerifierAdapter.ConfirmResponse.Item[]): Hex {
+        const rawReport = creCallbacks[0].rawReport;
+        const reportContext = creCallbacks[0].reportContext;
+        const signatures: Hex[] = Array.from(
+            new Set(creCallbacks.flatMap(i => i.signs).map(i => i.signature as Hex)),
+        );
+        const abi = signatures.map(() => ({ type: 'bytes' }));
+        return encodePacked(
+            ['bytes', 'bytes', 'bytes'],
+            [reportContext as Hex, rawReport as Hex, encodeAbiParameters(abi, signatures)],
+        );
     }
 }
 
