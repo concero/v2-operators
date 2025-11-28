@@ -39,14 +39,19 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         }
     }
 
-    async addConfirmationCallback(payload: CREVerifierAdapter.ConfirmResponse) {
-        for (const [messageId, callbackItem] of Object.entries(payload)) {
-            if (this.verifierConfirmCallback[messageId]) {
-                this.verifierConfirmCallback[messageId] =
-                    this.verifierConfirmCallback[messageId].concat(callbackItem);
+    addConfirmationCallback(payload: CREVerifierAdapter.ConfirmResponse) {
+        for (const [messageId, item] of Object.entries(payload)) {
+            if (!this.verifierConfirmCallback[messageId]) {
+                this.verifierConfirmCallback[messageId] = [item];
             } else {
-                this.verifierConfirmCallback[messageId] = [callbackItem];
+                this.verifierConfirmCallback[messageId] = Array.from([
+                    ...this.verifierConfirmCallback[messageId],
+                    item,
+                ]);
             }
+            this.logger.debug(
+                `Callbacks for messageId=${messageId} count is ${this.verifierConfirmCallback[messageId]?.length || 0}`,
+            );
         }
     }
 
