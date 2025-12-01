@@ -1,4 +1,4 @@
-import { Address, encodeAbiParameters, encodePacked, Hash, Hex } from 'viem';
+import { Address, encodeAbiParameters, encodePacked, Hash, Hex, hexToBytes } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 import { BaseVerifierAdapter } from './base-verifier.adapter';
 import { VerifierAdapter } from './types';
@@ -177,18 +177,21 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
     }
 
     private packConfirmations(creCallbacks: CREVerifierAdapter.ConfirmResponse.Item[]): Hex {
-        const rawReport = creCallbacks[0].rawReport;
-        const reportContext = creCallbacks[0].reportContext;
-        const signatures: Hex[] = Array.from(
+        const rawReport = creCallbacks[0].rawReport as Hex;
+        const reportContext = creCallbacks[0].reportContext as Hex;
+
+        const signaturesBytes = Array.from(
             new Set(creCallbacks.flatMap(i => i.signs).map(i => i.signature as Hex)),
+        ).map(sig => hexToBytes(sig) as unknown as Hex);
+
+        const encodedSignatures = encodeAbiParameters(
+            [{ type: 'bytes[]' }],
+            [signaturesBytes as Hex[]],
         );
+
         return encodePacked(
             ['bytes', 'bytes', 'bytes'],
-            [
-                rawReport as Hex,
-                reportContext as Hex,
-                encodeAbiParameters([{ type: 'bytes[]' }], [signatures as Hex[]]),
-            ],
+            [rawReport, reportContext, encodedSignatures],
         );
     }
 }

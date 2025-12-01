@@ -60,6 +60,8 @@ export class LogProcessor extends ContextProvider {
                 return;
             }
 
+            this.logger.debug(`Logs: ${logs.map(i => i.transactionHash).join(', ')}`);
+
             this.logger.debug(
                 `Processing ${logs.length} ConceroMessageSent events from ${network.name}`,
             );

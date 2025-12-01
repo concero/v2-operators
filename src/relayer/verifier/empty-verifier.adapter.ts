@@ -42,6 +42,6 @@ export class EmptyVerifierAdapter extends BaseVerifierAdapter implements Verifie
             ],
         });
 
-        this.logger.debug(`submittedMessage on ${dstNetwork.name} ${payload.data.messageId}`);
+        this.logger.info(`submittedMessage on ${dstNetwork.name} ${payload.data.messageId}`);
     }
 }

@@ -27,10 +27,10 @@ export class VerifierProcessor extends ContextProvider {
         onSuccess?: (messageId: VerifierProcessor.Payload['data']) => Promise<void>,
     ): Promise<void> {
         try {
-            this.logger.debug(`[${payload.type}] processing ${payload.type}`);
+            this.logger.info(`[${payload.type}] processing ${payload.type}`);
             await this.adapters['cre'].requestVerification(payload);
             await onSuccess?.(payload.data);
-            this.logger.debug(`[${payload.type}] Processed successfully ${payload.type}`);
+            this.logger.info(`[${payload.type}] Processed successfully ${payload.type}`);
         } catch (e) {
             this.logger.error(`[${payload.type}] Processing failed: ${e}`);
             await onError(payload.data);
