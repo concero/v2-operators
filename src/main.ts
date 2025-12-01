@@ -33,8 +33,6 @@ process.on('uncaughtException', (error: Error) => {
     globalErrorHandler(new AppError(AppErrorEnum.UncaughtException, error));
 });
 
-// 0x03fefa2fad4c5c0c1bc4868e08d602e74720709516574b58632eb741cd57b9cd
-
 export async function main() {
     if (process.env.ENABLE_HEAP_SNAPSHOTS === 'true') {
         startHeapSnapshotCollection(globalConfig.LOGGER.logDir);
@@ -47,8 +45,6 @@ export async function main() {
         name: 'ConceroMessageSent',
     }) as AbiEvent;
     const eventHash = toEventHash(messageSent);
-
-    console.log({ eventHash });
 
     const app = new RelayerApp({
         contract: {

@@ -114,7 +114,9 @@ export class Relayer extends ManagerBase {
         if (this.initialized) return;
 
         this.verifierNetwork = this.networkManager.getVerifierNetwork();
+        /*
         this.verifierAddress = await this.deploymentManager.getConceroVerifier();
+*/
 
         await this.setup.executeSetup();
 

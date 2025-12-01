@@ -21,25 +21,24 @@ export class EmptyVerifierAdapter extends BaseVerifierAdapter implements Verifie
             );
         }
 
-        const routerAddress = this.context.messagingDeployment.getRouterByChainName(
+        const dstRouterAddress = this.context.messagingDeployment.getRouterByChainName(
             dstNetwork.name,
         );
-        if (!routerAddress) {
-            throw new Error(
-                `DstRouterAddress not found [chainSelector=${payload.data.parsedReceipt.dstChainSelector}]`,
-            );
+        if (!dstRouterAddress) {
+            throw new Error(`DstRouterAddress not found [chainName=${dstNetwork.name}]`);
+        }
+        const dstRelayerLib = this.context.messagingDeployment.getConceroRelayerLibByChainName(
+            dstNetwork.name,
+        );
+        if (!dstRelayerLib) {
+            throw new Error(`DstRelayerLib not found [chainName=${dstNetwork.name}]`);
         }
 
         await this.context.txWriter.callContract(dstNetwork, {
-            address: routerAddress,
+            address: dstRouterAddress,
             functionName: 'submitMessage',
             abi: this.context.config.contract.router,
-            args: [
-                payload.data.messageReceipt,
-                [],
-                payload.data.validatorLibs,
-                payload.data.relayerLib,
-            ],
+            args: [payload.data.messageReceipt, [], payload.data.validatorLibs, dstRelayerLib],
         });
 
         this.logger.info(`submittedMessage on ${dstNetwork.name} ${payload.data.messageId}`);

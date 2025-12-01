@@ -104,6 +104,7 @@ export abstract class ManagerProvider {
             this.loggerBuilder.getLogger('MessagingDeploymentManager'),
             this.networkManager,
             globalConfig.DEPLOYMENT_MANAGER,
+            this.httpClient,
         );
 
         await this.networkManager.initialize();

@@ -1,4 +1,4 @@
-import { Address, formatUnits, getAbiItem, Hash } from 'viem';
+import { Address, getAbiItem, Hash } from 'viem';
 import type {
     ConceroNetwork,
     ITxWriter,
@@ -54,8 +54,8 @@ export class RelayerSetup {
 
     public async executeSetup(): Promise<void> {
         try {
-            await this.ensureOperatorIsRegistered();
-            await this.ensureOperatorDeposit();
+            // await this.ensureOperatorIsRegistered();
+            // await this.ensureOperatorDeposit();
 
             this.logger.info('Relayer setup successful');
         } catch (error) {
@@ -64,10 +64,13 @@ export class RelayerSetup {
         }
     }
 
+    /*
     private async ensureOperatorIsRegistered(): Promise<void> {
         const verifierNetwork = this.networkManager.getVerifierNetwork();
         const { publicClient } = this.viemClientManager.getClients(verifierNetwork.name);
+        /!*
         const verifierAddress = await this.deploymentManager.getConceroVerifier();
+*!/
 
         const isRegistered = await publicClient.readContract({
             address: verifierAddress,
@@ -105,7 +108,9 @@ export class RelayerSetup {
 
         this.logger.info(`Operator registration confirmed with txHash ${confirmedTxHash}`);
     }
+*/
 
+    /*
     private async ensureOperatorDeposit(): Promise<void> {
         const verifierNetwork = this.networkManager.getVerifierNetwork();
         const verifierAddress = await this.deploymentManager.getConceroVerifier();
@@ -141,6 +146,7 @@ export class RelayerSetup {
 
         this.logger.info(`Deposited ${requiredDeposit} to ConceroVerifier with hash ${txHash}`);
     }
+*/
 
     private async waitForOperatorRegistration(
         network: ConceroNetwork,

@@ -69,28 +69,3 @@ export type DecodedMessageLogReceipt = {
     validatorLibs: Hex[];
     payload: Hex;
 };
-
-enum DeploymentType {
-    Router = 'router',
-    ValidatorLib = 'validatorLib',
-    RelayerLib = 'relayerLib',
-}
-type Chain = {
-    id: number;
-    selector: number;
-    name: string;
-    isTestnet: boolean;
-    finalityConfirmations: number;
-    rpcUrls: string[];
-    blockExplorers: {
-        name: string;
-        url: string;
-        apiUrl: string;
-    }[];
-    nativeCurrency: {
-        name: string;
-        symbol: string;
-        decimals: number;
-    };
-    deployments: Partial<Record<DeploymentType, Address>>;
-};

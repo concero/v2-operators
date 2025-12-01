@@ -4,6 +4,6 @@ import { NetworkUpdateListener } from '@concero/operator-utils';
 export interface IMessagingDeploymentManager extends NetworkUpdateListener {
     initialize(): Promise<void>;
     getRouterByChainName(chainName: string): Address;
-    getConceroRouters(): Promise<Record<string, Address>>;
-    getConceroVerifier(): Promise<Address>;
+    getConceroRelayerLibByChainName(chainName: string): Address;
+    getConceroRouters(): Record<string, Address>;
 }

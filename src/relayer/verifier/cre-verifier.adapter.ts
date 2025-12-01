@@ -136,7 +136,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
 
         for (const message of messagesToConfirm) {
             if (!message) {
-                continue;
+                return;
             }
 
             const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
@@ -158,6 +158,15 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
                 );
                 return;
             }
+            const relayerLib = this.context.messagingDeployment.getConceroRelayerLibByChainName(
+                dstNetwork.name,
+            );
+            if (!relayerLib) {
+                this.logger.error(
+                    `RelayerLib not found [chainSelector=${message.item.dstChainSelector}]`,
+                );
+                return;
+            }
 
             const validations = this.packValidations(message.confirmations);
             await this.context.txWriter.callContract(dstNetwork, {
@@ -168,7 +177,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
                     message.item.messageReceipt,
                     [validations],
                     message.item.validatorLibs,
-                    message.item.relayerLib,
+                    relayerLib,
                 ],
             });
             delete this.verifierConfirmCallback[message.messageId];

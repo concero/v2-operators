@@ -11,6 +11,8 @@ import { abi as conceroVerifierAbi } from '../abi/ConceroVerifier.json';
 import { RelayerGlobalConfig } from '../types/GlobalConfig';
 
 export const relayerConfig: RelayerGlobalConfig = {
+    chainOptionsUrl:
+        'https://raw.githubusercontent.com/concero/concero-networks/refs/heads/master/output/chains.minified.json',
     RELAYER: {
         operatorAddress: getEnvString('OPERATOR_ADDRESS'),
         gasLimit: {

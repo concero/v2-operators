@@ -2,6 +2,7 @@ import { Abi, Address } from 'viem';
 import { type GlobalConfig as OperatorUtilsGlobalConfig } from '@concero/operator-utils';
 
 export type RelayerGlobalConfig = OperatorUtilsGlobalConfig & {
+    chainOptionsUrl: string;
     RELAYER: {
         operatorAddress: Address;
         gasLimit: {
