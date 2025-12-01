@@ -182,10 +182,13 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         const signatures: Hex[] = Array.from(
             new Set(creCallbacks.flatMap(i => i.signs).map(i => i.signature as Hex)),
         );
-        const abi = signatures.map(() => ({ type: 'bytes' }));
         return encodePacked(
             ['bytes', 'bytes', 'bytes'],
-            [reportContext as Hex, rawReport as Hex, encodeAbiParameters(abi, signatures)],
+            [
+                rawReport as Hex,
+                reportContext as Hex,
+                encodeAbiParameters([{ type: 'bytes[]' }], [signatures as Hex[]]),
+            ],
         );
     }
 }
