@@ -181,7 +181,16 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         const reportContext = creCallbacks[0].reportContext as Hex;
 
         const signatures = Array.from(
-            new Set(creCallbacks.flatMap(item => item.signs.map(sign => sign.signature))),
+            new Set(
+                creCallbacks.flatMap(item =>
+                    item.signs.map(sign => {
+                        const hex = sign.signature.startsWith('0x')
+                            ? sign.signature
+                            : `0x${sign.signature}`;
+                        return hex as Hex;
+                    }),
+                ),
+            ),
         );
 
         this.logger.info(`Got signatures: ${signatures.join(', ')}`);
