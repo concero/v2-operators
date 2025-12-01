@@ -159,14 +159,14 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
                 return;
             }
 
-            const confirmations = this.packConfirmations(message.confirmations);
+            const validations = this.packValidations(message.confirmations);
             await this.context.txWriter.callContract(dstNetwork, {
                 address: routerAddress,
                 functionName: 'submitMessage',
                 abi: this.context.config.contract.router,
                 args: [
                     message.item.messageReceipt,
-                    confirmations,
+                    [validations],
                     message.item.validatorLibs,
                     message.item.relayerLib,
                 ],
@@ -176,7 +176,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         }
     }
 
-    private packConfirmations(creCallbacks: CREVerifierAdapter.ConfirmResponse.Item[]): Hex {
+    private packValidations(creCallbacks: CREVerifierAdapter.ConfirmResponse.Item[]): Hex {
         const rawReport = creCallbacks[0].rawReport as Hex;
         const reportContext = creCallbacks[0].reportContext as Hex;
 
