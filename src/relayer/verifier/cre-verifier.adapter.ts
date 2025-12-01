@@ -184,7 +184,9 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
             new Set(creCallbacks.flatMap(item => item.signs.map(sign => sign.signature))),
         );
 
+        this.logger.info(`Got signatures: ${signatures.join(', ')}`);
         const encodedSignatures = encodeAbiParameters([{ type: 'bytes[]' }], [signatures as Hex[]]);
+        this.logger.info(`Encoded signatures: ${encodedSignatures}`);
 
         return encodePacked(
             ['bytes', 'bytes', 'bytes'],
