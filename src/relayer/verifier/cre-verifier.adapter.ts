@@ -1,4 +1,4 @@
-import { Address, encodeAbiParameters, encodePacked, Hash, Hex, hexToBytes } from 'viem';
+import { Address, encodeAbiParameters, encodePacked, Hash, Hex } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 import { BaseVerifierAdapter } from './base-verifier.adapter';
 import { VerifierAdapter } from './types';
@@ -136,7 +136,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
 
         for (const message of messagesToConfirm) {
             if (!message) {
-                return;
+                continue;
             }
 
             const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
@@ -180,14 +180,11 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         const rawReport = creCallbacks[0].rawReport as Hex;
         const reportContext = creCallbacks[0].reportContext as Hex;
 
-        const signaturesBytes = Array.from(
-            new Set(creCallbacks.flatMap(i => i.signs).map(i => i.signature as Hex)),
-        ).map(sig => hexToBytes(sig) as unknown as Hex);
-
-        const encodedSignatures = encodeAbiParameters(
-            [{ type: 'bytes[]' }],
-            [signaturesBytes as Hex[]],
+        const signatures = Array.from(
+            new Set(creCallbacks.flatMap(item => item.signs.map(sign => sign.signature))),
         );
+
+        const encodedSignatures = encodeAbiParameters([{ type: 'bytes[]' }], [signatures as Hex[]]);
 
         return encodePacked(
             ['bytes', 'bytes', 'bytes'],
@@ -223,7 +220,7 @@ export namespace CREVerifierAdapter {
             signs: {
                 signature: string;
                 signerId: number;
-            };
+            }[];
         };
     }
 }
