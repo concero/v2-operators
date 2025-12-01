@@ -1,5 +1,4 @@
 import { Address, encodeAbiParameters, encodePacked, Hash, Hex } from 'viem';
-import { ConceroNetwork } from '@concero/operator-utils';
 import { BaseVerifierAdapter } from './base-verifier.adapter';
 import { VerifierAdapter } from './types';
 
@@ -139,47 +138,11 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
                 return;
             }
 
-            const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
-                String(message.item.dstChainSelector),
-            );
-            if (!dstNetwork) {
-                this.logger.error(
-                    `DstNetwork not found [chainSelector=${message.item.dstChainSelector}]`,
-                );
-                return;
-            }
-
-            const routerAddress = this.context.messagingDeployment.getRouterByChainName(
-                dstNetwork.name,
-            );
-            if (!routerAddress) {
-                this.logger.error(
-                    `DstRouterAddress not found [chainSelector=${message.item.dstChainSelector}]`,
-                );
-                return;
-            }
-            const relayerLib = this.context.messagingDeployment.getConceroRelayerLibByChainName(
-                dstNetwork.name,
-            );
-            if (!relayerLib) {
-                this.logger.error(
-                    `RelayerLib not found [chainSelector=${message.item.dstChainSelector}]`,
-                );
-                return;
-            }
-
             const validations = this.packValidations(message.confirmations);
-            await this.context.txWriter.callContract(dstNetwork, {
-                address: routerAddress,
-                functionName: 'submitMessage',
-                abi: this.context.config.contract.router,
-                args: [
-                    message.item.messageReceipt,
-                    [validations],
-                    message.item.validatorLibs,
-                    relayerLib,
-                ],
-            });
+            await this.submitMessage(message.item.dstChainSelector, message.item.messageReceipt, [
+                validations,
+            ]);
+
             delete this.verifierConfirmCallback[message.messageId];
             delete this.pendingVerifierConfirmStack[message.messageId];
         }

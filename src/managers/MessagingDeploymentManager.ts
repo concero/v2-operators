@@ -103,6 +103,17 @@ export class MessagingDeploymentManager extends ManagerBase implements IMessagin
         return relayerLib;
     }
 
+    getConceroValidatorLibByChainName(chainName: string): Address {
+        const relayerLib = Object.values(this.chainOptions)?.find(i => i.name === chainName)
+            ?.deployments?.validatorLib;
+
+        if (!relayerLib) {
+            throw new Error(`RelayerLib not found for chain: ${chainName}`);
+        }
+
+        return relayerLib;
+    }
+
     async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {
         try {
             this.chainOptions = await this.fetchChainOptions();
