@@ -1,28 +1,29 @@
+import * as process from 'node:process';
 import { Address, encodeAbiParameters, encodePacked, Hash, Hex } from 'viem';
-import { BaseVerifierAdapter } from './base-verifier.adapter';
-import { VerifierAdapter } from './types';
+import { BaseVerifierStrategy } from './base-verifier.strategy';
+import { VerifierStrategy } from './verifier.interface';
 
-import { createCREJWT, CRERequestBody } from '../../utils';
-import { RetryQueueService } from '../services';
-import { Context } from '../types';
+import { createCREJWT, CRERequestBody } from '../../../utils';
+import { JobQueue } from '../../services';
+import { Context } from '../../types';
 
 const MAX_STACK_SIZE = 10;
 
-export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierAdapter {
-    private pendingVerifierRequestStack: CREVerifierAdapter.Item[] = [];
-    private pendingVerifierConfirmStack: { [messageId: string]: CREVerifierAdapter.Item } = {};
+export class CREVerifierStrategy extends BaseVerifierStrategy implements VerifierStrategy {
+    private pendingVerifierRequestStack: CREVerifierStrategy.Item[] = [];
+    private pendingVerifierConfirmStack: { [messageId: string]: CREVerifierStrategy.Item } = {};
     private verifierConfirmCallback: {
-        [messageId: string]: CREVerifierAdapter.ConfirmResponse.Item[];
+        [messageId: string]: CREVerifierStrategy.ConfirmResponse.Item[];
     } = {};
     private isFlushing = false;
 
-    constructor(ctx: Context, reportJobQueue: RetryQueueService) {
-        super('CREVerifierAdapter', ctx, reportJobQueue);
+    constructor(ctx: Context, jobQueue: JobQueue) {
+        super('CREVerifierStrategy', ctx, jobQueue);
         setInterval(() => this.flush(), 1000);
         setInterval(() => this.processConfirmations(), 1000);
     }
 
-    async requestVerification(payload: VerifierAdapter.Payload) {
+    async requestVerification(payload: VerifierStrategy.Payload) {
         this.pendingVerifierRequestStack.push({
             messageId: payload.data.messageId,
             blockNumber: payload.blockNumber.toString(),
@@ -38,7 +39,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         }
     }
 
-    addConfirmationCallback(payload: CREVerifierAdapter.ConfirmResponse) {
+    addConfirmationCallback(payload: CREVerifierStrategy.ConfirmResponse) {
         for (const [messageId, item] of Object.entries(payload)) {
             if (!this.verifierConfirmCallback[messageId]) {
                 this.verifierConfirmCallback[messageId] = [item];
@@ -69,7 +70,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
             const batchSize = Math.min(MAX_STACK_SIZE, this.pendingVerifierRequestStack.length);
             const batch = Array.from(this.pendingVerifierRequestStack.slice(0, batchSize));
 
-            const requestBody: CRERequestBody<CREVerifierAdapter.RequestVerify> = {
+            const requestBody: CRERequestBody<CREVerifierStrategy.RequestVerify> = {
                 jsonrpc: '2.0',
                 id: Date.now().toString(),
                 method: 'workflows.execute',
@@ -148,7 +149,7 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
         }
     }
 
-    private packValidations(creCallbacks: CREVerifierAdapter.ConfirmResponse.Item[]): Hex {
+    private packValidations(creCallbacks: CREVerifierStrategy.ConfirmResponse.Item[]): Hex {
         const rawReport = creCallbacks[0].rawReport as Hex;
         const reportContext = creCallbacks[0].reportContext as Hex;
 
@@ -174,9 +175,13 @@ export class CREVerifierAdapter extends BaseVerifierAdapter implements VerifierA
             [rawReport, reportContext, encodedSignatures],
         );
     }
+
+    confirmVerification(payload: VerifierStrategy.Payload): Promise<void> {
+        return Promise.resolve(undefined);
+    }
 }
 
-export namespace CREVerifierAdapter {
+export namespace CREVerifierStrategy {
     export type Item = RequestVerify.Item & {
         dstChainSelector: number;
         messageReceipt: Hex;

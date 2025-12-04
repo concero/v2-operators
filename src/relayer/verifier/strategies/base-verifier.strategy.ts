@@ -1,16 +1,16 @@
 import { Hex } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
-import { RetryQueueService } from '../services';
-import { ContextProvider } from '../services/context.provider';
-import { Context } from '../types';
+import { JobQueue } from '../../services';
+import { ContextProvider } from '../../services/context.provider';
+import { Context } from '../../types';
 
-export abstract class BaseVerifierAdapter extends ContextProvider {
-    protected readonly reportJobQueue: RetryQueueService;
+export abstract class BaseVerifierStrategy extends ContextProvider {
+    protected readonly JobQueue: JobQueue;
 
-    protected constructor(name: string, context: Context, reportJobQueue: RetryQueueService) {
+    protected constructor(name: string, context: Context, reportJobQueue: JobQueue) {
         super(name, context);
-        this.reportJobQueue = reportJobQueue;
+        this.JobQueue = reportJobQueue;
     }
 
     protected async submitMessage(
@@ -26,13 +26,11 @@ export abstract class BaseVerifierAdapter extends ContextProvider {
             return;
         }
 
-        const routerAddress = this.context.messagingDeployment.getRouterByChainName(
+        const routerAddress = this.context.deploymentManager.getRouterByChainName(dstNetwork.name);
+        const relayerLib = this.context.deploymentManager.getConceroRelayerLibByChainName(
             dstNetwork.name,
         );
-        const relayerLib = this.context.messagingDeployment.getConceroRelayerLibByChainName(
-            dstNetwork.name,
-        );
-        const validatorLib = this.context.messagingDeployment.getConceroValidatorLibByChainName(
+        const validatorLib = this.context.deploymentManager.getConceroValidatorLibByChainName(
             dstNetwork.name,
         );
 

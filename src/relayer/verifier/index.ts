@@ -1,3 +1,3 @@
-export * from './types';
+export * from './strategies';
 
-export * from './verifier.processor';
+export * from './verifier.module';

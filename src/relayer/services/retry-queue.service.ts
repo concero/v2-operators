@@ -8,9 +8,9 @@ const saveJsonStringify = (object: Record<string, unknown>): string => {
     return JSON.stringify(object, (_, v) => (typeof v === 'bigint' ? v.toString() : v));
 };
 
-export class RetryQueueService extends ContextProvider {
+export class JobQueue extends ContextProvider {
     constructor(context: Context) {
-        super('ReportJobQueue', context);
+        super('JobQueue', context);
     }
 
     async getDue(limit = 10) {

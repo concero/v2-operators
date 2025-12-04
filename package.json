@@ -15,7 +15,6 @@
         "format": "prettier --config .prettierrc.json --write \"**/*.{ts,json}\"",
         "start": "bun run start:dev",
         "start:node": "NODE_ENV=development node --env-file=.env ./dist/index.js",
-        "start:dev": "bun ./src/index.ts",
         "start:new:dev": "bun ./src/main.ts",
         "start:new:prod": "bun ./dist/main.js",
         "start:prod": "NODE_ENV=production bun ./dist/index.js",

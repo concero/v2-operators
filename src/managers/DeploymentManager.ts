@@ -1,37 +1,29 @@
 import { Address } from 'viem';
 import {
     ConceroNetworkManager,
-    getEnvString,
     HttpClient,
     IConceroNetworkManager,
     LoggerInterface,
 } from '@concero/operator-utils';
-import { ManagerBase } from './ManagerBase';
 
 import { globalConfig } from '../constants';
 import { Chain } from '../types';
 import { ConceroNetwork } from '../types/ConceroNetwork';
-import { DeploymentManagerConfig } from '../types/ManagerConfigs';
-import { IMessagingDeploymentManager } from '../types/managers/IMessagingDeploymentManager';
 
-export class MessagingDeploymentManager extends ManagerBase implements IMessagingDeploymentManager {
-    private static instance: MessagingDeploymentManager;
+export class DeploymentManager {
+    private static instance: DeploymentManager;
     private chainOptions: Record<Chain['chainSelector'], Chain> = {};
 
     private readonly networkManager: IConceroNetworkManager;
     private readonly logger: LoggerInterface;
-    private readonly config: DeploymentManagerConfig;
     private readonly httpClient: HttpClient;
 
     private constructor(
         logger: LoggerInterface,
         networkManager: ConceroNetworkManager,
-        config: DeploymentManagerConfig,
         httpClient: HttpClient,
     ) {
-        super();
         this.logger = logger;
-        this.config = config;
         this.networkManager = networkManager;
         this.httpClient = httpClient;
     }
@@ -39,39 +31,13 @@ export class MessagingDeploymentManager extends ManagerBase implements IMessagin
     static createInstance(
         logger: LoggerInterface,
         networkManager: ConceroNetworkManager,
-        config: DeploymentManagerConfig,
         httpClient: HttpClient,
-    ): MessagingDeploymentManager {
-        MessagingDeploymentManager.instance = new MessagingDeploymentManager(
-            logger,
-            networkManager,
-            config,
-            httpClient,
-        );
-        return MessagingDeploymentManager.instance;
-    }
-
-    async initialize(): Promise<void> {
-        if (this.initialized) return;
-
-        try {
-            await super.initialize();
-            // Initial fetch of deployments will happen on first network update
-            this.logger.debug('Initialized');
-        } catch (error) {
-            this.logger.error(`Failed to initialize: ${error}`);
-            throw error;
-        }
+    ): DeploymentManager {
+        DeploymentManager.instance = new DeploymentManager(logger, networkManager, httpClient);
+        return DeploymentManager.instance;
     }
 
     getConceroRouters(): Record<string, Address> {
-        if (this.config.networkMode === 'localhost') {
-            return {
-                [getEnvString('LOCALHOST_FORK_CHAIN_ID')]: getEnvString(
-                    'CONCERO_ROUTER_PROXY_LOCALHOST',
-                ) as Address,
-            };
-        }
         let routers: Record<string, Address> = {};
         Object.values(this.chainOptions).map(i => {
             if (i?.deployments?.router) {
@@ -112,6 +78,18 @@ export class MessagingDeploymentManager extends ManagerBase implements IMessagin
         }
 
         return relayerLib;
+    }
+
+    getFinalityConformationsByChainName(chainName: string): number {
+        const finalityConfirmations = Object.values(this.chainOptions)?.find(
+            i => i.name === chainName,
+        )?.finalityConfirmations;
+
+        if (!finalityConfirmations) {
+            throw new Error(`FinalityConfirmations not found for chain: ${chainName}`);
+        }
+
+        return finalityConfirmations;
     }
 
     async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {

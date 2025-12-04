@@ -1,41 +1,34 @@
 import { Log } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
-import { MessagingCodec } from './codec';
-import { LogParserService } from './services';
-import { Context, MessageSentLogData } from './types';
-import { VerifierType } from './verifier';
+import { BaseLogService } from './base-log.service';
+import { LogFinalityService } from './log-finality.service';
 
-import { ContextProvider } from './services/context.provider';
+import { MessagingCodec } from '../codec';
+import { LogParserService } from '../services';
+import { Context, DecodedMessageLogReceipt, MessageSentLogData } from '../types';
+import { VerifierType } from '../verifier';
 
-export class LogProcessor extends ContextProvider {
+const UINT64_MAX = 18446744073709551615n;
+
+export class LogWatcherService extends BaseLogService {
     private readonly parser: LogParserService;
+    private readonly logFinalityService: LogFinalityService;
 
-    constructor(context: Context) {
-        super('LogProcessor', context);
+    constructor(context: Context, logFinalityService: LogFinalityService) {
+        super('LogWatcherService', context);
         this.parser = new LogParserService(context);
+        this.logFinalityService = logFinalityService;
     }
 
     async init() {
         const onLogs = this.onLogs.bind(this);
-        const activeNetworks: ConceroNetwork[] = this.context.network.getActiveNetworks();
-        this.logger.debug(
-            `Got ${activeNetworks.length} active networks: ${activeNetworks.map(i => i.name).join(', ')}`,
-        );
 
-        for (const network of activeNetworks) {
-            const blockManager = this.context.blockRegistry.getBlockManager(network.name);
-
-            if (!blockManager) {
-                this.logger.warn(
-                    `No block manager available for ${network.name}, skipping event setup`,
-                );
-                continue;
-            }
-
+        this.forEachActiveNetwork(async (network, blockManager) => {
             try {
-                const routerAddress = this.context.messagingDeployment.getRouterByChainName(
+                const routerAddress = this.context.deploymentManager.getRouterByChainName(
                     network.name,
                 );
+
                 await this.context.txReader.logWatcher.create(
                     routerAddress,
                     network,
@@ -44,12 +37,11 @@ export class LogProcessor extends ContextProvider {
                     blockManager,
                 );
 
-                await blockManager.startPolling();
                 this.logger.debug(`Created MessageSent watcher for ${network.name}`);
             } catch (error) {
                 this.logger.error(`Failed to set up router listener for ${network.name}: ${error}`);
             }
-        }
+        });
     }
 
     private async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
@@ -73,28 +65,36 @@ export class LogProcessor extends ContextProvider {
 
             for (const parsedLog of parsedLogs) {
                 const parsedReceipt = MessagingCodec.decodeReceipt(parsedLog.data.messageReceipt);
+                const verifierType =
+                    parsedLog.data.validatorLibs.length > 0 ? VerifierType.CRE : VerifierType.Empty;
+
                 const shouldFinaliseSrc = parsedReceipt.srcChainData.blockConfirmations !== 0n;
                 if (shouldFinaliseSrc) {
-                    this.context.txMonitor.trackTxFinality(
-                        parsedLog.transactionHash,
-                        network.name,
-                        // @todo: move to separate polling service
-                        'relayer',
-                    );
-                } else {
-                    const isCRE = parsedLog.data.validatorLibs.length > 0;
-                    this.context.eventBus.requestVerify({
-                        ...parsedLog,
-                        data: {
-                            ...parsedLog.data,
-                            parsedReceipt,
-                        },
-                        type: isCRE ? VerifierType.CRE : VerifierType.Empty,
+                    const confirmations = this.extractConfirmations(network.name, parsedReceipt);
+                    await this.logFinalityService.addToStack({
+                        verifierType,
+                        chainName: network.name,
+                        parsedReceipt,
+                        parsedLog,
+                        expectedBlockNumber: BigInt(confirmations) + parsedLog.blockNumber,
                     });
+                } else {
+                    this.requestVerification(parsedLog, parsedReceipt, verifierType);
                 }
             }
         } catch (error) {
             this.logger.error(`Error processing logs from ${network.name}: ${error}`);
         }
+    }
+
+    private extractConfirmations(
+        networkName: string,
+        parsedReceipt: DecodedMessageLogReceipt,
+    ): number {
+        if (parsedReceipt.srcChainData.blockConfirmations === UINT64_MAX) {
+            return this.context.deploymentManager.getFinalityConformationsByChainName(networkName);
+        }
+
+        return Number(parsedReceipt.srcChainData.blockConfirmations);
     }
 }

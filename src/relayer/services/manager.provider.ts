@@ -3,7 +3,6 @@ import {
     ConceroNetworkManager,
     HttpClient,
     Logger,
-    NetworkManager,
     NonceManager,
     RpcManager,
     TxMonitor,
@@ -15,20 +14,20 @@ import { EventBusService } from './event-bus.service';
 import { PrismaClient } from '@prisma/client';
 
 import { globalConfig } from '../../constants';
-import { DbManager, LogsListenerStore, MessagingDeploymentManager } from '../../managers';
+import { DbManager, DeploymentManager, LogsListenerStore } from '../../managers';
 import { Config, Context } from '../types';
 
 export abstract class ManagerProvider {
     private config: Config;
     private loggerBuilder!: Logger;
     private eventBus!: EventBusService;
-    private networkManager!: NetworkManager;
+    private networkManager!: ConceroNetworkManager;
     private nonceManager!: NonceManager;
     private rpcManager!: RpcManager;
     private dbClient!: PrismaClient;
     private viemClientManager!: ViemClientManager;
     private blockManagerRegistry!: BlockManagerRegistry;
-    private messagingDeploymentManager!: MessagingDeploymentManager;
+    private deploymentManager!: DeploymentManager;
     private logsListenerStore!: LogsListenerStore;
     private txMonitor!: TxMonitor;
     private txReader!: TxReader;
@@ -49,9 +48,9 @@ export abstract class ManagerProvider {
             dbClient: this.dbClient,
             viemClient: this.viemClientManager,
             blockRegistry: this.blockManagerRegistry,
-            messagingDeployment: this.messagingDeploymentManager,
+            deploymentManager: this.deploymentManager,
             logsListener: this.logsListenerStore,
-            txMonitor: this.txMonitor,
+            txMonitor: this.txMonitor as any,
             txReader: this.txReader,
             txWriter: this.txWriter,
             http: this.httpClient,
@@ -100,27 +99,26 @@ export abstract class ManagerProvider {
             this.networkManager,
             this.viemClientManager,
         );
-        this.messagingDeploymentManager = MessagingDeploymentManager.createInstance(
+        this.deploymentManager = DeploymentManager.createInstance(
             this.loggerBuilder.getLogger('MessagingDeploymentManager'),
             this.networkManager,
-            globalConfig.DEPLOYMENT_MANAGER,
             this.httpClient,
         );
 
         await this.networkManager.initialize();
         await this.rpcManager.initialize();
-        await this.messagingDeploymentManager.initialize();
         await this.viemClientManager.initialize();
         await this.blockManagerRegistry.initialize();
 
         // Register network update listeners after all managers are initialized
         this.networkManager.registerUpdateListener(this.rpcManager);
-        this.networkManager.registerUpdateListener(this.messagingDeploymentManager);
+        this.networkManager.registerUpdateListener(this.deploymentManager);
         this.networkManager.registerUpdateListener(this.viemClientManager);
         this.networkManager.registerUpdateListener(this.blockManagerRegistry);
 
         // Start polling for network updates which will also trigger initial updates
         await this.networkManager.startPolling();
+        this.blockManagerRegistry.startPolling();
 
         this.txMonitor = TxMonitor.createInstance(
             this.loggerBuilder.getLogger('TxMonitor'),
@@ -147,7 +145,8 @@ export abstract class ManagerProvider {
             this.loggerBuilder.getLogger('TxWriter'),
             this.viemClientManager,
             this.txMonitor,
-            this.nonceManager,
+            // @todo: implement "increment" method
+            this.nonceManager as any,
             globalConfig.TX_WRITER,
         );
 

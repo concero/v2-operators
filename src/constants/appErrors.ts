@@ -1,4 +1,4 @@
-type AppErrorType = {
+type AppError = {
     message: string;
     isOperational: boolean;
 };
@@ -17,7 +17,7 @@ export enum AppErrorEnum {
     LogDecodingFailed = 'LogDecodingFailed',
 }
 
-const appErrors: Record<AppErrorEnum, AppErrorType> = {
+export const appErrors: Record<AppErrorEnum, AppError> = {
     [AppErrorEnum.ViemCreateClientFailed]: {
         message: 'Failed to create viem client',
         isOperational: false,
@@ -63,5 +63,3 @@ const appErrors: Record<AppErrorEnum, AppErrorType> = {
         isOperational: true,
     },
 };
-
-export { appErrors };

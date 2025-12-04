@@ -1,10 +1,10 @@
-import { LogProcessor } from './log.processor';
+import { LogModule } from './log';
 import { ManagerProvider } from './services';
 import { Config } from './types';
-import { VerifierProcessor } from './verifier';
+import { JobQueue } from './verifier';
 
 export class RelayerApp extends ManagerProvider {
-    private logProcessor!: LogProcessor;
+    private logModule!: LogModule;
     private verifierProcessor!: VerifierProcessor;
 
     constructor(config: Config) {
@@ -13,8 +13,8 @@ export class RelayerApp extends ManagerProvider {
 
     async init(): Promise<void> {
         await this.initManagers();
-        this.logProcessor = new LogProcessor(this.context);
-        await this.logProcessor.init();
+        this.logModule = new LogModule(this.context);
+        await this.logModule.init();
         this.verifierProcessor = new VerifierProcessor(this.context);
         this.verifierProcessor.init();
     }

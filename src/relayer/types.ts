@@ -1,11 +1,10 @@
-import { Abi, AbiEvent, Address, Hex } from 'viem';
+import { Abi, AbiEvent, Address, Hash, Hex } from 'viem';
 import {
     BlockManagerRegistry,
+    ConceroNetworkManager,
     HttpClient,
     Logger,
-    NetworkManager,
     RpcManager,
-    TxMonitor,
     TxReader,
     TxWriter,
     ViemClientManager,
@@ -13,7 +12,7 @@ import {
 import { EventBusService } from './services';
 import { PrismaClient } from '@prisma/client';
 
-import { LogsListenerStore, MessagingDeploymentManager } from '../managers';
+import { DeploymentManager, LogsListenerStore } from '../managers';
 
 export type Config = {
     contract: {
@@ -30,14 +29,31 @@ export type Context = {
     config: Config;
     http: HttpClient;
     eventBus: EventBusService;
-    network: NetworkManager;
+    network: ConceroNetworkManager;
     rpc: RpcManager;
     dbClient: PrismaClient;
     viemClient: ViemClientManager;
     blockRegistry: BlockManagerRegistry;
-    messagingDeployment: MessagingDeploymentManager;
+    deploymentManager: DeploymentManager;
     logsListener: LogsListenerStore;
-    txMonitor: TxMonitor;
+    txMonitor: {
+        ensureTxFinality(
+            txHash: Hash,
+            chainName: string,
+            onFinalityCallback: (txHash: Hash, chainName: string, isFinalized: boolean) => void,
+        ): void;
+        ensureTxInclusion(
+            txHash: Hash,
+            chainName: string,
+            onTxIncluded: (
+                txHash: Hash,
+                networkName: string,
+                blockNumber: bigint,
+                isIncluded: boolean,
+            ) => void,
+            confirmations?: number,
+        ): void;
+    };
     txReader: TxReader;
     txWriter: TxWriter;
 };

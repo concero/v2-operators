@@ -1,6 +1,6 @@
 import './utils/configureDotEnv';
 
-import { Abi, AbiEvent, getAbiItem, toEventHash } from 'viem';
+import { Abi, AbiEvent, getAbiItem } from 'viem';
 import { AppErrorEnum, globalConfig } from './constants';
 import { RelayerApp } from './relayer';
 import { AppError } from './utils';
@@ -44,7 +44,6 @@ export async function main() {
         abi: router,
         name: 'ConceroMessageSent',
     }) as AbiEvent;
-    const eventHash = toEventHash(messageSent);
 
     const app = new RelayerApp({
         contract: {

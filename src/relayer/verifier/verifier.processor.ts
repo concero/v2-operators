@@ -1,22 +1,24 @@
 import { CREVerifierAdapter } from './cre-verifier.adapter';
 import { EmptyVerifierAdapter } from './empty-verifier.adapter';
 import { VerifierAdapter, VerifierType } from './types';
+import { VerifierModule } from './verifier.module';
 import fastify, { FastifyInstance } from 'fastify';
 
-import { ContextProvider, RetryQueueService } from '../services';
+import { RetryQueueService } from '../services';
+import { ContextProvider } from '../services/context.provider';
 import { Context } from '../types';
 
 export class VerifierProcessor extends ContextProvider {
-    private readonly retryQueue: RetryQueueService;
+    private readonly reportJobQueue: RetryQueueService;
     private readonly adapters: Record<VerifierType, VerifierAdapter>;
     private readonly app: FastifyInstance;
 
     constructor(context: Context) {
         super('VerifierProcessor', context);
-        this.retryQueue = new RetryQueueService(this.context);
+        this.reportJobQueue = new RetryQueueService(this.context);
         this.adapters = {
-            [VerifierType.Empty]: new EmptyVerifierAdapter(this.context, this.retryQueue),
-            [VerifierType.CRE]: new CREVerifierAdapter(this.context, this.retryQueue),
+            [VerifierType.Empty]: new EmptyVerifierAdapter(this.context, this.reportJobQueue),
+            [VerifierType.CRE]: new CREVerifierAdapter(this.context, this.reportJobQueue),
         };
         this.app = fastify({ logger: true });
     }
@@ -41,14 +43,16 @@ export class VerifierProcessor extends ContextProvider {
 
     private startListener() {
         const requestVerification = this.requestVerification.bind(this);
-        this.context.eventBus.on(VerifierProcessor.command, (payload: VerifierProcessor.Payload) =>
-            requestVerification(payload, payload =>
-                this.retryQueue.add(
-                    payload.messageId,
-                    payload.parsedReceipt.dstChainSelector,
-                    payload,
+        this.context.eventBus.on(
+            VerifierModule.Request.command,
+            (payload: VerifierModule.Request.Payload) =>
+                requestVerification(payload, payload =>
+                    this.reportJobQueue.add(
+                        payload.messageId,
+                        payload.parsedReceipt.dstChainSelector,
+                        payload,
+                    ),
                 ),
-            ),
         );
     }
 
@@ -56,14 +60,14 @@ export class VerifierProcessor extends ContextProvider {
         const requestVerification = this.requestVerification.bind(this);
 
         setInterval(async () => {
-            const jobs = await this.retryQueue.getDue(10);
+            const jobs = await this.reportJobQueue.getDue(10);
 
             for (const job of jobs) {
                 const payload: VerifierProcessor.Payload = JSON.parse(job.payload);
                 await requestVerification(
                     payload,
-                    () => this.retryQueue.reschedule(job.id, job.attempts),
-                    () => this.retryQueue.markSuccess(job.id),
+                    () => this.reportJobQueue.reschedule(job.id, job.attempts),
+                    () => this.reportJobQueue.markSuccess(job.id),
                 );
             }
         }, 15_000);
@@ -92,11 +96,4 @@ export class VerifierProcessor extends ContextProvider {
         this.startListener();
         this.setupApi();
     }
-}
-
-export namespace VerifierProcessor {
-    export const command = 'request_message_report';
-    export type Payload = VerifierAdapter.Payload & {
-        type: VerifierType;
-    };
 }
