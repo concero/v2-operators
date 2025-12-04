@@ -1,14 +1,13 @@
 import { BaseVerifierStrategy } from './base-verifier.strategy';
 import { VerifierStrategy } from './verifier.interface';
 
-import { JobQueue } from '../../services';
 import { Context } from '../../types';
 import { VerifierModule } from '../verifier.module';
 
 // common strategy
 export class EmptyVerifierStrategy extends BaseVerifierStrategy implements VerifierStrategy {
-    constructor(context: Context, jobQueue: JobQueue) {
-        super('EmptyVerifierStrategy', context, jobQueue);
+    constructor(context: Context) {
+        super('EmptyVerifierStrategy', context);
     }
 
     async requestVerification(payload: VerifierModule.Request.Payload): Promise<void> {

@@ -1,6 +1,6 @@
 import { ContextProvider } from './context.provider';
 
-import { Context } from '../types';
+import { Context, JobStatus } from '../types';
 
 const REPORT_RETRY_1M_COUNT = 4;
 const reportDelaySec = (attempts: number) => (attempts < REPORT_RETRY_1M_COUNT ? 60 : 300);
@@ -13,43 +13,52 @@ export class JobQueue extends ContextProvider {
         super('JobQueue', context);
     }
 
-    async getDue(limit = 10) {
+    async add(messageId: string, payload: Record<string, unknown>, status: JobStatus) {
+        const next = new Date(Date.now() + 60000);
+        await this.context.dbClient.job.upsert({
+            where: { messageId },
+            update: {
+                payload: saveJsonStringify(payload),
+                nextRetryAt: next,
+            },
+            create: {
+                messageId,
+                payload: saveJsonStringify(payload),
+                attempts: 0,
+                nextRetryAt: next,
+                status,
+            },
+        });
+    }
+
+    async getDue(limit: number, status: JobStatus) {
         return this.context.dbClient.job.findMany({
-            where: { nextRetryAt: { lte: new Date() } },
+            where: { nextRetryAt: { lte: new Date() }, status },
             orderBy: { id: 'asc' },
             take: limit,
         });
     }
 
-    async markSuccess(id: number) {
-        await this.context.dbClient.job.delete({ where: { id } });
-    }
-
-    async add(messageId: string, chainSelector: number, payload: any, firstDelaySec = 60) {
-        const next = new Date(Date.now() + firstDelaySec * 1000);
-        await this.context.dbClient.job.upsert({
-            where: { messageId },
-            update: {
-                chainSelector,
-                payload: saveJsonStringify(payload),
-                nextRetryAt: next,
-            },
-            create: {
-                chainSelector,
-                messageId,
-                payload: saveJsonStringify(payload),
-                attempts: 0,
-                nextRetryAt: next,
-            },
+    async markSuccess(jobId: number) {
+        await this.context.dbClient.job.update({
+            where: { id: jobId },
+            data: { status: JobStatus.Success },
         });
     }
 
-    async reschedule(id: number, attempts: number) {
+    async changeStatus(jobId: number, status: JobStatus) {
+        await this.context.dbClient.job.update({
+            where: { id: jobId },
+            data: { status },
+        });
+    }
+
+    async reschedule(id: number, attempts: number, status: JobStatus) {
         const delay = reportDelaySec(attempts);
         const next = new Date(Date.now() + delay * 1000);
         await this.context.dbClient.job.update({
             where: { id },
-            data: { attempts: { increment: 1 }, nextRetryAt: next },
+            data: { attempts: { increment: 1 }, nextRetryAt: next, status },
         });
     }
 }

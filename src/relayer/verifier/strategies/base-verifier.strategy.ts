@@ -1,16 +1,12 @@
 import { Hex } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
-import { JobQueue } from '../../services';
 import { ContextProvider } from '../../services/context.provider';
 import { Context } from '../../types';
 
 export abstract class BaseVerifierStrategy extends ContextProvider {
-    protected readonly JobQueue: JobQueue;
-
-    protected constructor(name: string, context: Context, reportJobQueue: JobQueue) {
+    protected constructor(name: string, context: Context) {
         super(name, context);
-        this.JobQueue = reportJobQueue;
     }
 
     protected async submitMessage(

@@ -10,10 +10,15 @@ export class VerifierModule {
     private readonly verifierExecutorService: VerifierExecutorService;
     private readonly jobQueue: JobQueue;
 
-    constructor(context: Context) {
-        this.jobQueue = new JobQueue(context);
+    constructor(context: Context, jobQueue: JobQueue) {
+        this.jobQueue = jobQueue;
         this.verifierApiService = new VerifierApiService(context);
-        this.verifierP;
+        this.verifierExecutorService = new VerifierExecutorService(context, this.jobQueue);
+    }
+
+    async init(): Promise<void> {
+        await this.verifierApiService.init();
+        await this.verifierExecutorService.init();
     }
 }
 

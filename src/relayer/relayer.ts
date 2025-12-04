@@ -1,11 +1,11 @@
 import { LogModule } from './log';
 import { ManagerProvider } from './services';
 import { Config } from './types';
-import { JobQueue } from './verifier';
+import { VerifierModule } from './verifier';
 
 export class RelayerApp extends ManagerProvider {
     private logModule!: LogModule;
-    private verifierProcessor!: VerifierProcessor;
+    private verifierModule!: VerifierModule;
 
     constructor(config: Config) {
         super(config);
@@ -15,7 +15,7 @@ export class RelayerApp extends ManagerProvider {
         await this.initManagers();
         this.logModule = new LogModule(this.context);
         await this.logModule.init();
-        this.verifierProcessor = new VerifierProcessor(this.context);
-        this.verifierProcessor.init();
+        this.verifierModule = new VerifierModule(this.context);
+        await this.verifierModule.init();
     }
 }

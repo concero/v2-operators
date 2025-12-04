@@ -4,7 +4,6 @@ import { BaseVerifierStrategy } from './base-verifier.strategy';
 import { VerifierStrategy } from './verifier.interface';
 
 import { createCREJWT, CRERequestBody } from '../../../utils';
-import { JobQueue } from '../../services';
 import { Context } from '../../types';
 
 const MAX_STACK_SIZE = 10;
@@ -17,8 +16,8 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
     } = {};
     private isFlushing = false;
 
-    constructor(ctx: Context, jobQueue: JobQueue) {
-        super('CREVerifierStrategy', ctx, jobQueue);
+    constructor(ctx: Context) {
+        super('CREVerifierStrategy', ctx);
         setInterval(() => this.flush(), 1000);
         setInterval(() => this.processConfirmations(), 1000);
     }

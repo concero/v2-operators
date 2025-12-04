@@ -23,14 +23,15 @@ model LogsListenerBlockCheckpoints {
 }
 
 model Job {
-  id          Int      @id @default(autoincrement())
-  chainSelector   Int 
-  messageId   String   @unique
-  payload     String
-  attempts    Int      @default(0)
-  nextRetryAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  messageId       String   @unique
+  // processing | processing_request | request_failed | processing_confirm | confirm_failed | success
+  status          String
+  payload         String
+  attempts        Int      @default(0)
+  nextRetryAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([nextRetryAt])
   @@map("job")

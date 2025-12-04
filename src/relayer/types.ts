@@ -1,10 +1,11 @@
-import { Abi, AbiEvent, Address, Hash, Hex } from 'viem';
+import { Abi, AbiEvent, Address, Hex } from 'viem';
 import {
     BlockManagerRegistry,
     ConceroNetworkManager,
     HttpClient,
     Logger,
     RpcManager,
+    TxMonitor,
     TxReader,
     TxWriter,
     ViemClientManager,
@@ -36,24 +37,7 @@ export type Context = {
     blockRegistry: BlockManagerRegistry;
     deploymentManager: DeploymentManager;
     logsListener: LogsListenerStore;
-    txMonitor: {
-        ensureTxFinality(
-            txHash: Hash,
-            chainName: string,
-            onFinalityCallback: (txHash: Hash, chainName: string, isFinalized: boolean) => void,
-        ): void;
-        ensureTxInclusion(
-            txHash: Hash,
-            chainName: string,
-            onTxIncluded: (
-                txHash: Hash,
-                networkName: string,
-                blockNumber: bigint,
-                isIncluded: boolean,
-            ) => void,
-            confirmations?: number,
-        ): void;
-    };
+    txMonitor: TxMonitor;
     txReader: TxReader;
     txWriter: TxWriter;
 };
@@ -85,3 +69,20 @@ export type DecodedMessageLogReceipt = {
     validatorLibs: Hex[];
     payload: Hex;
 };
+
+/*
+processing - log found & not requested confirmation
+processing_request - verification request fetched & not responded yet
+request_failed - verification request failed => need to be retried
+processing_confirm - verification request succeeded => confirmation started
+confirm_failed - verification confirm (messageSubmit) failed => need to be retried
+success - message delivered
+*/
+export enum JobStatus {
+    Processing = 'processing',
+    ProcessingRequest = 'processing_request',
+    RequestFailed = 'request_failed',
+    ProcessingConfirm = 'processing_confirm',
+    ConfirmFailed = 'confirm_failed',
+    Success = 'success',
+}
