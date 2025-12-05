@@ -60,6 +60,13 @@ export class JobQueueService {
         });
     }
 
+    async getAll(limit?: number) {
+        return this.dbClient.job.findMany({
+            orderBy: { id: 'asc' },
+            take: limit,
+        });
+    }
+
     async markSuccess(jobId: number) {
         await this.dbClient.job.update({
             where: { id: jobId },

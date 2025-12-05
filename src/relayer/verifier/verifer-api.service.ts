@@ -29,6 +29,10 @@ export class VerifierApiService extends ContextProvider {
 
             return res.status(200).send({ statusCode: 200, ok: true });
         });
+        this.app.get('/api/v1/processes', async (req, res) => {
+            const data = await this.context.jobQueue.getAll(100);
+            res.send(JSON.stringify({ statusCode: 200, ok: true, data }));
+        });
         this.app.listen({ port: 5000, host: '0.0.0.0' }).catch(this.logger.error);
     }
 }
