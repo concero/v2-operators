@@ -79,7 +79,9 @@ export class LogWatcherService extends BaseLogService {
                         expectedBlockNumber: BigInt(confirmations) + parsedLog.blockNumber,
                     });
                 } else {
-                    this.requestVerification(parsedLog, parsedReceipt, verifierType);
+                    this.requestVerification(parsedLog, parsedReceipt, verifierType).catch(
+                        this.logger.error,
+                    );
                 }
             }
         } catch (error) {

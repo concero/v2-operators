@@ -52,9 +52,12 @@ export class LogFinalityService extends BaseLogService {
         const excludeCondition = buildCondition('exclude', network.name, lastBlock);
 
         const verifiedItems = this.waitingConfirmationStack.filter(selectCondition);
-        for (const item of verifiedItems) {
-            this.requestVerification(item.parsedLog, item.parsedReceipt, item.verifierType);
-        }
+
+        await Promise.all(
+            verifiedItems.map(async item =>
+                this.requestVerification(item.parsedLog, item.parsedReceipt, item.verifierType),
+            ),
+        );
 
         this.waitingConfirmationStack = this.waitingConfirmationStack.filter(excludeCondition);
     }

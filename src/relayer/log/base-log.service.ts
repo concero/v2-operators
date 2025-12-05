@@ -2,8 +2,8 @@ import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
 
 import { DecodedLog } from '../../types';
 import { ContextProvider } from '../services/context.provider';
-import { Context, DecodedMessageLogReceipt, MessageSentLogData } from '../types';
-import { VerifierType } from '../verifier';
+import { Context, DecodedMessageLogReceipt, JobStatus, MessageSentLogData } from '../types';
+import { VerifierModule, VerifierType } from '../verifier';
 
 export abstract class BaseLogService extends ContextProvider {
     protected constructor(name: string, context: Context) {
@@ -32,18 +32,25 @@ export abstract class BaseLogService extends ContextProvider {
         }
     }
 
-    protected requestVerification(
+    protected async requestVerification(
         parsedLog: DecodedLog<MessageSentLogData>,
         parsedReceipt: DecodedMessageLogReceipt,
         verifierType: VerifierType,
-    ): void {
-        this.context.eventBus.requestVerification({
+    ): Promise<void> {
+        const payload: VerifierModule.Request.Payload = {
             ...parsedLog,
             data: {
                 ...parsedLog.data,
                 parsedReceipt,
             },
             type: verifierType,
-        });
+        };
+
+        await this.context.jobQueue.add(
+            parsedLog.data.messageId,
+            payload,
+            JobStatus.ProcessingRequest,
+        );
+        this.context.eventBus.requestVerification(payload);
     }
 }
