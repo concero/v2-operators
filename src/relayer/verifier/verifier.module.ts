@@ -20,7 +20,10 @@ export class VerifierModule {
 
     // infinite retry calls
     private async pumpRequestRetries() {
-        const failedRequests = await this.context.jobQueue.getDue(10, JobStatus.RequestFailed);
+        const failedRequests = await this.context.jobQueue.getDueByNextRetry(
+            10,
+            JobStatus.RequestFailed,
+        );
 
         await Promise.all(
             failedRequests.map(async job =>
@@ -29,7 +32,10 @@ export class VerifierModule {
         );
     }
     private async pumpConfirmRetries() {
-        const failedConfirms = await this.context.jobQueue.getDue(10, JobStatus.ConfirmFailed);
+        const failedConfirms = await this.context.jobQueue.getDueByNextRetry(
+            10,
+            JobStatus.ConfirmFailed,
+        );
 
         await Promise.all(
             failedConfirms.map(async job =>

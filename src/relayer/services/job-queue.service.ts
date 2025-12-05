@@ -19,7 +19,7 @@ export class JobQueueService {
     }
 
     async add(messageId: string, payload: Record<string, unknown>, status: JobStatus) {
-        const next = new Date(Date.now() + 60000);
+        const next = new Date(Date.now() + 60_000);
         return this.dbClient.job.upsert({
             where: { messageId },
             update: {
@@ -52,9 +52,17 @@ export class JobQueueService {
         });
     }
 
-    async getDue(limit: number, status: JobStatus) {
+    async getDueByNextRetry(limit: number, status: JobStatus) {
         return this.dbClient.job.findMany({
             where: { nextRetryAt: { lte: new Date() }, status },
+            orderBy: { id: 'asc' },
+            take: limit,
+        });
+    }
+
+    async getDue(limit: number, status: JobStatus) {
+        return this.dbClient.job.findMany({
+            where: { status },
             orderBy: { id: 'asc' },
             take: limit,
         });
