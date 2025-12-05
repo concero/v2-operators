@@ -92,6 +92,9 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
         if (batch.length === 0) {
             return;
         }
+        this.logger.debug(
+            `Processing ${batch.length} requests (ids=${batch.map(i => i.id).join(',')}) `,
+        );
 
         try {
             this.isFlushing = true;
@@ -146,12 +149,16 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
 
     private async processConfirmations() {
         const batch = await this.context.jobQueue.getDue(10, JobStatus.ProcessingConfirm);
+        this.logger.debug(
+            `Processing ${batch.length} confirmations (ids=${batch.map(i => i.id).join(',')})`,
+        );
 
         await Promise.all(
             batch.map(async i => {
                 const parsedPayload = JSON.parse(i.payload) as Record<string, unknown> &
                     VerifierModule.Confirm.Payload;
                 if (!Array.isArray(parsedPayload.confirmations)) {
+                    this.logger.debug(`Processing ${batch.length} failed because of confirmations`);
                     return;
                 }
 
