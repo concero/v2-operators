@@ -7,6 +7,7 @@ function createHeapSnapshot(logDir: string, log: ReturnType<typeof Logger.protot
         writeHeapSnapshot(filename);
         log.info(`Wrote heap snapshot to ${filename}`);
     } catch (error) {
+        // @ts-ignore @todo: fix types
         log.error('Failed to write heap snapshot:', error);
     }
 }
