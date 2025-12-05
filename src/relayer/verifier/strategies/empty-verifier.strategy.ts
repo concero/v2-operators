@@ -11,7 +11,7 @@ export class EmptyVerifierStrategy extends BaseVerifierStrategy implements Verif
     }
 
     async requestVerification(payload: VerifierModule.Request.Payload): Promise<void> {
-        return this.context.eventBus.confirmVerification(payload);
+        return Promise.resolve();
     }
 
     async confirmVerification(payload: VerifierModule.Confirm.Payload): Promise<void> {

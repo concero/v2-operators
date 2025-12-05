@@ -1,3 +1,4 @@
+import { CREVerifierStrategy } from './strategies';
 import fastify, { FastifyInstance } from 'fastify';
 
 import { ContextProvider } from '../services';
@@ -5,9 +6,11 @@ import { Context } from '../types';
 
 export class VerifierApiService extends ContextProvider {
     private readonly app: FastifyInstance;
+    private readonly creVerifier: CREVerifierStrategy;
 
-    constructor(context: Context) {
+    constructor(context: Context, creVerifier: CREVerifierStrategy) {
         super('VerifierApiService', context);
+        this.creVerifier = creVerifier;
         this.app = fastify({ logger: true });
     }
 
@@ -15,10 +18,9 @@ export class VerifierApiService extends ContextProvider {
         this.app.post('/api/v1/callback/cre', async (req, res) => {
             try {
                 this.logger.info(`CRE Callback Got: ${JSON.stringify(req.body)}`);
-                // this.context.eventBus.confirmVerification();
-                /*  (this.adapters.cre as CREVerifierAdapter).addConfirmationCallback(
-                    req.body as CREVerifierAdapter.ConfirmResponse,
-                );*/
+                await this.creVerifier.addConfirmationCallback(
+                    req.body as CREVerifierStrategy.CRE.Response,
+                );
             } catch (e) {
                 this.logger.error(
                     `CRE Callback Failed: ${e?.toString()} ${JSON.stringify(req.body)}`,

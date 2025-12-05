@@ -10,7 +10,7 @@ import {
     TxWriter,
     ViemClientManager,
 } from '@concero/operator-utils';
-import { EventBusService } from './services';
+import { EventBusService, JobQueueService } from './services';
 import { PrismaClient } from '@prisma/client';
 
 import { DeploymentManager, LogsListenerStore } from '../managers';
@@ -36,6 +36,7 @@ export type Context = {
     viemClient: ViemClientManager;
     blockRegistry: BlockManagerRegistry;
     deploymentManager: DeploymentManager;
+    jobQueue: JobQueueService;
     logsListener: LogsListenerStore;
     txMonitor: TxMonitor;
     txReader: TxReader;

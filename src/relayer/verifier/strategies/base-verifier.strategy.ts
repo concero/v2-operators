@@ -12,7 +12,7 @@ export abstract class BaseVerifierStrategy extends ContextProvider {
     protected async submitMessage(
         dstChainSelector: number,
         messageReceipt: Hex,
-        confirmations: Hex[],
+        validations: Hex[],
     ): Promise<void> {
         const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
             String(dstChainSelector),
@@ -34,7 +34,7 @@ export abstract class BaseVerifierStrategy extends ContextProvider {
             address: routerAddress,
             functionName: 'submitMessage',
             abi: this.context.config.contract.router,
-            args: [messageReceipt, confirmations, [validatorLib], relayerLib],
+            args: [messageReceipt, validations, [validatorLib], relayerLib],
         });
     }
 }

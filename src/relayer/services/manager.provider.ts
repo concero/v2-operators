@@ -11,6 +11,7 @@ import {
     ViemClientManager,
 } from '@concero/operator-utils';
 import { EventBusService } from './event-bus.service';
+import { JobQueueService } from './job-queue.service';
 import { PrismaClient } from '@prisma/client';
 
 import { globalConfig } from '../../constants';
@@ -33,6 +34,7 @@ export abstract class ManagerProvider {
     private txReader!: TxReader;
     private txWriter!: TxWriter;
     private httpClient!: HttpClient;
+    private jobQueueService!: JobQueueService;
 
     protected constructor(config: Config) {
         this.config = config;
@@ -50,7 +52,8 @@ export abstract class ManagerProvider {
             blockRegistry: this.blockManagerRegistry,
             deploymentManager: this.deploymentManager,
             logsListener: this.logsListenerStore,
-            txMonitor: this.txMonitor as any,
+            txMonitor: this.txMonitor,
+            jobQueue: this.jobQueueService,
             txReader: this.txReader,
             txWriter: this.txWriter,
             http: this.httpClient,
@@ -76,7 +79,10 @@ export abstract class ManagerProvider {
 
         this.dbClient = DbManager.getClient();
         await this.dbClient.$connect();
-
+        this.jobQueueService = new JobQueueService(
+            this.loggerBuilder.getLogger('JobQueueService'),
+            this.dbClient,
+        );
         this.logsListenerStore = new LogsListenerStore(
             this.loggerBuilder.getLogger('LogsListenerBlockCheckpointStore'),
             this.dbClient,

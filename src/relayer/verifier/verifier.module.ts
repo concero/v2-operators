@@ -1,24 +1,62 @@
-import { VerifierStrategy, VerifierType } from './strategies';
+import { CREVerifierStrategy, VerifierStrategy, VerifierType } from './strategies';
 import { VerifierApiService } from './verifer-api.service';
 import { VerifierExecutorService } from './verifier-executor.service';
 
-import { JobQueue } from '../services';
-import { Context } from '../types';
+import { Context, JobStatus } from '../types';
 
 export class VerifierModule {
+    private readonly context: Context;
     private readonly verifierApiService: VerifierApiService;
     private readonly verifierExecutorService: VerifierExecutorService;
-    private readonly jobQueue: JobQueue;
 
-    constructor(context: Context, jobQueue: JobQueue) {
-        this.jobQueue = jobQueue;
-        this.verifierApiService = new VerifierApiService(context);
-        this.verifierExecutorService = new VerifierExecutorService(context, this.jobQueue);
+    constructor(context: Context) {
+        this.context = context;
+        this.verifierExecutorService = new VerifierExecutorService(context);
+        this.verifierApiService = new VerifierApiService(
+            context,
+            this.verifierExecutorService.getStrategy(VerifierType.CRE) as CREVerifierStrategy,
+        );
     }
 
-    async init(): Promise<void> {
+    // infinite retry calls
+    private async pumpRequestRetries() {
+        const failedRequests = await this.context.jobQueue.getDue(10, JobStatus.RequestFailed);
+
+        await Promise.all(
+            failedRequests.map(async job =>
+                this.verifierExecutorService.safeRequestVerification(JSON.parse(job.payload), job),
+            ),
+        );
+    }
+    private async pumpConfirmRetries() {
+        const failedConfirms = await this.context.jobQueue.getDue(10, JobStatus.ConfirmFailed);
+
+        await Promise.all(
+            failedConfirms.map(async job =>
+                this.verifierExecutorService.safeConfirmVerification(JSON.parse(job.payload), job),
+            ),
+        );
+    }
+
+    async init() {
+        // events facade
+        this.context.eventBus.on(
+            VerifierModule.Request.command,
+            (payload: VerifierModule.Request.Payload) =>
+                this.verifierExecutorService.safeRequestVerification(payload),
+        );
+        this.context.eventBus.on(
+            VerifierModule.Confirm.command,
+            (payload: VerifierModule.Confirm.Payload) =>
+                this.verifierExecutorService.safeConfirmVerification(payload),
+        );
+
+        // infinite retries for request & confirm
+        setInterval(async () => this.pumpRequestRetries(), 15_000);
+        setInterval(async () => this.pumpConfirmRetries(), 15_000);
+
+        // setup api
         await this.verifierApiService.init();
-        await this.verifierExecutorService.init();
     }
 }
 
