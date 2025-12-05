@@ -34,7 +34,7 @@ export class VerifierApiService extends ContextProvider {
             res.headers({ 'content-type': 'application/json' }).send({
                 statusCode: 200,
                 ok: true,
-                data,
+                data: data.map(i => ({ ...i, payload: JSON.parse(i.payload) })),
             });
         });
         this.app.listen({ port: 5000, host: '0.0.0.0' }).catch(this.logger.error);
