@@ -157,6 +157,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
             batch.map(async i => {
                 const parsedPayload = JSON.parse(i.payload) as Record<string, unknown> &
                     VerifierModule.Confirm.Payload;
+                this.logger.debug(`Got keys ${Object.keys(parsedPayload).join(',')}`);
                 if (!Array.isArray(parsedPayload.callbacks)) {
                     this.logger.debug(`Processing ${batch.length} failed because of callbacks`);
                     return;
