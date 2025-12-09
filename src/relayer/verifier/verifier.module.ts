@@ -57,7 +57,7 @@ export class VerifierModule {
                 await this.context.jobQueue.update(
                     payload.data.messageId,
                     payload,
-                    JobStatus.RequestFailed,
+                    JobStatus.ProcessingRequest,
                 );
             }),
         );
