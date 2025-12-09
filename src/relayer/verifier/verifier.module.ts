@@ -1,3 +1,4 @@
+import { LoggerInterface } from '@concero/operator-utils';
 import { CREVerifierStrategy, VerifierStrategy, VerifierType } from './strategies';
 import { VerifierApiService } from './verifer-api.service';
 import { VerifierExecutorService } from './verifier-executor.service';
@@ -6,11 +7,13 @@ import { Context, JobStatus } from '../types';
 
 export class VerifierModule {
     private readonly context: Context;
+    private readonly logger: LoggerInterface;
     private readonly verifierApiService: VerifierApiService;
     private readonly verifierExecutorService: VerifierExecutorService;
 
     constructor(context: Context) {
         this.context = context;
+        this.logger = this.context.logger.getLogger('VerifierModule');
         this.verifierExecutorService = new VerifierExecutorService(context);
         this.verifierApiService = new VerifierApiService(
             context,
@@ -47,6 +50,9 @@ export class VerifierModule {
 
     private async pumpCallbacksTimeouts() {
         const failedCallbacks = await this.context.jobQueue.getFailedCallbackTimeouts();
+        this.logger.info(
+            `Failed callbacks by timeouts: ${failedCallbacks.map(i => i.id).join(', ')}`,
+        );
         await Promise.all(
             failedCallbacks.map(async job => {
                 const payload = JSON.parse(job.payload) as VerifierModule.Request.Payload;
