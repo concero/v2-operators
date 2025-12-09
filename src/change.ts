@@ -4,9 +4,10 @@ import { JobStatus } from './relayer/types';
 
 const prisma = new PrismaClient();
 
-prisma.$connect().then(() => {
-    prisma.job.update({
+prisma.job
+    .update({
         where: { status: JobStatus.Processing },
         data: { status: JobStatus.RequestFailed },
-    });
-});
+    })
+    .then(() => console.log('success'))
+    .catch(() => console.error('error'));
