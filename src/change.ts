@@ -10,4 +10,4 @@ prisma.job
         data: { status: JobStatus.RequestFailed },
     })
     .then(() => console.log('success'))
-    .catch(() => console.error('error'));
+    .catch(e => console.error(`error: ${e.toString()}`));
