@@ -52,6 +52,17 @@ export class JobQueueService {
         });
     }
 
+    async getFailedCallbackTimeouts() {
+        return this.dbClient.job.findMany({
+            where: {
+                status: JobStatus.ProcessingConfirm,
+                updatedAt: {
+                    lte: new Date(Date.now() - 5 * 60_000),
+                },
+            },
+        });
+    }
+
     async getDueByNextRetry(limit: number, status: JobStatus) {
         return this.dbClient.job.findMany({
             where: { nextRetryAt: { lte: new Date() }, status },

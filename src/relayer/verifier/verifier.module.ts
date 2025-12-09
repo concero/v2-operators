@@ -19,7 +19,7 @@ export class VerifierModule {
     }
 
     // infinite retry calls
-    private async pumpRequestRetries() {
+    private async pumpFailedRequestRetries() {
         const failedRequests = await this.context.jobQueue.getDueByNextRetry(
             10,
             JobStatus.RequestFailed,
@@ -31,6 +31,7 @@ export class VerifierModule {
             ),
         );
     }
+
     private async pumpConfirmRetries() {
         const failedConfirms = await this.context.jobQueue.getDueByNextRetry(
             10,
@@ -41,6 +42,25 @@ export class VerifierModule {
             failedConfirms.map(async job =>
                 this.verifierExecutorService.safeConfirmVerification(JSON.parse(job.payload), job),
             ),
+        );
+    }
+
+    private async pumpCallbacksTimeouts() {
+        const failedCallbacks = await this.context.jobQueue.getFailedCallbackTimeouts();
+
+        await Promise.all(
+            failedCallbacks.map(async job => {
+                const payload = JSON.parse(job.payload) as VerifierModule.Request.Payload;
+                if ('callbacks' in payload) {
+                    delete payload.callbacks;
+                }
+
+                await this.context.jobQueue.update(
+                    payload.data.messageId,
+                    payload,
+                    JobStatus.Processing,
+                );
+            }),
         );
     }
 
@@ -58,7 +78,8 @@ export class VerifierModule {
         );
 
         // infinite retries for request & confirm
-        setInterval(async () => this.pumpRequestRetries(), 15_000);
+        setInterval(async () => this.pumpCallbacksTimeouts(), 2 * 60_000);
+        setInterval(async () => this.pumpFailedRequestRetries(), 15_000);
         setInterval(async () => this.pumpConfirmRetries(), 15_000);
 
         // setup api
