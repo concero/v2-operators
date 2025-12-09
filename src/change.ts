@@ -5,7 +5,7 @@ import { JobStatus } from './relayer/types';
 const prisma = new PrismaClient();
 
 prisma.job
-    .update({
+    .updateMany({
         where: { status: JobStatus.Processing },
         data: { status: JobStatus.RequestFailed },
     })
