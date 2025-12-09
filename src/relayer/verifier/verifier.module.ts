@@ -47,7 +47,6 @@ export class VerifierModule {
 
     private async pumpCallbacksTimeouts() {
         const failedCallbacks = await this.context.jobQueue.getFailedCallbackTimeouts();
-
         await Promise.all(
             failedCallbacks.map(async job => {
                 const payload = JSON.parse(job.payload) as VerifierModule.Request.Payload;
@@ -58,7 +57,7 @@ export class VerifierModule {
                 await this.context.jobQueue.update(
                     payload.data.messageId,
                     payload,
-                    JobStatus.Processing,
+                    JobStatus.RequestFailed,
                 );
             }),
         );
