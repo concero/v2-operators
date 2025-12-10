@@ -52,7 +52,7 @@ export class JobQueueService {
         });
     }
 
-    async getFailedCallbackTimeouts() {
+    async getDueByCallbackTimeouts(limit: number) {
         return this.dbClient.job.findMany({
             where: {
                 status: JobStatus.ProcessingConfirm,
@@ -60,6 +60,7 @@ export class JobQueueService {
                     lte: new Date(Date.now() - 5 * 60_000),
                 },
             },
+            take: limit,
         });
     }
 
