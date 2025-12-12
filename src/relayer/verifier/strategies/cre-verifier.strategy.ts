@@ -88,7 +88,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
             return;
         }
 
-        const batch = await this.context.jobQueue.getDue(10, JobStatus.ProcessingRequest);
+        const batch = await this.context.jobQueue.getDue(1, JobStatus.ProcessingRequest);
         if (batch.length === 0) {
             return;
         }
