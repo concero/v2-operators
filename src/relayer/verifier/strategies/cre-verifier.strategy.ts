@@ -157,7 +157,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
                     VerifierModule.Confirm.Payload;
                 if (!Array.isArray(parsedPayload.callbacks)) {
                     this.logger.debug(
-                        `Processing confirmations  job=${i.id} failed (no callbacks found)`,
+                        `Processing confirmations job=${i.id} failed (no callbacks found)`,
                     );
                     return;
                 }

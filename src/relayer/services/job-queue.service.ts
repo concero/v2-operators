@@ -57,7 +57,7 @@ export class JobQueueService {
             where: {
                 status: JobStatus.ProcessingConfirm,
                 updatedAt: {
-                    lte: new Date(Date.now() - 5 * 60_000),
+                    lte: new Date(Date.now() - 120000),
                 },
             },
             take: limit,

@@ -49,7 +49,7 @@ export class VerifierModule {
     }
 
     private async pumpCallbacksTimeouts() {
-        const failedCallbacks = await this.context.jobQueue.getDueByCallbackTimeouts(6);
+        const failedCallbacks = await this.context.jobQueue.getDueByCallbackTimeouts(10);
         this.logger.info(
             `Failed callbacks by timeouts: ${failedCallbacks.map(i => i.id).join(', ')}`,
         );
