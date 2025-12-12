@@ -88,7 +88,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
             return;
         }
 
-        const batch = await this.context.jobQueue.getDue(1, JobStatus.ProcessingRequest);
+        const batch = await this.context.jobQueue.getDue(2, JobStatus.ProcessingRequest);
         if (batch.length === 0) {
             return;
         }
@@ -149,16 +149,16 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
 
     private async processConfirmations() {
         const batch = await this.context.jobQueue.getDue(10, JobStatus.ProcessingConfirm);
-        this.logger.debug(
-            `Processing ${batch.length} confirmations (ids=${batch.map(i => i.id).join(',')})`,
-        );
+        this.logger.debug(`Processing confirmations (ids=${batch.map(i => i.id).join(',')})`);
 
         await Promise.all(
             batch.map(async i => {
                 const parsedPayload = JSON.parse(i.payload) as Record<string, unknown> &
                     VerifierModule.Confirm.Payload;
                 if (!Array.isArray(parsedPayload.callbacks)) {
-                    this.logger.debug(`Processing ${batch.length} failed because of callbacks`);
+                    this.logger.debug(
+                        `Processing confirmations  job=${i.id} failed (no callbacks found)`,
+                    );
                     return;
                 }
 

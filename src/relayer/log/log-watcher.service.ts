@@ -1,4 +1,4 @@
-import { Log } from 'viem';
+import { Log, maxUint64 } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 import { BaseLogService } from './base-log.service';
 import { LogFinalityService } from './log-finality.service';
@@ -7,8 +7,6 @@ import { MessagingCodec } from '../codec';
 import { LogParserService } from '../services';
 import { Context, DecodedMessageLogReceipt, MessageSentLogData } from '../types';
 import { VerifierType } from '../verifier';
-
-const UINT64_MAX = 18446744073709551615n;
 
 export class LogWatcherService extends BaseLogService {
     private readonly parser: LogParserService;
@@ -93,7 +91,7 @@ export class LogWatcherService extends BaseLogService {
         networkName: string,
         parsedReceipt: DecodedMessageLogReceipt,
     ): number {
-        if (parsedReceipt.srcChainData.blockConfirmations === UINT64_MAX) {
+        if (parsedReceipt.srcChainData.blockConfirmations === maxUint64) {
             return this.context.deploymentManager.getFinalityConformationsByChainName(networkName);
         }
 
