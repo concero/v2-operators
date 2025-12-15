@@ -24,11 +24,12 @@ export class LogWatcherService extends BaseLogService {
                 const routerAddress = this.context.deploymentManager.getRouterByChainSelector(
                     Number(network.chainSelector),
                 );
+                const onLogs = this.onLogs.bind(this);
 
                 await this.context.txReader.logWatcher.create(
                     routerAddress,
                     network,
-                    (logs, network) => this.onLogs(logs, network),
+                    onLogs,
                     this.context.config.event.messageSent,
                     blockManager,
                 );
