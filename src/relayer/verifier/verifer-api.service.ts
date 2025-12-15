@@ -30,7 +30,15 @@ export class VerifierApiService extends ContextProvider {
             return res.status(200).send({ statusCode: 200, ok: true });
         });
         this.app.get('/api/v1/processes', async (req, res) => {
-            const data = await this.context.jobQueue.getAll(100);
+            const data = await this.context.jobQueue.getAll();
+            let processes: Record<string, any[]> = {};
+            for (const process of data) {
+                if (processes[process.status]) {
+                    processes[process.status] = processes[process.status].concat(process);
+                } else {
+                    processes[process.status] = [process];
+                }
+            }
             res.headers({ 'content-type': 'application/json' }).send({
                 statusCode: 200,
                 ok: true,
