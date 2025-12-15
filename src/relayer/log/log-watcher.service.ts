@@ -43,16 +43,8 @@ export class LogWatcherService extends BaseLogService {
 
     private async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
         try {
-            if (logs.length === 0) {
-                return;
-            }
-
             this.logger.info(
-                `Logs (size=${logs.length}): ${logs.map(i => i.transactionHash).join(', ')}`,
-            );
-
-            this.logger.info(
-                `Processing ${logs.length} ConceroMessageSent events from ${network.name}`,
+                `ConceroMessageSent (size=${logs.length}): ${logs.map(i => i.transactionHash).join(', ')}`,
             );
 
             const parsedLogs = this.parser.parseLogs<MessageSentLogData>(
