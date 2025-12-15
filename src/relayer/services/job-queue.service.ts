@@ -1,13 +1,12 @@
 import { LoggerInterface } from '@concero/operator-utils';
-import { PrismaClient } from '@prisma/client';
+import { Job, Prisma, PrismaClient } from '@prisma/client';
+import stringify from 'json-stable-stringify';
 
+import { Nullable } from '../../types/common';
 import { JobStatus } from '../types';
 
 const REPORT_RETRY_1M_COUNT = 4;
-const reportDelaySec = (attempts: number) => (attempts < REPORT_RETRY_1M_COUNT ? 60 : 300);
-const saveJsonStringify = (object: Record<string, unknown>): string => {
-    return JSON.stringify(object, (_, v) => (typeof v === 'bigint' ? v.toString() : v));
-};
+const reportDelayMlSec = (attempts: number) => (attempts < REPORT_RETRY_1M_COUNT ? 60 : 300) * 1000;
 
 export class JobQueueService {
     private readonly logger: LoggerInterface;
@@ -18,72 +17,67 @@ export class JobQueueService {
         this.dbClient = dbClient;
     }
 
-    async add(messageId: string, payload: Record<string, unknown>, status: JobStatus) {
-        const next = new Date(Date.now() + 60_000);
+    async create(
+        messageId: string,
+        srcChainSelector: number,
+        payload: Record<string, unknown>,
+        status: JobStatus,
+    ) {
+        const nextRetryAt = new Date(Date.now() + 60_000);
         return this.dbClient.job.upsert({
             where: { messageId },
             update: {
-                payload: saveJsonStringify(payload),
-                nextRetryAt: next,
+                payload: stringify(payload || '{}') as string,
+                srcChainSelector,
+                nextRetryAt,
             },
             create: {
                 messageId,
-                payload: saveJsonStringify(payload),
+                payload: stringify(payload || '{}') as string,
+                srcChainSelector,
                 attempts: 0,
-                nextRetryAt: next,
+                nextRetryAt,
                 status,
             },
         });
     }
 
-    async findOne(messageId: string) {
-        return this.dbClient.job.findUnique({
-            where: { messageId },
+    async findOne(where: Prisma.JobWhereInput): Promise<Nullable<Job>> {
+        return this.dbClient.job.findFirst({
+            where,
         });
+    }
+
+    async getList(
+        where?: Prisma.JobWhereInput,
+        pagination?: { take: number; skip: number },
+    ): Promise<Job[]> {
+        try {
+            return this.dbClient.job.findMany({
+                where,
+                take: pagination?.take,
+                skip: pagination?.skip,
+            });
+        } catch (e) {
+            this.logger.error(`[getList] failed ${e}`);
+            return [];
+        }
     }
 
     async update(messageId: string, payload: Record<string, unknown>, status?: JobStatus) {
         return this.dbClient.job.update({
             where: { messageId },
             data: {
-                payload: saveJsonStringify(payload),
+                payload: stringify(payload || '{}') as string,
                 status,
             },
         });
     }
 
-    async getDueByCallbackTimeouts(limit: number) {
-        return this.dbClient.job.findMany({
-            where: {
-                status: JobStatus.ProcessingConfirm,
-                updatedAt: {
-                    lte: new Date(Date.now() - 120000),
-                },
-            },
-            take: limit,
-        });
-    }
-
-    async getDueByNextRetry(limit: number, status: JobStatus) {
-        return this.dbClient.job.findMany({
-            where: { nextRetryAt: { lte: new Date() }, status },
-            orderBy: { id: 'asc' },
-            take: limit,
-        });
-    }
-
-    async getDue(limit: number, status: JobStatus) {
-        return this.dbClient.job.findMany({
-            where: { status },
-            orderBy: { id: 'asc' },
-            take: limit,
-        });
-    }
-
-    async getAll(limit?: number) {
-        return this.dbClient.job.findMany({
-            orderBy: { id: 'asc' },
-            take: limit,
+    async updateMany(where: Prisma.JobWhereInput, data: Prisma.JobUpdateInput) {
+        return this.dbClient.job.updateMany({
+            where,
+            data,
         });
     }
 
@@ -102,11 +96,11 @@ export class JobQueueService {
     }
 
     async reschedule(id: number, attempts: number, status: JobStatus) {
-        const delay = reportDelaySec(attempts);
-        const next = new Date(Date.now() + delay * 1000);
+        const delay = reportDelayMlSec(attempts);
+        const nextRetryAt = new Date(Date.now() + delay);
         await this.dbClient.job.update({
             where: { id },
-            data: { attempts: { increment: 1 }, nextRetryAt: next, status },
+            data: { attempts: { increment: 1 }, nextRetryAt, status },
         });
     }
 }

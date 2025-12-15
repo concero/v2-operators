@@ -12,11 +12,10 @@ export interface VerifierStrategy {
 }
 
 export namespace VerifierStrategy {
-    export type Payload = DecodedLog<
-        MessageSentLogData & {
-            parsedReceipt: DecodedMessageLogReceipt;
-        }
-    > & {
-        type: VerifierType;
+    export type Payload = DecodedLog<MessageSentLogData> & {
+        parsedReceipt: DecodedMessageLogReceipt;
+        verifierType: VerifierType;
+        expectedBlockNumber?: bigint;
+        callbacks?: [];
     };
 }

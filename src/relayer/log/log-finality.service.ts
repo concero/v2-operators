@@ -2,63 +2,82 @@ import { ConceroNetwork } from '@concero/operator-utils';
 import { BaseLogService } from './base-log.service';
 
 import { DecodedLog } from '../../types';
-import { Context, DecodedMessageLogReceipt, MessageSentLogData } from '../types';
-import { VerifierType } from '../verifier';
+import { Context, DecodedMessageLogReceipt, JobStatus, MessageSentLogData } from '../types';
+import { VerifierStrategy, VerifierType } from '../verifier';
 
-type Item = {
-    chainName: string;
-    parsedReceipt: DecodedMessageLogReceipt;
-    parsedLog: DecodedLog<MessageSentLogData>;
+type Item = VerifierStrategy.Payload & {
     expectedBlockNumber: bigint;
-    verifierType: VerifierType;
 };
 
-function buildCondition(
-    type: 'select' | 'exclude',
-    chainName: string,
-    expectedBlockNumber: bigint,
-): (item: Item) => boolean {
-    return (i: Item) =>
-        type === 'select'
-            ? i.expectedBlockNumber < expectedBlockNumber && i.chainName === chainName
-            : !(i.expectedBlockNumber < expectedBlockNumber && i.chainName === chainName);
-}
-
 export class LogFinalityService extends BaseLogService {
-    private waitingConfirmationStack: Item[] = [];
-
     constructor(context: Context) {
         super('LogFinalityService', context);
-    }
-
-    // @todo: move united job for message with status & store that stack in DB
-    async addToStack(item: Item) {
-        this.waitingConfirmationStack.push(item);
     }
 
     init() {
         this.forEachActiveNetwork(async (network, blockManager) => {
             blockManager.watchBlocks({
-                onBlockRange: (_, endBlock) => this.processFinalityByChain(network, endBlock),
+                onBlockRange: (_, currentChainBlock) =>
+                    this.processFinalityByChain(network, currentChainBlock),
             });
         });
     }
 
+    async addToStack(
+        parsedLog: DecodedLog<MessageSentLogData>,
+        parsedReceipt: DecodedMessageLogReceipt,
+        expectedBlockNumber: bigint,
+        verifierType: VerifierType,
+    ): Promise<void> {
+        await this.context.jobQueue.create(
+            parsedLog.data.messageId,
+            parsedReceipt.srcChainSelector,
+            {
+                ...parsedLog,
+                parsedReceipt,
+                verifierType,
+                expectedBlockNumber,
+            } as VerifierStrategy.Payload,
+            JobStatus.WaitingConfirmations,
+        );
+    }
+
     private async processFinalityByChain(
         network: ConceroNetwork,
-        lastBlock: bigint,
+        currentChainBlock: bigint,
     ): Promise<void> {
-        const selectCondition = buildCondition('select', network.name, lastBlock);
-        const excludeCondition = buildCondition('exclude', network.name, lastBlock);
-
-        const verifiedItems = this.waitingConfirmationStack.filter(selectCondition);
-
-        await Promise.all(
-            verifiedItems.map(async item =>
-                this.requestVerification(item.parsedLog, item.parsedReceipt, item.verifierType),
-            ),
+        const waitingConfirmationJobs = await this.context.jobQueue.getList({
+            status: JobStatus.WaitingConfirmations,
+            srcChainSelector: Number(network.chainSelector),
+        });
+        const waitingConfirmationPayloads: Item[] = waitingConfirmationJobs.map(i =>
+            JSON.parse(i.payload),
         );
 
-        this.waitingConfirmationStack = this.waitingConfirmationStack.filter(excludeCondition);
+        const messagesToVerify = waitingConfirmationPayloads.filter(
+            (i: Item) =>
+                i.expectedBlockNumber < currentChainBlock &&
+                i.parsedReceipt.srcChainSelector === Number(network.chainSelector),
+        );
+
+        const results = await Promise.allSettled(
+            messagesToVerify.map(async item => {
+                await this.requestVerification(
+                    item.parsedReceipt.srcChainSelector,
+                    item,
+                    item.parsedReceipt,
+                    item.verifierType,
+                );
+                return item;
+            }),
+        );
+        const verifiedMessagesIds = results
+            .filter(i => i.status === 'fulfilled')
+            .map(i => i.value.data.messageId);
+
+        await this.context.jobQueue.updateMany(
+            { messageId: { in: verifiedMessagesIds } },
+            { status: JobStatus.ProcessingRequest },
+        );
     }
 }

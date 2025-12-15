@@ -6,7 +6,6 @@ import { VerifierStrategy } from './verifier.interface';
 
 import { createCREJWT, CRERequestBody } from '../../../utils';
 import { Context, JobStatus } from '../../types';
-import { VerifierModule } from '../verifier.module';
 
 const packCREValidations = (
     logger: LoggerInterface,
@@ -49,7 +48,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
             messageId: string,
             item: CREVerifierStrategy.CRE.Response.Item,
         ]): Promise<void> => {
-            const found = await this.context.jobQueue.findOne(messageId);
+            const found = await this.context.jobQueue.findOne({ messageId });
             if (!found) {
                 this.logger.warn(`Job for messageId=${messageId} not found`);
                 return;
@@ -88,10 +87,15 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
             return;
         }
 
-        const batch = await this.context.jobQueue.getDue(2, JobStatus.ProcessingRequest);
+        // cre supports only 2 batches without "go panic error"
+        const batch = await this.context.jobQueue.getList(
+            { status: JobStatus.ProcessingRequest },
+            { take: 2, skip: 0 },
+        );
         if (batch.length === 0) {
             return;
         }
+
         this.logger.debug(
             `Processing ${batch.length} requests (ids=${batch.map(i => i.id).join(',')}) `,
         );
@@ -106,13 +110,11 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
                 params: {
                     input: {
                         batch: batch.map(i => {
-                            const parsedPayload = JSON.parse(
-                                i.payload,
-                            ) as VerifierModule.Confirm.Payload;
+                            const parsedPayload = JSON.parse(i.payload) as VerifierStrategy.Payload;
                             return {
                                 messageId: i.messageId as Hex,
                                 blockNumber: parsedPayload.blockNumber.toString(),
-                                srcChainSelector: parsedPayload.data.parsedReceipt.srcChainSelector,
+                                srcChainSelector: parsedPayload.parsedReceipt.srcChainSelector,
                             };
                         }),
                     },
@@ -123,6 +125,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
                 requestBody,
                 process.env.CRE_REQUESTER_PRIVATE_KEY as Hex,
             );
+
             await this.context.http.post(
                 // @todo: fix types
                 process.env.CRE_BASE_URL as string,
@@ -148,13 +151,19 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
     }
 
     private async processConfirmations() {
-        const batch = await this.context.jobQueue.getDue(10, JobStatus.ProcessingConfirm);
+        const batch = await this.context.jobQueue.getList(
+            { status: JobStatus.ProcessingConfirm },
+            { take: 10, skip: 0 },
+        );
+        if (!batch.length) {
+            return;
+        }
+
         this.logger.debug(`Processing confirmations (ids=${batch.map(i => i.id).join(',')})`);
 
         await Promise.all(
             batch.map(async i => {
-                const parsedPayload = JSON.parse(i.payload) as Record<string, unknown> &
-                    VerifierModule.Confirm.Payload;
+                const parsedPayload = JSON.parse(i.payload) as VerifierStrategy.Payload;
                 if (!Array.isArray(parsedPayload.callbacks)) {
                     this.logger.debug(
                         `Processing confirmations job=${i.id} failed (no callbacks found)`,
@@ -164,7 +173,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
 
                 const validations = packCREValidations(this.logger, parsedPayload.callbacks);
                 await this.submitMessage(
-                    parsedPayload.data.parsedReceipt.dstChainSelector,
+                    parsedPayload.parsedReceipt.dstChainSelector,
                     parsedPayload.data.messageReceipt,
                     [validations],
                 );

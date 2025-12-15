@@ -1,13 +1,13 @@
 import { EventEmitter } from 'node:events';
 
-import { VerifierModule } from '../verifier';
+import { VerifierModule, VerifierStrategy } from '../verifier';
 
 export class EventBusService extends EventEmitter {
-    requestVerification(payload: VerifierModule.Request.Payload) {
+    requestVerification(payload: VerifierStrategy.Payload) {
         this.emit(VerifierModule.Request.command, payload);
     }
 
-    confirmVerification(payload: VerifierModule.Confirm.Payload) {
+    confirmVerification(payload: VerifierStrategy.Payload) {
         this.emit(VerifierModule.Confirm.command, payload);
     }
 }

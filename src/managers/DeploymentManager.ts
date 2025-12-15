@@ -1,5 +1,6 @@
 import { Address } from 'viem';
 import {
+    ConceroNetwork,
     ConceroNetworkManager,
     HttpClient,
     IConceroNetworkManager,
@@ -8,7 +9,6 @@ import {
 
 import { globalConfig } from '../constants';
 import { Chain } from '../types';
-import { ConceroNetwork } from '../types/ConceroNetwork';
 
 export class DeploymentManager {
     private static instance: DeploymentManager;
@@ -47,37 +47,39 @@ export class DeploymentManager {
         return routers;
     }
 
-    getRouterByChainName(chainName: string): Address {
-        const router = Object.values(this.chainOptions)?.find(i => i.name === chainName)
-            ?.deployments?.router;
+    getRouterByChainSelector(chainSelector: number): Address {
+        const router = this.chainOptions?.[chainSelector]?.deployments?.router;
 
         if (!router) {
-            throw new Error(`Router not found for chain: ${chainName}`);
+            throw new Error(
+                `Router not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+            );
         }
 
         return router;
     }
 
-    getConceroRelayerLibByChainName(chainName: string): Address {
-        const relayerLib = Object.values(this.chainOptions)?.find(i => i.name === chainName)
-            ?.deployments?.relayerLib;
+    getConceroRelayerLibByChainSelector(chainSelector: number): Address {
+        const relayerLib = this.chainOptions?.[chainSelector]?.deployments?.relayerLib;
 
         if (!relayerLib) {
-            throw new Error(`RelayerLib not found for chain: ${chainName}`);
+            throw new Error(
+                `RelayerLib not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+            );
         }
 
         return relayerLib;
     }
 
-    getConceroValidatorLibByChainName(chainName: string): Address {
-        const relayerLib = Object.values(this.chainOptions)?.find(i => i.name === chainName)
-            ?.deployments?.validatorLib;
+    getConceroValidatorLibByChainSelector(chainSelector: number): Address {
+        const validatorLib = this.chainOptions?.[chainSelector]?.deployments?.validatorLib;
 
-        if (!relayerLib) {
-            throw new Error(`RelayerLib not found for chain: ${chainName}`);
+        if (!validatorLib) {
+            throw new Error(
+                `ValidatorLib not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+            );
         }
-
-        return relayerLib;
+        return validatorLib;
     }
 
     getFinalityConformationsByChainName(chainName: string): number {

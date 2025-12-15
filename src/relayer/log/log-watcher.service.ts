@@ -19,18 +19,16 @@ export class LogWatcherService extends BaseLogService {
     }
 
     async init() {
-        const onLogs = this.onLogs.bind(this);
-
         this.forEachActiveNetwork(async (network, blockManager) => {
             try {
-                const routerAddress = this.context.deploymentManager.getRouterByChainName(
-                    network.name,
+                const routerAddress = this.context.deploymentManager.getRouterByChainSelector(
+                    Number(network.chainSelector),
                 );
 
                 await this.context.txReader.logWatcher.create(
                     routerAddress,
                     network,
-                    onLogs,
+                    (logs, network) => this.onLogs(logs, network),
                     this.context.config.event.messageSent,
                     blockManager,
                 );
@@ -44,15 +42,15 @@ export class LogWatcherService extends BaseLogService {
 
     private async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
         try {
-            this.logger.debug(`Found ${logs.length} logs`);
-
             if (logs.length === 0) {
                 return;
             }
 
-            this.logger.debug(`Logs: ${logs.map(i => i.transactionHash).join(', ')}`);
+            this.logger.info(
+                `Logs (size=${logs.length}): ${logs.map(i => i.transactionHash).join(', ')}`,
+            );
 
-            this.logger.debug(
+            this.logger.info(
                 `Processing ${logs.length} ConceroMessageSent events from ${network.name}`,
             );
 
@@ -69,16 +67,18 @@ export class LogWatcherService extends BaseLogService {
                 const shouldFinaliseSrc = parsedReceipt.srcChainData.blockConfirmations !== 0n;
                 if (shouldFinaliseSrc) {
                     const confirmations = this.extractConfirmations(network.name, parsedReceipt);
-                    await this.logFinalityService.addToStack({
-                        verifierType,
-                        chainName: network.name,
-                        parsedReceipt,
+                    await this.logFinalityService.addToStack(
                         parsedLog,
-                        expectedBlockNumber: BigInt(confirmations) + parsedLog.blockNumber,
-                    });
+                        parsedReceipt,
+                        BigInt(confirmations) + BigInt(parsedLog.blockNumber),
+                        verifierType,
+                    );
                 } else {
-                    this.requestVerification(parsedLog, parsedReceipt, verifierType).catch(
-                        this.logger.error,
+                    await this.requestVerification(
+                        parsedReceipt.srcChainSelector,
+                        parsedLog,
+                        parsedReceipt,
+                        verifierType,
                     );
                 }
             }

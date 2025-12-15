@@ -80,7 +80,7 @@ confirm_failed - verification confirm (messageSubmit) failed => need to be retri
 success - message delivered
 */
 export enum JobStatus {
-    Processing = 'processing',
+    WaitingConfirmations = 'waiting_confirmations',
     ProcessingRequest = 'processing_request',
     RequestFailed = 'request_failed',
     ProcessingConfirm = 'processing_confirm',

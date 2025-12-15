@@ -3,7 +3,7 @@ import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
 import { DecodedLog } from '../../types';
 import { ContextProvider } from '../services/context.provider';
 import { Context, DecodedMessageLogReceipt, JobStatus, MessageSentLogData } from '../types';
-import { VerifierModule, VerifierType } from '../verifier';
+import { VerifierStrategy, VerifierType } from '../verifier';
 
 export abstract class BaseLogService extends ContextProvider {
     protected constructor(name: string, context: Context) {
@@ -33,21 +33,20 @@ export abstract class BaseLogService extends ContextProvider {
     }
 
     protected async requestVerification(
+        srcChainSelector: number,
         parsedLog: DecodedLog<MessageSentLogData>,
         parsedReceipt: DecodedMessageLogReceipt,
         verifierType: VerifierType,
     ): Promise<void> {
-        const payload: VerifierModule.Request.Payload = {
+        const payload: VerifierStrategy.Payload = {
             ...parsedLog,
-            data: {
-                ...parsedLog.data,
-                parsedReceipt,
-            },
-            type: verifierType,
+            parsedReceipt,
+            verifierType: verifierType,
         };
 
-        await this.context.jobQueue.add(
+        await this.context.jobQueue.create(
             parsedLog.data.messageId,
+            srcChainSelector,
             payload,
             JobStatus.ProcessingRequest,
         );

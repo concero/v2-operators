@@ -23,39 +23,57 @@ export class VerifierModule {
 
     // infinite retry calls
     private async pumpFailedRequestRetries() {
-        const failedRequests = await this.context.jobQueue.getDueByNextRetry(
-            10,
-            JobStatus.RequestFailed,
+        const failedRequestJobs = await this.context.jobQueue.getList(
+            {
+                nextRetryAt: { lte: new Date() },
+                status: JobStatus.RequestFailed,
+            },
+            { take: 10, skip: 0 },
         );
 
         await Promise.all(
-            failedRequests.map(async job =>
+            failedRequestJobs.map(async job =>
                 this.verifierExecutorService.safeRequestVerification(JSON.parse(job.payload), job),
             ),
         );
     }
 
     private async pumpConfirmRetries() {
-        const failedConfirms = await this.context.jobQueue.getDueByNextRetry(
-            10,
-            JobStatus.ConfirmFailed,
+        const failedConfirmJobs = await this.context.jobQueue.getList(
+            {
+                nextRetryAt: { lte: new Date() },
+                status: JobStatus.ConfirmFailed,
+            },
+            { take: 10, skip: 0 },
         );
 
         await Promise.all(
-            failedConfirms.map(async job =>
+            failedConfirmJobs.map(async job =>
                 this.verifierExecutorService.safeConfirmVerification(JSON.parse(job.payload), job),
             ),
         );
     }
 
     private async pumpCallbacksTimeouts() {
-        const failedCallbacks = await this.context.jobQueue.getDueByCallbackTimeouts(10);
+        const failedCallbackJobs = await this.context.jobQueue.getList({
+            status: JobStatus.ProcessingConfirm,
+            updatedAt: {
+                // updated then 5 min ago and later
+                lte: new Date(Date.now() - 6 * 50_000),
+            },
+        });
+        // if empty => just return
+        if (!failedCallbackJobs.length) {
+            return;
+        }
+
         this.logger.info(
-            `Failed callbacks by timeouts: ${failedCallbacks.map(i => i.id).join(', ')}`,
+            `Callbacks timeout jobs: [ids=${failedCallbackJobs.map(i => i.id).join(',')}]`,
         );
+
         await Promise.all(
-            failedCallbacks.map(async job => {
-                const payload = JSON.parse(job.payload) as VerifierModule.Request.Payload;
+            failedCallbackJobs.map(async job => {
+                const payload = JSON.parse(job.payload) as VerifierStrategy.Payload;
                 if ('callbacks' in payload) {
                     delete payload.callbacks;
                 }
@@ -73,17 +91,17 @@ export class VerifierModule {
         // events facade
         this.context.eventBus.on(
             VerifierModule.Request.command,
-            (payload: VerifierModule.Request.Payload) =>
+            (payload: VerifierStrategy.Payload) =>
                 this.verifierExecutorService.safeRequestVerification(payload),
         );
         this.context.eventBus.on(
             VerifierModule.Confirm.command,
-            (payload: VerifierModule.Confirm.Payload) =>
+            (payload: VerifierStrategy.Payload) =>
                 this.verifierExecutorService.safeConfirmVerification(payload),
         );
 
         // infinite retries for request & confirm
-        setInterval(async () => this.pumpCallbacksTimeouts(), 2 * 60_000);
+        setInterval(async () => this.pumpCallbacksTimeouts(), 15_000);
         setInterval(async () => this.pumpFailedRequestRetries(), 15_000);
         setInterval(async () => this.pumpConfirmRetries(), 15_000);
 
@@ -95,14 +113,8 @@ export class VerifierModule {
 export namespace VerifierModule {
     export namespace Request {
         export const command = 'request_verification';
-        export type Payload = VerifierStrategy.Payload & {
-            type: VerifierType;
-        };
     }
     export namespace Confirm {
         export const command = 'confirm_verification';
-        export type Payload = VerifierStrategy.Payload & {
-            type: VerifierType;
-        };
     }
 }

@@ -17,18 +17,13 @@ export abstract class BaseVerifierStrategy extends ContextProvider {
         const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
             String(dstChainSelector),
         );
-        if (!dstNetwork) {
-            this.logger.error(`DstNetwork not found [chainSelector=${dstChainSelector}]`);
-            return;
-        }
 
-        const routerAddress = this.context.deploymentManager.getRouterByChainName(dstNetwork.name);
-        const relayerLib = this.context.deploymentManager.getConceroRelayerLibByChainName(
-            dstNetwork.name,
-        );
-        const validatorLib = this.context.deploymentManager.getConceroValidatorLibByChainName(
-            dstNetwork.name,
-        );
+        const routerAddress =
+            this.context.deploymentManager.getRouterByChainSelector(dstChainSelector);
+        const relayerLib =
+            this.context.deploymentManager.getConceroRelayerLibByChainSelector(dstChainSelector);
+        const validatorLib =
+            this.context.deploymentManager.getConceroValidatorLibByChainSelector(dstChainSelector);
 
         await this.context.txWriter.callContract(dstNetwork, {
             address: routerAddress,

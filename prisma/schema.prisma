@@ -25,7 +25,13 @@ model LogsListenerBlockCheckpoints {
 model Job {
   id              Int      @id @default(autoincrement())
   messageId       String   @unique
-  // processing | processing_request | request_failed | processing_confirm | confirm_failed | success
+  srcChainSelector  Int?
+  // waiting_confirmations
+  // processing_request
+  // request_failed
+  // processing_confirm
+  // confirm_failed
+  // success
   status          String
   payload         String
   attempts        Int      @default(0)

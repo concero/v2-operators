@@ -4,7 +4,6 @@ import {
     VerifierStrategy,
     VerifierType,
 } from './strategies';
-import { VerifierModule } from './verifier.module';
 import { Job } from '@prisma/client';
 
 import { ContextProvider } from '../services';
@@ -23,71 +22,75 @@ export class VerifierExecutorService extends ContextProvider {
         (this.strategies.cre as CREVerifierStrategy).init();
     }
 
-    getStrategy(type: VerifierType): VerifierStrategy {
-        return this.strategies[type];
+    getStrategy(verifierType: VerifierType): VerifierStrategy {
+        return this.strategies[verifierType];
     }
 
     // wrapped strategy calls
 
     private async requestVerification(
-        payload: VerifierModule.Request.Payload,
-        options: {
-            onError: (payload: VerifierModule.Request.Payload) => Promise<void>;
-            onSuccess: (messageId: VerifierModule.Request.Payload) => Promise<void>;
+        payload: VerifierStrategy.Payload,
+        {
+            onError,
+            onSuccess,
+        }: {
+            onError: (payload: VerifierStrategy.Payload) => Promise<void>;
+            onSuccess: (messageId: VerifierStrategy.Payload) => Promise<void>;
         },
     ): Promise<void> {
         try {
-            this.logger.info(`[${payload.type}] requesting ${payload.type}`);
-            await this.getStrategy(payload.type).requestVerification(payload);
-            await options.onSuccess(payload);
+            this.logger.info(`[${payload.verifierType}] requesting ${payload.verifierType}`);
+            await this.getStrategy(payload.verifierType).requestVerification(payload);
+            await onSuccess(payload);
             this.logger.info(
-                `[${payload.type}] Requested successfully ${payload.type} with id = ${payload.data.messageId}`,
+                `[${payload.verifierType}] Requested successfully ${payload.verifierType} with [messageId=${payload.data.messageId}]`,
             );
         } catch (e) {
-            this.logger.error(`[${payload.type}] Request failed: ${e}`);
-            await options.onError(payload);
+            this.logger.error(`[${payload.verifierType}] Request failed: ${e}`);
+            await onError(payload);
         }
     }
 
     private async confirmVerification(
-        payload: VerifierModule.Confirm.Payload,
-        options: {
-            onError: (payload: VerifierModule.Confirm.Payload) => Promise<void>;
-            onSuccess: (messageId: VerifierModule.Confirm.Payload) => Promise<void>;
+        payload: VerifierStrategy.Payload,
+        {
+            onError,
+            onSuccess,
+        }: {
+            onError: (payload: VerifierStrategy.Payload) => Promise<void>;
+            onSuccess: (messageId: VerifierStrategy.Payload) => Promise<void>;
         },
     ): Promise<void> {
         try {
-            this.logger.info(`[${payload.type}] confirming ${payload.type}`);
-            await this.getStrategy(payload.type).confirmVerification(payload);
-            await options.onSuccess(payload);
+            this.logger.info(`[${payload.verifierType}] confirming ${payload.verifierType}`);
+            await this.getStrategy(payload.verifierType).confirmVerification(payload);
+            await onSuccess(payload);
             this.logger.info(
-                `[${payload.type}] Confirmed successfully ${payload.type} with id = ${payload.data.messageId}`,
+                `[${payload.verifierType}] Confirmed successfully ${payload.verifierType} with [messageId=${payload.data.messageId}]`,
             );
         } catch (e) {
-            this.logger.error(`[${payload.type}] Confirm failed: ${e}`);
-            await options.onError(payload);
+            this.logger.error(`[${payload.verifierType}] Confirm failed: ${e}`);
+            await onError(payload);
         }
     }
 
     // retries & job status aggregation based on strategy calls
 
-    async safeRequestVerification(
-        payload: VerifierModule.Request.Payload,
-        job?: Job,
-    ): Promise<void> {
+    async safeRequestVerification(payload: VerifierStrategy.Payload, job?: Job): Promise<void> {
         return this.requestVerification(payload, {
             onSuccess: async payload => {
                 if (job) {
                     await this.context.jobQueue.changeStatus(job.id, JobStatus.ProcessingConfirm);
                 } else {
-                    await this.context.jobQueue.add(
+                    await this.context.jobQueue.create(
                         payload.data.messageId,
+                        payload.parsedReceipt.srcChainSelector,
                         payload,
                         JobStatus.ProcessingConfirm,
                     );
                 }
 
-                if (payload.type !== VerifierType.CRE) {
+                if (payload.verifierType === VerifierType.Empty) {
                     this.context.eventBus.confirmVerification(payload);
                 }
             },
@@ -99,8 +102,9 @@ export class VerifierExecutorService extends ContextProvider {
                         JobStatus.RequestFailed,
                     );
                 } else {
-                    await this.context.jobQueue.add(
+                    await this.context.jobQueue.create(
                         payload.data.messageId,
+                        payload.parsedReceipt.srcChainSelector,
                         payload,
                         JobStatus.RequestFailed,
                     );
@@ -109,10 +113,7 @@ export class VerifierExecutorService extends ContextProvider {
         });
     }
 
-    async safeConfirmVerification(
-        payload: VerifierModule.Confirm.Payload,
-        job?: Job,
-    ): Promise<void> {
+    async safeConfirmVerification(payload: VerifierStrategy.Payload, job?: Job): Promise<void> {
         return this.confirmVerification(payload, {
             onSuccess: async () => {
                 if (job) {
@@ -127,8 +128,9 @@ export class VerifierExecutorService extends ContextProvider {
                         JobStatus.ConfirmFailed,
                     );
                 } else {
-                    await this.context.jobQueue.add(
+                    await this.context.jobQueue.create(
                         payload.data.messageId,
+                        payload.parsedReceipt.srcChainSelector,
                         payload,
                         JobStatus.ConfirmFailed,
                     );

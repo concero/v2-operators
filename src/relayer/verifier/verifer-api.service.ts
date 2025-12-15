@@ -1,4 +1,5 @@
 import { CREVerifierStrategy } from './strategies';
+import { Job } from '@prisma/client';
 import fastify, { FastifyInstance } from 'fastify';
 
 import { ContextProvider } from '../services';
@@ -29,24 +30,30 @@ export class VerifierApiService extends ContextProvider {
 
             return res.status(200).send({ statusCode: 200, ok: true });
         });
-        this.app.get('/api/v1/processes', async (req, res) => {
-            const data = await this.context.jobQueue.getAll();
-            let processes: Record<string, any[]> = {};
+        this.app.get('/api/v1/processes', async (_, res) => {
+            const data = await this.context.jobQueue.getList();
+            let processes: Record<string, { jobs: Job[]; size: number }> = {};
             const getItem = (i: any) => ({ ...i, payload: JSON.parse(i.payload) });
 
             for (const process of data) {
                 if (processes[process.status]) {
-                    processes[process.status] = processes[process.status].concat(getItem(process));
+                    const prev = processes[process.status];
+                    processes[process.status] = {
+                        jobs: prev.jobs.concat(getItem(process)),
+                        size: prev.size + 1,
+                    };
                 } else {
-                    processes[process.status] = [getItem(process)];
+                    processes[process.status] = {
+                        jobs: [getItem(process)],
+                        size: 1,
+                    };
                 }
             }
             res.headers({ 'content-type': 'application/json' }).send({
                 statusCode: 200,
                 ok: true,
-                processes,
-                length: data.length,
-                data: data.map(i => getItem(i)),
+                total: data.length,
+                ...processes,
             });
         });
         this.app.listen({ port: 5000, host: '0.0.0.0' }).catch(this.logger.error);
