@@ -27,13 +27,13 @@ export class JobQueueService {
         return this.dbClient.job.upsert({
             where: { messageId },
             update: {
-                payload: ObjectLib.stringify(payload || {}) as string,
+                payload: ObjectLib.stringify(payload),
                 srcChainSelector,
                 nextRetryAt,
             },
             create: {
                 messageId,
-                payload: ObjectLib.stringify(payload || {}) as string,
+                payload: ObjectLib.stringify(payload),
                 srcChainSelector,
                 attempts: 0,
                 nextRetryAt,
