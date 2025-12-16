@@ -1,11 +1,11 @@
 import { createHash } from 'crypto';
 import { parseSignature, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import stringify from 'json-stable-stringify';
+import { ObjectLib } from './object';
 
 // Helper function to compute SHA256 hash
 const sha256 = (data: any): string => {
-    const jsonString = typeof data === 'string' ? data : (stringify(data) ?? '');
+    const jsonString = typeof data === 'string' ? data : (ObjectLib.stringify(data) ?? '');
     return createHash('sha256').update(jsonString).digest('hex');
 };
 
@@ -54,10 +54,10 @@ export const createCREJWT = async <T>(
 
     // Encode header and payload to base64url
     const encodedHeader = base64URLEncode(
-        Buffer.from(JSON.stringify(header), 'utf8').toString('base64'),
+        Buffer.from(ObjectLib.stringify(header), 'utf8').toString('base64'),
     );
     const encodedPayload = base64URLEncode(
-        Buffer.from(JSON.stringify(payload), 'utf8').toString('base64'),
+        Buffer.from(ObjectLib.stringify(payload), 'utf8').toString('base64'),
     );
     const rawMessage = `${encodedHeader}.${encodedPayload}`;
 

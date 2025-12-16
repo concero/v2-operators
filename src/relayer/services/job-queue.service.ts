@@ -1,8 +1,8 @@
 import { LoggerInterface } from '@concero/operator-utils';
 import { Job, Prisma, PrismaClient } from '@prisma/client';
-import stringify from 'json-stable-stringify';
 
 import { Nullable } from '../../types/common';
+import { ObjectLib } from '../../utils';
 import { JobStatus } from '../types';
 
 const REPORT_RETRY_1M_COUNT = 4;
@@ -27,13 +27,13 @@ export class JobQueueService {
         return this.dbClient.job.upsert({
             where: { messageId },
             update: {
-                payload: stringify(payload || '{}') as string,
+                payload: ObjectLib.stringify(payload || {}) as string,
                 srcChainSelector,
                 nextRetryAt,
             },
             create: {
                 messageId,
-                payload: stringify(payload || '{}') as string,
+                payload: ObjectLib.stringify(payload || {}) as string,
                 srcChainSelector,
                 attempts: 0,
                 nextRetryAt,
@@ -68,7 +68,7 @@ export class JobQueueService {
         return this.dbClient.job.update({
             where: { messageId },
             data: {
-                payload: stringify(payload || '{}') as string,
+                payload: ObjectLib.stringify(payload || {}) as string,
                 status,
             },
         });

@@ -2,6 +2,7 @@ import { CREVerifierStrategy } from './strategies';
 import { Job } from '@prisma/client';
 import fastify, { FastifyInstance } from 'fastify';
 
+import { ObjectLib } from '../../utils';
 import { ContextProvider } from '../services';
 import { Context } from '../types';
 
@@ -18,13 +19,15 @@ export class VerifierApiService extends ContextProvider {
     async init() {
         this.app.post('/api/v1/callback/cre', async (req, res) => {
             try {
-                this.logger.info(`CRE Callback Got: ${JSON.stringify(req.body)}`);
+                this.logger.info(
+                    `CRE Callback Got: ${ObjectLib.stringify(req.body as Record<string, unknown>)}`,
+                );
                 await this.creVerifier.addConfirmationCallback(
                     req.body as CREVerifierStrategy.CRE.Response,
                 );
             } catch (e) {
                 this.logger.error(
-                    `CRE Callback Failed: ${e?.toString()} ${JSON.stringify(req.body)}`,
+                    `CRE Callback Failed: ${e?.toString()} ${ObjectLib.stringify(req.body as Record<string, unknown>)}`,
                 );
             }
 

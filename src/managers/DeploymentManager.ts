@@ -9,6 +9,7 @@ import {
 
 import { globalConfig } from '../constants';
 import { Chain } from '../types';
+import { ObjectLib } from '../utils';
 
 export class DeploymentManager {
     private static instance: DeploymentManager;
@@ -97,7 +98,7 @@ export class DeploymentManager {
     async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {
         try {
             this.chainOptions = await this.fetchChainOptions();
-            this.logger.debug(`Found deployments ${JSON.stringify(this.chainOptions)}`);
+            this.logger.debug(`Found deployments ${ObjectLib.stringify(this.chainOptions)}`);
 
             for (const network of networks) {
                 if (!this.hasValidDeployments(network.name)) {
