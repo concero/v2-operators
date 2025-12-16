@@ -1,14 +1,14 @@
-import { LogFinalityService } from './log-finality.service';
+import { LogBlockConformationsService } from './log-block-conformations.service';
 import { LogWatcherService } from './log-watcher.service';
 
 import { Context } from '../types';
 
 export class LogModule {
-    private readonly logFinalityService: LogFinalityService;
+    private readonly logFinalityService: LogBlockConformationsService;
     private readonly logWatcherService: LogWatcherService;
 
     constructor(context: Context) {
-        this.logFinalityService = new LogFinalityService(context);
+        this.logFinalityService = new LogBlockConformationsService(context);
         this.logWatcherService = new LogWatcherService(context, this.logFinalityService);
     }
 

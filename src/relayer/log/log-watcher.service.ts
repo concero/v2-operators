@@ -1,7 +1,7 @@
 import { Log, maxUint64 } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 import { BaseLogService } from './base-log.service';
-import { LogFinalityService } from './log-finality.service';
+import { LogBlockConformationsService } from './log-block-conformations.service';
 
 import { MessagingCodec } from '../codec';
 import { LogParserService } from '../services';
@@ -10,9 +10,9 @@ import { VerifierType } from '../verifier';
 
 export class LogWatcherService extends BaseLogService {
     private readonly parser: LogParserService;
-    private readonly logFinalityService: LogFinalityService;
+    private readonly logFinalityService: LogBlockConformationsService;
 
-    constructor(context: Context, logFinalityService: LogFinalityService) {
+    constructor(context: Context, logFinalityService: LogBlockConformationsService) {
         super('LogWatcherService', context);
         this.parser = new LogParserService(context);
         this.logFinalityService = logFinalityService;
@@ -64,7 +64,7 @@ export class LogWatcherService extends BaseLogService {
                     await this.logFinalityService.addToStack(
                         parsedLog,
                         parsedReceipt,
-                        BigInt(confirmations) + BigInt(parsedLog.blockNumber),
+                        confirmations + parsedLog.blockNumber,
                         verifierType,
                     );
                 } else {
@@ -84,11 +84,13 @@ export class LogWatcherService extends BaseLogService {
     private extractConfirmations(
         networkName: string,
         parsedReceipt: DecodedMessageLogReceipt,
-    ): number {
+    ): bigint {
         if (parsedReceipt.srcChainData.blockConfirmations === maxUint64) {
-            return this.context.deploymentManager.getFinalityConformationsByChainName(networkName);
+            const configa =
+                this.context.deploymentManager.getFinalityConformationsByChainName(networkName);
+            return BigInt(configa);
         }
 
-        return Number(parsedReceipt.srcChainData.blockConfirmations);
+        return parsedReceipt.srcChainData.blockConfirmations;
     }
 }

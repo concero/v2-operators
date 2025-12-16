@@ -5,13 +5,12 @@ import { DecodedLog } from '../../types';
 import { Context, DecodedMessageLogReceipt, JobStatus, MessageSentLogData } from '../types';
 import { VerifierStrategy, VerifierType } from '../verifier';
 
-type Item = VerifierStrategy.Payload & {
-    expectedBlockNumber: bigint;
-};
+type Item = VerifierStrategy.Payload;
 
-export class LogFinalityService extends BaseLogService {
+// @todo: move to TxMonitor in operator utils
+export class LogBlockConformationsService extends BaseLogService {
     constructor(context: Context) {
-        super('LogFinalityService', context);
+        super('LogBlockConformationsService', context);
     }
 
     init() {
@@ -56,6 +55,7 @@ export class LogFinalityService extends BaseLogService {
 
         const messagesToVerify = waitingConfirmationPayloads.filter(
             (i: Item) =>
+                i.expectedBlockNumber &&
                 i.expectedBlockNumber < currentChainBlock &&
                 i.parsedReceipt.srcChainSelector === Number(network.chainSelector),
         );
