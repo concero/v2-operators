@@ -1,11 +1,11 @@
 import { createHash } from 'crypto';
 import { parseSignature, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { ObjectLib } from './object';
+import stringify from 'json-stable-stringify';
 
 // Helper function to compute SHA256 hash
 const sha256 = (data: any): string => {
-    const jsonString = typeof data === 'string' ? data : (ObjectLib.stringify(data) ?? '');
+    const jsonString = typeof data === 'string' ? data : (stringify(data) ?? '');
     return createHash('sha256').update(jsonString).digest('hex');
 };
 
@@ -13,9 +13,9 @@ const base64URLEncode = (str: string): string =>
     str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 
 export type CRERequestBody<T = unknown> = {
-    jsonrpc: string;
     id: string;
-    method: string;
+    jsonrpc: '2.0';
+    method: 'workflows.execute';
     params: {
         input: T;
         workflow: { workflowID: string };
@@ -54,10 +54,10 @@ export const createCREJWT = async <T>(
 
     // Encode header and payload to base64url
     const encodedHeader = base64URLEncode(
-        Buffer.from(ObjectLib.stringify(header), 'utf8').toString('base64'),
+        Buffer.from(JSON.stringify(header), 'utf8').toString('base64'),
     );
     const encodedPayload = base64URLEncode(
-        Buffer.from(ObjectLib.stringify(payload), 'utf8').toString('base64'),
+        Buffer.from(JSON.stringify(payload), 'utf8').toString('base64'),
     );
     const rawMessage = `${encodedHeader}.${encodedPayload}`;
 

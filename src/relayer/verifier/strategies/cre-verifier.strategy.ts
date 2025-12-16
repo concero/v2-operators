@@ -3,6 +3,7 @@ import { encodeAbiParameters, encodePacked, Hash, Hex } from 'viem';
 import { LoggerInterface } from '@concero/operator-utils';
 import { BaseVerifierStrategy } from './base-verifier.strategy';
 import { VerifierStrategy } from './verifier.interface';
+import axios, { AxiosError } from 'axios';
 
 import { createCREJWT, CRERequestBody } from '../../../utils';
 import { Context, JobStatus } from '../../types';
@@ -110,11 +111,11 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
                 params: {
                     input: {
                         batch: batch.map(i => {
-                            const parsedPayload = JSON.parse(i.payload) as VerifierStrategy.Payload;
+                            const payload = JSON.parse(i.payload) as VerifierStrategy.Payload;
                             return {
                                 messageId: i.messageId as Hex,
-                                blockNumber: parsedPayload.blockNumber.toString(),
-                                srcChainSelector: parsedPayload.parsedReceipt.srcChainSelector,
+                                blockNumber: String(payload.blockNumber),
+                                srcChainSelector: payload.parsedReceipt.srcChainSelector,
                             };
                         }),
                     },
@@ -126,22 +127,35 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
                 process.env.CRE_REQUESTER_PRIVATE_KEY as Hex,
             );
 
-            await this.context.http.post(
-                // @todo: fix types
-                process.env.CRE_BASE_URL as string,
-                requestBody,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                },
-            );
+            this.logger.info('Token: ' + token + ', RequestBody: ' + JSON.stringify(token));
 
-            await Promise.all(
-                batch.map(i =>
-                    this.context.jobQueue.changeStatus(i.id, JobStatus.ProcessingConfirm),
-                ),
+            try {
+                await axios.post(
+                    // @todo: fix types
+                    process.env.CRE_BASE_URL as string,
+                    requestBody,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`,
+                        },
+                    },
+                );
+            } catch (e) {
+                if (e instanceof AxiosError) {
+                    // @ts-ignore
+                    this.logger.error(`Found error: ${JSON.stringify(e.response)}`);
+                } else {
+                    this.logger.error(`Error ${e}`);
+                }
+                throw e;
+            }
+
+            await this.context.jobQueue.updateMany(
+                { id: { in: batch.map(i => i.id) } },
+                {
+                    status: JobStatus.ProcessingConfirm,
+                },
             );
         } catch (e) {
             throw e;

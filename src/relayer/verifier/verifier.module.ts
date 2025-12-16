@@ -101,8 +101,8 @@ export class VerifierModule {
         );
 
         // infinite retries for request & confirm
-        setInterval(async () => this.pumpCallbacksTimeouts(), 15_000);
-        setInterval(async () => this.pumpFailedRequestRetries(), 15_000);
+        setInterval(async () => this.pumpCallbacksTimeouts(), 120_000);
+        setInterval(async () => this.pumpFailedRequestRetries(), 30_000);
         setInterval(async () => this.pumpConfirmRetries(), 15_000);
 
         // setup api
