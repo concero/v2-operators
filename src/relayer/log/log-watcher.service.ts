@@ -19,12 +19,13 @@ export class LogWatcherService extends BaseLogService {
     }
 
     async init() {
+        const onLogs = this.onLogs.bind(this);
+
         this.forEachActiveNetwork(async (network, blockManager) => {
             try {
                 const routerAddress = this.context.deploymentManager.getRouterByChainSelector(
                     Number(network.chainSelector),
                 );
-                const onLogs = this.onLogs.bind(this);
 
                 await this.context.txReader.logWatcher.create(
                     routerAddress,
