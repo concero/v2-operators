@@ -119,16 +119,16 @@ export class LogPipelineService extends ContextProvider {
     ): Promise<void> {
         await this.context.jobQueue.create({
             messageId: parsedLog.data.messageId,
+            status: JobStatus.WaitingSrcConfirmation,
+            payload: { data: parsedLog.data, verifierType, parsedReceipt },
+            // src
+            srcBlockNumber: String(parsedLog.blockNumber),
             srcChainSelector: parsedReceipt.srcChainSelector,
             dstChainSelector: parsedReceipt.dstChainSelector,
+            // dst
+            dstBlockNumber: null,
             srcBlockNumberDelta: String(srcBlocksDelta),
             dstBlockNumberDelta: String(dstBlocksDelta),
-            payload: {
-                ...parsedLog,
-                parsedReceipt,
-                verifierType,
-            },
-            status: JobStatus.WaitingSrcConfirmation,
         });
     }
 }

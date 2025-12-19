@@ -80,7 +80,10 @@ export enum JobStatus {
     Success = 'success', // tx executed and on dst side
 }
 export type JobBlocksDelta = bigint | 'finalized';
-export type JobPayload = ParsedLog<MessageSentLogData> & {
+export type JobPayload = Omit<
+    ParsedLog<MessageSentLogData>,
+    'eventName' | 'eventHash' | 'blockNumber' | 'transactionHash'
+> & {
     parsedReceipt: ParsedMessageLogReceipt;
     verifierType: VerifierType;
     callbacks?: [];

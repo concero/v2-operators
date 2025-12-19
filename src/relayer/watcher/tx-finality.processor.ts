@@ -8,33 +8,56 @@ export class TxFinalityProcessor extends ContextProvider {
         super('TxFinalityProcessor', context);
     }
 
-    async processBatch(network: ConceroNetwork, currentChainBlock: bigint): Promise<void> {
-        const batch = await this.context.jobQueue.getList({
-            status: JobStatus.WaitingTxFinality,
-            // @todo dst, not src
-            dstChainSelector: Number(network.chainSelector),
-        });
-        const items = batch.map(item => ({
-            ...item,
-            payload: JSON.parse(item.payload) as JobPayload,
-        }));
+    async processCommonBatch(network: ConceroNetwork, lastChainBlock: bigint): Promise<void> {
+        const batch = await this.context.jobQueue.getList(
+            {
+                status: JobStatus.WaitingSrcConfirmation,
+                dstChainSelector: Number(network.chainSelector),
+                dstBlockNumber: { not: null },
+                dstBlockNumberDelta: { not: 'finalized' },
+            },
+            { take: 100 },
+        );
 
-        // @todo implement check by finalized blockNumber
-        // @todo implement check if exists in blockchain
-        const validJobIds = items
+        const finalizedJobIds = batch
+            .map(i => ({ ...i, payload: JSON.parse(i.payload) as JobPayload }))
             .filter(
                 item =>
-                    item.dstBlockNumberDelta &&
-                    item.srcChainSelector &&
-                    item.dstBlockNumberDelta < currentChainBlock &&
-                    // @todo: move to dstChainSelector
-                    item.srcChainSelector === Number(network.chainSelector),
+                    BigInt(item.dstBlockNumber as string) + BigInt(item.dstBlockNumberDelta) <
+                    lastChainBlock,
             )
             .map(i => i.id);
 
         await this.context.jobQueue.updateMany(
             {
-                id: { in: validJobIds },
+                id: { in: finalizedJobIds },
+            },
+            { status: JobStatus.Success },
+        );
+    }
+
+    async processFinalizedBatch(
+        network: ConceroNetwork,
+        lastFinalizedBlock: bigint,
+    ): Promise<void> {
+        const batch = await this.context.jobQueue.getList(
+            {
+                status: JobStatus.WaitingSrcConfirmation,
+                srcChainSelector: Number(network.chainSelector),
+                dstBlockNumber: { not: null },
+                srcBlockNumberDelta: 'finalized',
+            },
+            { take: 100 },
+        );
+
+        const finalizedJobIds = batch
+            .map(i => ({ ...i, payload: JSON.parse(i.payload) as JobPayload }))
+            .filter(item => BigInt(item.dstBlockNumber as string) <= lastFinalizedBlock)
+            .map(i => i.id);
+
+        await this.context.jobQueue.updateMany(
+            {
+                id: { in: finalizedJobIds },
             },
             { status: JobStatus.Success },
         );

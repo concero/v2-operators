@@ -22,8 +22,7 @@ export class SrcFinalityProcessor extends ContextProvider {
             .map(i => ({ ...i, payload: JSON.parse(i.payload) as JobPayload }))
             .filter(
                 item =>
-                    BigInt(item.srcBlockNumberDelta) + BigInt(item.payload.blockNumber) <
-                    lastChainBlock,
+                    BigInt(item.srcBlockNumber) + BigInt(item.srcBlockNumberDelta) < lastChainBlock,
             )
             .map(i => i.id);
 
@@ -50,7 +49,7 @@ export class SrcFinalityProcessor extends ContextProvider {
 
         const finalizedJobIds = batch
             .map(i => ({ ...i, payload: JSON.parse(i.payload) as JobPayload }))
-            .filter(item => BigInt(item.payload.blockNumber) <= lastFinalizedBlock)
+            .filter(item => BigInt(item.srcBlockNumber) <= lastFinalizedBlock)
             .map(i => i.id);
 
         await this.context.jobQueue.updateMany(

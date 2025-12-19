@@ -25,16 +25,20 @@ export class JobQueueService {
     async create(entity: CreateEntity) {
         const nextRetryAt = new Date(Date.now() + 60_000);
 
-        const rawPayload = ObjectLib.stringify(entity.payload);
         return this.dbClient.job.create({
             data: {
                 messageId: entity.messageId,
                 status: entity.status,
-                payload: rawPayload,
+                payload: ObjectLib.stringify(entity.payload),
+                // src
+                srcBlockNumber: entity.srcBlockNumber,
                 srcChainSelector: entity.srcChainSelector,
-                srcBlockNumberDelta: entity.srcBlockNumberDelta,
                 dstChainSelector: entity.dstChainSelector,
+                // dst
+                dstBlockNumber: null,
+                srcBlockNumberDelta: entity.srcBlockNumberDelta,
                 dstBlockNumberDelta: entity.dstBlockNumberDelta,
+                // retry
                 attempts: 0,
                 nextRetryAt,
             },
