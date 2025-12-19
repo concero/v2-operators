@@ -1,6 +1,6 @@
 import { Hex } from 'viem';
 
-export type DecodedLog<Data = unknown> = {
+export type ParsedLog<Data = unknown> = {
     eventHash: Hex;
     eventName: string;
     data: Data;

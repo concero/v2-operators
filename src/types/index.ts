@@ -1,2 +1,2 @@
-export * from './DecodedLog';
+export * from './parsedLog';
 export * from './chain';

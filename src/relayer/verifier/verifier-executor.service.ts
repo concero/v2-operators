@@ -7,7 +7,7 @@ import {
 import { Job } from '@prisma/client';
 
 import { ContextProvider } from '../services';
-import { Context, JobStatus } from '../types';
+import { Context, JobPayload, JobStatus } from '../types';
 
 export class VerifierExecutorService extends ContextProvider {
     private readonly strategies: Record<VerifierType, VerifierStrategy>;
@@ -29,13 +29,13 @@ export class VerifierExecutorService extends ContextProvider {
     // wrapped strategy calls
 
     private async requestVerification(
-        payload: VerifierStrategy.Payload,
+        payload: JobPayload,
         {
             onError,
             onSuccess,
         }: {
-            onError: (payload: VerifierStrategy.Payload) => Promise<void>;
-            onSuccess: (messageId: VerifierStrategy.Payload) => Promise<void>;
+            onError: (payload: JobPayload) => Promise<void>;
+            onSuccess: (messageId: JobPayload) => Promise<void>;
         },
     ): Promise<void> {
         try {
@@ -52,13 +52,13 @@ export class VerifierExecutorService extends ContextProvider {
     }
 
     private async confirmVerification(
-        payload: VerifierStrategy.Payload,
+        payload: JobPayload,
         {
             onError,
             onSuccess,
         }: {
-            onError: (payload: VerifierStrategy.Payload) => Promise<void>;
-            onSuccess: (messageId: VerifierStrategy.Payload) => Promise<void>;
+            onError: (payload: JobPayload) => Promise<void>;
+            onSuccess: (messageId: JobPayload) => Promise<void>;
         },
     ): Promise<void> {
         try {
@@ -76,11 +76,14 @@ export class VerifierExecutorService extends ContextProvider {
 
     // retries & job status aggregation based on strategy calls
 
-    async safeRequestVerification(payload: VerifierStrategy.Payload, job?: Job): Promise<void> {
+    async safeRequestVerification(payload: JobPayload, job?: Job): Promise<void> {
         return this.requestVerification(payload, {
             onSuccess: async payload => {
                 if (job) {
-                    await this.context.jobQueue.changeStatus(job.id, JobStatus.ProcessingConfirm);
+                    await this.context.jobQueue.updateOne(
+                        { id: job.id },
+                        { status: JobStatus.ProcessingConfirm },
+                    );
                 } else {
                     await this.context.jobQueue.create(
                         payload.data.messageId,
@@ -113,11 +116,18 @@ export class VerifierExecutorService extends ContextProvider {
         });
     }
 
-    async safeConfirmVerification(payload: VerifierStrategy.Payload, job?: Job): Promise<void> {
+    async safeConfirmVerification(payload: JobPayload, job?: Job): Promise<void> {
         return this.confirmVerification(payload, {
             onSuccess: async () => {
                 if (job) {
-                    await this.context.jobQueue.markSuccess(job.id);
+                    await this.context.jobQueue.updateOne(
+                        { id: job.id },
+                        { status: JobStatus.WaitingTxFinality },
+                    );
+                } else {
+                    this.logger.error(
+                        `Log(${payload?.data?.messageId}) was success but not upserted to db`,
+                    );
                 }
             },
             onError: async () => {

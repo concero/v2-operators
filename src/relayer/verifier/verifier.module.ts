@@ -1,9 +1,9 @@
 import { LoggerInterface } from '@concero/operator-utils';
-import { CREVerifierStrategy, VerifierStrategy, VerifierType } from './strategies';
+import { CREVerifierStrategy, VerifierType } from './strategies';
 import { VerifierApiService } from './verifer-api.service';
 import { VerifierExecutorService } from './verifier-executor.service';
 
-import { Context, JobStatus } from '../types';
+import { Context, JobPayload, JobStatus } from '../types';
 
 export class VerifierModule {
     private readonly context: Context;
@@ -73,15 +73,14 @@ export class VerifierModule {
 
         await Promise.all(
             failedCallbackJobs.map(async job => {
-                const payload = JSON.parse(job.payload) as VerifierStrategy.Payload;
+                const payload = JSON.parse(job.payload) as JobPayload;
                 if ('callbacks' in payload) {
                     delete payload.callbacks;
                 }
 
-                await this.context.jobQueue.update(
-                    payload.data.messageId,
-                    payload,
-                    JobStatus.ProcessingRequest,
+                await this.context.jobQueue.updateOne(
+                    { messageId: payload.data.messageId },
+                    { payload: JSON.stringify(payload), status: JobStatus.ProcessingRequest },
                 );
             }),
         );
@@ -89,15 +88,11 @@ export class VerifierModule {
 
     async init() {
         // events facade
-        this.context.eventBus.on(
-            VerifierModule.Request.command,
-            (payload: VerifierStrategy.Payload) =>
-                this.verifierExecutorService.safeRequestVerification(payload),
+        this.context.eventBus.on(VerifierModule.Request.command, (payload: JobPayload) =>
+            this.verifierExecutorService.safeRequestVerification(payload),
         );
-        this.context.eventBus.on(
-            VerifierModule.Confirm.command,
-            (payload: VerifierStrategy.Payload) =>
-                this.verifierExecutorService.safeConfirmVerification(payload),
+        this.context.eventBus.on(VerifierModule.Confirm.command, (payload: JobPayload) =>
+            this.verifierExecutorService.safeConfirmVerification(payload),
         );
 
         // infinite retries for request & confirm

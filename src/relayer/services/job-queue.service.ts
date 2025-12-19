@@ -64,13 +64,10 @@ export class JobQueueService {
         }
     }
 
-    async update(messageId: string, payload: Record<string, unknown>, status?: JobStatus) {
+    async updateOne(where: Prisma.JobWhereUniqueInput, data: Prisma.JobUpdateInput) {
         return this.dbClient.job.update({
-            where: { messageId },
-            data: {
-                payload: ObjectLib.stringify(payload || {}) as string,
-                status,
-            },
+            where,
+            data,
         });
     }
 
@@ -78,20 +75,6 @@ export class JobQueueService {
         return this.dbClient.job.updateMany({
             where,
             data,
-        });
-    }
-
-    async markSuccess(jobId: number) {
-        await this.dbClient.job.update({
-            where: { id: jobId },
-            data: { status: JobStatus.Success },
-        });
-    }
-
-    async changeStatus(jobId: number, status: JobStatus) {
-        await this.dbClient.job.update({
-            where: { id: jobId },
-            data: { status },
         });
     }
 

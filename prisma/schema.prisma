@@ -26,6 +26,7 @@ model Job {
   id              Int      @id @default(autoincrement())
   messageId       String   @unique
   srcChainSelector  Int?
+  dstChainSelector  Int?
   // waiting_confirmations
   // processing_request
   // request_failed

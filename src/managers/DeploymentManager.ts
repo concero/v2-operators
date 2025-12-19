@@ -83,16 +83,28 @@ export class DeploymentManager {
         return validatorLib;
     }
 
-    getFinalityConformationsByChainName(chainName: string): number {
-        const finalityConfirmations = Object.values(this.chainOptions)?.find(
-            i => i.name === chainName,
-        )?.finalityConfirmations;
+    getMinBlockConformationsByChainSelector(chainSelector: number): bigint {
+        const minBlockConfirmations = this.chainOptions?.[chainSelector]?.minBlockConfirmations;
 
-        if (!finalityConfirmations) {
-            throw new Error(`FinalityConfirmations not found for chain: ${chainName}`);
+        if (typeof minBlockConfirmations !== 'number') {
+            throw new Error(
+                `FinalityConfirmations not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+            );
         }
 
-        return finalityConfirmations;
+        return BigInt(minBlockConfirmations);
+    }
+
+    getFinalityBlockConformationsByChainSelector(chainSelector: number): bigint {
+        const finalityConfirmations = this.chainOptions?.[chainSelector]?.finalityConfirmations;
+
+        if (typeof finalityConfirmations !== 'number') {
+            throw new Error(
+                `FinalityConfirmations not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+            );
+        }
+
+        return BigInt(finalityConfirmations);
     }
 
     async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {

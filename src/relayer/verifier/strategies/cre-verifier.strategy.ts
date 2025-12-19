@@ -6,7 +6,7 @@ import { VerifierStrategy } from './verifier.interface';
 import axios, { AxiosError } from 'axios';
 
 import { createCREJWT, CRERequestBody } from '../../../utils';
-import { Context, JobStatus } from '../../types';
+import { Context, JobPayload, JobStatus } from '../../types';
 
 const packCREValidations = (
     logger: LoggerInterface,
@@ -42,7 +42,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
         super('CREVerifierStrategy', ctx);
     }
 
-    async requestVerification(payload: VerifierStrategy.Payload) {}
+    async requestVerification(payload: JobPayload) {}
 
     async addConfirmationCallback(response: CREVerifierStrategy.CRE.Response) {
         const handleResponseItem = async ([messageId, item]: [
@@ -55,7 +55,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
                 return;
             }
 
-            const foundPayload = JSON.parse(found.payload) as Record<string, unknown>;
+            const foundPayload = JSON.parse(found.payload) as JobPayload;
 
             const mergedCallbacks: CREVerifierStrategy.CRE.Response.Item[] = foundPayload?.callbacks
                 ? Array.from(
@@ -67,7 +67,10 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
                 callbacks: mergedCallbacks,
             };
 
-            await this.context.jobQueue.update(messageId, mergedPayload);
+            await this.context.jobQueue.updateOne(
+                { messageId },
+                { payload: JSON.stringify(mergedPayload) },
+            );
 
             this.logger.debug(
                 `Callbacks for messageId=${messageId} count is ${mergedCallbacks?.length || 0}`,
@@ -111,7 +114,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
                 params: {
                     input: {
                         batch: batch.map(i => {
-                            const payload = JSON.parse(i.payload) as VerifierStrategy.Payload;
+                            const payload = JSON.parse(i.payload) as JobPayload;
                             return {
                                 messageId: i.messageId as Hex,
                                 blockNumber: String(payload.blockNumber),
@@ -177,7 +180,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
 
         await Promise.all(
             batch.map(async i => {
-                const parsedPayload = JSON.parse(i.payload) as VerifierStrategy.Payload;
+                const parsedPayload = JSON.parse(i.payload) as JobPayload;
                 if (!Array.isArray(parsedPayload.callbacks)) {
                     this.logger.debug(
                         `Processing confirmations job=${i.id} failed (no callbacks found)`,
@@ -186,13 +189,9 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
                 }
 
                 const validations = packCREValidations(this.logger, parsedPayload.callbacks);
-                await this.submitMessage(
-                    parsedPayload.parsedReceipt.dstChainSelector,
-                    parsedPayload.data.messageReceipt,
-                    [validations],
-                );
+                await this.submitMessage(parsedPayload, [validations]);
 
-                await this.context.jobQueue.changeStatus(i.id, JobStatus.Success);
+                await this.context.jobQueue.updateOne({ id: i.id }, { status: JobStatus.Success });
             }),
         );
     }

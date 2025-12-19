@@ -7,13 +7,14 @@ export enum DeploymentType {
     ValidatorLib = 'validatorLib',
     RelayerLib = 'relayerLib',
 }
-
 export type Chain = {
     id: string;
     chainSelector: number;
     name: string;
     isTestnet: boolean;
+    finalityTagEnabled: boolean;
     finalityConfirmations: number;
+    minBlockConfirmations: number;
     rpcUrls: string[];
     blockExplorers: {
         name: string;

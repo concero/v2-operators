@@ -2,18 +2,15 @@ import { Hex } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
 import { ContextProvider } from '../../services/context.provider';
-import { Context } from '../../types';
+import { Context, JobPayload } from '../../types';
 
 export abstract class BaseVerifierStrategy extends ContextProvider {
     protected constructor(name: string, context: Context) {
         super(name, context);
     }
 
-    protected async submitMessage(
-        dstChainSelector: number,
-        messageReceipt: Hex,
-        validations: Hex[],
-    ): Promise<void> {
+    protected async submitMessage(payload: JobPayload, validations: Hex[]): Promise<void> {
+        const dstChainSelector = payload.parsedReceipt.dstChainSelector;
         const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
             String(dstChainSelector),
         );
@@ -29,7 +26,7 @@ export abstract class BaseVerifierStrategy extends ContextProvider {
             address: routerAddress,
             functionName: 'submitMessage',
             abi: this.context.config.contract.router,
-            args: [messageReceipt, validations, [validatorLib], relayerLib],
+            args: [payload.data.messageReceipt, validations, [validatorLib], relayerLib],
         });
     }
 }

@@ -1,0 +1,38 @@
+import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
+import { SrcFinalityProcessor } from './src-finality.processor';
+import { TxFinalityProcessor } from './tx-finality.processor';
+
+import { ChainsSetupService } from '../services';
+import { Context } from '../types';
+
+export class WatcherModule extends ChainsSetupService {
+    private readonly srcFinalityProcessor: SrcFinalityProcessor;
+    private readonly txFinalityProcessor: TxFinalityProcessor;
+
+    constructor(context: Context) {
+        super('WatcherModule', context);
+        this.srcFinalityProcessor = new SrcFinalityProcessor(context);
+        this.txFinalityProcessor = new TxFinalityProcessor(context);
+    }
+
+    protected setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
+        const pipeBlockNumber = this.pipeBlockNumber.bind(this);
+        blockManager.watchBlocks({
+            onBlockRange: (_, currentChainBlock) => pipeBlockNumber(network, currentChainBlock),
+        });
+    }
+
+    private async pipeBlockNumber(
+        network: ConceroNetwork,
+        currentChainBlock: bigint,
+    ): Promise<void> {
+        try {
+            await Promise.all([
+                this.srcFinalityProcessor.processBatch(network, currentChainBlock),
+                this.txFinalityProcessor.processBatch(network, currentChainBlock),
+            ]);
+        } catch (e) {
+            this.logger.error(`Unhandled error: ${e}`);
+        }
+    }
+}
