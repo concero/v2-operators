@@ -28,7 +28,8 @@ export class WatcherModule extends ChainsSetupService {
     ): Promise<void> {
         try {
             await Promise.all([
-                this.srcFinalityProcessor.processBatch(network, currentChainBlock),
+                // @todo: add finalizedBlock in operator-utils lib this.srcFinalityProcessor.processFinalizedBatch(network, currentChainBlock),
+                this.srcFinalityProcessor.processCommonBatch(network, currentChainBlock),
                 this.txFinalityProcessor.processBatch(network, currentChainBlock),
             ]);
         } catch (e) {

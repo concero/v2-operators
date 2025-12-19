@@ -107,6 +107,18 @@ export class DeploymentManager {
         return BigInt(finalityConfirmations);
     }
 
+    getFinalityTagEnabled(chainSelector: number): boolean {
+        const finalityConfirmations = this.chainOptions?.[chainSelector]?.finalityTagEnabled;
+
+        if (typeof finalityConfirmations !== 'boolean') {
+            throw new Error(
+                `FinalityTagEnabled not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+            );
+        }
+
+        return Boolean(finalityConfirmations);
+    }
+
     async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {
         try {
             this.chainOptions = await this.fetchChainOptions();

@@ -8,28 +8,54 @@ export class SrcFinalityProcessor extends ContextProvider {
         super('SrcFinalityProcessor', context);
     }
 
-    async processBatch(network: ConceroNetwork, currentChainBlock: bigint): Promise<void> {
-        const batch = await this.context.jobQueue.getList({
-            status: JobStatus.WaitingConfirmations,
-            srcChainSelector: Number(network.chainSelector),
-        });
-        const items = batch.map(item => ({
-            ...item,
-            payload: JSON.parse(item.payload) as JobPayload,
-        }));
-
-        // items
-        const validItems = items.filter(
-            item =>
-                item.payload.expectedSrcBlockNumber &&
-                item.srcChainSelector &&
-                item.payload.expectedSrcBlockNumber < currentChainBlock &&
-                item.srcChainSelector === Number(network.chainSelector),
+    async processCommonBatch(network: ConceroNetwork, lastChainBlock: bigint): Promise<void> {
+        const batch = await this.context.jobQueue.getList(
+            {
+                status: JobStatus.WaitingSrcConfirmation,
+                srcChainSelector: Number(network.chainSelector),
+                srcBlockNumberDelta: { not: 'finalized' },
+            },
+            { take: 100 },
         );
+
+        const finalizedJobIds = batch
+            .map(i => ({ ...i, payload: JSON.parse(i.payload) as JobPayload }))
+            .filter(
+                item =>
+                    BigInt(item.srcBlockNumberDelta) + BigInt(item.payload.blockNumber) <
+                    lastChainBlock,
+            )
+            .map(i => i.id);
 
         await this.context.jobQueue.updateMany(
             {
-                id: { in: validItems.map(i => i.id) },
+                id: { in: finalizedJobIds },
+            },
+            { status: JobStatus.ProcessingRequest },
+        );
+    }
+
+    async processFinalizedBatch(
+        network: ConceroNetwork,
+        lastFinalizedBlock: bigint,
+    ): Promise<void> {
+        const batch = await this.context.jobQueue.getList(
+            {
+                status: JobStatus.WaitingSrcConfirmation,
+                srcChainSelector: Number(network.chainSelector),
+                srcBlockNumberDelta: 'finalized',
+            },
+            { take: 100 },
+        );
+
+        const finalizedJobIds = batch
+            .map(i => ({ ...i, payload: JSON.parse(i.payload) as JobPayload }))
+            .filter(item => BigInt(item.payload.blockNumber) <= lastFinalizedBlock)
+            .map(i => i.id);
+
+        await this.context.jobQueue.updateMany(
+            {
+                id: { in: finalizedJobIds },
             },
             { status: JobStatus.ProcessingRequest },
         );

@@ -94,7 +94,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
         // cre supports only 2 batches without "go panic error"
         const batch = await this.context.jobQueue.getList(
             { status: JobStatus.ProcessingRequest },
-            { take: 2, skip: 0 },
+            { take: 2 },
         );
         if (batch.length === 0) {
             return;
@@ -170,7 +170,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
     private async processConfirmations() {
         const batch = await this.context.jobQueue.getList(
             { status: JobStatus.ProcessingConfirm },
-            { take: 10, skip: 0 },
+            { take: 10 },
         );
         if (!batch.length) {
             return;

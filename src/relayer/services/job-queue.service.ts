@@ -3,10 +3,15 @@ import { Job, Prisma, PrismaClient } from '@prisma/client';
 
 import { Nullable } from '../../types/common';
 import { ObjectLib } from '../../utils';
-import { JobStatus } from '../types';
+import { JobPayload, JobStatus } from '../types';
 
 const REPORT_RETRY_1M_COUNT = 4;
 const reportDelayMlSec = (attempts: number) => (attempts < REPORT_RETRY_1M_COUNT ? 60 : 300) * 1000;
+
+type CreateEntity = Omit<
+    Job,
+    'id' | 'status' | 'payload' | 'attempts' | 'nextRetryAt' | 'createdAt' | 'updatedAt'
+> & { status: JobStatus; payload: JobPayload };
 
 export class JobQueueService {
     private readonly logger: LoggerInterface;
@@ -17,40 +22,28 @@ export class JobQueueService {
         this.dbClient = dbClient;
     }
 
-    async create(
-        messageId: string,
-        srcChainSelector: number,
-        payload: Record<string, unknown>,
-        status: JobStatus,
-    ) {
+    async create(entity: CreateEntity) {
         const nextRetryAt = new Date(Date.now() + 60_000);
-        return this.dbClient.job.upsert({
-            where: { messageId },
-            update: {
-                payload: ObjectLib.stringify(payload),
-                srcChainSelector,
-                nextRetryAt,
-            },
-            create: {
-                messageId,
-                payload: ObjectLib.stringify(payload),
-                srcChainSelector,
+
+        const rawPayload = ObjectLib.stringify(entity.payload);
+        return this.dbClient.job.create({
+            data: {
+                messageId: entity.messageId,
+                status: entity.status,
+                payload: rawPayload,
+                srcChainSelector: entity.srcChainSelector,
+                srcBlockNumberDelta: entity.srcBlockNumberDelta,
+                dstChainSelector: entity.dstChainSelector,
+                dstBlockNumberDelta: entity.dstBlockNumberDelta,
                 attempts: 0,
                 nextRetryAt,
-                status,
             },
-        });
-    }
-
-    async findOne(where: Prisma.JobWhereInput): Promise<Nullable<Job>> {
-        return this.dbClient.job.findFirst({
-            where,
         });
     }
 
     async getList(
         where?: Prisma.JobWhereInput,
-        pagination?: { take: number; skip: number },
+        pagination?: { take?: number; skip?: number },
     ): Promise<Job[]> {
         try {
             return this.dbClient.job.findMany({
@@ -62,6 +55,12 @@ export class JobQueueService {
             this.logger.error(`[getList] failed ${e}`);
             return [];
         }
+    }
+
+    async findOne(where: Prisma.JobWhereInput): Promise<Nullable<Job>> {
+        return this.dbClient.job.findFirst({
+            where,
+        });
     }
 
     async updateOne(where: Prisma.JobWhereUniqueInput, data: Prisma.JobUpdateInput) {

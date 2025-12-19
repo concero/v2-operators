@@ -1,5 +1,6 @@
 import { Address } from 'viem';
 
+// @todo move to declare
 export interface env {
     OPERATOR_ADDRESS: Address;
     OPERATOR_PRIVATE_KEY: string;

@@ -28,7 +28,7 @@ export class VerifierModule {
                 nextRetryAt: { lte: new Date() },
                 status: JobStatus.RequestFailed,
             },
-            { take: 10, skip: 0 },
+            { take: 10 },
         );
 
         await Promise.all(
@@ -44,7 +44,7 @@ export class VerifierModule {
                 nextRetryAt: { lte: new Date() },
                 status: JobStatus.ConfirmFailed,
             },
-            { take: 10, skip: 0 },
+            { take: 10 },
         );
 
         await Promise.all(

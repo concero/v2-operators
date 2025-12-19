@@ -70,28 +70,18 @@ export type ParsedMessageLogReceipt = {
     payload: Hex;
 };
 
-/*
-processing - log found & not requested confirmation
-processing_request - verification request fetched & not responded yet
-request_failed - verification request failed => need to be retried
-processing_confirm - verification request succeeded => confirmation started
-confirm_failed - verification confirm (messageSubmit) failed => need to be retried
-success - message delivered
-*/
 export enum JobStatus {
-    WaitingConfirmations = 'waiting_confirmations',
-    ProcessingRequest = 'processing_request',
-    RequestFailed = 'request_failed',
-    ProcessingConfirm = 'processing_confirm',
-    ConfirmFailed = 'confirm_failed',
-    ProcessingTxFinality = 'processing_tx_finality',
-    WaitingTxFinality = 'waiting_tx_finality',
-    Success = 'success',
+    WaitingSrcConfirmation = 'waiting_src_confirmation', // wait for finalization / block confirmation proof on src
+    ProcessingRequest = 'processing_request', // planned to be requested
+    RequestFailed = 'request_failed', // planned request failed, should be retried
+    ProcessingVerify = 'processing_verify', // planned to be verified
+    VerifyFailed = 'confirm_failed', // planned verification failed, should be retried
+    WaitingTxFinality = 'waiting_tx_finality', // planned to check finality on dst
+    Success = 'success', // tx executed and on dst side
 }
+export type JobBlocksDelta = bigint | 'finalized';
 export type JobPayload = ParsedLog<MessageSentLogData> & {
     parsedReceipt: ParsedMessageLogReceipt;
     verifierType: VerifierType;
-    expectedSrcBlockNumber?: bigint;
-    expectedDstBlockNumber?: bigint;
     callbacks?: [];
 };

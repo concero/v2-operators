@@ -10,9 +10,9 @@ export class TxFinalityProcessor extends ContextProvider {
 
     async processBatch(network: ConceroNetwork, currentChainBlock: bigint): Promise<void> {
         const batch = await this.context.jobQueue.getList({
-            status: JobStatus.WaitingConfirmations,
+            status: JobStatus.WaitingTxFinality,
             // @todo dst, not src
-            srcChainSelector: Number(network.chainSelector),
+            dstChainSelector: Number(network.chainSelector),
         });
         const items = batch.map(item => ({
             ...item,
@@ -24,9 +24,9 @@ export class TxFinalityProcessor extends ContextProvider {
         const validJobIds = items
             .filter(
                 item =>
-                    item.payload.expectedDstBlockNumber &&
+                    item.dstBlockNumberDelta &&
                     item.srcChainSelector &&
-                    item.payload.expectedDstBlockNumber < currentChainBlock &&
+                    item.dstBlockNumberDelta < currentChainBlock &&
                     // @todo: move to dstChainSelector
                     item.srcChainSelector === Number(network.chainSelector),
             )

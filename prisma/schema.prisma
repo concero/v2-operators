@@ -25,16 +25,12 @@ model LogsListenerBlockCheckpoints {
 model Job {
   id              Int      @id @default(autoincrement())
   messageId       String   @unique
-  srcChainSelector  Int?
-  dstChainSelector  Int?
-  // waiting_confirmations
-  // processing_request
-  // request_failed
-  // processing_confirm
-  // confirm_failed
-  // success
+  srcChainSelector  Int
+  srcBlockNumberDelta String
+  dstChainSelector  Int
+  dstBlockNumberDelta String
   status          String
-  payload         String
+  payload         String  @default("{}")
   attempts        Int      @default(0)
   nextRetryAt     DateTime @default(now())
   createdAt       DateTime @default(now())

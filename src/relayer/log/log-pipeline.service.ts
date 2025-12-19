@@ -6,7 +6,7 @@ import { MessagingCodec } from '../codec';
 import { ContextProvider } from '../services';
 import {
     Context,
-    JobPayload,
+    JobBlocksDelta,
     JobStatus,
     MessageSentLogData,
     ParsedMessageLogReceipt,
@@ -20,9 +20,10 @@ export class LogPipelineService extends ContextProvider {
 
     // Starts log pipeline that ends src block conformations tracking:
     // 1. Parse
-    // 2. Extract confirmations
+    // 2. Extract dst/src confirmations
     // 2. Extract verifier type
     // 3. Upsert to DB for src watcher
+
     async execute(network: ConceroNetwork, log: Log): Promise<void> {
         try {
             const parsedLog = this.parseLog(log, this.context.config.contract.router);
@@ -33,9 +34,16 @@ export class LogPipelineService extends ContextProvider {
                 return;
             }
             const parsedReceipt = MessagingCodec.decodeReceipt(parsedLog.data.messageReceipt);
-            const srcBlockConfirmations = this.extractLogBlockConfirmations(parsedReceipt);
+            const srcBlocksDelta = this.extractSrcBlocksDelta(parsedReceipt);
+            const dstBlocksDelta = this.extractDstBlocksDelta(parsedReceipt);
             const verifierType = this.extractLogVerifierType(parsedReceipt);
-            await this.upsertLog(parsedLog, parsedReceipt, verifierType, srcBlockConfirmations);
+            await this.upsertLog(
+                parsedLog,
+                parsedReceipt,
+                verifierType,
+                srcBlocksDelta,
+                dstBlocksDelta,
+            );
         } catch (e) {
             this.logger.error(`Unhandled error: ${e}`);
         }
@@ -62,18 +70,40 @@ export class LogPipelineService extends ContextProvider {
         }
     }
 
-    private extractLogBlockConfirmations(parsedReceipt: ParsedMessageLogReceipt): bigint {
-        if (parsedReceipt.srcChainData.blockConfirmations === 0n) {
-            return this.context.deploymentManager.getMinBlockConformationsByChainSelector(
+    private extractSrcBlocksDelta(parsedReceipt: ParsedMessageLogReceipt): JobBlocksDelta {
+        if (parsedReceipt.srcChainData.blockConfirmations === maxUint64) {
+            const isEnabledFinalized = this.context.deploymentManager.getFinalityTagEnabled(
                 parsedReceipt.srcChainSelector,
             );
-        } else if (parsedReceipt.srcChainData.blockConfirmations === maxUint64) {
+
+            if (isEnabledFinalized) {
+                return 'finalized';
+            }
+
             return this.context.deploymentManager.getFinalityBlockConformationsByChainSelector(
+                parsedReceipt.srcChainSelector,
+            );
+        } else if (parsedReceipt.srcChainData.blockConfirmations === 0n) {
+            return this.context.deploymentManager.getMinBlockConformationsByChainSelector(
                 parsedReceipt.srcChainSelector,
             );
         }
 
         return parsedReceipt.srcChainData.blockConfirmations;
+    }
+
+    private extractDstBlocksDelta(parsedReceipt: ParsedMessageLogReceipt): JobBlocksDelta {
+        const isEnabledFinalized = this.context.deploymentManager.getFinalityTagEnabled(
+            parsedReceipt.dstChainSelector,
+        );
+
+        if (isEnabledFinalized) {
+            return 'finalized';
+        }
+
+        return this.context.deploymentManager.getFinalityBlockConformationsByChainSelector(
+            parsedReceipt.dstChainSelector,
+        );
     }
 
     private extractLogVerifierType(parsedReceipt: ParsedMessageLogReceipt): VerifierType {
@@ -84,18 +114,21 @@ export class LogPipelineService extends ContextProvider {
         parsedLog: ParsedLog<MessageSentLogData>,
         parsedReceipt: ParsedMessageLogReceipt,
         verifierType: VerifierType,
-        srcBlockConfirmations: bigint,
+        srcBlocksDelta: JobBlocksDelta,
+        dstBlocksDelta: JobBlocksDelta,
     ): Promise<void> {
-        await this.context.jobQueue.create(
-            parsedLog.data.messageId,
-            parsedReceipt.srcChainSelector,
-            {
+        await this.context.jobQueue.create({
+            messageId: parsedLog.data.messageId,
+            srcChainSelector: parsedReceipt.srcChainSelector,
+            dstChainSelector: parsedReceipt.dstChainSelector,
+            srcBlockNumberDelta: String(srcBlocksDelta),
+            dstBlockNumberDelta: String(dstBlocksDelta),
+            payload: {
                 ...parsedLog,
                 parsedReceipt,
                 verifierType,
-                expectedSrcBlockNumber: srcBlockConfirmations + parsedLog.blockNumber,
-            } as JobPayload,
-            JobStatus.WaitingConfirmations,
-        );
+            },
+            status: JobStatus.WaitingSrcConfirmation,
+        });
     }
 }
