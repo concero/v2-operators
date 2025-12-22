@@ -1,4 +1,3 @@
-import { Job } from '@prisma/client';
 import fastify, { FastifyInstance } from 'fastify';
 
 import { ObjectLib } from '../../utils';
@@ -30,28 +29,22 @@ export class ValidatorApiService extends ContextProvider {
         });
         this.app.get('/api/v1/processes', async (_, res) => {
             const data = await this.context.jobQueue.getList();
-            let processes: Record<string, { jobs: Job[]; size: number }> = {};
-            const getItem = (i: any) => ({ ...i, payload: JSON.parse(i.payload) });
+            const getItem = (i: any) => ({
+                ...i,
+                payload: {
+                    ...JSON.parse(i.payload),
+                    data: { ...JSON.parse(i.payload)?.data, messageReceipt: undefined },
+                    payload: undefined,
+                    parsedReceipt: undefined,
+                    callbacks: undefined,
+                },
+            });
 
-            for (const process of data) {
-                if (processes[process.status]) {
-                    const prev = processes[process.status];
-                    processes[process.status] = {
-                        jobs: prev.jobs.concat(getItem(process)),
-                        size: prev.size + 1,
-                    };
-                } else {
-                    processes[process.status] = {
-                        jobs: [getItem(process)],
-                        size: 1,
-                    };
-                }
-            }
             res.headers({ 'content-type': 'application/json' }).send({
                 statusCode: 200,
                 ok: true,
                 total: data.length,
-                ...processes,
+                jobs: data.map(getItem),
             });
         });
         this.app.get('/api/v1/chains', async (_, res) => {
