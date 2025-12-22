@@ -20,8 +20,7 @@ export class RelayerApp extends ManagerProvider {
 
         this.watcherModule = new WatcherModule(this.context);
         console.log(typeof this.watcherModule.init, this.watcherModule.init);
-        this.watcherModule.init();
+        await this.watcherModule.init();
         this.logModule = new LogModule(this.context);
-        this.logModule.init();
     }
 }
