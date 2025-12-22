@@ -18,20 +18,25 @@ export class WatcherModule extends ChainsSetupService {
     protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
         const pipeBlockNumber = this.pipeBlockNumber.bind(this);
         blockManager.watchBlocks({
-            onBlockRange: (_, currentChainBlock) => pipeBlockNumber(network, currentChainBlock),
+            // @ts-ignore @todo: fix typings
+            onBlockRange: (_: bigint, currentChainBlock: bigint, finalizedBlock?: bigint) =>
+                pipeBlockNumber(network, currentChainBlock, finalizedBlock),
         });
     }
 
     private async pipeBlockNumber(
         network: ConceroNetwork,
         currentChainBlock: bigint,
+        currentFinalizedBlock?: bigint,
     ): Promise<void> {
         try {
             await Promise.all([
                 // @todo: add finalizedBlock in operator-utils lib
-                this.srcFinalityProcessor.processFinalizedBatch(network, currentChainBlock),
+                currentFinalizedBlock &&
+                    this.srcFinalityProcessor.processFinalizedBatch(network, currentFinalizedBlock),
                 this.srcFinalityProcessor.processCommonBatch(network, currentChainBlock),
-                this.txFinalityProcessor.processFinalizedBatch(network, currentChainBlock),
+                currentFinalizedBlock &&
+                    this.txFinalityProcessor.processFinalizedBatch(network, currentFinalizedBlock),
                 this.txFinalityProcessor.processCommonBatch(network, currentChainBlock),
             ]);
         } catch (e) {
