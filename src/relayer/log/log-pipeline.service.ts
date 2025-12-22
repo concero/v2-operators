@@ -10,8 +10,8 @@ import {
     JobStatus,
     MessageSentLogData,
     ParsedMessageLogReceipt,
+    ValidatorType,
 } from '../types';
-import { ValidatorType } from '../validator';
 
 export class LogPipelineService extends ContextProvider {
     constructor(context: Context) {
@@ -36,7 +36,7 @@ export class LogPipelineService extends ContextProvider {
             const parsedReceipt = MessagingCodec.decodeReceipt(parsedLog.data.messageReceipt);
             const srcBlocksDelta = this.extractSrcBlocksDelta(parsedReceipt);
             const dstBlocksDelta = this.extractDstBlocksDelta(parsedReceipt);
-            const validatorType = this.extractLogVerifierType(parsedReceipt);
+            const validatorType = this.extractLogValidatorType(parsedReceipt);
             await this.upsertLog(
                 parsedLog,
                 parsedReceipt,
@@ -106,7 +106,7 @@ export class LogPipelineService extends ContextProvider {
         );
     }
 
-    private extractLogVerifierType(parsedReceipt: ParsedMessageLogReceipt): ValidatorType {
+    private extractLogValidatorType(parsedReceipt: ParsedMessageLogReceipt): ValidatorType {
         return parsedReceipt.validatorLibs.length > 0 ? ValidatorType.CRE : ValidatorType.Empty;
     }
 
@@ -120,7 +120,9 @@ export class LogPipelineService extends ContextProvider {
         await this.context.jobQueue.create({
             messageId: parsedLog.data.messageId,
             status: JobStatus.WaitingSrcConfirmation,
-            payload: { data: parsedLog.data, validatorType, parsedReceipt },
+            callbacksCount: 0,
+            validatorType,
+            payload: { data: parsedLog.data, parsedReceipt },
             // src
             srcBlockNumber: String(parsedLog.blockNumber),
             srcChainSelector: parsedReceipt.srcChainSelector,

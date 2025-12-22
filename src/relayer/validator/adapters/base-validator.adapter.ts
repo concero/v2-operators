@@ -4,7 +4,7 @@ import { ConceroNetwork } from '@concero/operator-utils';
 import { ContextProvider } from '../../services/context.provider';
 import { Context, JobPayload } from '../../types';
 
-export abstract class BaseVerifierStrategy extends ContextProvider {
+export abstract class BaseValidatorAdapter extends ContextProvider {
     protected constructor(name: string, context: Context) {
         super(name, context);
     }

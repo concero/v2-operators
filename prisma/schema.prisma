@@ -25,6 +25,8 @@ model LogsListenerBlockCheckpoints {
 model Job {
   id              Int      @id @default(autoincrement())
   messageId       String   @unique
+  validatorType  String
+  callbacksCount Int?
   srcChainSelector  Int
   srcBlockNumber String
   srcBlockNumberDelta String

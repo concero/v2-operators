@@ -29,6 +29,7 @@ export class JobQueueService {
             data: {
                 messageId: entity.messageId,
                 status: entity.status,
+                validatorType: entity.validatorType,
                 payload: ObjectLib.stringify(entity.payload),
                 // src
                 srcBlockNumber: entity.srcBlockNumber,
