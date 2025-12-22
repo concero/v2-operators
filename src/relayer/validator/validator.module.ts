@@ -22,7 +22,7 @@ export class ValidatorModule {
         };
     }
 
-    async init() {
+    async setup() {
         this.api.init();
 
         setInterval(async () => {

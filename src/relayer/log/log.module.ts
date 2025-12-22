@@ -51,7 +51,7 @@ export class LogModule extends ChainsSetupService {
         }
     }
 
-    async init(): Promise<void> {
-        await super.init();
+    async setup(): Promise<void> {
+        this.init.bind(this);
     }
 }
