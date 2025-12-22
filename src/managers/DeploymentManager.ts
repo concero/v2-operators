@@ -5,13 +5,14 @@ import {
     HttpClient,
     IConceroNetworkManager,
     LoggerInterface,
+    NetworkUpdateListener,
 } from '@concero/operator-utils';
 
 import { globalConfig } from '../constants';
 import { Chain } from '../types';
 import { ObjectLib } from '../utils';
 
-export class DeploymentManager {
+export class DeploymentManager implements NetworkUpdateListener {
     private static instance: DeploymentManager;
     private chainOptions: Record<Chain['chainSelector'], Chain> = {};
 

@@ -50,8 +50,4 @@ export class LogModule extends ChainsSetupService {
             this.logger.error(`Error processing logs from ${network.name}: ${error}`);
         }
     }
-
-    async setup(): Promise<void> {
-        this.init.bind(this);
-    }
 }
