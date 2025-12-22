@@ -35,7 +35,7 @@ export class LogModule extends ChainsSetupService {
         }
     }
 
-    async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
+    protected async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
         try {
             this.logger.info(
                 `ConceroMessageSent (size=${logs.length}): ${logs.map(i => i.transactionHash).join(', ')}`,
