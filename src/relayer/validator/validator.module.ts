@@ -20,7 +20,7 @@ export class ValidatorModule {
 
         setInterval(async () => {
             await Promise.all([
-                Object.values(this.adapters).forEach(async adapter => {
+                Object.values(this.adapters).map(async adapter => {
                     await Promise.allSettled([
                         adapter.pumpPendingRequest(),
                         adapter.pumpFailedRequest(),
