@@ -26,9 +26,12 @@ export abstract class ChainsSetupService extends ContextProvider {
             this.logger.info(
                 `Build handler for ${network.name}: ${typeof this.setupHandler} ${this.setupHandler.name}`,
             );
-            this.setupHandler(network, blockManager as BlockManager);
+            await this.setupHandler(network, blockManager as BlockManager);
         }
     }
 
-    protected abstract setupHandler(network: ConceroNetwork, blockManager: BlockManager): void;
+    protected abstract setupHandler(
+        network: ConceroNetwork,
+        blockManager: BlockManager,
+    ): Promise<void>;
 }
