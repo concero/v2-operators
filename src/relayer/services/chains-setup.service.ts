@@ -6,8 +6,6 @@ import { Context } from '../types';
 export abstract class ChainsSetupService extends ContextProvider {
     protected constructor(name: string, context: Context) {
         super(name, context);
-
-        this.setupEachHandler();
     }
 
     protected setupEachHandler(): void {
@@ -31,4 +29,8 @@ export abstract class ChainsSetupService extends ContextProvider {
     }
 
     protected abstract setupHandler(network: ConceroNetwork, blockManager: BlockManager): void;
+
+    async init(): Promise<void> {
+        this.setupEachHandler();
+    }
 }
