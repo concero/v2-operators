@@ -15,14 +15,14 @@ export class WatcherModule extends ChainsSetupService {
         this.txFinalityProcessor = new TxFinalityProcessor(context);
     }
 
-    protected setupHandler = (network: ConceroNetwork, blockManager: BlockManager) => {
+    protected setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
         const pipeBlockNumber = this.pipeBlockNumber.bind(this);
         blockManager.watchBlocks({
             onBlockRange: (_, currentChainBlock) => pipeBlockNumber(network, currentChainBlock),
         });
-    };
+    }
 
-    protected async pipeBlockNumber(
+    private async pipeBlockNumber(
         network: ConceroNetwork,
         currentChainBlock: bigint,
     ): Promise<void> {

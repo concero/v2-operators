@@ -1,6 +1,6 @@
 import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
+import { ContextProvider } from './context.provider';
 
-import { ContextProvider } from '../services/context.provider';
 import { Context } from '../types';
 
 export abstract class ChainsSetupService extends ContextProvider {
