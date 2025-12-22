@@ -17,21 +17,14 @@ export abstract class ChainsSetupService extends ContextProvider {
         for (const network of activeNetworks) {
             const blockManager = this.context.blockRegistry.getBlockManager(network.name);
 
-            if (!blockManager) {
-                this.logger.warn(
-                    `No block manager available for ${network.name}, skipping event setup`,
+            if (blockManager) {
+                this.logger.info(
+                    `Build handler for ${network.name}: ${typeof this.setupHandler} ${this.setupHandler.name}`,
                 );
-                continue;
+                this.setupHandler(network, blockManager as BlockManager);
             }
-            this.logger.info(
-                `Build handler for ${network.name}: ${typeof this.setupHandler} ${this.setupHandler.name}`,
-            );
-            await this.setupHandler(network, blockManager as BlockManager);
         }
     }
 
-    protected abstract setupHandler(
-        network: ConceroNetwork,
-        blockManager: BlockManager,
-    ): Promise<void>;
+    protected abstract setupHandler(network: ConceroNetwork, blockManager: BlockManager): void;
 }

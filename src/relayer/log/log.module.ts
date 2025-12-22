@@ -13,7 +13,7 @@ export class LogModule extends ChainsSetupService {
         this.pipeline = new LogPipelineService(context);
     }
 
-    protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
+    protected setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
         const onLogs = this.onLogs.bind(this);
 
         try {
@@ -21,7 +21,7 @@ export class LogModule extends ChainsSetupService {
                 Number(network.chainSelector),
             );
 
-            await this.context.txReader.logWatcher.create(
+            this.context.txReader.logWatcher.create(
                 routerAddress,
                 network,
                 onLogs,
@@ -29,7 +29,7 @@ export class LogModule extends ChainsSetupService {
                 blockManager,
             );
 
-            this.logger.debug(`Created MessageSent watcher for ${network.name}`);
+            this.logger.info(`Created MessageSent watcher for ${network.name}`);
         } catch (error) {
             this.logger.error(`Failed to set up router listener for ${network.name}: ${error}`);
         }
