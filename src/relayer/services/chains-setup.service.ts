@@ -9,6 +9,9 @@ export abstract class ChainsSetupService extends ContextProvider {
     }
 
     setupEachHandler(): void {
+        this.logger.debug(
+            `Found active networks: ${JSON.stringify(this.context.network.getActiveNetworks())}`,
+        );
         const activeNetworks: ConceroNetwork[] = this.context.network.getActiveNetworks();
         this.logger.debug(
             `Got ${activeNetworks.length} active networks: ${activeNetworks.map(i => i.name).join(', ')}`,
