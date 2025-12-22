@@ -7,7 +7,6 @@ export abstract class ChainsSetupService extends ContextProvider {
     protected constructor(name: string, context: Context) {
         super(name, context);
         this.setupEachHandler();
-        setInterval(() => this.setupEachHandler(), 60 * 1000);
     }
 
     protected setupEachHandler(): void {
