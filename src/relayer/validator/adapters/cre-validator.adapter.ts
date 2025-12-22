@@ -101,7 +101,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             {
                 status: JobStatus.ProcessingConfirm,
                 validatorType: ValidatorType.CRE,
-                callbacksCount: { gte: 10 },
+                callbacksCount: { gte: 4 },
             },
             { take: 20 },
         );
