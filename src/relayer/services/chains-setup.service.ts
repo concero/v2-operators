@@ -8,7 +8,7 @@ export abstract class ChainsSetupService extends ContextProvider {
         super(name, context);
     }
 
-    protected setupEachHandler(): void {
+    setupEachHandler(): void {
         const activeNetworks: ConceroNetwork[] = this.context.network.getActiveNetworks();
         this.logger.debug(
             `Got ${activeNetworks.length} active networks: ${activeNetworks.map(i => i.name).join(', ')}`,
@@ -29,8 +29,4 @@ export abstract class ChainsSetupService extends ContextProvider {
     }
 
     protected abstract setupHandler(network: ConceroNetwork, blockManager: BlockManager): void;
-
-    async init(): Promise<void> {
-        this.setupEachHandler();
-    }
 }

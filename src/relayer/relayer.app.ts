@@ -18,8 +18,8 @@ export class RelayerApp extends ManagerProvider {
         this.verifierModule = new ValidatorModule(this.context);
         await this.verifierModule.setup();
         this.watcherModule = new WatcherModule(this.context);
-        await this.watcherModule.setup();
+        this.watcherModule.setupEachHandler();
         this.logModule = new LogModule(this.context);
-        await this.logModule.init();
+        this.logModule.setupEachHandler();
     }
 }

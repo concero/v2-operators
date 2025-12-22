@@ -38,8 +38,4 @@ export class WatcherModule extends ChainsSetupService {
             this.logger.error(`Unhandled error: ${e}`);
         }
     }
-
-    async setup(): Promise<void> {
-        this.init.bind(this);
-    }
 }
