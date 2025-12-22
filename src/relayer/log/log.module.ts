@@ -13,6 +13,11 @@ export class LogModule extends ChainsSetupService {
         this.pipeline = new LogPipelineService(context);
     }
 
+    init() {
+        const setup = this.setupEachHandler.bind(this);
+        setup();
+    }
+
     protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
         const onLogs = this.onLogs.bind(this);
 

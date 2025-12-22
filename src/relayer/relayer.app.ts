@@ -16,10 +16,10 @@ export class RelayerApp extends ManagerProvider {
     async init(): Promise<void> {
         await this.initManagers();
         this.verifierModule = new ValidatorModule(this.context);
-        await this.verifierModule.setup();
+        await this.verifierModule.init();
         this.watcherModule = new WatcherModule(this.context);
-        this.watcherModule.setupEachHandler();
+        this.watcherModule.init();
         this.logModule = new LogModule(this.context);
-        this.logModule.setupEachHandler();
+        this.logModule.init();
     }
 }
