@@ -6,10 +6,9 @@ import { Context } from '../types';
 export abstract class ChainsSetupService extends ContextProvider {
     protected constructor(name: string, context: Context) {
         super(name, context);
-        this.setupEachHandler();
     }
 
-    protected setupEachHandler(): void {
+    setupEachHandler(): void {
         const activeNetworks: ConceroNetwork[] = this.context.network.getActiveNetworks();
         this.logger.debug(
             `Got ${activeNetworks.length} active networks: ${activeNetworks.map(i => i.name).join(', ')}`,
