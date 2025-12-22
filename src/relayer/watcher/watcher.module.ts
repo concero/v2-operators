@@ -16,8 +16,10 @@ export class WatcherModule extends ChainsSetupService {
     }
 
     init() {
+        console.log(`start setup WatcherModule`);
         const setup = this.setupEachHandler.bind(this);
         setup();
+        console.log(`end setup WatcherModule`);
     }
 
     protected setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
