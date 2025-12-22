@@ -27,7 +27,7 @@ export abstract class ChainsSetupService extends ContextProvider {
                 continue;
             }
             this.logger.info(
-                `Build handler for ${network.name}: ${typeof this.setupHandler} ${this.setupEachHandler.name}`,
+                `Build handler for ${network.name}: ${typeof this.setupHandler} ${this.setupHandler.name}`,
             );
             await blockManager.startPolling();
             this.setupHandler(network, blockManager as BlockManager);
