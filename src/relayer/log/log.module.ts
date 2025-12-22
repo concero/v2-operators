@@ -21,13 +21,16 @@ export class LogModule extends ChainsSetupService {
                 Number(network.chainSelector),
             );
 
-            this.context.txReader.logWatcher.create(
-                routerAddress,
-                network,
-                onLogs,
-                this.context.config.event.messageSent,
-                blockManager,
-            );
+            this.context.txReader.logWatcher
+                .create(
+                    routerAddress,
+                    network,
+                    onLogs,
+                    this.context.config.event.messageSent,
+                    blockManager,
+                )
+                .catch(this.logger.error)
+                .then(this.logger.info);
 
             this.logger.info(`Created MessageSent watcher for ${network.name}`);
         } catch (error) {
