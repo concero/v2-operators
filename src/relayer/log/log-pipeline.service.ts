@@ -11,7 +11,7 @@ import {
     MessageSentLogData,
     ParsedMessageLogReceipt,
 } from '../types';
-import { VerifierType } from '../verifier';
+import { ValidatorType } from '../validator';
 
 export class LogPipelineService extends ContextProvider {
     constructor(context: Context) {
@@ -36,11 +36,11 @@ export class LogPipelineService extends ContextProvider {
             const parsedReceipt = MessagingCodec.decodeReceipt(parsedLog.data.messageReceipt);
             const srcBlocksDelta = this.extractSrcBlocksDelta(parsedReceipt);
             const dstBlocksDelta = this.extractDstBlocksDelta(parsedReceipt);
-            const verifierType = this.extractLogVerifierType(parsedReceipt);
+            const validatorType = this.extractLogVerifierType(parsedReceipt);
             await this.upsertLog(
                 parsedLog,
                 parsedReceipt,
-                verifierType,
+                validatorType,
                 srcBlocksDelta,
                 dstBlocksDelta,
             );
@@ -106,21 +106,21 @@ export class LogPipelineService extends ContextProvider {
         );
     }
 
-    private extractLogVerifierType(parsedReceipt: ParsedMessageLogReceipt): VerifierType {
-        return parsedReceipt.validatorLibs.length > 0 ? VerifierType.CRE : VerifierType.Empty;
+    private extractLogVerifierType(parsedReceipt: ParsedMessageLogReceipt): ValidatorType {
+        return parsedReceipt.validatorLibs.length > 0 ? ValidatorType.CRE : ValidatorType.Empty;
     }
 
     private async upsertLog(
         parsedLog: ParsedLog<MessageSentLogData>,
         parsedReceipt: ParsedMessageLogReceipt,
-        verifierType: VerifierType,
+        validatorType: ValidatorType,
         srcBlocksDelta: JobBlocksDelta,
         dstBlocksDelta: JobBlocksDelta,
     ): Promise<void> {
         await this.context.jobQueue.create({
             messageId: parsedLog.data.messageId,
             status: JobStatus.WaitingSrcConfirmation,
-            payload: { data: parsedLog.data, verifierType, parsedReceipt },
+            payload: { data: parsedLog.data, validatorType, parsedReceipt },
             // src
             srcBlockNumber: String(parsedLog.blockNumber),
             srcChainSelector: parsedReceipt.srcChainSelector,

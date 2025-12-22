@@ -1,6 +1,6 @@
 import { JobPayload } from '../../types';
 
-export enum VerifierType {
+export enum ValidatorType {
     Empty = 'empty',
     CRE = 'cre',
 }

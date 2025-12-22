@@ -10,7 +10,6 @@ import {
     TxWriter,
     ViemClientManager,
 } from '@concero/operator-utils';
-import { EventBusService } from './event-bus.service';
 import { JobQueueService } from './job-queue.service';
 import { PrismaClient } from '@prisma/client';
 
@@ -21,7 +20,6 @@ import { Config, Context } from '../types';
 export abstract class ManagerProvider {
     private config: Config;
     private loggerBuilder!: Logger;
-    private eventBus!: EventBusService;
     private networkManager!: ConceroNetworkManager;
     private nonceManager!: NonceManager;
     private rpcManager!: RpcManager;
@@ -44,7 +42,6 @@ export abstract class ManagerProvider {
         return {
             logger: this.loggerBuilder,
             config: this.config,
-            eventBus: this.eventBus,
             network: this.networkManager,
             rpc: this.rpcManager,
             dbClient: this.dbClient,
@@ -62,7 +59,6 @@ export abstract class ManagerProvider {
 
     protected async initManagers() {
         this.loggerBuilder = Logger.createInstance(globalConfig.LOGGER as any);
-        this.eventBus = new EventBusService();
 
         this.httpClient = HttpClient.createInstance(
             this.loggerBuilder.getLogger('HttpClient'),

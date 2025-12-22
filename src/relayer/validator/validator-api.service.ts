@@ -6,17 +6,17 @@ import { ObjectLib } from '../../utils';
 import { ContextProvider } from '../services';
 import { Context } from '../types';
 
-export class VerifierApiService extends ContextProvider {
+export class ValidatorApiService extends ContextProvider {
     private readonly app: FastifyInstance;
     private readonly creVerifier: CREVerifierStrategy;
 
     constructor(context: Context, creVerifier: CREVerifierStrategy) {
-        super('VerifierApiService', context);
+        super('ValidatorApiService', context);
         this.creVerifier = creVerifier;
         this.app = fastify({ logger: true });
     }
 
-    async init() {
+    async setupAPI() {
         this.app.post('/api/v1/callback/cre', async (req, res) => {
             try {
                 this.logger.info(

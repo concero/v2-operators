@@ -1,23 +1,23 @@
 import { LoggerInterface } from '@concero/operator-utils';
-import { CREVerifierStrategy, VerifierType } from './strategies';
-import { VerifierApiService } from './verifer-api.service';
-import { VerifierExecutorService } from './verifier-executor.service';
+import { CREVerifierStrategy, ValidatorType } from './strategies';
+import { ValidatorApiService } from './validator-api.service';
+import { ValidatorExecutorService } from './validator-executor.service';
 
 import { Context, JobPayload, JobStatus } from '../types';
 
-export class VerifierModule {
+export class ValidatorModule {
     private readonly context: Context;
     private readonly logger: LoggerInterface;
-    private readonly verifierApiService: VerifierApiService;
-    private readonly verifierExecutorService: VerifierExecutorService;
+    private readonly api: ValidatorApiService;
+    private readonly verifierExecutorService: ValidatorExecutorService;
 
     constructor(context: Context) {
         this.context = context;
-        this.logger = this.context.logger.getLogger('VerifierModule');
-        this.verifierExecutorService = new VerifierExecutorService(context);
-        this.verifierApiService = new VerifierApiService(
+        this.logger = this.context.logger.getLogger('ValidatorModule');
+        this.verifierExecutorService = new ValidatorExecutorService(context);
+        this.api = new ValidatorApiService(
             context,
-            this.verifierExecutorService.getStrategy(VerifierType.CRE) as CREVerifierStrategy,
+            this.verifierExecutorService.getStrategy(ValidatorType.CRE) as CREVerifierStrategy,
         );
     }
 
@@ -87,21 +87,10 @@ export class VerifierModule {
     }
 
     async init() {
-        // events facade
-        this.context.eventBus.on(VerifierModule.Request.command, (payload: JobPayload) =>
-            this.verifierExecutorService.safeRequestVerification(payload),
-        );
-        this.context.eventBus.on(VerifierModule.Confirm.command, (payload: JobPayload) =>
-            this.verifierExecutorService.safeConfirmVerification(payload),
-        );
-
         // infinite retries for request & confirm
         setInterval(async () => this.pumpCallbacksTimeouts(), 120_000);
         setInterval(async () => this.pumpFailedRequestRetries(), 30_000);
         setInterval(async () => this.pumpConfirmRetries(), 15_000);
-
-        // setup api
-        await this.verifierApiService.init();
     }
 }
 

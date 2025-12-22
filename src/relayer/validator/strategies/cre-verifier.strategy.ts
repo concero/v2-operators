@@ -117,7 +117,7 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
                             const payload = JSON.parse(i.payload) as JobPayload;
                             return {
                                 messageId: i.messageId as Hex,
-                                blockNumber: String(payload.blockNumber),
+                                blockNumber: i.srcBlockNumber,
                                 srcChainSelector: payload.parsedReceipt.srcChainSelector,
                             };
                         }),
@@ -182,8 +182,13 @@ export class CREVerifierStrategy extends BaseVerifierStrategy implements Verifie
             batch.map(async i => {
                 const parsedPayload = JSON.parse(i.payload) as JobPayload;
                 if (!Array.isArray(parsedPayload.callbacks)) {
+                    this.logger.debug(`Job [id=${i.id}] due to none callbacks`);
+                    return;
+                }
+
+                if (parsedPayload.callbacks.length < 10) {
                     this.logger.debug(
-                        `Processing confirmations job=${i.id} failed (no callbacks found)`,
+                        `Job [id=${i.id}] due to callbacks count=${parsedPayload.callbacks}`,
                     );
                     return;
                 }

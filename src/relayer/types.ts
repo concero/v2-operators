@@ -10,8 +10,8 @@ import {
     TxWriter,
     ViemClientManager,
 } from '@concero/operator-utils';
-import { EventBusService, JobQueueService } from './services';
-import { VerifierType } from './verifier';
+import { JobQueueService } from './services';
+import { ValidatorType } from './validator';
 import { PrismaClient } from '@prisma/client';
 
 import { DeploymentManager, LogsListenerStore } from '../managers';
@@ -31,7 +31,6 @@ export type Context = {
     logger: Logger;
     config: Config;
     http: HttpClient;
-    eventBus: EventBusService;
     network: ConceroNetworkManager;
     rpc: RpcManager;
     dbClient: PrismaClient;
@@ -74,8 +73,8 @@ export enum JobStatus {
     WaitingSrcConfirmation = 'waiting_src_confirmation', // wait for finalization / block confirmation proof on src
     ProcessingRequest = 'processing_request', // planned to be requested
     RequestFailed = 'request_failed', // planned request failed, should be retried
-    ProcessingVerify = 'processing_verify', // planned to be verified
-    VerifyFailed = 'confirm_failed', // planned verification failed, should be retried
+    ProcessingConfirm = 'processing_verify', // planned to be verified
+    ConfirmFailed = 'confirm_failed', // planned verification failed, should be retried
     WaitingTxFinality = 'waiting_tx_finality', // planned to check finality on dst
     Success = 'success', // tx executed and on dst side
 }
@@ -85,6 +84,6 @@ export type JobPayload = Omit<
     'eventName' | 'eventHash' | 'blockNumber' | 'transactionHash'
 > & {
     parsedReceipt: ParsedMessageLogReceipt;
-    verifierType: VerifierType;
+    validatorType: ValidatorType;
     callbacks?: [];
 };
