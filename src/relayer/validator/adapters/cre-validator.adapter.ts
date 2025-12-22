@@ -20,16 +20,15 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         try {
             const requestBody: CRERequestBody<CRE.Request> = {
                 jsonrpc: '2.0',
-                id: Date.now().toString(),
+                id: crypto.randomUUID(),
                 method: 'workflows.execute',
                 params: {
                     input: {
                         batch: jobs.map(i => {
-                            const payload = JSON.parse(i.payload) as JobPayload;
                             return {
                                 messageId: i.messageId as Hex,
                                 blockNumber: i.srcBlockNumber,
-                                srcChainSelector: payload.parsedReceipt.srcChainSelector,
+                                srcChainSelector: i.srcChainSelector,
                             };
                         }),
                     },
