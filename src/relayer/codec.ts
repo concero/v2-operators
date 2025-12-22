@@ -1,8 +1,8 @@
 import { Address, Hex } from 'viem';
-import { DecodedMessageLogReceipt } from './types';
+import { ParsedMessageLogReceipt } from './types';
 
 export namespace MessagingCodec {
-    export function decodeReceipt(input: string): DecodedMessageLogReceipt {
+    export function decodeReceipt(input: string): ParsedMessageLogReceipt {
         const hex = input.startsWith('0x') ? input.slice(2) : input;
         let offset = 0;
 

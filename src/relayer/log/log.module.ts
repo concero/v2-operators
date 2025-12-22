@@ -2,7 +2,7 @@ import { Log } from 'viem';
 import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
 import { LogPipelineService } from './log-pipeline.service';
 
-import { ChainsSetupService } from '../services';
+import { ChainsSetupService } from '../services/chains-setup.service';
 import { Context } from '../types';
 
 export class LogModule extends ChainsSetupService {
@@ -35,7 +35,7 @@ export class LogModule extends ChainsSetupService {
         }
     }
 
-    private async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
+    async onLogs(logs: Log[], network: ConceroNetwork): Promise<void> {
         try {
             this.logger.info(
                 `ConceroMessageSent (size=${logs.length}): ${logs.map(i => i.transactionHash).join(', ')}`,
