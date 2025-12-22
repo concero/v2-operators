@@ -9,9 +9,6 @@ export abstract class ChainsSetupService extends ContextProvider {
     }
 
     setupEachHandler(): void {
-        this.logger.info(
-            `Found active networks: ${JSON.stringify(this.context.network.getActiveNetworks())}`,
-        );
         const activeNetworks: ConceroNetwork[] = this.context.network.getActiveNetworks();
         this.logger.debug(
             `Got ${activeNetworks.length} active networks: ${activeNetworks.map(i => i.name).join(', ')}`,
@@ -26,8 +23,9 @@ export abstract class ChainsSetupService extends ContextProvider {
                 );
                 continue;
             }
-            this.logger.info(`Build handler for ${network.name}: ${typeof this.setupHandler}`);
             this.setupHandler(network, blockManager as BlockManager);
+
+            blockManager.startPolling();
         }
     }
 
