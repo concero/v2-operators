@@ -94,35 +94,24 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
     async pumpPendingConfirm() {
         const jobs = await this.context.jobQueue.getList(
-            { status: JobStatus.ProcessingConfirm, validatorType: ValidatorType.CRE },
+            {
+                status: JobStatus.ProcessingConfirm,
+                validatorType: ValidatorType.CRE,
+                callbacksCount: { gte: 10 },
+            },
             { take: 20 },
         );
 
-        await Promise.all(
+        const promises = await Promise.allSettled(
             jobs.map(async i => {
                 const parsedPayload = JSON.parse(i.payload) as JobPayload;
                 if (!Array.isArray(parsedPayload.callbacks)) {
                     this.logger.debug(`Job [id=${i.id}] due to none callbacks`);
-                    return;
-                }
-
-                if (parsedPayload.callbacks.length < 10) {
-                    this.logger.debug(
-                        `Job [id=${i.id}] due to callbacks count=${parsedPayload.callbacks}`,
-                    );
-                    return;
+                    throw Error(`Job [id=${i.id}] due to none callbacks`);
                 }
 
                 const validations = await this.packCREValidations(parsedPayload.callbacks);
                 await this.submitMessage(parsedPayload, [validations]);
-
-                await this.context.jobQueue.updateOne({ id: i.id }, { status: JobStatus.Success });
-            }),
-        );
-        const promises = await Promise.allSettled(
-            jobs.map(async i => {
-                const payload = JSON.parse(i.payload) as JobPayload;
-                await this.submitMessage(payload, payload.parsedReceipt.validatorLibs);
                 return i.id;
             }),
         );
