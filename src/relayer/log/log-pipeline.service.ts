@@ -45,6 +45,7 @@ export class LogPipelineService extends ContextProvider {
                 dstBlocksDelta,
             );
         } catch (e) {
+            // @todo upsert raw log to reparse & restart
             this.logger.error(`Unhandled error: ${e}`);
         }
     }
