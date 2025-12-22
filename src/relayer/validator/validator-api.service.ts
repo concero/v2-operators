@@ -61,7 +61,7 @@ export class ValidatorApiService extends ContextProvider {
                 statusCode: 200,
                 ok: true,
                 total: data.length,
-                data,
+                data: data.map(i => ({ ...i, blockNumber: String(i.blockNumber) })),
             });
         });
         this.app.listen({ port: 5000, host: '0.0.0.0' }).catch(this.logger.error);
