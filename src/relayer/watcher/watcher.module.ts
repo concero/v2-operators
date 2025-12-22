@@ -16,9 +16,7 @@ export class WatcherModule extends ChainsSetupService {
     }
 
     init() {
-        console.log(`start setup WatcherModule`);
-        const setup = this.setupEachHandler.bind(this);
-        setup();
+        this.setupEachHandler.call(this);
         console.log(`end setup WatcherModule`);
     }
 
