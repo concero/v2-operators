@@ -17,6 +17,11 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             { status: JobStatus.ProcessingRequest, validatorType: ValidatorType.CRE },
             { take: 2 },
         );
+
+        if (jobs.length === 0) {
+            return;
+        }
+
         try {
             const requestBody: CRERequestBody<CRE.Request> = {
                 jsonrpc: '2.0',
