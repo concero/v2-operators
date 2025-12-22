@@ -1,4 +1,3 @@
-import { CREVerifierStrategy } from './strategies';
 import { Job } from '@prisma/client';
 import fastify, { FastifyInstance } from 'fastify';
 
@@ -20,7 +19,7 @@ export class ValidatorApiService extends ContextProvider {
                 this.logger.info(
                     `CRE Callback Got: ${ObjectLib.stringify(req.body as Record<string, unknown>)}`,
                 );
-                await this.addConfirmationCallback(req.body as CREVerifierStrategy.CRE.Response);
+                await this.addConfirmationCallback(req.body as CRE.Response);
             } catch (e) {
                 this.logger.error(
                     `CRE Callback Failed: ${e?.toString()} ${ObjectLib.stringify(req.body as Record<string, unknown>)}`,
@@ -62,7 +61,7 @@ export class ValidatorApiService extends ContextProvider {
         // @todo: avoid promise.all
         const handleResponseItem = async ([messageId, item]: [
             messageId: string,
-            item: CREVerifierStrategy.CRE.Response.Item,
+            item: CRE.Response.Item,
         ]): Promise<void> => {
             const found = await this.context.jobQueue.findOne({ messageId });
             if (!found) {
@@ -72,10 +71,8 @@ export class ValidatorApiService extends ContextProvider {
 
             const foundPayload = JSON.parse(found.payload) as JobPayload;
 
-            const mergedCallbacks: CREVerifierStrategy.CRE.Response.Item[] = foundPayload?.callbacks
-                ? Array.from(
-                      (foundPayload['callbacks'] || []) as CREVerifierStrategy.CRE.Response.Item[],
-                  ).concat(item)
+            const mergedCallbacks: CRE.Response.Item[] = foundPayload?.callbacks
+                ? Array.from((foundPayload['callbacks'] || []) as CRE.Response.Item[]).concat(item)
                 : [item];
             const mergedPayload = {
                 ...foundPayload,
