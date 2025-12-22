@@ -54,6 +54,16 @@ export class ValidatorApiService extends ContextProvider {
                 ...processes,
             });
         });
+        this.app.get('/api/v1/chains', async (_, res) => {
+            const data = await this.context.dbClient.logsListenerBlockCheckpoints.findMany();
+
+            res.headers({ 'content-type': 'application/json' }).send({
+                statusCode: 200,
+                ok: true,
+                total: data.length,
+                data,
+            });
+        });
         this.app.listen({ port: 5000, host: '0.0.0.0' }).catch(this.logger.error);
     }
 
