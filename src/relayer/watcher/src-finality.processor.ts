@@ -48,7 +48,6 @@ export class SrcFinalityProcessor extends ContextProvider {
         );
 
         const finalizedJobIds = batch
-            .map(i => ({ ...i, payload: JSON.parse(i.payload) as JobPayload }))
             .filter(item => BigInt(item.srcBlockNumber) <= lastFinalizedBlock)
             .map(i => i.id);
 

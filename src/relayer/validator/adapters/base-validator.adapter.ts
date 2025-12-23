@@ -1,4 +1,4 @@
-import { Hex } from 'viem';
+import { Hash, Hex } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
 import { ContextProvider } from '../../services/context.provider';
@@ -9,7 +9,10 @@ export abstract class BaseValidatorAdapter extends ContextProvider {
         super(name, context);
     }
 
-    protected async submitMessage(payload: JobPayload, validations: Hex[]): Promise<void> {
+    protected async submitMessage(
+        payload: JobPayload,
+        validations: Hex[],
+    ): Promise<{ hash: Hash; blockNumber: bigint }> {
         const dstChainSelector = payload.parsedReceipt.dstChainSelector;
         const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
             String(dstChainSelector),
@@ -22,11 +25,23 @@ export abstract class BaseValidatorAdapter extends ContextProvider {
         const validatorLib =
             this.context.deploymentManager.getConceroValidatorLibByChainSelector(dstChainSelector);
 
-        await this.context.txWriter.callContract(dstNetwork, {
-            address: routerAddress,
-            functionName: 'submitMessage',
-            abi: this.context.config.contract.router,
-            args: [payload.data.messageReceipt, validations, [validatorLib], relayerLib],
-        });
+        const networkName =
+            this.context.deploymentManager.getNetworkNameByChainSelector(dstChainSelector);
+
+        const hash = await this.context.txWriter.callContract(
+            dstNetwork,
+            {
+                address: routerAddress,
+                functionName: 'submitMessage',
+                abi: this.context.config.contract.router,
+                args: [payload.data.messageReceipt, validations, [validatorLib], relayerLib],
+            },
+            true,
+        );
+        const tx = await this.context.viemClient
+            .getClients(networkName)
+            .publicClient.getTransaction({ hash });
+
+        return { blockNumber: tx.blockNumber, hash };
     }
 }

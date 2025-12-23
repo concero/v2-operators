@@ -45,13 +45,12 @@ export class TxFinalityProcessor extends ContextProvider {
                 status: JobStatus.WaitingSrcConfirmation,
                 srcChainSelector: Number(network.chainSelector),
                 dstBlockNumber: { not: null },
-                srcBlockNumberDelta: 'finalized',
+                dstBlockNumberDelta: 'finalized',
             },
             { take: 100 },
         );
 
         const finalizedJobIds = batch
-            .map(i => ({ ...i, payload: JSON.parse(i.payload) as JobPayload }))
             .filter(item => BigInt(item.dstBlockNumber as string) <= lastFinalizedBlock)
             .map(i => i.id);
 

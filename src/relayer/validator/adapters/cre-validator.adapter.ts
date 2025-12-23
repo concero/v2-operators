@@ -115,7 +115,11 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 }
 
                 const validations = await this.packCREValidations(parsedPayload.callbacks);
-                await this.submitMessage(parsedPayload, [validations]);
+                const dst = await this.submitMessage(parsedPayload, [validations]);
+                await this.context.jobQueue.updateOne(
+                    { id: i.id },
+                    { dstBlockNumber: String(dst.blockNumber) },
+                );
                 return i.id;
             }),
         );
