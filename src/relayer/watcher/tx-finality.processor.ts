@@ -22,7 +22,7 @@ export class TxFinalityProcessor extends ContextProvider {
             .map(i => ({ ...i, payload: JSON.parse(i.payload) as JobPayload }))
             .filter(
                 item =>
-                    BigInt(item.dstBlockNumber as string) + BigInt(item.dstBlockNumberDelta) <
+                    (item.dstBlockNumber ? BigInt(item.dstBlockNumber as string) : 0n) <=
                     lastChainBlock,
             )
             .map(i => i.id);
@@ -49,7 +49,11 @@ export class TxFinalityProcessor extends ContextProvider {
         );
 
         const finalizedJobIds = batch
-            .filter(item => BigInt(item.dstBlockNumber as string) <= lastFinalizedBlock)
+            .filter(
+                item =>
+                    (item.dstBlockNumber ? BigInt(item.dstBlockNumber as string) : 0n) <=
+                    lastFinalizedBlock,
+            )
             .map(i => i.id);
 
         await this.context.jobQueue.updateMany(
