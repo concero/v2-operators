@@ -18,8 +18,7 @@ export class WatcherModule extends ChainsSetupService {
     protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
         const pipeBlockNumber = this.pipeBlockNumber.bind(this);
         blockManager.watchBlocks({
-            // @todo: fix error
-            onBlockRange: (_: bigint, lastChainBlock, finalizedBlock?: bigint) =>
+            onBlockRange: (_: bigint, lastChainBlock, finalizedBlock) =>
                 pipeBlockNumber(network, lastChainBlock, finalizedBlock),
         });
     }
