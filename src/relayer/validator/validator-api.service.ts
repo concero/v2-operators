@@ -67,8 +67,16 @@ export class ValidatorApiService extends ContextProvider {
             item: CRE.Response.Item,
         ]): Promise<void> => {
             const found = await this.context.jobQueue.findOne({ messageId });
+
             if (!found) {
                 this.logger.warn(`Job for messageId=${messageId} not found`);
+                return;
+            }
+
+            if (found?.callbacksCount || 0 > 3) {
+                this.logger.warn(
+                    `Job messageId=${messageId} callbacks count already ${found.callbacksCount}`,
+                );
                 return;
             }
 
