@@ -30,6 +30,9 @@ export class WatcherModule extends ChainsSetupService {
         currentFinalizedBlock?: bigint,
     ): Promise<void> {
         try {
+            this.logger.info(
+                `Piping blocks ${network.name}: ${String(currentChainBlock)} ${String(currentFinalizedBlock)}`,
+            );
             await Promise.all([
                 // @todo: add finalizedBlock in operator-utils lib
                 currentFinalizedBlock &&
