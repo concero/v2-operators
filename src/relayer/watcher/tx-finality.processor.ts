@@ -1,7 +1,7 @@
 import { ConceroNetwork } from '@concero/operator-utils';
 
 import { ContextProvider } from '../services';
-import { Context, JobPayload, JobStatus } from '../types';
+import { Context, JobStatus } from '../types';
 
 export class TxFinalityProcessor extends ContextProvider {
     constructor(context: Context) {
@@ -19,11 +19,8 @@ export class TxFinalityProcessor extends ContextProvider {
         );
 
         const finalizedJobIds = batch
-            .map(i => ({ ...i, payload: JSON.parse(i.payload) as JobPayload }))
             .filter(
-                item =>
-                    (item.dstBlockNumber ? BigInt(item.dstBlockNumber as string) : 0n) <=
-                    lastChainBlock,
+                item => (item.dstBlockNumber ? BigInt(item.dstBlockNumber) : 0n) <= lastChainBlock,
             )
             .map(i => i.id);
 
@@ -51,8 +48,7 @@ export class TxFinalityProcessor extends ContextProvider {
         const finalizedJobIds = batch
             .filter(
                 item =>
-                    (item.dstBlockNumber ? BigInt(item.dstBlockNumber as string) : 0n) <=
-                    lastFinalizedBlock,
+                    (item.dstBlockNumber ? BigInt(item.dstBlockNumber) : 0n) <= lastFinalizedBlock,
             )
             .map(i => i.id);
 
