@@ -13,7 +13,6 @@ export class TxFinalityProcessor extends ContextProvider {
             {
                 status: JobStatus.WaitingSrcConfirmation,
                 dstChainSelector: Number(network.chainSelector),
-                dstBlockNumber: { not: null },
                 dstBlockNumberDelta: { not: 'finalized' },
             },
             { take: 100 },
@@ -44,7 +43,6 @@ export class TxFinalityProcessor extends ContextProvider {
             {
                 status: JobStatus.WaitingSrcConfirmation,
                 srcChainSelector: Number(network.chainSelector),
-                dstBlockNumber: { not: null },
                 dstBlockNumberDelta: 'finalized',
             },
             { take: 100 },
