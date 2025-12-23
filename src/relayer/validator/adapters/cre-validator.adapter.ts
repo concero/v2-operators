@@ -124,6 +124,11 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             }),
         );
         const jobIds = promises.filter(i => i.status === 'fulfilled').map(i => i.value);
+        const errors = promises.filter(i => i.status === 'rejected').map(i => i.reason);
+        if (errors.length > 0) {
+            this.logger.error(errors.join(';'));
+        }
+
         await this.context.jobQueue.updateMany(
             { id: { in: jobIds } },
             { status: JobStatus.WaitingTxFinality },
