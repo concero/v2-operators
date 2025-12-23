@@ -11,7 +11,7 @@ export class TxFinalityProcessor extends ContextProvider {
     async processCommonBatch(network: ConceroNetwork, lastChainBlock: bigint): Promise<void> {
         const batch = await this.context.jobQueue.getList(
             {
-                status: JobStatus.WaitingSrcConfirmation,
+                status: JobStatus.WaitingTxFinality,
                 dstChainSelector: Number(network.chainSelector),
                 dstBlockNumberDelta: { not: 'finalized' },
             },
@@ -41,8 +41,8 @@ export class TxFinalityProcessor extends ContextProvider {
     ): Promise<void> {
         const batch = await this.context.jobQueue.getList(
             {
-                status: JobStatus.WaitingSrcConfirmation,
-                srcChainSelector: Number(network.chainSelector),
+                status: JobStatus.WaitingTxFinality,
+                dstChainSelector: Number(network.chainSelector),
                 dstBlockNumberDelta: 'finalized',
             },
             { take: 100 },
