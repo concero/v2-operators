@@ -110,37 +110,41 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 validatorType: ValidatorType.CRE,
                 callbacksCount: { gte: 4 },
             },
-            { take: 20 },
+            { take: 100 },
         );
 
-        const promises = await Promise.allSettled(
-            jobs.map(async i => {
-                const parsedPayload = JSON.parse(i.payload) as JobPayload;
+        const batches = ArrayLib.toChunks(jobs, 10);
+        for (const batch of batches) {
+            const promises = await Promise.allSettled(
+                batch.map(async i => {
+                    const parsedPayload = JSON.parse(i.payload) as JobPayload;
 
-                const rawCallbacks = await this.context.dbClient.creCallback.findMany({
-                    where: { messageId: i.messageId },
-                });
-                const callbacks = rawCallbacks.map(i => JSON.parse(i.payload)) as CRE.Response.Item[];
-                const validations = await this.packCREValidations(callbacks);
+                    const rawCallbacks = await this.context.dbClient.creCallback.findMany({
+                        where: { messageId: i.messageId },
+                    });
+                    const callbacks = rawCallbacks.map(i => JSON.parse(i.payload)) as CRE.Response.Item[];
+                    const validations = await this.packCREValidations(callbacks);
 
-                const dst = await this.submitMessage(parsedPayload, [validations]);
-                await this.context.jobQueue.updateOne(
-                    { id: i.id },
-                    { dstBlockNumber: String(dst.blockNumber), dstTxHash: dst.hash },
-                );
-                return i.id;
-            }),
-        );
-        const jobIds = promises.filter(i => i.status === 'fulfilled').map(i => i.value);
-        const errors = promises.filter(i => i.status === 'rejected').map(i => i.reason);
-        if (errors.length > 0) {
-            this.logger.error(errors.join(';'));
+                    const dst = await this.submitMessage(parsedPayload, [validations]);
+                    await this.context.jobQueue.updateOne(
+                        { id: i.id },
+                        { dstBlockNumber: String(dst.blockNumber), dstTxHash: dst.hash },
+                    );
+                    return i.id;
+                }),
+            );
+            const batchJobIds = promises.filter(i => i.status === 'fulfilled').map(i => i.value);
+            const batchErrors = promises.filter(i => i.status === 'rejected').map(i => i.reason);
+            if (batchErrors.length > 0) {
+                this.logger.error(batchErrors.join(';'));
+            }
+
+            await this.context.jobQueue.updateMany(
+                { id: { in: batchJobIds } },
+                { status: JobStatus.WaitingTxFinality },
+            );
         }
 
-        await this.context.jobQueue.updateMany(
-            { id: { in: jobIds } },
-            { status: JobStatus.WaitingTxFinality },
-        );
     }
 
     private async packCREValidations(creCallbacks: CRE.Response.Item[]) {
