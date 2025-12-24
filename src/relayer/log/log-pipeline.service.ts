@@ -125,10 +125,12 @@ export class LogPipelineService extends ContextProvider {
             validatorType,
             payload: { data: parsedLog.data, parsedReceipt },
             // src
+            srcTxHash: parsedLog.transactionHash,
             srcBlockNumber: String(parsedLog.blockNumber),
             srcChainSelector: parsedReceipt.srcChainSelector,
             dstChainSelector: parsedReceipt.dstChainSelector,
             // dst
+            dstTxHash: null,
             dstBlockNumber: null,
             srcBlockNumberDelta: String(srcBlocksDelta),
             dstBlockNumberDelta: String(dstBlocksDelta),
