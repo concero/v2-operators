@@ -73,12 +73,6 @@ export class ValidatorApiService extends ContextProvider {
                 return;
             }
 
-            if (found?.callbacksCount || 0 > 3) {
-                this.logger.warn(
-                    `Job messageId=${messageId} callbacks count already ${found.callbacksCount}`,
-                );
-                return;
-            }
 
             const foundPayload = JSON.parse(found.payload) as JobPayload;
 
@@ -89,6 +83,18 @@ export class ValidatorApiService extends ContextProvider {
                 ...foundPayload,
                 callbacks: mergedCallbacks,
             };
+
+            this.logger.info(`From CRE::  [messageId=${messageId}] callbacksCount=${found.callbacksCount} ${typeof found.callbacksCount} merged=${mergedCallbacks.join(';')}`)
+
+
+            if (found.callbacksCount || 0 > 3) {
+                this.logger.warn(
+                    `Job messageId=${messageId} callbacks count already ${found.callbacksCount}`,
+                );
+                return;
+            }
+
+
 
             await this.context.jobQueue.updateOne(
                 { messageId },
