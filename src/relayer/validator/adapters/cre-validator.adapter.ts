@@ -33,7 +33,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     method: 'workflows.execute',
                     params: {
                         input: {
-                            batch: jobs.map(i => {
+                            batch: batch.map(i => {
                                 return {
                                     messageId: i.messageId as Hex,
                                     blockNumber: i.srcBlockNumber,
@@ -60,7 +60,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     },
                 );
                 await this.context.jobQueue.updateMany(
-                    { id: { in: jobs.map(i => i.id) } },
+                    { id: { in: batch.map(i => i.id) } },
                     { status: JobStatus.ProcessingConfirm },
                 );
             } catch (e) {
@@ -71,7 +71,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 }
                 this.logger.debug(`Failed CRE request ${e}`);
                 await this.context.jobQueue.updateMany(
-                    { id: { in: jobs.map(i => i.id) } },
+                    { id: { in: batch.map(i => i.id) } },
                     { status: JobStatus.RequestFailed },
                 );
             }
