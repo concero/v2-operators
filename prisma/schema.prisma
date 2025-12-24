@@ -49,9 +49,10 @@ model Job {
 }
 
 model CreCallback {
+  id              Int      @id @default(autoincrement())
   messageId       String
   payload String
 
-  @@id([messageId])
+  @@index([messageId])
   @@map("cre_callback")
 }
