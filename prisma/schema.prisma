@@ -47,3 +47,11 @@ model Job {
 
   @@map("job")
 }
+
+model CreCallback {
+  messageId       String
+  payload String
+
+  @@id([messageId])
+  @@map("cre_callback")
+}

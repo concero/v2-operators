@@ -2,7 +2,7 @@ import fastify, { FastifyInstance } from 'fastify';
 
 import { ObjectLib } from '../../utils';
 import { ContextProvider } from '../services';
-import { Context, CRE, JobPayload } from '../types';
+import { Context, CRE } from '../types';
 
 export class ValidatorApiService extends ContextProvider {
     private readonly app: FastifyInstance;
@@ -10,6 +10,9 @@ export class ValidatorApiService extends ContextProvider {
     constructor(context: Context) {
         super('ValidatorApiService', context);
         this.app = fastify({ logger: true });
+        setInterval(async () => {
+           await this.calculateConfirmations()
+        }, 1000)
     }
 
     async init() {
@@ -61,50 +64,30 @@ export class ValidatorApiService extends ContextProvider {
     }
 
     private async addConfirmationCallback(response: CRE.Response) {
-        await Promise.allSettled(
-            Object.entries(response || {}).map(async ([messageId, item]) => {
-                const found = await this.context.jobQueue.findOne({ messageId });
+        const items = Object.entries(response || {});
+        if (items.length === 0) {
+            return
+        }
 
-                if (!found) {
-                    this.logger.warn(`Job for messageId=${messageId} not found`);
-                    return;
-                }
-
-
-                const foundPayload = JSON.parse(found.payload) as JobPayload;
-
-                const mergedCallbacks: CRE.Response.Item[] = foundPayload?.callbacks
-                    ? Array.from((foundPayload['callbacks'] || []) as CRE.Response.Item[]).concat(item)
-                    : [item];
-                const mergedPayload = {
-                    ...foundPayload,
-                    callbacks: mergedCallbacks,
-                };
-
-                this.logger.info(`From CRE::  [messageId=${messageId}] callbacksCount=${found.callbacksCount} ${typeof found.callbacksCount} merged=${mergedCallbacks.join(';')}`)
+        await this.context.dbClient.creCallback.createMany({
+           data: items.map(([messageId, payload]) => ({
+               messageId, payload: JSON.stringify(payload)
+           })),
+        })
 
 
-                if (found.callbacksCount || 0 > 3) {
-                    this.logger.warn(
-                        `Job messageId=${messageId} callbacks count already ${found.callbacksCount}`,
-                    );
-                    return;
-                }
+    }
 
+    private async calculateConfirmations() {
+        const callbacks = await this.context.dbClient.creCallback.groupBy({
+            by: ['messageId'],
+            _count: {
+                messageId: true,
+            }
+        })
 
-
-                await this.context.jobQueue.updateOne(
-                    { messageId },
-                    {
-                        payload: JSON.stringify(mergedPayload),
-                        callbacksCount: mergedCallbacks.length || 0,
-                    },
-                );
-
-                this.logger.debug(
-                    `Callbacks for messageId=${messageId} count is ${mergedCallbacks?.length || 0}`,
-                );
-            }),
-        );
+        await Promise.allSettled(callbacks.map(async (callback) => {
+           await this.context.jobQueue.updateOne({messageId: callback.messageId}, {callbacksCount: callback._count.messageId});
+        }))
     }
 }
