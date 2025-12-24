@@ -110,13 +110,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         const promises = await Promise.allSettled(
             jobs.map(async i => {
-                const parsedPayload = JSON.parse(i.payload) as JobPayload;
-                if (!Array.isArray(parsedPayload.callbacks)) {
-                    this.logger.debug(`Job [id=${i.id}] due to none callbacks`);
-                    throw Error(`Job [id=${i.id}] due to none callbacks`);
-                }
+                const parsedPayload = JSON.parse(i.payload) as JobPayload
 
-                const validations = await this.packCREValidations(parsedPayload.callbacks);
+                const rawCallbacks = await this.context.dbClient.creCallback.findMany({
+                    where: { messageId: i.messageId }
+                });
+                const callbacks =  rawCallbacks.map(i => JSON.parse(i.payload)) as CRE.Response.Item[];
+                const validations = await this.packCREValidations(callbacks);
 
                 const dst = await this.submitMessage(parsedPayload, [validations]);
                 await this.context.jobQueue.updateOne(

@@ -87,7 +87,6 @@ export type JobPayload = Omit<
     'eventName' | 'eventHash' | 'blockNumber' | 'transactionHash'
 > & {
     parsedReceipt: ParsedMessageLogReceipt;
-    callbacks?: [];
 };
 
 export namespace CRE {
