@@ -16,7 +16,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     async pumpPendingRequest() {
         const jobs = await this.context.jobQueue.getList(
             { status: JobStatus.ProcessingRequest, validatorType: ValidatorType.CRE },
-            { take: 40 },
+            { take: 100 },
         );
 
         if (jobs.length === 0) {
