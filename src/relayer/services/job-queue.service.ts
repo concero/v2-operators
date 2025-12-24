@@ -23,8 +23,6 @@ export class JobQueueService {
     }
 
     async create(entity: CreateEntity) {
-        const nextRetryAt = new Date(Date.now() + 60_000);
-
         return this.dbClient.job.create({
             data: {
                 messageId: entity.messageId,
@@ -36,12 +34,10 @@ export class JobQueueService {
                 srcChainSelector: entity.srcChainSelector,
                 dstChainSelector: entity.dstChainSelector,
                 // dst
+                dstTxHash: null,
                 dstBlockNumber: null,
                 srcBlockNumberDelta: entity.srcBlockNumberDelta,
                 dstBlockNumberDelta: entity.dstBlockNumberDelta,
-                // retry
-                attempts: 0,
-                nextRetryAt,
             },
         });
     }
@@ -79,15 +75,6 @@ export class JobQueueService {
         return this.dbClient.job.updateMany({
             where,
             data,
-        });
-    }
-
-    async reschedule(id: number, attempts: number, status: JobStatus) {
-        const delay = reportDelayMlSec(attempts);
-        const nextRetryAt = new Date(Date.now() + delay);
-        await this.dbClient.job.update({
-            where: { id },
-            data: { attempts: { increment: 1 }, nextRetryAt, status },
         });
     }
 }

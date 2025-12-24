@@ -28,20 +28,14 @@ export abstract class BaseValidatorAdapter extends ContextProvider {
         const networkName =
             this.context.deploymentManager.getNetworkNameByChainSelector(dstChainSelector);
 
-        const hash = await this.context.txWriter.callContract(
-            dstNetwork,
-            {
-                address: routerAddress,
-                functionName: 'submitMessage',
-                abi: this.context.config.contract.router,
-                args: [payload.data.messageReceipt, validations, [validatorLib], relayerLib],
-            },
-            true,
-        );
-        const tx = await this.context.viemClient
-            .getClients(networkName)
-            .publicClient.getTransaction({ hash });
+        const receipt = await this.context.txWriter.callContract(dstNetwork, {
+            address: routerAddress,
+            functionName: 'submitMessage',
+            abi: this.context.config.contract.router,
+            args: [payload.data.messageReceipt, validations, [validatorLib], relayerLib],
+        });
 
-        return { blockNumber: tx.blockNumber, hash };
+
+        return { blockNumber: receipt.blockNumber, hash: receipt.transactionHash };
     }
 }
