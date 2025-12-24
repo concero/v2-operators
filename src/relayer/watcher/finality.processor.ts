@@ -21,9 +21,8 @@ export class FinalityProcessor extends ContextProvider {
     }
 
     async process(network: ConceroNetwork, chainBlock: bigint, finalizedBlock: bigint): Promise<void> {
-        const processStrategy = this.processStrategy.bind(this);
         const promises = this.strategies.map(
-            async (strategy) => processStrategy(network, chainBlock, finalizedBlock, strategy)
+            async (strategy) => this.processStrategy(network, chainBlock, finalizedBlock, strategy)
         )
 
         await Promise.all(promises);

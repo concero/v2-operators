@@ -64,11 +64,10 @@ export class WatcherModule extends ChainsSetupService {
     }
 
     protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
-        const process = this.finalityProcessor.process.bind(this);
 
         blockManager.watchBlocks({
             onBlockRange: (_: bigint, lastChainBlock, finalizedBlock) =>
-                process(network, lastChainBlock, finalizedBlock ?? 0n),
+                this.finalityProcessor.process(network, lastChainBlock, finalizedBlock ?? 0n),
         });
     }
 }
