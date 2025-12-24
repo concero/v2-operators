@@ -31,13 +31,14 @@ model Job {
   status          String
 
   // src
+  srcTxHash String
   srcChainSelector  Int
   srcBlockNumber String
   srcBlockNumberDelta String
 
   // dst
-  dstChainSelector  Int
   dstTxHash String?
+  dstChainSelector  Int
   dstBlockNumber String?
   dstBlockNumberDelta String
 

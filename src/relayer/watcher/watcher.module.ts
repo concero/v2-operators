@@ -13,47 +13,52 @@ export class WatcherModule extends ChainsSetupService {
         this.finalityProcessor = new FinalityProcessor(context, [
             // src common
             {
-                where: (network) => ({
+                buildQuery: (network) => ({
                     status: JobStatus.WaitingSrcConfirmation,
                     srcChainSelector: Number(network.chainSelector),
                     srcBlockNumberDelta: { not: 'finalized' },
                 }),
                 filter: (job: Job, lastChainBlock: bigint) =>
                     BigInt(job.srcBlockNumber) + BigInt(job.srcBlockNumberDelta) < lastChainBlock,
+                inclusion: 'src',
                 nextStatus: JobStatus.ProcessingRequest
             },
             // src finalized
             {
-                where: (network) => ({
+                buildQuery: (network) => ({
                     status: JobStatus.WaitingSrcConfirmation,
                     srcChainSelector: Number(network.chainSelector),
                     srcBlockNumberDelta: 'finalized',
                 }),
+                inclusion: 'src',
                 filter: (job: Job, _, lastFinalizedBlock: bigint) =>
                     BigInt(job.srcBlockNumber) < lastFinalizedBlock,
                 nextStatus: JobStatus.ProcessingRequest
             },
             // dst common
             {
-                where: (network) => ({
+                nextStatus: JobStatus.Success,
+                buildQuery: (network) => ({
                     status: JobStatus.WaitingTxFinality,
                     dstChainSelector: Number(network.chainSelector),
                     dstBlockNumberDelta: { not: 'finalized' },
                 }),
+                inclusion: 'dst',
                 filter: (job: Job, lastChainBlock: bigint) =>
-                    BigInt(job.dstBlockNumber ?? 0) + BigInt(job.dstBlockNumberDelta) < lastChainBlock,
-                nextStatus: JobStatus.Success
+                    (BigInt(job.dstBlockNumber ?? 0) + BigInt(job.dstBlockNumberDelta) < lastChainBlock)
+                    && Boolean(job.dstTxHash)
             },
             // dst finalized
             {
-                where: (network) => ({
+                nextStatus: JobStatus.Success,
+                buildQuery: (network) => ({
                     status: JobStatus.WaitingTxFinality,
                     dstChainSelector: Number(network.chainSelector),
                     dstBlockNumberDelta: 'finalized',
                 }),
+                inclusion: 'dst',
                 filter: (job: Job, _, lastFinalizedBlock: bigint) =>
-                    BigInt(job.dstBlockNumber ?? 0) < lastFinalizedBlock,
-                nextStatus: JobStatus.Success
+                    (BigInt(job.dstBlockNumber ?? 0) < lastFinalizedBlock) && Boolean(job.dstTxHash)
             }
         ])
     }
