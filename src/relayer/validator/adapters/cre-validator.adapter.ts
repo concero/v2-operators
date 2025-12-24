@@ -84,6 +84,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         status: JobStatus.ProcessingRequest,
                         updatedAt: { lte: new Date(Date.now() - 5 * 60_000) },
                         validatorType: ValidatorType.CRE,
+                        callbacksCount: { lt: 4 }
+                        // no submit retry
                     },
                 ],
             },
@@ -115,10 +117,11 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 }
 
                 const validations = await this.packCREValidations(parsedPayload.callbacks);
+
                 const dst = await this.submitMessage(parsedPayload, [validations]);
                 await this.context.jobQueue.updateOne(
                     { id: i.id },
-                    { dstBlockNumber: String(dst.blockNumber) },
+                    { dstBlockNumber: String(dst.blockNumber), dstTxHash: dst.hash },
                 );
                 return i.id;
             }),
@@ -136,26 +139,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     }
 
     async pumpFailedConfirm() {
-        const jobs = await this.context.jobQueue.getList(
-            {
-                OR: [
-                    // failed
-                    { status: JobStatus.ConfirmFailed, validatorType: ValidatorType.CRE },
-                    // timeout
-                    {
-                        status: JobStatus.ProcessingConfirm,
-                        updatedAt: { lte: new Date(Date.now() - 5 * 60_000) },
-                        validatorType: ValidatorType.CRE,
-                    },
-                ],
-            },
-            { take: 100 },
-        );
-
-        await this.context.jobQueue.updateMany(
-            { id: { in: jobs.map(i => i.id) } },
-            { status: JobStatus.ProcessingRequest },
-        );
+        // failed not used: JobStatus.ConfirmFailed not used at all
     }
 
     private async packCREValidations(creCallbacks: CRE.Response.Item[]) {

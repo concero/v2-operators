@@ -30,6 +30,7 @@ export class JobQueueService {
                 validatorType: entity.validatorType,
                 payload: ObjectLib.stringify(entity.payload),
                 // src
+                srcTxHash: entity.srcTxHash,
                 srcBlockNumber: entity.srcBlockNumber,
                 srcChainSelector: entity.srcChainSelector,
                 dstChainSelector: entity.dstChainSelector,

@@ -73,11 +73,11 @@ export type ParsedMessageLogReceipt = {
 };
 
 export enum JobStatus {
+    Reorged = 'reorged',
     WaitingSrcConfirmation = 'waiting_src_confirmation', // wait for finalization / block confirmation proof on src
     ProcessingRequest = 'processing_request', // planned to be requested
     RequestFailed = 'request_failed', // planned request failed, should be retried
     ProcessingConfirm = 'processing_verify', // planned to be verified
-    ConfirmFailed = 'confirm_failed', // planned verification failed, should be retried
     WaitingTxFinality = 'waiting_tx_finality', // planned to check finality on dst
     Success = 'success', // tx executed and on dst side
 }

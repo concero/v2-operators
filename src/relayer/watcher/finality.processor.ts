@@ -9,7 +9,6 @@ interface ProcessorStrategy {
     buildQuery: (network: ConceroNetwork) => Prisma.JobWhereInput
     inclusion: 'dst' | 'src'
     filter: (job: Job, lastChainBlock: bigint, lastFinalizedBlock: bigint) => boolean
-    nextStatus: JobStatus
 }
 
 export class FinalityProcessor extends ContextProvider {
@@ -39,31 +38,29 @@ export class FinalityProcessor extends ContextProvider {
             { take: 100 }
         )
 
-        const promises = batch
+        await Promise.all(batch
             .filter(job => strategy.filter(job, chainBlock, finalizedBlock))
             .map(async job => {
                 const publicClient = await this.context.viemClient.getClients(network.name).publicClient
 
                 if (strategy.inclusion === 'src') {
-                    const tx = await publicClient.getTransaction({ hash: job.srcTxHash as Hex })
-                    if (!tx) throw Error(`Job inclusion failed [srcTxHash=${job.srcTxHash}]`);
+                    try {
+                       await publicClient.getTransaction({ hash: job.srcTxHash as Hex })
+                        await this.context.jobQueue.updateOne({id: job.id}, { status: JobStatus.ProcessingRequest })
+                    } catch (e) {
+                        this.logger.warn(`Job inclusion failed [srcTxHash=${job.srcTxHash}]`);
+                        await this.context.jobQueue.updateOne({id: job.id}, { status: JobStatus.Reorged })
+                    }
                 } else {
-                    const tx = await publicClient.getTransaction({ hash: job.dstTxHash as Hex })
-                    if (!tx) throw Error(`Job inclusion failed [dstTxHash=${job.srcTxHash}]`);
+                    try {
+                        await publicClient.getTransaction({ hash: job.dstTxHash as Hex })
+                        await this.context.jobQueue.updateOne({ id: job.id }, { status: JobStatus.Success })
+                    } catch (e) {
+                        this.logger.info(`Job inclusion failed [dstTxHash=${job.srcTxHash}]`);
+                        await this.context.jobQueue.updateOne({ id: job.id }, { status: JobStatus.ProcessingConfirm })
+                    }
                 }
-
-                return job.id
             })
-        const results = await Promise.allSettled(promises);
-        const finalizedJobIds = results
-            .filter(i => i.status === 'fulfilled')
-            .map(i => i.value);
-
-        await this.context.jobQueue.updateMany(
-            {
-                id: { in: finalizedJobIds },
-            },
-            { status: strategy.nextStatus },
-        );
+        )
     }
 }
