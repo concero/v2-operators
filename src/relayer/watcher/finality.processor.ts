@@ -1,9 +1,10 @@
 import { ConceroNetwork } from '@concero/operator-utils';
 
 import { ContextProvider } from '../services';
-import { Context, JobStatus } from '../types';
+import { Context } from '../types';
 import { Job, Prisma } from '@prisma/client';
 import { Hex } from 'viem';
+import { JobStatus } from '../../types';
 
 interface ProcessorStrategy {
     buildQuery: (network: ConceroNetwork) => Prisma.JobWhereInput

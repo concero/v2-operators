@@ -19,16 +19,19 @@ export class ValidatorModule {
         await this.api.init();
 
         setInterval(async () => {
-            await Promise.all([
-                Object.values(this.adapters).map(async adapter => {
-                    await Promise.allSettled([
-                        adapter.pumpPendingRequest(),
-                        adapter.pumpFailedRequest(),
-                        adapter.pumpPendingConfirm(),
-                        adapter.pumpFailedConfirm(),
-                    ]);
-                }),
-            ]);
-        }, 10000);
+            await Promise.all(
+                Object.values(this.adapters).map(async adapter => adapter.pumpPendingRequest()),
+            );
+        }, 1000);
+        setInterval(async () => {
+            await Promise.all(
+                Object.values(this.adapters).map(async adapter => adapter.pumpFailedRequest()),
+            );
+        }, 1000);
+        setInterval(async () => {
+            await Promise.all(
+                Object.values(this.adapters).map(async adapter => adapter.pumpPendingConfirm()),
+            );
+        }, 1000);
     }
 }

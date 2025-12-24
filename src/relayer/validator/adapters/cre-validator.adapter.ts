@@ -4,8 +4,9 @@ import { BaseValidatorAdapter } from './base-validator.adapter';
 import { IValidatorAdapter } from './validator-adapter.interface';
 import axios, { AxiosError } from 'axios';
 
-import { createCREJWT, CRERequestBody } from '../../../utils';
-import { Context, CRE, JobPayload, JobStatus, ValidatorType } from '../../types';
+import { ArrayLib, createCREJWT, CRERequestBody } from '../../../utils';
+import { Context, ValidatorType } from '../../types';
+import { CRE, JobPayload, JobStatus } from '../../../types';
 
 export class CREValidatorAdapter extends BaseValidatorAdapter implements IValidatorAdapter {
     constructor(context: Context) {
@@ -15,61 +16,65 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     async pumpPendingRequest() {
         const jobs = await this.context.jobQueue.getList(
             { status: JobStatus.ProcessingRequest, validatorType: ValidatorType.CRE },
-            { take: 2 },
+            { take: 40 },
         );
 
         if (jobs.length === 0) {
             return;
         }
 
-        try {
-            const requestBody: CRERequestBody<CRE.Request> = {
-                jsonrpc: '2.0',
-                id: crypto.randomUUID(),
-                method: 'workflows.execute',
-                params: {
-                    input: {
-                        batch: jobs.map(i => {
-                            return {
-                                messageId: i.messageId as Hex,
-                                blockNumber: i.srcBlockNumber,
-                                srcChainSelector: i.srcChainSelector,
-                            };
-                        }),
+        const batches = ArrayLib.toChunks(jobs, 2);
+
+        for (const batch of batches) {
+            try {
+                const requestBody: CRERequestBody<CRE.Request> = {
+                    jsonrpc: '2.0',
+                    id: crypto.randomUUID(),
+                    method: 'workflows.execute',
+                    params: {
+                        input: {
+                            batch: jobs.map(i => {
+                                return {
+                                    messageId: i.messageId as Hex,
+                                    blockNumber: i.srcBlockNumber,
+                                    srcChainSelector: i.srcChainSelector,
+                                };
+                            }),
+                        },
+                        workflow: { workflowID: process.env.CRE_WORKFLOW_ID as string },
                     },
-                    workflow: { workflowID: process.env.CRE_WORKFLOW_ID as string },
-                },
-            };
-            const token = await createCREJWT(
-                requestBody,
-                process.env.CRE_REQUESTER_PRIVATE_KEY as Hex,
-            );
-            await axios.post(
-                // @todo: fix types
-                process.env.CRE_BASE_URL as string,
-                requestBody,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
+                };
+                const token = await createCREJWT(
+                    requestBody,
+                    process.env.CRE_REQUESTER_PRIVATE_KEY as Hex,
+                );
+                await axios.post(
+                    // @todo: fix types
+                    process.env.CRE_BASE_URL as string,
+                    requestBody,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`,
+                        },
                     },
-                },
-            );
-            await this.context.jobQueue.updateMany(
-                { id: { in: jobs.map(i => i.id) } },
-                { status: JobStatus.ProcessingConfirm },
-            );
-        } catch (e) {
-            if (e instanceof AxiosError) {
-                this.logger.error(`Found error: ${JSON.stringify(e.response)}`);
-            } else {
-                this.logger.error(`Error ${e}`);
+                );
+                await this.context.jobQueue.updateMany(
+                    { id: { in: jobs.map(i => i.id) } },
+                    { status: JobStatus.ProcessingConfirm },
+                );
+            } catch (e) {
+                if (e instanceof AxiosError) {
+                    this.logger.error(`Found error: ${JSON.stringify(e.response)}`);
+                } else {
+                    this.logger.error(`Error ${e}`);
+                }
+                this.logger.debug(`Failed CRE request ${e}`);
+                await this.context.jobQueue.updateMany(
+                    { id: { in: jobs.map(i => i.id) } },
+                    { status: JobStatus.RequestFailed },
+                );
             }
-            this.logger.debug(`Failed CRE request ${e}`);
-            await this.context.jobQueue.updateMany(
-                { id: { in: jobs.map(i => i.id) } },
-                { status: JobStatus.RequestFailed },
-            );
         }
     }
 
@@ -84,7 +89,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         status: JobStatus.ProcessingRequest,
                         updatedAt: { lte: new Date(Date.now() - 5 * 60_000) },
                         validatorType: ValidatorType.CRE,
-                        callbacksCount: { lt: 4 }
+                        callbacksCount: { lt: 4 },
                         // no submit retry
                     },
                 ],
@@ -110,12 +115,12 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         const promises = await Promise.allSettled(
             jobs.map(async i => {
-                const parsedPayload = JSON.parse(i.payload) as JobPayload
+                const parsedPayload = JSON.parse(i.payload) as JobPayload;
 
                 const rawCallbacks = await this.context.dbClient.creCallback.findMany({
-                    where: { messageId: i.messageId }
+                    where: { messageId: i.messageId },
                 });
-                const callbacks =  rawCallbacks.map(i => JSON.parse(i.payload)) as CRE.Response.Item[];
+                const callbacks = rawCallbacks.map(i => JSON.parse(i.payload)) as CRE.Response.Item[];
                 const validations = await this.packCREValidations(callbacks);
 
                 const dst = await this.submitMessage(parsedPayload, [validations]);
@@ -136,10 +141,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             { id: { in: jobIds } },
             { status: JobStatus.WaitingTxFinality },
         );
-    }
-
-    async pumpFailedConfirm() {
-        // failed not used: JobStatus.ConfirmFailed not used at all
     }
 
     private async packCREValidations(creCallbacks: CRE.Response.Item[]) {

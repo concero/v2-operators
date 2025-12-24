@@ -25,9 +25,6 @@ export abstract class BaseValidatorAdapter extends ContextProvider {
         const validatorLib =
             this.context.deploymentManager.getConceroValidatorLibByChainSelector(dstChainSelector);
 
-        const networkName =
-            this.context.deploymentManager.getNetworkNameByChainSelector(dstChainSelector);
-
         const receipt = await this.context.txWriter.callContract(dstNetwork, {
             address: routerAddress,
             functionName: 'submitMessage',

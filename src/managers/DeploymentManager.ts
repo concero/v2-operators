@@ -84,10 +84,6 @@ export class DeploymentManager implements NetworkUpdateListener {
         return validatorLib;
     }
 
-    getNetworkNameByChainSelector(chainSelector: number): string {
-        return this.chainOptions[chainSelector]?.name;
-    }
-
     getMinBlockConformationsByChainSelector(chainSelector: number): bigint {
         const minBlockConfirmations = this.chainOptions?.[chainSelector]?.minBlockConfirmations;
 

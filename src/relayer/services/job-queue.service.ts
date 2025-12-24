@@ -1,12 +1,7 @@
 import { LoggerInterface } from '@concero/operator-utils';
 import { Job, Prisma, PrismaClient } from '@prisma/client';
-
-import { Nullable } from '../../types/common';
 import { ObjectLib } from '../../utils';
-import { JobPayload, JobStatus } from '../types';
-
-const REPORT_RETRY_1M_COUNT = 4;
-const reportDelayMlSec = (attempts: number) => (attempts < REPORT_RETRY_1M_COUNT ? 60 : 300) * 1000;
+import { JobPayload, JobStatus } from '../../types';
 
 type CreateEntity = Omit<
     Job,
@@ -57,12 +52,6 @@ export class JobQueueService {
             this.logger.error(`[getList] failed ${e}`);
             return [];
         }
-    }
-
-    async findOne(where: Prisma.JobWhereInput): Promise<Nullable<Job>> {
-        return this.dbClient.job.findFirst({
-            where,
-        });
     }
 
     async updateOne(where: Prisma.JobWhereUniqueInput, data: Prisma.JobUpdateInput) {

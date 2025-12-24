@@ -1,9 +1,10 @@
 import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
 
 import { ChainsSetupService } from '../services/chains-setup.service';
-import { Context, JobStatus } from '../types';
+import { Context } from '../types';
 import { FinalityProcessor } from './finality.processor';
 import { Job } from '@prisma/client';
+import { JobStatus } from '../../types';
 
 export class WatcherModule extends ChainsSetupService {
     private readonly finalityProcessor: FinalityProcessor;
@@ -21,7 +22,6 @@ export class WatcherModule extends ChainsSetupService {
                 filter: (job: Job, lastChainBlock: bigint) =>
                     BigInt(job.srcBlockNumber) + BigInt(job.srcBlockNumberDelta) < lastChainBlock,
                 inclusion: 'src',
-                nextStatus: JobStatus.ProcessingRequest
             },
             // src finalized
             {
@@ -33,11 +33,9 @@ export class WatcherModule extends ChainsSetupService {
                 inclusion: 'src',
                 filter: (job: Job, _, lastFinalizedBlock: bigint) =>
                     BigInt(job.srcBlockNumber) < lastFinalizedBlock,
-                nextStatus: JobStatus.ProcessingRequest
             },
             // dst common
             {
-                nextStatus: JobStatus.Success,
                 buildQuery: (network) => ({
                     status: JobStatus.WaitingTxFinality,
                     dstChainSelector: Number(network.chainSelector),
@@ -50,7 +48,6 @@ export class WatcherModule extends ChainsSetupService {
             },
             // dst finalized
             {
-                nextStatus: JobStatus.Success,
                 buildQuery: (network) => ({
                     status: JobStatus.WaitingTxFinality,
                     dstChainSelector: Number(network.chainSelector),

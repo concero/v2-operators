@@ -2,7 +2,8 @@ import fastify, { FastifyInstance } from 'fastify';
 
 import { ObjectLib } from '../../utils';
 import { ContextProvider } from '../services';
-import { Context, CRE } from '../types';
+import { Context } from '../types';
+import { CRE } from '../../types';
 
 export class ValidatorApiService extends ContextProvider {
     private readonly app: FastifyInstance;

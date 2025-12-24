@@ -1,7 +1,8 @@
 import { BaseValidatorAdapter } from './base-validator.adapter';
 import { IValidatorAdapter } from './validator-adapter.interface';
 
-import { Context, JobPayload, JobStatus, ValidatorType } from '../../types';
+import { Context, ValidatorType } from '../../types';
+import { JobPayload, JobStatus } from '../../../types';
 
 export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IValidatorAdapter {
     constructor(context: Context) {
@@ -46,9 +47,5 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
             { id: { in: jobIds } },
             { status: JobStatus.WaitingTxFinality },
         );
-    }
-
-    async pumpFailedConfirm() {
-        // not used
     }
 }
