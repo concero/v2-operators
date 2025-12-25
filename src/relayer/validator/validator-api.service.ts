@@ -1,9 +1,9 @@
 import fastify, { FastifyInstance } from 'fastify';
 
+import { CRE } from '../../types';
 import { ObjectLib } from '../../utils';
 import { ContextProvider } from '../services';
 import { Context } from '../types';
-import { CRE } from '../../types';
 
 export class ValidatorApiService extends ContextProvider {
     private readonly app: FastifyInstance;
@@ -12,8 +12,8 @@ export class ValidatorApiService extends ContextProvider {
         super('ValidatorApiService', context);
         this.app = fastify({ logger: true });
         setInterval(async () => {
-           await this.calculateConfirmations()
-        }, 1000)
+            await this.calculateConfirmations();
+        }, 1000);
     }
 
     async init() {
@@ -67,16 +67,15 @@ export class ValidatorApiService extends ContextProvider {
     private async addConfirmationCallback(response: CRE.Response) {
         const items = Object.entries(response || {});
         if (items.length === 0) {
-            return
+            return;
         }
 
         await this.context.dbClient.creCallback.createMany({
-           data: items.map(([messageId, payload]) => ({
-               messageId, payload: JSON.stringify(payload)
-           })),
-        })
-
-
+            data: items.map(([messageId, payload]) => ({
+                messageId,
+                payload: JSON.stringify(payload),
+            })),
+        });
     }
 
     private async calculateConfirmations() {
@@ -84,11 +83,16 @@ export class ValidatorApiService extends ContextProvider {
             by: ['messageId'],
             _count: {
                 messageId: true,
-            }
-        })
+            },
+        });
 
-        await Promise.allSettled(callbacks.map(async (callback) => {
-           await this.context.jobQueue.updateOne({messageId: callback.messageId}, {callbacksCount: callback._count.messageId});
-        }))
+        await Promise.allSettled(
+            callbacks.map(async callback => {
+                await this.context.jobQueue.updateOne(
+                    { messageId: callback.messageId },
+                    { callbacksCount: callback._count.messageId },
+                );
+            }),
+        );
     }
 }

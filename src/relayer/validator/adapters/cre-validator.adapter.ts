@@ -4,9 +4,11 @@ import { BaseValidatorAdapter } from './base-validator.adapter';
 import { IValidatorAdapter } from './validator-adapter.interface';
 import axios, { AxiosError } from 'axios';
 
+import { CRE, JobPayload, JobStatus } from '../../../types';
 import { ArrayLib, createCREJWT, CRERequestBody } from '../../../utils';
 import { Context, ValidatorType } from '../../types';
-import { CRE, JobPayload, JobStatus } from '../../../types';
+
+const requiredCallbacksCount = 4;
 
 export class CREValidatorAdapter extends BaseValidatorAdapter implements IValidatorAdapter {
     constructor(context: Context) {
@@ -89,7 +91,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         status: JobStatus.ProcessingRequest,
                         updatedAt: { lte: new Date(Date.now() - 5 * 60_000) },
                         validatorType: ValidatorType.CRE,
-                        callbacksCount: { lt: 4 },
+                        callbacksCount: { lt: requiredCallbacksCount },
                         // no submit retry
                     },
                 ],
@@ -97,9 +99,17 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             { take: 100 },
         );
 
+        await this.context.dbClient.creCallback.deleteMany({
+            where: {
+                messageId: {
+                    in: Array.from(new Set(jobs.map(i => i.messageId))),
+                },
+            },
+        });
+
         await this.context.jobQueue.updateMany(
             { id: { in: jobs.map(i => i.id) } },
-            { status: JobStatus.ProcessingRequest },
+            { status: JobStatus.ProcessingRequest, callbacksCount: 0 },
         );
     }
 
@@ -108,7 +118,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             {
                 status: JobStatus.ProcessingConfirm,
                 validatorType: ValidatorType.CRE,
-                callbacksCount: { gte: 4 },
+                callbacksCount: { gte: requiredCallbacksCount },
             },
             { take: 100 },
         );
@@ -122,7 +132,9 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     const rawCallbacks = await this.context.dbClient.creCallback.findMany({
                         where: { messageId: i.messageId },
                     });
-                    const callbacks = rawCallbacks.map(i => JSON.parse(i.payload)) as CRE.Response.Item[];
+                    const callbacks = rawCallbacks.map(i =>
+                        JSON.parse(i.payload),
+                    ) as CRE.Response.Item[];
                     const validations = await this.packCREValidations(callbacks);
 
                     const dst = await this.submitMessage(parsedPayload, [validations]);
@@ -144,7 +156,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 { status: JobStatus.WaitingTxFinality },
             );
         }
-
     }
 
     private async packCREValidations(creCallbacks: CRE.Response.Item[]) {
