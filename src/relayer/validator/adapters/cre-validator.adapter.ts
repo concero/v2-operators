@@ -8,7 +8,7 @@ import { CRE, JobPayload, JobStatus } from '../../../types';
 import { ArrayLib, createCREJWT, CRERequestBody } from '../../../utils';
 import { Context, ValidatorType } from '../../types';
 
-const requiredCallbacksCount = 7;
+const requiredCallbacksCount = 4;
 const msInMin = 60_000;
 const creRequestExpirationMs = 5 * msInMin;
 
