@@ -171,6 +171,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             callbacksCount: { lte: requiredCallbacksCount },
         });
 
+        if (stuckRequests.length === 0) {
+            this.logger.info('No stuck requests');
+            return;
+        }
+
+        this.logger.info(`${stuckRequests.length} stuck requests`);
+
         await this.context.dbClient.creCallback.deleteMany({
             where: {
                 messageId: {
