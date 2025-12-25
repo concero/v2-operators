@@ -130,7 +130,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         const batches = ArrayLib.toChunks(jobs, 10);
         for (const batch of batches) {
-            this.logger.info(`Submit ${batch.length} messages`);
             const promises = await Promise.allSettled(
                 batch.map(async i => {
                     const parsedPayload = JSON.parse(i.payload) as JobPayload;
@@ -142,6 +141,10 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         JSON.parse(i.payload),
                     ) as CRE.Response.Item[];
                     const validations = await this.packCREValidations(callbacks);
+
+                    this.logger.info(
+                        `Submit message [${i.messageId}] to chain ${i.dstChainSelector}`,
+                    );
 
                     const dst = await this.submitMessage(parsedPayload, [validations]);
                     await this.context.jobQueue.updateOne(
