@@ -67,7 +67,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 );
             } catch (e) {
                 if (e instanceof AxiosError) {
-                    this.logger.error(`Found error: ${JSON.stringify(e.response)}`);
+                    this.logger.error(`Found error: ${JSON.stringify(e.toJSON())}`);
                 } else {
                     this.logger.error(`Error ${e}`);
                 }
