@@ -25,7 +25,8 @@
         "test": "jest",
         "prisma:reset": "prisma migrate reset",
         "prisma:studio": "prisma studio --schema=prisma/schema.prisma",
-        "prisma:migrate:dev": "prisma migrate dev",
+        "prisma:migrate:dev": "bun prisma migrate deploy && bun prisma generate",
+        "prisma:migrate:deploy": "",
         "prisma:generate": "prisma generate",
         "postinstall": "bun run prisma:generate"
     },

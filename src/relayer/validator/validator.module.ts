@@ -33,5 +33,11 @@ export class ValidatorModule {
                 Object.values(this.adapters).map(async adapter => adapter.pumpPendingConfirm()),
             );
         }, 1000);
+
+        setInterval(async () => {
+            await Promise.all(
+                Object.values(this.adapters).map(async adapter => adapter.pumpStuckCreRequests()),
+            );
+        }, 30_000);
     }
 }

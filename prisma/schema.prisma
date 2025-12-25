@@ -29,6 +29,7 @@ model Job {
   validatorType  String
   callbacksCount Int?
   status          String
+  lastVerificationRequestedAt DateTime?
 
   // src
   srcTxHash String
