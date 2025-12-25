@@ -168,6 +168,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             status: JobStatus.ProcessingConfirm,
             validatorType: ValidatorType.CRE,
             lastVerificationRequestedAt: { lte: new Date(Date.now() - creRequestExpirationMs) },
+            callbacksCount: { lte: requiredCallbacksCount },
         });
 
         await this.context.dbClient.creCallback.deleteMany({
@@ -180,7 +181,11 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         await this.context.jobQueue.updateMany(
             { id: { in: stuckRequests.map(i => i.id) } },
-            { status: JobStatus.ProcessingRequest, lastVerificationRequestedAt: null },
+            {
+                status: JobStatus.ProcessingRequest,
+                lastVerificationRequestedAt: null,
+                callbacksCount: 0,
+            },
         );
     }
 
@@ -201,9 +206,9 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             ),
         ).slice(0, 7);
 
-        this.logger.info(`Got signatures: ${signatures.join(', ')}`);
+        // this.logger.info(`Got signatures: ${signatures.join(', ')}`);
         const encodedSignatures = encodeAbiParameters([{ type: 'bytes[]' }], [signatures as Hex[]]);
-        this.logger.info(`Encoded signatures: ${encodedSignatures}`);
+        // this.logger.info(`Encoded signatures: ${encodedSignatures}`);
 
         return encodePacked(
             ['bytes', 'bytes', 'bytes'],
