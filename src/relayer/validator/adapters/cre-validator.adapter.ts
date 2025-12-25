@@ -164,18 +164,16 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         const signatures = Array.from(
             new Set(
-                creCallbacks
-                    .flatMap(item =>
-                        item.signs.map(sign => {
-                            const hex = sign.signature.startsWith('0x')
-                                ? sign.signature
-                                : `0x${sign.signature}`;
-                            return hex as Hex;
-                        }),
-                    )
-                    .slice(0, 7),
+                creCallbacks.flatMap(item =>
+                    item.signs.map(sign => {
+                        const hex = sign.signature.startsWith('0x')
+                            ? sign.signature
+                            : `0x${sign.signature}`;
+                        return hex as Hex;
+                    }),
+                ),
             ),
-        );
+        ).slice(0, 7);
 
         this.logger.info(`Got signatures: ${signatures.join(', ')}`);
         const encodedSignatures = encodeAbiParameters([{ type: 'bytes[]' }], [signatures as Hex[]]);
