@@ -25,7 +25,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             return;
         }
 
-        const batches = ArrayLib.toChunks(jobs, 2);
+        const batches = ArrayLib.toChunks(jobs, 5);
 
         for (const batch of batches) {
             try {
