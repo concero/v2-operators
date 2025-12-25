@@ -36,7 +36,9 @@ export class ValidatorModule {
 
         setInterval(async () => {
             await Promise.all(
-                Object.values(this.adapters).map(async adapter => adapter.pumpStuckCreRequests()),
+                Object.values(this.adapters).map(async adapter =>
+                    adapter.pumpStuckVerificationRequests(),
+                ),
             );
         }, 30_000);
     }

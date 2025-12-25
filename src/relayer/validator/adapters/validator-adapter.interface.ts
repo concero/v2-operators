@@ -5,5 +5,5 @@ export interface IValidatorAdapter {
 
     pumpPendingConfirm(): Promise<void>;
 
-    pumpStuckCreRequests(): Promise<void>;
+    pumpStuckVerificationRequests(): Promise<void>;
 }

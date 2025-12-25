@@ -163,7 +163,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         }
     }
 
-    async pumpStuckCreRequests() {
+    async pumpStuckVerificationRequests() {
         const stuckRequests = await this.context.jobQueue.getList({
             status: JobStatus.ProcessingConfirm,
             validatorType: ValidatorType.CRE,
