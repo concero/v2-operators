@@ -114,7 +114,7 @@
 
     "@colors/colors": ["@colors/colors@1.6.0", "", {}, "sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA=="],
 
-    "@concero/operator-utils": ["@concero/operator-utils@github:concero/operator-utils#95b9883", { "dependencies": { "async-mutex": "0.5.0", "axios": "1.12.0", "p-queue": "9.0.0", "uuid": "11.1.0", "viem": "2.37.6", "winston": "3.17.0", "winston-daily-rotate-file": "5.0.0" } }, "concero-operator-utils-95b9883"],
+    "@concero/operator-utils": ["@concero/operator-utils@github:concero/operator-utils#c50b6ea", { "dependencies": { "async-mutex": "0.5.0", "axios": "1.12.0", "p-queue": "9.0.0", "uuid": "11.1.0", "viem": "2.37.6", "winston": "3.17.0", "winston-daily-rotate-file": "5.0.0" } }, "concero-operator-utils-c50b6ea"],
 
     "@dabh/diagnostics": ["@dabh/diagnostics@2.0.8", "", { "dependencies": { "@so-ric/colorspace": "^1.1.6", "enabled": "2.0.x", "kuler": "^2.0.0" } }, "sha512-R4MSXTVnuMzGD7bzHdW2ZhhdPC/igELENcq5IjEverBvq5hn1SXCWcsi6eSsdWP0/Ur+SItRRjAktmdoX/8R/Q=="],
 

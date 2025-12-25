@@ -19,6 +19,7 @@
         "start:new:prod": "bun ./dist/main.js",
         "start:prod": "NODE_ENV=production bun ./dist/index.js",
         "start:relayerA": "bun ./src/index.ts",
+        "start:db": "docker compose -f ./docker/docker-compose.yml --env-file ./.env.database up -d --build",
         "check-updates": "bun npm-check-updates",
         "prepare": "husky",
         "test": "jest",
