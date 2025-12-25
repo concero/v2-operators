@@ -130,6 +130,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         const batches = ArrayLib.toChunks(jobs, 10);
         for (const batch of batches) {
+            this.logger.info(`Submit ${batch.length} messages`);
             const promises = await Promise.allSettled(
                 batch.map(async i => {
                     const parsedPayload = JSON.parse(i.payload) as JobPayload;
