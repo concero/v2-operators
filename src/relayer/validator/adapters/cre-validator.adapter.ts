@@ -167,7 +167,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             status: JobStatus.ProcessingConfirm,
             validatorType: ValidatorType.CRE,
             lastVerificationRequestedAt: { lte: new Date(Date.now() - creRequestExpirationMs) },
-            callbacksCount: { lte: requiredCallbacksCount },
+            callbacksCount: { not: { gte: requiredCallbacksCount } },
         });
 
         if (stuckRequests.length === 0) {
