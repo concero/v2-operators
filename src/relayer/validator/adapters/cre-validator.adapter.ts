@@ -163,11 +163,19 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     }
 
     async pumpStuckVerificationRequests() {
-        const stuckRequests = await this.context.jobQueue.getList({
+        const commonQuery = {
             status: JobStatus.ProcessingConfirm,
             validatorType: ValidatorType.CRE,
-            lastVerificationRequestedAt: { lte: new Date(Date.now() - creRequestExpirationMs) },
-            callbacksCount: { not: { gte: requiredCallbacksCount } },
+            lastVerificationRequestedAt: {
+                lte: new Date(Date.now() - creRequestExpirationMs),
+            },
+        };
+
+        const stuckRequests = await this.context.jobQueue.getList({
+            OR: [
+                { ...commonQuery, callbacksCount: { lte: requiredCallbacksCount } },
+                { ...commonQuery, callbacksCount: null },
+            ],
         });
 
         if (stuckRequests.length === 0) {
