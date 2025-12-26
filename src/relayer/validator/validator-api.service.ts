@@ -70,12 +70,16 @@ export class ValidatorApiService extends ContextProvider {
             return;
         }
 
+        const start = Date.now();
+
         await this.context.dbClient.creCallback.createMany({
             data: items.map(([messageId, payload]) => ({
                 messageId,
                 payload: JSON.stringify(payload),
             })),
         });
+
+        this.logger.info(`creCallback.createMany took: ${(Date.now() - start) / 1000}s`);
     }
 
     private async calculateConfirmations() {

@@ -25,6 +25,8 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
         // not used
     }
 
+    async pumpStuckVerificationRequests() {}
+
     async pumpPendingConfirm() {
         const jobs = await this.context.jobQueue.getList(
             { status: JobStatus.ProcessingConfirm, validatorType: ValidatorType.Empty },

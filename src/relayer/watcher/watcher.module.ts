@@ -40,11 +40,12 @@ export class WatcherModule extends ChainsSetupService {
                     status: JobStatus.WaitingTxFinality,
                     dstChainSelector: Number(network.chainSelector),
                     dstBlockNumberDelta: { not: 'finalized' },
+                    dstTxHash: { not: null },
                 }),
                 inclusion: 'dst',
                 filter: (job: Job, lastChainBlock: bigint) =>
                     BigInt(job.dstBlockNumber ?? 0) + BigInt(job.dstBlockNumberDelta) <
-                        lastChainBlock && Boolean(job.dstTxHash),
+                    lastChainBlock,
             },
             // dst finalized
             {
@@ -52,10 +53,11 @@ export class WatcherModule extends ChainsSetupService {
                     status: JobStatus.WaitingTxFinality,
                     dstChainSelector: Number(network.chainSelector),
                     dstBlockNumberDelta: 'finalized',
+                    dstTxHash: { not: null },
                 }),
                 inclusion: 'dst',
                 filter: (job: Job, _, lastFinalizedBlock: bigint) =>
-                    BigInt(job.dstBlockNumber ?? 0) < lastFinalizedBlock && Boolean(job.dstTxHash),
+                    BigInt(job.dstBlockNumber ?? 0) < lastFinalizedBlock,
             },
         ]);
     }

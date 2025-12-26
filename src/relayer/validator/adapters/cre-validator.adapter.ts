@@ -8,6 +8,10 @@ import { CRE, JobPayload, JobStatus } from '../../../types';
 import { ArrayLib, createCREJWT, CRERequestBody } from '../../../utils';
 import { Context, ValidatorType } from '../../types';
 
+const requiredCallbacksCount = 4;
+const msInMin = 60_000;
+const creRequestExpirationMs = 5 * msInMin;
+
 export class CREValidatorAdapter extends BaseValidatorAdapter implements IValidatorAdapter {
     constructor(context: Context) {
         super('CREValidatorAdapter', context);
@@ -23,7 +27,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             return;
         }
 
-        const batches = ArrayLib.toChunks(jobs, 2);
+        const batches = ArrayLib.toChunks(jobs, 5);
 
         for (const batch of batches) {
             try {
@@ -61,7 +65,10 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 );
                 await this.context.jobQueue.updateMany(
                     { id: { in: batch.map(i => i.id) } },
-                    { status: JobStatus.ProcessingConfirm },
+                    {
+                        status: JobStatus.ProcessingConfirm,
+                        lastVerificationRequestedAt: new Date(Date.now()),
+                    },
                 );
             } catch (e) {
                 this.logger.error(`Failed CRE request ${e}`);
@@ -92,9 +99,17 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             { take: 100 },
         );
 
+        await this.context.dbClient.creCallback.deleteMany({
+            where: {
+                messageId: {
+                    in: Array.from(new Set(jobs.map(i => i.messageId))),
+                },
+            },
+        });
+
         await this.context.jobQueue.updateMany(
             { id: { in: jobs.map(i => i.id) } },
-            { status: JobStatus.ProcessingRequest },
+            { status: JobStatus.ProcessingRequest, callbacksCount: 0 },
         );
     }
 
@@ -103,7 +118,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             {
                 status: JobStatus.ProcessingConfirm,
                 validatorType: ValidatorType.CRE,
-                callbacksCount: { gte: 4 },
+                callbacksCount: { gte: requiredCallbacksCount },
             },
             { take: 100 },
         );
@@ -121,6 +136,10 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         JSON.parse(i.payload),
                     ) as CRE.Response.Item[];
                     const validations = await this.packCREValidations(callbacks);
+
+                    this.logger.info(
+                        `Submit message [${i.messageId}] to chain ${i.dstChainSelector}`,
+                    );
 
                     const dst = await this.submitMessage(parsedPayload, [validations]);
                     await this.context.jobQueue.updateOne(
@@ -143,6 +162,39 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         }
     }
 
+    async pumpStuckVerificationRequests() {
+        const stuckRequests = await this.context.jobQueue.getList({
+            status: JobStatus.ProcessingConfirm,
+            validatorType: ValidatorType.CRE,
+            lastVerificationRequestedAt: { lte: new Date(Date.now() - creRequestExpirationMs) },
+            callbacksCount: { lte: requiredCallbacksCount },
+        });
+
+        if (stuckRequests.length === 0) {
+            this.logger.info('No stuck requests');
+            return;
+        }
+
+        this.logger.info(`${stuckRequests.length} stuck requests`);
+
+        await this.context.dbClient.creCallback.deleteMany({
+            where: {
+                messageId: {
+                    in: Array.from(new Set(stuckRequests.map(i => i.messageId))),
+                },
+            },
+        });
+
+        await this.context.jobQueue.updateMany(
+            { id: { in: stuckRequests.map(i => i.id) } },
+            {
+                status: JobStatus.ProcessingRequest,
+                lastVerificationRequestedAt: null,
+                callbacksCount: 0,
+            },
+        );
+    }
+
     private async packCREValidations(creCallbacks: CRE.Response.Item[]) {
         const rawReport = creCallbacks[0].rawReport as Hex;
         const reportContext = creCallbacks[0].reportContext as Hex;
@@ -158,11 +210,11 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     }),
                 ),
             ),
-        );
+        ).slice(0, 7);
 
-        this.logger.info(`Got signatures: ${signatures.join(', ')}`);
+        // this.logger.info(`Got signatures: ${signatures.join(', ')}`);
         const encodedSignatures = encodeAbiParameters([{ type: 'bytes[]' }], [signatures as Hex[]]);
-        this.logger.info(`Encoded signatures: ${encodedSignatures}`);
+        // this.logger.info(`Encoded signatures: ${encodedSignatures}`);
 
         return encodePacked(
             ['bytes', 'bytes', 'bytes'],
