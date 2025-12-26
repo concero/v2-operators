@@ -30,6 +30,7 @@ model Job {
   callbacksCount Int?
   status          String
   lastVerificationRequestedAt DateTime?
+  lastSubmittedAt DateTime?
 
   // src
   srcTxHash String

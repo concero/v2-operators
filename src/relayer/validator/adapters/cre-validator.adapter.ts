@@ -11,6 +11,7 @@ import { Context, ValidatorType } from '../../types';
 const requiredCallbacksCount = 4;
 const msInMin = 60_000;
 const creRequestExpirationMs = 5 * msInMin;
+const messageSubmissionExpirationMs = 3 * msInMin;
 
 export class CREValidatorAdapter extends BaseValidatorAdapter implements IValidatorAdapter {
     constructor(context: Context) {
@@ -119,11 +120,25 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 status: JobStatus.ProcessingConfirm,
                 validatorType: ValidatorType.CRE,
                 callbacksCount: { gte: requiredCallbacksCount },
+                OR: [
+                    {
+                        lastSubmittedAt: {
+                            lte: new Date(Date.now() - messageSubmissionExpirationMs),
+                        },
+                    },
+                    { lastSubmittedAt: null },
+                ],
             },
             { take: 100 },
         );
 
+        await this.context.jobQueue.updateMany(
+            { id: { in: jobs.map(i => i.id) } },
+            { lastSubmittedAt: new Date(Date.now()) },
+        );
+
         const batches = ArrayLib.toChunks(jobs, 10);
+
         for (const batch of batches) {
             const promises = await Promise.allSettled(
                 batch.map(async i => {
@@ -163,19 +178,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     }
 
     async pumpStuckVerificationRequests() {
-        const commonQuery = {
+        const stuckRequests = await this.context.jobQueue.getList({
             status: JobStatus.ProcessingConfirm,
             validatorType: ValidatorType.CRE,
             lastVerificationRequestedAt: {
                 lte: new Date(Date.now() - creRequestExpirationMs),
             },
-        };
-
-        const stuckRequests = await this.context.jobQueue.getList({
-            OR: [
-                { ...commonQuery, callbacksCount: { lte: requiredCallbacksCount } },
-                { ...commonQuery, callbacksCount: null },
-            ],
+            OR: [{ callbacksCount: { lte: requiredCallbacksCount } }, { callbacksCount: null }],
         });
 
         if (stuckRequests.length === 0) {
@@ -186,11 +195,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         this.logger.info(`${stuckRequests.length} stuck requests`);
 
         await this.context.dbClient.creCallback.deleteMany({
-            where: {
-                messageId: {
-                    in: Array.from(new Set(stuckRequests.map(i => i.messageId))),
-                },
-            },
+            where: { messageId: { in: Array.from(new Set(stuckRequests.map(i => i.messageId))) } },
         });
 
         await this.context.jobQueue.updateMany(
