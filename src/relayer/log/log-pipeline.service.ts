@@ -1,10 +1,16 @@
 import { Abi, decodeEventLog, Hex, Log, maxUint64 } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
-import { JobBlocksDelta, JobStatus, ParsedLog } from '../../types';
-import { MessagingCodec } from '../codec';
+import {
+    JobBlocksDelta,
+    JobStatus,
+    MessageSentLogData,
+    ParsedLog,
+    ParsedMessageLogReceipt,
+} from '../../types';
+import { MessagingCodec } from '../../utils';
 import { ContextProvider } from '../services';
-import { Context, MessageSentLogData, ParsedMessageLogReceipt, ValidatorType } from '../types';
+import { Context, ValidatorType } from '../types';
 
 export class LogPipelineService extends ContextProvider {
     constructor(context: Context) {
@@ -19,7 +25,7 @@ export class LogPipelineService extends ContextProvider {
 
     async execute(network: ConceroNetwork, log: Log): Promise<void> {
         try {
-            const parsedLog = this.parseLog(log, this.context.config.contract.router);
+            const parsedLog = this.parseLog(log, this.context.config.routerContractAbi);
             if (!parsedLog) {
                 this.logger.error(
                     `Unable to parse log [address=${log.address}, blockNumber=${String(log.blockNumber)}, chain=${network.name}]`,

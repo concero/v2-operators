@@ -1,7 +1,8 @@
 import { LoggerInterface } from '@concero/operator-utils';
 import { Job, Prisma, PrismaClient } from '@prisma/client';
-import { ObjectLib } from '../../utils';
+
 import { JobPayload, JobStatus } from '../../types';
+import { ObjectLib } from '../../utils';
 
 type CreateEntity = Omit<
     Job,

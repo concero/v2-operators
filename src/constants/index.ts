@@ -1,3 +1,4 @@
+export * from './abi';
 export * from './appErrors';
 export { envPrefixes } from './envPrefixes';
 export { eventEmitter } from './eventEmitter';

@@ -4,9 +4,9 @@ import { BaseValidatorAdapter } from './base-validator.adapter';
 import { IValidatorAdapter } from './validator-adapter.interface';
 import axios from 'axios';
 
+import { CRE, JobPayload, JobStatus } from '../../../types';
 import { ArrayLib, createCREJWT, CRERequestBody } from '../../../utils';
 import { Context, ValidatorType } from '../../types';
-import { CRE, JobPayload, JobStatus } from '../../../types';
 
 export class CREValidatorAdapter extends BaseValidatorAdapter implements IValidatorAdapter {
     constructor(context: Context) {
@@ -117,7 +117,9 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     const rawCallbacks = await this.context.dbClient.creCallback.findMany({
                         where: { messageId: i.messageId },
                     });
-                    const callbacks = rawCallbacks.map(i => JSON.parse(i.payload)) as CRE.Response.Item[];
+                    const callbacks = rawCallbacks.map(i =>
+                        JSON.parse(i.payload),
+                    ) as CRE.Response.Item[];
                     const validations = await this.packCREValidations(callbacks);
 
                     const dst = await this.submitMessage(parsedPayload, [validations]);
@@ -139,7 +141,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 { status: JobStatus.WaitingTxFinality },
             );
         }
-
     }
 
     private async packCREValidations(creCallbacks: CRE.Response.Item[]) {

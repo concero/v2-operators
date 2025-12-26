@@ -1,4 +1,3 @@
-import { Abi, AbiEvent, Address, Hex } from 'viem';
 import {
     BlockManagerRegistry,
     ConceroNetworkManager,
@@ -14,20 +13,12 @@ import { JobQueueService } from './services';
 import { PrismaClient } from '@prisma/client';
 
 import { DeploymentManager, LogsListenerStore } from '../managers';
+import { Config } from '../types';
 
 export enum ValidatorType {
     CRE = 'cre',
     Empty = 'empty',
 }
-export type Config = {
-    contract: {
-        router: Abi;
-        verifier: Abi;
-    };
-    event: {
-        messageSent: AbiEvent;
-    };
-};
 
 export type Context = {
     logger: Logger;
@@ -45,29 +36,3 @@ export type Context = {
     txReader: TxReader;
     txWriter: TxWriter;
 };
-
-export type MessageSentLogData = {
-    messageId: Hex;
-    messageReceipt: Hex;
-    validatorLibs: Address[];
-    relayerLib: Address;
-};
-export type ParsedMessageLogReceipt = {
-    version: number;
-    srcChainSelector: number;
-    dstChainSelector: number;
-    nonce: bigint;
-    srcChainData: {
-        sender: Address;
-        blockConfirmations: bigint;
-    };
-    dstChainData: {
-        raw: Hex;
-        receiver: Address | null;
-        gasLimit: number | null;
-    };
-    relayerLib: Hex;
-    validatorLibs: Hex[];
-    payload: Hex;
-};
-

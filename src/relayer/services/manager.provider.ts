@@ -15,7 +15,8 @@ import { PrismaClient } from '@prisma/client';
 
 import { globalConfig } from '../../constants';
 import { DbManager, DeploymentManager, LogsListenerStore } from '../../managers';
-import { Config, Context } from '../types';
+import { Config } from '../../types';
+import { Context } from '../types';
 
 export abstract class ManagerProvider {
     private config: Config;

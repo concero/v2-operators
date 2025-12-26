@@ -1,8 +1,9 @@
 import { LogModule } from './log';
 import { ManagerProvider } from './services';
-import { Config } from './types';
 import { ValidatorModule } from './validator';
 import { WatcherModule } from './watcher';
+
+import { Config } from '../types';
 
 export class RelayerApp extends ManagerProvider {
     private logModule!: LogModule;

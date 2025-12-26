@@ -26,7 +26,7 @@ export class LogModule extends ChainsSetupService {
                     routerAddress,
                     network,
                     onLogs,
-                    this.context.config.event.messageSent,
+                    this.context.config.messageSentEventAbi,
                     blockManager,
                 )
                 .catch(this.logger.error)

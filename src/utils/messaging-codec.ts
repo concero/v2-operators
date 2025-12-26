@@ -1,5 +1,6 @@
 import { Address, Hex } from 'viem';
-import { ParsedMessageLogReceipt } from './types';
+
+import { ParsedMessageLogReceipt } from '../types';
 
 export namespace MessagingCodec {
     export function decodeReceipt(input: string): ParsedMessageLogReceipt {

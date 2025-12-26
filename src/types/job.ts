@@ -1,4 +1,4 @@
-import { MessageSentLogData, ParsedMessageLogReceipt } from '../relayer/types';
+import { MessageSentLogData, ParsedMessageLogReceipt } from './message-sent-log';
 import { ParsedLog } from './parsedLog';
 
 export enum JobStatus {
@@ -10,6 +10,7 @@ export enum JobStatus {
     WaitingTxFinality = 'waiting_tx_finality', // planned to check finality on dst
     Success = 'success', // tx executed and on dst side
 }
+
 export type JobBlocksDelta = bigint | 'finalized';
 export type JobPayload = Omit<
     ParsedLog<MessageSentLogData>,

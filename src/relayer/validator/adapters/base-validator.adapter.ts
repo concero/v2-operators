@@ -1,8 +1,9 @@
 import { Hash, Hex } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
+import { JobPayload } from '../../../types';
 import { ContextProvider } from '../../services/context.provider';
-import { Context, JobPayload } from '../../types';
+import { Context } from '../../types';
 
 export abstract class BaseValidatorAdapter extends ContextProvider {
     protected constructor(name: string, context: Context) {
@@ -28,10 +29,9 @@ export abstract class BaseValidatorAdapter extends ContextProvider {
         const receipt = await this.context.txWriter.callContract(dstNetwork, {
             address: routerAddress,
             functionName: 'submitMessage',
-            abi: this.context.config.contract.router,
+            abi: this.context.config.routerContractAbi,
             args: [payload.data.messageReceipt, validations, [validatorLib], relayerLib],
         });
-
 
         return { blockNumber: receipt.blockNumber, hash: receipt.transactionHash };
     }
