@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 
 import * as path from 'path';
 
-export const ENV_FILES: string[] = ['.env'];
+export const ENV_FILES: string[] = ['.env.development'];
 
 function stripJunk(raw: string) {
     return raw
@@ -41,12 +41,12 @@ function sanitizeEthAddress(raw: string | undefined): `0x${string}` {
 /**
  * Configures dotenv loading order:
  * 1) Base files from ENV_FILES (in order added)
- * 2) .env.local (optional)
- * 3) .env.development or .env.production (last, always loaded with override)
+ * 2) .env.development.local (optional)
+ * 3) .env.development.development or .env.development.production (last, always loaded with override)
  *
  * Any other NODE_ENV values are coerced to "development".
  *
- * @param {string} [basePath='./'] - Base path where .env files are located.
+ * @param {string} [basePath='./'] - Base path where .env.development files are located.
  * */
 export function configureDotEnv(basePath = './'): void {
     const baseDir = basePath.endsWith(path.sep) ? basePath : `${basePath}${path.sep}`;
@@ -57,15 +57,13 @@ export function configureDotEnv(basePath = './'): void {
         dotenv.config({ path: p, override: true });
     }
 
-    dotenv.config({ path: path.resolve(baseDir, '.env.local'), override: true });
+    dotenv.config({ path: path.resolve(baseDir, '.env.development.local'), override: true });
 
     dotenv.config({ path: path.resolve(baseDir, `.env.${nodeEnvNormalized}`), override: true });
 
-    try {
-        process.env.OPERATOR_PRIVATE_KEY = sanitizeHexPrivateKey(process.env.OPERATOR_PRIVATE_KEY);
-    } catch (e) {
-        throw e;
-    }
+    console.log({ DATABASE_URL: process.env.DATABASE_URL, processes: process.env });
+    process.env.OPERATOR_PRIVATE_KEY = sanitizeHexPrivateKey(process.env.OPERATOR_PRIVATE_KEY);
+    process.env.DATABASE_URL = `postgresql://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.POSTGRES_DB}`;
 
     if (process.env.OPERATOR_ADDRESS) {
         process.env.OPERATOR_ADDRESS = sanitizeEthAddress(process.env.OPERATOR_ADDRESS);

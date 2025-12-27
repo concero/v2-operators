@@ -13,9 +13,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps bun.lock* ./prisma
 COPY --from=deps /app/prisma ./prisma
+COPY .env* ./
+COPY src ./src
 COPY tsconfig.json package.json ./
 
-RUN bun build
+
+RUN bun run build
 
 FROM oven/bun:1.1-slim AS runtime
 
@@ -23,8 +26,10 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+COPY --from=deps /app/prisma ./prisma
 
 COPY package.json bun.lockb* ./
-COPY envs/${ENVIRONMENT} ./envs/${ENVIRONMENT}
+COPY .env* ./
 
-CMD ["sh", "-c", "echo '✅ Container ready! To run: bun run dist/apps/<service>/main.js'; sleep infinity"]
+
+CMD ["echo", "started"]
