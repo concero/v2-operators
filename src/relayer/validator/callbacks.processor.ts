@@ -4,6 +4,7 @@ import { Context } from '../types';
 export class CallbacksProcessor extends ContextProvider {
     constructor(context: Context) {
         super('CallbacksProcessor', context);
+
         setInterval(async () => {
             await this.calculateCRECallbacks();
         }, 500);

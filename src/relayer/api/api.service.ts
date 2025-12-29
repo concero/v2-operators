@@ -1,5 +1,7 @@
+import { concatHex, Hash, Hex, hexToBytes, keccak256, recoverAddress } from 'viem';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
+import { allowedSignerAddresses } from '../../constants';
 import { CRE, JobStatus } from '../../types';
 import { ObjectLib } from '../../utils';
 import { LogModule } from '../log';
@@ -17,9 +19,10 @@ export class ApiService extends ContextProvider {
     async handleCRECallback(req: FastifyRequest, res: FastifyReply) {
         try {
             const body = req.body as CRE.Response;
+            const validBody = await this.extractValidResponse(body);
             this.logger.info(`handleCRECallback Got: ${ObjectLib.stringify(body)}`);
 
-            const items = Object.entries(body || {});
+            const items = Object.entries(validBody || {});
             if (items.length === 0) {
                 return;
             }
@@ -126,6 +129,65 @@ export class ApiService extends ContextProvider {
     }
 
     // helpers
+
+    private async extractValidResponse(creResponse: CRE.Response): Promise<CRE.Response> {
+        let result: CRE.Response = {};
+
+        const validateWorkflowId = (reportContext: Hex): void => {
+            const bytes = hexToBytes(reportContext);
+            const workflowId = Buffer.from(bytes.slice(0, 32)).toString('hex');
+            if (workflowId !== process.env.CRE_WORKFLOW_ID) {
+                if (workflowId !== process.env.CRE_WORKFLOW_ID) {
+                    throw new Error('CRE Workflow Id is invalid');
+                }
+            }
+        };
+
+        const validateSignatures = async (signatures: string[], hash: Hash) => {
+            if (signatures.length < 7) {
+                throw new Error(
+                    `Invalid number of signatures: got ${signatures.length}, required 7`,
+                );
+            }
+
+            const recovered: Hex[] = [];
+
+            for (const signature of signatures) {
+                const rawSigner = await recoverAddress({
+                    hash,
+                    signature: signature as Hex,
+                });
+                const normalizedSigner = rawSigner.toLowerCase() as Hex;
+
+                if (!allowedSignerAddresses.includes(normalizedSigner)) {
+                    throw new Error(`Signer ${normalizedSigner} is not allowed`);
+                }
+
+                if (recovered.includes(normalizedSigner)) {
+                    throw new Error(`Duplicate signer ${normalizedSigner}`);
+                }
+
+                recovered.push(normalizedSigner);
+            }
+        };
+
+        Object.entries(creResponse).map(async ([messageId, item]) => {
+            try {
+                const { rawReport, reportContext, signs } = item;
+                validateWorkflowId(reportContext as Hex);
+
+                const signatures = signs.map(i => i.signature);
+                const hash = keccak256(concatHex([rawReport as Hex, reportContext as Hex]));
+                await validateSignatures(signatures, hash);
+
+                result[messageId] = item;
+            } catch (e) {
+                this.logger.error(`extractValidItems failed: ${e}`);
+            }
+        });
+
+        return result;
+    }
 
     private respond(res: FastifyReply, json: Record<string, unknown>, status = 200) {
         res.headers({ 'content-type': 'application/json' }).status(status).send(json);
