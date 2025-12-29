@@ -1,0 +1,27 @@
+name: Deploy Concero Relayer
+
+on:
+  push:
+    branches:
+      - feature/support-cre
+
+jobs:
+  deploy:
+    name: Deploy static files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to DEV
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEV_SSH_HOST }}
+          username: ${{ secrets.DEV_SSH_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          port: ${{ secrets.DEV_SSH_PORT }}
+          script: |
+            echo "Deploying Concero Relayer → DEV"
+            cd /root/relayer
+            git fetch --all
+            git reset --hard origin/${{ steps.branch.outputs.branch }}
+            docker compose -f docker/docker-compose.yml --env-file .env.development up --build
+            echo "✅ DEV done at $(date)"
