@@ -16,9 +16,9 @@ export class CallbacksProcessor extends ContextProvider {
             _count: {
                 messageId: true,
             },
-            where: {
+            /* where: {
                 job: { OR: [{ callbacksCount: { lt: 10 } }, { callbacksCount: null }] },
-            },
+            }, */
         });
 
         await Promise.allSettled(
