@@ -17,7 +17,6 @@ export class RelayerApp extends ManagerProvider {
     }
 
     async init(): Promise<void> {
-        const refetchLog = this.logModule.refetchLog.bind(this.logModule);
         await this.initManagers();
         this.verifierModule = new ValidatorModule(this.context);
         await this.verifierModule.init();
@@ -26,6 +25,7 @@ export class RelayerApp extends ManagerProvider {
         this.logModule = new LogModule(this.context);
         await this.logModule.setupEachHandler();
         this.apiModule = new ApiModule(this.context);
+        const refetchLog = this.logModule.refetchLog.bind(this.logModule);
         await this.apiModule.init(refetchLog);
     }
 }
