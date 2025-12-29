@@ -51,6 +51,7 @@ export class LogModule extends ChainsSetupService {
             const srcNetworkName =
                 this.context.deploymentManager.getNetworkNameByChainSelector(srcChainSelector);
             const extractedLog = await this.extractor.extractLog(
+                srcChainSelector,
                 srcNetworkName,
                 blockNumber,
                 messageId,
