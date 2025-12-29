@@ -2,11 +2,20 @@ import { LoggerInterface } from '@concero/operator-utils';
 import { Job, Prisma, PrismaClient } from '@prisma/client';
 
 import { JobPayload, JobStatus } from '../../types';
+import { Nullable } from '../../types/common';
 import { ObjectLib } from '../../utils';
 
 type CreateEntity = Omit<
     Job,
-    'id' | 'status' | 'payload' | 'attempts' | 'nextRetryAt' | 'createdAt' | 'updatedAt'
+    | 'id'
+    | 'status'
+    | 'payload'
+    | 'attempts'
+    | 'nextRetryAt'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'lastVerificationRequestedAt'
+    | 'lastSubmittedAt'
 > & { status: JobStatus; payload: JobPayload };
 
 export class JobQueueService {
@@ -37,6 +46,17 @@ export class JobQueueService {
                 dstBlockNumberDelta: entity.dstBlockNumberDelta,
             },
         });
+    }
+
+    async findOne(where: Prisma.JobWhereUniqueInput): Promise<Nullable<Job>> {
+        try {
+            return this.dbClient.job.findUnique({
+                where,
+            });
+        } catch (e) {
+            this.logger.error(`[getList] failed ${e}`);
+            return null;
+        }
     }
 
     async getList(

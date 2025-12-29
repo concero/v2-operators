@@ -3,4 +3,4 @@ set -e
 
 bunx prisma generate
 bunx prisma migrate deploy
-exec bun run start:prod
+exec bun run start

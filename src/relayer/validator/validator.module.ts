@@ -1,14 +1,14 @@
 import { CREValidatorAdapter, EmptyValidatorAdapter, IValidatorAdapter } from './adapters';
-import { ValidatorApiService } from './validator-api.service';
+import { CallbacksProcessor } from './callbacks.processor';
 
 import { Context, ValidatorType } from '../types';
 
 export class ValidatorModule {
-    private readonly api: ValidatorApiService;
+    private readonly callbacksProcessor: CallbacksProcessor;
     private readonly adapters: Record<ValidatorType, IValidatorAdapter>;
 
     constructor(context: Context) {
-        this.api = new ValidatorApiService(context);
+        this.callbacksProcessor = new CallbacksProcessor(context);
         this.adapters = {
             [ValidatorType.CRE]: new CREValidatorAdapter(context),
             [ValidatorType.Empty]: new EmptyValidatorAdapter(context),
@@ -16,8 +16,6 @@ export class ValidatorModule {
     }
 
     async init() {
-        await this.api.init();
-
         setInterval(async () => {
             await Promise.all(
                 Object.values(this.adapters).map(async adapter => adapter.pumpPendingRequest()),

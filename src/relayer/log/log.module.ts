@@ -1,16 +1,20 @@
 import { Log } from 'viem';
 import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
+import { LogExtractorService } from './log-extractor.service';
 import { LogPipelineService } from './log-pipeline.service';
 
+import { Nullable } from '../../types/common';
 import { ChainsSetupService } from '../services/chains-setup.service';
 import { Context } from '../types';
 
 export class LogModule extends ChainsSetupService {
     private readonly pipeline: LogPipelineService;
+    private readonly extractor: LogExtractorService;
 
     constructor(context: Context) {
         super('LogModule', context);
         this.pipeline = new LogPipelineService(context);
+        this.extractor = new LogExtractorService(context);
     }
 
     protected setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
@@ -35,6 +39,40 @@ export class LogModule extends ChainsSetupService {
             this.logger.info(`Created MessageSent watcher for ${network.name}`);
         } catch (error) {
             this.logger.error(`Failed to set up router listener for ${network.name}: ${error}`);
+        }
+    }
+
+    async refetchLog(
+        srcChainSelector: number,
+        blockNumber: bigint,
+        messageId: string,
+    ): Promise<Nullable<string>> {
+        try {
+            const srcNetworkName =
+                this.context.deploymentManager.getNetworkNameByChainSelector(srcChainSelector);
+            const extractedLog = await this.extractor.extractLog(
+                srcNetworkName,
+                blockNumber,
+                messageId,
+            );
+
+            if (!extractedLog) {
+                this.logger.error(
+                    `Log [messageId=${messageId}, blockNumber=${String(blockNumber)}, srcChain=${srcNetworkName}] not found`,
+                );
+                return `Log [messageId=${messageId}, blockNumber=${String(blockNumber)}, srcChain=${srcNetworkName}] not found`;
+            }
+
+            const network = this.context.network.getNetworkByName(srcNetworkName);
+
+            await this.onLogs([extractedLog], network);
+
+            return null;
+        } catch (e) {
+            this.logger.error(
+                `Log [messageId=${messageId}, blockNumber=${String(blockNumber)}, srcChainSelector=${srcChainSelector}] refetch failed: ${e}`,
+            );
+            return `Log [messageId=${messageId}, blockNumber=${String(blockNumber)}, srcChainSelector=${srcChainSelector}] refetch failed: ${e}`;
         }
     }
 

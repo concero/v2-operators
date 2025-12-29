@@ -11,14 +11,14 @@ services:
       - ../.deploy/logs:/app/logs
     command: >
       sh -c "
-      bun run prisma:migrate:dev &&
+      bun run prisma:migrate:deploy &&
       bun run start
       "
     depends_on:
       - postgres
 
   postgres:
-    image: postgres:17.0
+    image: postgres:16.0
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
