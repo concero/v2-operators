@@ -11,19 +11,25 @@ export class LogExtractorService extends ContextProvider {
     }
 
     async extractLog(
+        srcChainSelector: number,
         srcNetworkName: string,
         blockNumber: bigint,
         messageId: string,
     ): Promise<Nullable<Log>> {
+        const fromBlock = blockNumber - 10n;
+        const toBlock = blockNumber;
+        const address = this.context.deploymentManager.getRouterByChainSelector(srcChainSelector);
+
         const client = this.context.viemClient.getClients(srcNetworkName).publicClient;
 
         const logs = await client.getLogs({
+            address,
             event: this.context.config.messageSentEventAbi,
-            fromBlock: blockNumber,
-            toBlock: blockNumber + 10n,
+            fromBlock,
+            toBlock,
         });
 
-        const log = logs.find(log => log.topics?.[2] === messageId);
+        const log = logs?.find(log => log.topics?.[1]?.toLowerCase() === messageId?.toLowerCase());
 
         return log ?? null;
     }
