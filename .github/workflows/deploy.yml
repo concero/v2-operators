@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy static files
+    name: Deploy Relayer
     runs-on: ubuntu-latest
 
     steps:
@@ -23,5 +23,5 @@ jobs:
             cd /root/relayer
             git fetch --all
             git reset --hard origin/${{ steps.branch.outputs.branch }}
-            docker compose -f docker/docker-compose.yml --env-file .env.development up --build
+            docker compose --env-file .env -f docker/docker-compose.yml up --build
             echo "✅ DEV done at $(date)"
