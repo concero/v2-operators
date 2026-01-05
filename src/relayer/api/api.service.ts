@@ -133,9 +133,16 @@ export class ApiService extends ContextProvider {
     private async extractValidResponse(creResponse: CRE.Response): Promise<CRE.Response> {
         let result: CRE.Response = {};
 
-        const validateWorkflowId = (reportContext: Hex): void => {
-            const bytes = hexToBytes(reportContext);
-            const workflowId = Buffer.from(bytes.slice(0, 32)).toString('hex');
+        const validateWorkflowId = (rawReport: Hex): void => {
+            const bytes = hexToBytes(rawReport);
+
+            // TODO: move to constants
+            const workflowIdOffset = 77;
+            const workflowIdLength = 32; // bytes32 length
+
+            const workflowId = Buffer.from(
+                bytes.slice(workflowIdOffset, workflowIdOffset + workflowIdLength),
+            ).toString('hex');
             if (workflowId.toLowerCase() !== process.env.CRE_WORKFLOW_ID?.toLowerCase()) {
                 throw new Error(
                     `CRE Workflow Id is invalid. Received: ${workflowId}, expected: ${process.env.CRE_WORKFLOW_ID}`,
@@ -174,7 +181,7 @@ export class ApiService extends ContextProvider {
         Object.entries(creResponse).map(async ([messageId, item]) => {
             try {
                 const { rawReport, reportContext, signs } = item;
-                validateWorkflowId(reportContext as Hex);
+                validateWorkflowId(rawReport as Hex);
 
                 const signatures = signs.map(i => i.signature);
                 const hash = keccak256(concatHex([rawReport as Hex, reportContext as Hex]));
