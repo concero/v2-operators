@@ -3,6 +3,8 @@ name: "relayers"
 services:
   app:
     container_name: "relayer"
+    ports:
+      - "5000:5000"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile
