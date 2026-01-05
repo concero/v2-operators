@@ -29,6 +29,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ../.deploy/postgres:/var/lib/postgresql/data
+    env_file:
+      - ../.env
     container_name: ${DATABASE_HOST}
     hostname: ${DATABASE_HOST}
     ports:
