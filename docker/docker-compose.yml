@@ -11,6 +11,8 @@ services:
     restart: unless-stopped
     volumes:
       - ../.deploy/logs:/app/logs
+    env_file:
+      - ../.env
     command: >
       sh -c "
       bun run prisma:migrate:deploy &&

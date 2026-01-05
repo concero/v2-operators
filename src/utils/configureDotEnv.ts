@@ -2,7 +2,8 @@ import * as dotenv from 'dotenv';
 
 import * as path from 'path';
 
-export const ENV_FILES: string[] = ['.env.development'];
+// @todo: remove
+export const ENV_FILES: string[] = ['.env'];
 
 function stripJunk(raw: string) {
     return raw
@@ -41,14 +42,16 @@ function sanitizeEthAddress(raw: string | undefined): `0x${string}` {
 /**
  * Configures dotenv loading order:
  * 1) Base files from ENV_FILES (in order added)
- * 2) .env.development.local (optional)
- * 3) .env.development.development or .env.development.production (last, always loaded with override)
+ * 2) .env.local (optional)
+ * 3) .env.development or .env.production (last, always loaded with override)
  *
  * Any other NODE_ENV values are coerced to "development".
  *
- * @param {string} [basePath='./'] - Base path where .env.development files are located.
+ * @param {string} [basePath='./'] - Base path where .env files are located.
  * */
 export function configureDotEnv(basePath = './'): void {
+    console.log({ basePath });
+
     const baseDir = basePath.endsWith(path.sep) ? basePath : `${basePath}${path.sep}`;
     const nodeEnvNormalized = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 
@@ -57,7 +60,7 @@ export function configureDotEnv(basePath = './'): void {
         dotenv.config({ path: p, override: true });
     }
 
-    dotenv.config({ path: path.resolve(baseDir, '.env.development.local'), override: true });
+    dotenv.config({ path: path.resolve(baseDir, '.env.local'), override: true });
 
     dotenv.config({ path: path.resolve(baseDir, `.env.${nodeEnvNormalized}`), override: true });
 
