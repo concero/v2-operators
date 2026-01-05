@@ -137,7 +137,7 @@ export class ApiService extends ContextProvider {
             const bytes = hexToBytes(rawReport);
 
             // TODO: move to constants
-            const workflowIdOffset = 43;
+            const workflowIdOffset = 44;
             const workflowIdLength = 32; // bytes32 length
 
             const workflowId = Buffer.from(
