@@ -24,7 +24,7 @@ export class ApiController extends ContextProvider {
 
         this.app.register(
             async apiV1 => {
-                apiV1.post('/callbacks/cre', handleCRECallback);
+                apiV1.post('/callback/cre', handleCRECallback);
 
                 apiV1.register(
                     async managementApi => {
