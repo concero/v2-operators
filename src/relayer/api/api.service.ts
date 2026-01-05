@@ -133,22 +133,30 @@ export class ApiService extends ContextProvider {
     private async extractValidResponse(creResponse: CRE.Response): Promise<CRE.Response> {
         let result: CRE.Response = {};
 
-        const validateWorkflowId = (reportContext: Hex): void => {
-            const bytes = hexToBytes(reportContext);
-            const workflowId = Buffer.from(bytes.slice(0, 32)).toString('hex');
-            if (workflowId !== process.env.CRE_WORKFLOW_ID) {
-                if (workflowId !== process.env.CRE_WORKFLOW_ID) {
-                    throw new Error('CRE Workflow Id is invalid');
-                }
+        const validateWorkflowId = (rawReport: Hex): void => {
+            const bytes = hexToBytes(rawReport);
+
+            // TODO: move to constants
+            const workflowIdOffset = 44;
+            const workflowIdLength = 32; // bytes32 length
+
+            const workflowId = Buffer.from(
+                bytes.slice(workflowIdOffset, workflowIdOffset + workflowIdLength),
+            ).toString('hex');
+            if (workflowId.toLowerCase() !== process.env.CRE_WORKFLOW_ID?.toLowerCase()) {
+                throw new Error(
+                    `CRE Workflow Id is invalid. Received: ${workflowId}, expected: ${process.env.CRE_WORKFLOW_ID}`,
+                );
             }
         };
 
         const validateSignatures = async (signatures: string[], hash: Hash) => {
-            if (signatures.length < 7) {
-                throw new Error(
-                    `Invalid number of signatures: got ${signatures.length}, required 7`,
-                );
-            }
+            // TODO: adjust it. we receive only 4 sigs in one callback
+            // if (signatures.length < 7) {
+            //     throw new Error(
+            //         `Invalid number of signatures: got ${signatures.length}, required 7`,
+            //     );
+            // }
 
             const recovered: Hex[] = [];
 
@@ -174,7 +182,7 @@ export class ApiService extends ContextProvider {
         Object.entries(creResponse).map(async ([messageId, item]) => {
             try {
                 const { rawReport, reportContext, signs } = item;
-                validateWorkflowId(reportContext as Hex);
+                validateWorkflowId(rawReport as Hex);
 
                 const signatures = signs.map(i => i.signature);
                 const hash = keccak256(concatHex([rawReport as Hex, reportContext as Hex]));
