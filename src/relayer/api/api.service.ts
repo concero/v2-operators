@@ -136,10 +136,10 @@ export class ApiService extends ContextProvider {
         const validateWorkflowId = (reportContext: Hex): void => {
             const bytes = hexToBytes(reportContext);
             const workflowId = Buffer.from(bytes.slice(0, 32)).toString('hex');
-            if (workflowId !== process.env.CRE_WORKFLOW_ID) {
-                if (workflowId !== process.env.CRE_WORKFLOW_ID) {
-                    throw new Error('CRE Workflow Id is invalid');
-                }
+            if (workflowId.toLowerCase() !== process.env.CRE_WORKFLOW_ID?.toLowerCase()) {
+                throw new Error(
+                    `CRE Workflow Id is invalid. Received: ${workflowId}, expected: ${process.env.CRE_WORKFLOW_ID}`,
+                );
             }
         };
 
