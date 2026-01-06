@@ -31,16 +31,16 @@ process.on('uncaughtException', (error: Error) => {
 });
 
 export async function main() {
-    if (process.env.ENABLE_HEAP_SNAPSHOTS === 'true') {
-        startHeapSnapshotCollection(globalConfig.LOGGER.logDir);
-    }
-
     const app = new RelayerApp({
         routerContractAbi,
         messageSentEventAbi,
     });
 
     await app.init();
+
+    if (process.env.ENABLE_HEAP_SNAPSHOTS === 'true') {
+        startHeapSnapshotCollection(globalConfig.LOGGER.logDir);
+    }
 }
 
 main().catch(globalErrorHandler);
