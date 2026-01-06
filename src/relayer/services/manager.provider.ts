@@ -1,5 +1,6 @@
 import {
     BlockManagerRegistry,
+    ConceroNetwork,
     ConceroNetworkManager,
     HttpClient,
     Logger,
@@ -14,7 +15,12 @@ import { JobQueueService } from './job-queue.service';
 import { PrismaClient } from '@prisma/client';
 
 import { globalConfig } from '../../constants';
-import { DbManager, DeploymentManager, LogsListenerStore } from '../../managers';
+import {
+    DbManager,
+    DeploymentManager,
+    LogsListenerStore,
+    RelayerBalanceManager,
+} from '../../managers';
 import { Config } from '../../types';
 import { Context } from '../types';
 
@@ -34,6 +40,7 @@ export abstract class ManagerProvider {
     private txWriter!: TxWriter;
     private httpClient!: HttpClient;
     private jobQueueService!: JobQueueService;
+    private balanceManager!: RelayerBalanceManager;
 
     protected constructor(config: Config) {
         this.config = config;
@@ -55,6 +62,7 @@ export abstract class ManagerProvider {
             txReader: this.txReader,
             txWriter: this.txWriter,
             http: this.httpClient,
+            balanceManager: this.balanceManager,
         };
     }
 
@@ -113,11 +121,23 @@ export abstract class ManagerProvider {
         await this.viemClientManager.initialize();
         await this.blockManagerRegistry.initialize();
 
+        this.balanceManager = RelayerBalanceManager.createInstance(
+            this.loggerBuilder.getLogger('BalanceManager'),
+            this.viemClientManager,
+            this.txReader,
+            globalConfig.BALANCE_MANAGER,
+        );
+
         // Register network update listeners after all managers are initialized
         this.networkManager.registerUpdateListener(this.rpcManager);
         this.networkManager.registerUpdateListener(this.deploymentManager);
         this.networkManager.registerUpdateListener(this.viemClientManager);
         this.networkManager.registerUpdateListener(this.blockManagerRegistry);
+
+        this.networkManager.registerUpdateListener({
+            onNetworksUpdated: (networks: ConceroNetwork[]) =>
+                this.balanceManager.setActiveNetworks(networks),
+        });
 
         // Start polling for network updates which will also trigger initial updates
         await this.networkManager.startPolling();
@@ -155,5 +175,7 @@ export abstract class ManagerProvider {
 
         await this.txWriter.initialize();
         await this.txReader.initialize();
+
+        await this.balanceManager.initialize();
     }
 }

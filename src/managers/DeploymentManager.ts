@@ -61,6 +61,18 @@ export class DeploymentManager implements NetworkUpdateListener {
         return name;
     }
 
+    getNetworkOptionsByChainSelector(chainSelector: number): Chain {
+        const options = this.chainOptions?.[chainSelector];
+
+        if (!options) {
+            throw new Error(
+                `Options not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+            );
+        }
+
+        return options;
+    }
+
     getRouterByChainSelector(chainSelector: number): Address {
         const router = this.chainOptions?.[chainSelector]?.deployments?.router;
 

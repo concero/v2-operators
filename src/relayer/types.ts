@@ -12,7 +12,7 @@ import {
 import { JobQueueService } from './services';
 import { PrismaClient } from '@prisma/client';
 
-import { DeploymentManager, LogsListenerStore } from '../managers';
+import { DeploymentManager, LogsListenerStore, RelayerBalanceManager } from '../managers';
 import { Config } from '../types';
 
 export enum ValidatorType {
@@ -35,4 +35,5 @@ export type Context = {
     txMonitor: TxMonitor;
     txReader: TxReader;
     txWriter: TxWriter;
+    balanceManager: RelayerBalanceManager;
 };
