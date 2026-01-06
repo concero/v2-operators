@@ -1,6 +1,5 @@
 import {
     BlockManagerRegistry,
-    ConceroNetwork,
     ConceroNetworkManager,
     HttpClient,
     Logger,
@@ -134,10 +133,10 @@ export abstract class ManagerProvider {
         this.networkManager.registerUpdateListener(this.viemClientManager);
         this.networkManager.registerUpdateListener(this.blockManagerRegistry);
 
-        this.networkManager.registerUpdateListener({
+        /*this.networkManager.registerUpdateListener({
             onNetworksUpdated: (networks: ConceroNetwork[]) =>
                 this.balanceManager.setActiveNetworks(networks),
-        });
+        });*/
 
         // Start polling for network updates which will also trigger initial updates
         await this.networkManager.startPolling();
