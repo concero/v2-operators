@@ -54,7 +54,6 @@ export class ApiService extends ContextProvider {
     }
 
     // management endpoints
-
     async checkManagementAccess(req: FastifyRequest, res: FastifyReply) {
         if (
             !req.headers[secretTokenHeader] ||
