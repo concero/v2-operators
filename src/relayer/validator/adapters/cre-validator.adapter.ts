@@ -198,11 +198,10 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             lastVerificationRequestedAt: {
                 lte: new Date(Date.now() - creRequestExpirationMs),
             },
-            OR: [{ callbacksCount: { lte: requiredCallbacksCount } }, { callbacksCount: null }],
+            callbacksCount: { lte: requiredCallbacksCount },
         });
 
         if (stuckRequests.length === 0) {
-            this.logger.info('No stuck requests');
             return;
         }
 
