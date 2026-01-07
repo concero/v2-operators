@@ -22,6 +22,6 @@ jobs:
             echo "Deploying Concero Relayer → DEV"
             cd /root/relayer
             git fetch --all
-            git reset --hard origin/${{ steps.branch.outputs.branch }}
+            git reset --hard origin/feature/support-cre
             docker compose --env-file .env -f docker/docker-compose.yml up --build -d
             echo "✅ DEV done at $(date)"
