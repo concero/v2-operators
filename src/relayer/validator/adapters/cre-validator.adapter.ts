@@ -99,7 +99,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         updatedAt: { lte: new Date(Date.now() - 5 * 60_000) },
                         validatorType: ValidatorType.CRE,
                         callbacksCount: { lt: 4 },
-                        // no submit retry
                     },
                 ],
             },
