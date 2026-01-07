@@ -103,8 +103,10 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     },
                 ],
             },
-            { take: 100 },
+            { take: 10 },
         );
+
+        if (jobs.length === 0) return;
 
         await this.context.dbClient.creCallback.deleteMany({
             where: {
@@ -141,6 +143,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             },
             { take: 100 },
         );
+
+        if (jobs.length === 0) return;
 
         await this.context.jobQueue.updateMany(
             { id: { in: jobs.map(i => i.id) } },
@@ -192,14 +196,17 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     async pumpStuckVerificationRequests() {
         const start = Date.now();
 
-        const stuckRequests = await this.context.jobQueue.getList({
-            status: JobStatus.ProcessingConfirm,
-            validatorType: ValidatorType.CRE,
-            lastVerificationRequestedAt: {
-                lte: new Date(Date.now() - creRequestExpirationMs),
+        const stuckRequests = await this.context.jobQueue.getList(
+            {
+                status: JobStatus.ProcessingConfirm,
+                validatorType: ValidatorType.CRE,
+                lastVerificationRequestedAt: {
+                    lte: new Date(Date.now() - creRequestExpirationMs),
+                },
+                callbacksCount: { lte: requiredCallbacksCount },
             },
-            callbacksCount: { lte: requiredCallbacksCount },
-        });
+            { take: 10 },
+        );
 
         if (stuckRequests.length === 0) {
             return;
