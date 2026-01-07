@@ -19,6 +19,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     }
 
     async pumpPendingRequest() {
+        const start = Date.now();
+
         const jobs = await this.context.jobQueue.getList(
             { status: JobStatus.ProcessingRequest, validatorType: ValidatorType.CRE },
             { take: 100 },
@@ -79,9 +81,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 );
             }
         }
+
+        this.logger.info(`pumpPendingRequest took: ${(Date.now() - start) / 1000}s`);
     }
 
     async pumpFailedRequest() {
+        const start = Date.now();
+
         const jobs = await this.context.jobQueue.getList(
             {
                 OR: [
@@ -112,9 +118,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             { id: { in: jobs.map(i => i.id) } },
             { status: JobStatus.ProcessingRequest, callbacksCount: 0 },
         );
+
+        this.logger.info(`pumpFailedRequest took: ${(Date.now() - start) / 1000}s`);
     }
 
     async pumpPendingConfirm() {
+        const start = Date.now();
+
         const jobs = await this.context.jobQueue.getList(
             {
                 status: JobStatus.ProcessingConfirm,
@@ -175,9 +185,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 { status: JobStatus.WaitingTxFinality },
             );
         }
+
+        this.logger.info(`pumpPendingConfirm took: ${(Date.now() - start) / 1000}s`);
     }
 
     async pumpStuckVerificationRequests() {
+        const start = Date.now();
+
         const stuckRequests = await this.context.jobQueue.getList({
             status: JobStatus.ProcessingConfirm,
             validatorType: ValidatorType.CRE,
@@ -206,6 +220,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 callbacksCount: 0,
             },
         );
+
+        this.logger.info(`pumpStuckVerificationRequests took: ${(Date.now() - start) / 1000}s`);
     }
 
     private async packCREValidations(creCallbacks: CRE.Response.Item[]) {
