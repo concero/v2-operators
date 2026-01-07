@@ -1,14 +1,13 @@
 import { CREValidatorAdapter, EmptyValidatorAdapter, IValidatorAdapter } from './adapters';
-import { CallbacksProcessor } from './callbacks.processor';
 
 import { Context, ValidatorType } from '../types';
 
 export class ValidatorModule {
-    private readonly callbacksProcessor: CallbacksProcessor;
+    // private readonly callbacksProcessor: CallbacksProcessor;
     private readonly adapters: Record<ValidatorType, IValidatorAdapter>;
 
     constructor(context: Context) {
-        this.callbacksProcessor = new CallbacksProcessor(context);
+        // this.callbacksProcessor = new CallbacksProcessor(context);
         this.adapters = {
             [ValidatorType.CRE]: new CREValidatorAdapter(context),
             [ValidatorType.Empty]: new EmptyValidatorAdapter(context),

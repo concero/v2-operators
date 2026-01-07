@@ -18,6 +18,8 @@ export class ApiService extends ContextProvider {
 
     async handleCRECallback(req: FastifyRequest, res: FastifyReply) {
         try {
+            const start = Date.now();
+
             const body = req.body as CRE.Response;
             const validBody = await this.extractValidResponse(body);
             this.logger.info(`handleCRECallback Got: ${ObjectLib.stringify(body)}`);
@@ -27,14 +29,22 @@ export class ApiService extends ContextProvider {
                 return;
             }
 
-            const start = Date.now();
+            const messageIds = Array.from(new Set(items.map(([messageId]) => messageId)));
 
-            await this.context.dbClient.creCallback.createMany({
-                data: items.map(([messageId, payload]) => ({
-                    messageId,
-                    payload: JSON.stringify(payload),
-                })),
+            await this.context.dbClient.$transaction(async tx => {
+                await tx.creCallback.createMany({
+                    data: items.map(([messageId, payload]) => ({
+                        messageId,
+                        payload: JSON.stringify(payload),
+                    })),
+                });
+
+                await tx.job.updateMany({
+                    where: { messageId: { in: messageIds } },
+                    data: { callbacksCount: { increment: 1 } },
+                });
             });
+
             this.logger.info(`handleCRECallback took: ${(Date.now() - start) / 1000}s`);
         } catch (e) {
             this.logger.error(`handleCRECallback Failed: ${e}`);

@@ -27,7 +27,7 @@ model Job {
   messageId                   String    @unique
   payload                     String    @default("{}")
   validatorType               String
-  callbacksCount              Int?
+  callbacksCount              Int       @default(0)
   status                      String
   lastVerificationRequestedAt DateTime?
   lastSubmittedAt             DateTime?
