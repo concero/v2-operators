@@ -15,7 +15,6 @@ services:
       - ../.env
     command: >
       sh -c "
-      bun prisma migrate resolve --rolled-back 20260107105317_callbacks_count_default_value &&
       bun run prisma:migrate:deploy &&
       bun run start
       "
