@@ -74,4 +74,5 @@ model Counter {
   value Int
 
   @@index([type])
+  @@map("counter")
 }
