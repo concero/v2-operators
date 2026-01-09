@@ -49,7 +49,6 @@ export class ValidatorModule {
         }, 5000);
 
         // tx submit (no rate limit because of viem batching), limited by RPCs
-
         setInterval(async () => {
             await Promise.all(
                 Object.values(this.adapters).map(async adapter => adapter.pumpPendingConfirm(100)),
