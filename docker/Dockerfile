@@ -11,7 +11,7 @@ FROM deps AS build
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps bun.lock* ./prisma
+COPY --from=deps bun.lock* ./
 COPY --from=deps /app/prisma ./prisma
 COPY .env* ./
 COPY src ./src
