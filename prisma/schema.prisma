@@ -65,3 +65,13 @@ model CreCallback {
   @@index([messageId])
   @@map("cre_callback")
 }
+
+enum CounterType {
+  creBufferSize
+}
+model Counter {
+  type  CounterType @unique
+  value Int
+
+  @@index([type])
+}

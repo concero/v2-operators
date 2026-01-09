@@ -18,12 +18,12 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         super('CREValidatorAdapter', context);
     }
 
-    async pumpPendingRequest() {
+    async pumpPendingRequest(size: number): Promise<void> {
         const start = Date.now();
 
         const jobs = await this.context.jobQueue.getList(
             { status: JobStatus.ProcessingRequest, validatorType: ValidatorType.CRE },
-            { take: 100 },
+            { take: size },
         );
 
         if (jobs.length === 0) {
@@ -66,6 +66,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         },
                     },
                 );
+
                 await this.context.jobQueue.updateMany(
                     { id: { in: batch.map(i => i.id) } },
                     {
@@ -73,6 +74,16 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         lastVerificationRequestedAt: new Date(Date.now()),
                     },
                 );
+                await this.context.dbClient.counter.upsert({
+                    where: { type: 'creCalledRequests' },
+                    update: {
+                        value: { increment: batch.length },
+                    },
+                    create: {
+                        type: 'creCalledRequests',
+                        value: batch.length,
+                    },
+                });
             } catch (e) {
                 this.logger.error(`Failed CRE request ${e}`);
                 await this.context.jobQueue.updateMany(
@@ -85,7 +96,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         this.logger.info(`pumpPendingRequest took: ${(Date.now() - start) / 1000}s`);
     }
 
-    async pumpFailedRequest() {
+    async pumpFailedRequest(size: number): Promise<void> {
         const start = Date.now();
 
         const jobs = await this.context.jobQueue.getList(
@@ -103,7 +114,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     },
                 ],
             },
-            { take: 10 },
+            { take: size },
         );
 
         if (jobs.length === 0) return;
@@ -124,7 +135,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         this.logger.info(`pumpFailedRequest took: ${(Date.now() - start) / 1000}s`);
     }
 
-    async pumpPendingConfirm() {
+    async pumpPendingConfirm(size: number): Promise<void> {
         const start = Date.now();
 
         const jobs = await this.context.jobQueue.getList(
@@ -141,7 +152,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     { lastSubmittedAt: null },
                 ],
             },
-            { take: 100 },
+            { take: size },
         );
 
         if (jobs.length === 0) return;
@@ -193,19 +204,20 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         this.logger.info(`pumpPendingConfirm took: ${(Date.now() - start) / 1000}s`);
     }
 
-    async pumpStuckVerificationRequests() {
+    // change status to failed and reset callbackCount based on timeout
+    async pumpStuckVerificationRequests(size: number): Promise<void> {
         const start = Date.now();
 
         const stuckRequests = await this.context.jobQueue.getList(
             {
-                status: JobStatus.ProcessingConfirm,
+                status: JobStatus.RequestFailed,
                 validatorType: ValidatorType.CRE,
                 lastVerificationRequestedAt: {
                     lte: new Date(Date.now() - creRequestExpirationMs),
                 },
                 callbacksCount: { lte: requiredCallbacksCount },
             },
-            { take: 10 },
+            { take: size },
         );
 
         if (stuckRequests.length === 0) {

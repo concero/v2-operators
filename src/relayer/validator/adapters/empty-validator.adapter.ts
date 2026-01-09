@@ -9,10 +9,10 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
         super('EmptyValidatorAdapter', context);
     }
 
-    async pumpPendingRequest() {
+    async pumpPendingRequest(size: number): Promise<void> {
         const jobs = await this.context.jobQueue.getList(
             { status: JobStatus.ProcessingRequest, validatorType: ValidatorType.Empty },
-            { take: 100 },
+            { take: size },
         );
 
         await this.context.jobQueue.updateMany(
@@ -21,16 +21,18 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
         );
     }
 
-    async pumpFailedRequest() {
+    async pumpFailedRequest(size: number): Promise<void> {
         // not used
     }
 
-    async pumpStuckVerificationRequests() {}
+    async pumpStuckVerificationRequests(size: number): Promise<void> {
+        // not used
+    }
 
-    async pumpPendingConfirm() {
+    async pumpPendingConfirm(size: number): Promise<void> {
         const jobs = await this.context.jobQueue.getList(
             { status: JobStatus.ProcessingConfirm, validatorType: ValidatorType.Empty },
-            { take: 20 },
+            { take: size },
         );
 
         const promises = await Promise.allSettled(

@@ -39,10 +39,23 @@ export class ApiService extends ContextProvider {
                     })),
                 });
 
-                await tx.job.updateMany({
+                const jobs = await tx.job.updateManyAndReturn({
                     where: { messageId: { in: messageIds } },
                     data: { callbacksCount: { increment: 1 } },
                 });
+                const succeededCRECallsCount = jobs.filter(job => job.callbacksCount > 3).length;
+                if (succeededCRECallsCount > 0) {
+                    await tx.counter.upsert({
+                        where: { type: 'creCalledRequests' },
+                        update: {
+                            value: { decrement: succeededCRECallsCount },
+                        },
+                        create: {
+                            type: 'creCalledRequests',
+                            value: -succeededCRECallsCount,
+                        },
+                    });
+                }
             });
 
             this.logger.info(`handleCRECallback took: ${(Date.now() - start) / 1000}s`);
