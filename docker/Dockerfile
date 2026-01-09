@@ -13,9 +13,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps bun.lock* ./
 COPY --from=deps /app/prisma ./prisma
-COPY .env* ./
 COPY src ./src
-COPY tsconfig.json package.json ./
+COPY .env* tsconfig.json package.json ./
 
 
 RUN bun run build
