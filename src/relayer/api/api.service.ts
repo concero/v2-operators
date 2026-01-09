@@ -46,12 +46,12 @@ export class ApiService extends ContextProvider {
                 const succeededCRECallsCount = jobs.filter(job => job.callbacksCount > 3).length;
                 if (succeededCRECallsCount > 0) {
                     await tx.counter.upsert({
-                        where: { type: 'creCalledRequests' },
+                        where: { type: 'creBufferSize' },
                         update: {
                             value: { decrement: succeededCRECallsCount },
                         },
                         create: {
-                            type: 'creCalledRequests',
+                            type: 'creBufferSize',
                             value: -succeededCRECallsCount,
                         },
                     });

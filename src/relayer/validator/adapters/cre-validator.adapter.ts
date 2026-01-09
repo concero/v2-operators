@@ -75,12 +75,12 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     },
                 );
                 await this.context.dbClient.counter.upsert({
-                    where: { type: 'creCalledRequests' },
+                    where: { type: 'creBufferSize' },
                     update: {
                         value: { increment: batch.length },
                     },
                     create: {
-                        type: 'creCalledRequests',
+                        type: 'creBufferSize',
                         value: batch.length,
                     },
                 });
