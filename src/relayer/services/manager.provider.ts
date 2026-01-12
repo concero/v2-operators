@@ -14,12 +14,7 @@ import { JobQueueService } from './job-queue.service';
 import { PrismaClient } from '@prisma/client';
 
 import { globalConfig } from '../../constants';
-import {
-    DbManager,
-    DeploymentManager,
-    LogsListenerStore,
-    RelayerBalanceManager,
-} from '../../managers';
+import { DbManager, DeploymentManager, LogsListenerStore, RelayerBalanceManager, } from '../../managers';
 import { Config } from '../../types';
 import { Context } from '../types';
 
@@ -120,12 +115,7 @@ export abstract class ManagerProvider {
         await this.viemClientManager.initialize();
         await this.blockManagerRegistry.initialize();
 
-        this.balanceManager = RelayerBalanceManager.createInstance(
-            this.loggerBuilder.getLogger('BalanceManager'),
-            this.viemClientManager,
-            this.txReader,
-            globalConfig.BALANCE_MANAGER,
-        );
+        this.balanceManager = new RelayerBalanceManager(this.viemClientManager);
 
         // Register network update listeners after all managers are initialized
         this.networkManager.registerUpdateListener(this.rpcManager);
@@ -175,6 +165,6 @@ export abstract class ManagerProvider {
         await this.txWriter.initialize();
         await this.txReader.initialize();
 
-        await this.balanceManager.initialize();
+        await this.balanceManager.startPolling();
     }
 }
