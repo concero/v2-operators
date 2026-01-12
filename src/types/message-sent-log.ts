@@ -18,7 +18,7 @@ export type ParsedMessageLogReceipt = {
     dstChainData: {
         raw: Hex;
         receiver: Address | null;
-        gasLimit: number | null;
+        gasLimit: number | null; // TODO: should not be null
     };
     relayerLib: Hex;
     validatorLibs: Hex[];
