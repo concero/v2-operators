@@ -48,10 +48,10 @@ jobs:
         if: steps.env.outputs.env == 'testnet'
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.TESTNET_SSH_HOST }}
-          username: ${{ secrets.TESTNET_SSH_USER }}
-          key: ${{ secrets.TESTNET_SSH_KEY }}
-          port: ${{ secrets.TESTNET_SSH_PORT }}
+          host: ${{ secrets.TESTNET_HOST }}
+          username: ${{ secrets.TESTNET_USER }}
+          key: ${{ secrets.TESTNET_KEY }}
+          port: ${{ secrets.TESTNET_PORT }}
           script: |
             echo "🚀 Deploying Concero Relayer → TESTNET"
             cd /root/relayer
@@ -65,10 +65,10 @@ jobs:
         if: steps.env.outputs.env == 'stage'
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.STAGE_SSH_HOST }}
-          username: ${{ secrets.STAGE_SSH_USER }}
-          key: ${{ secrets.STAGE_SSH_KEY }}
-          port: ${{ secrets.STAGE_SSH_PORT }}
+          host: ${{ secrets.STAGE_HOST }}
+          username: ${{ secrets.STAGE_USER }}
+          key: ${{ secrets.STAGE_KEY }}
+          port: ${{ secrets.STAGE_PORT }}
           script: |
             echo "🚀 Deploying Concero Relayer → STAGE"
             cd /root/relayer
@@ -82,10 +82,10 @@ jobs:
         if: steps.env.outputs.env == 'mainnet'
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.MAINNET_SSH_HOST }}
-          username: ${{ secrets.MAINNET_SSH_USER }}
-          key: ${{ secrets.MAINNET_SSH_KEY }}
-          port: ${{ secrets.MAINNET_SSH_PORT }}
+          host: ${{ secrets.MAINNET_HOST }}
+          username: ${{ secrets.MAINNET_USER }}
+          key: ${{ secrets.MAINNET_KEY }}
+          port: ${{ secrets.MAINNET_PORT }}
           script: |
             echo "🚀 Deploying Concero Relayer → MAINNET"
             cd /root/relayer
