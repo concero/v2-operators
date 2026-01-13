@@ -21,71 +21,50 @@ jobs:
       - name: Define environment
         id: env
         run: |
-          case "${GITHUB_REF_NAME}" in
-            mainnet)
-              echo "ENV=MAINNET" >> $GITHUB_OUTPUT
-              echo "GIT_BRANCH=origin/mainnet" >> $GITHUB_OUTPUT
-              ;;
-            testnet)
-              echo "ENV=TESTNET" >> $GITHUB_OUTPUT
-              echo "GIT_BRANCH=origin/testnet" >> $GITHUB_OUTPUT
-              ;;
-            stage)
-              echo "ENV=STAGE" >> $GITHUB_OUTPUT
-              echo "GIT_BRANCH=origin/stage" >> $GITHUB_OUTPUT
-              ;;
-            *)
-              echo "❌ Unsupported branch"
-              exit 1
-              ;;
-          esac
+          if [ "${GITHUB_REF}" == "refs/heads/mainnet" ]; then
+            ENV=mainnet
+          elif [ "${GITHUB_REF}" == "refs/heads/testnet" ]; then
+            ENV=testnet
+          elif [ "${GITHUB_REF}" == "refs/heads/stage" ]; then
+            ENV=stage
+          else
+            echo "❌ Unsupported branch"
+            exit 1
+          fi
+          echo "env=$ENV" >> $GITHUB_OUTPUT
 
-      # ----------------- Create temporary SSH key file -----------------
-      - name: Write SSH key to temp file
-        id: sshkey
+      # ----------------- Define branch -----------------
+      - name: Define branch
+        id: branch
         run: |
-          KEY_FILE=$(mktemp)
-          chmod 600 "$KEY_FILE"
+          if [ "${{ steps.env.outputs.env }}" == "mainnet" ]; then
+            echo "branch=mainnet" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.env.outputs.env }}" == "testnet" ]; then
+            echo "branch=testnet" >> $GITHUB_OUTPUT
+          else
+            echo "branch=stage" >> $GITHUB_OUTPUT
+          fi
 
-          case "${{ steps.env.outputs.ENV }}" in
-            MAINNET)
-              echo "${{ secrets.MAINNET_KEY }}" > "$KEY_FILE"
-              ;;
-            TESTNET)
-              echo "${{ secrets.TESTNET_KEY }}" > "$KEY_FILE"
-              ;;
-            STAGE)
-              echo "${{ secrets.STAGE_KEY }}" > "$KEY_FILE"
-              ;;
-          esac
-
-          echo "KEY_FILE=$KEY_FILE" >> $GITHUB_OUTPUT
-
-      # ----------------- Deploy via SSH -----------------
-      - name: Deploy via SSH
-        run: |
-          case "${{ steps.env.outputs.ENV }}" in
-            MAINNET)
-              HOST=${{ secrets.MAINNET_HOST }}
-              USER=${{ secrets.MAINNET_USER }}
-              PORT=${{ secrets.MAINNET_PORT }}
-              ;;
-            TESTNET)
-              HOST=${{ secrets.TESTNET_HOST }}
-              USER=${{ secrets.TESTNET_USER }}
-              PORT=${{ secrets.TESTNET_PORT }}
-              ;;
-            STAGE)
-              HOST=${{ secrets.STAGE_HOST }}
-              USER=${{ secrets.STAGE_USER }}
-              PORT=${{ secrets.STAGE_PORT }}
-              ;;
-          esac
-
-          ssh -i "${{ steps.sshkey.outputs.KEY_FILE }}" -p "$PORT" "$USER@$HOST" << 'EOF'
-          echo "🚀 Deploying Concero Relayer → ${{ steps.env.outputs.ENV }}"
-          cd /root/relayer
-          git fetch --all
-          git reset --hard ${{ steps.env.outputs.GIT_BRANCH }}
-          docker compose --env-file .env -f docker/docker-compose.yml up --build -d
-          echo "✅ ${{ steps.env.outputs.ENV }} done at $(date)"
+      # ----------------- Deploy -----------------
+      - name: Deploy to environment
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ steps.env.outputs.env == 'mainnet' && secrets.MAINNET_SSH_HOST ||
+            steps.env.outputs.env == 'testnet' && secrets.TESTNET_SSH_HOST ||
+            steps.env.outputs.env == 'stage' && secrets.STAGE_SSH_HOST }}
+          username: ${{ steps.env.outputs.env == 'mainnet' && secrets.MAINNET_SSH_USER ||
+            steps.env.outputs.env == 'testnet' && secrets.TESTNET_SSH_USER ||
+            steps.env.outputs.env == 'stage' && secrets.STAGE_SSH_USER }}
+          key: ${{ steps.env.outputs.env == 'mainnet' && secrets.MAINNET_SSH_KEY ||
+            steps.env.outputs.env == 'testnet' && secrets.TESTNET_SSH_KEY ||
+            steps.env.outputs.env == 'stage' && secrets.STAGE_SSH_KEY }}
+          port: ${{ steps.env.outputs.env == 'mainnet' && secrets.MAINNET_SSH_PORT ||
+            steps.env.outputs.env == 'testnet' && secrets.TESTNET_SSH_PORT ||
+            steps.env.outputs.env == 'stage' && secrets.STAGE_SSH_PORT }}
+          script: |
+            echo "🚀 Deploying Concero Relayer → ${{ steps.env.outputs.env }}"
+            cd /root/relayer
+            git fetch --all
+            git reset --hard ${{ steps.branch.outputs.branch }}
+            docker compose --env-file .env -f docker/docker-compose.yml up --build -d
+            echo "✅ ${{ steps.env.outputs.env }} done at $(date)"
