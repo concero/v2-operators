@@ -11,12 +11,13 @@ services:
     restart: unless-stopped
     volumes:
       - ../.deploy/logs:/app/logs
+      - ../.deploy/profiles:/app/profiles
     env_file:
       - ../.env
     command: >
       sh -c "
-      bun run prisma:migrate:deploy &&
-      bun run start
+      npm run prisma:migrate:deploy &&
+      npm run start
       "
     depends_on:
       - postgres

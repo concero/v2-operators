@@ -14,7 +14,12 @@ import { JobQueueService } from './job-queue.service';
 import { PrismaClient } from '@prisma/client';
 
 import { globalConfig } from '../../constants';
-import { DbManager, DeploymentManager, LogsListenerStore, RelayerBalanceManager, } from '../../managers';
+import {
+    DbManager,
+    DeploymentManager,
+    LogsListenerStore,
+    RelayerBalanceManager,
+} from '../../managers';
 import { Config } from '../../types';
 import { Context } from '../types';
 
