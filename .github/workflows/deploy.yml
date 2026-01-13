@@ -16,7 +16,6 @@ jobs:
       # ----------------- Checkout -----------------
       - name: Checkout repository
         uses: actions/checkout@v4
-
       # ----------------- Define environment -----------------
       - name: Define environment
         id: env
@@ -44,27 +43,53 @@ jobs:
           else
             echo "branch=stage" >> $GITHUB_OUTPUT
           fi
-
-      # ----------------- Deploy -----------------
-      - name: Deploy to environment
+      # ---------- TESTNET DEPLOY ----------
+      - name: Deploy to TESTNET
+        if: steps.env.outputs.env == 'testnet'
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ steps.env.outputs.env == 'mainnet' && secrets.MAINNET_SSH_HOST ||
-            steps.env.outputs.env == 'testnet' && secrets.TESTNET_SSH_HOST ||
-            steps.env.outputs.env == 'stage' && secrets.STAGE_SSH_HOST }}
-          username: ${{ steps.env.outputs.env == 'mainnet' && secrets.MAINNET_SSH_USER ||
-            steps.env.outputs.env == 'testnet' && secrets.TESTNET_SSH_USER ||
-            steps.env.outputs.env == 'stage' && secrets.STAGE_SSH_USER }}
-          key: ${{ steps.env.outputs.env == 'mainnet' && secrets.MAINNET_SSH_KEY ||
-            steps.env.outputs.env == 'testnet' && secrets.TESTNET_SSH_KEY ||
-            steps.env.outputs.env == 'stage' && secrets.STAGE_SSH_KEY }}
-          port: ${{ steps.env.outputs.env == 'mainnet' && secrets.MAINNET_SSH_PORT ||
-            steps.env.outputs.env == 'testnet' && secrets.TESTNET_SSH_PORT ||
-            steps.env.outputs.env == 'stage' && secrets.STAGE_SSH_PORT }}
+          host: ${{ secrets.TESTNET_SSH_HOST }}
+          username: ${{ secrets.TESTNET_SSH_USER }}
+          key: ${{ secrets.TESTNET_SSH_KEY }}
+          port: ${{ secrets.TESTNET_SSH_PORT }}
           script: |
-            echo "🚀 Deploying Concero Relayer → ${{ steps.env.outputs.env }}"
+            echo "🚀 Deploying Concero Relayer → TESTNET"
             cd /root/relayer
             git fetch --all
-            git reset --hard ${{ steps.branch.outputs.branch }}
+            git reset --hard origin/testnet
             docker compose --env-file .env -f docker/docker-compose.yml up --build -d
-            echo "✅ ${{ steps.env.outputs.env }} done at $(date)"
+            echo "✅ TESTNET done at $(date)"
+
+      # ---------- STAGE DEPLOY ----------
+      - name: Deploy to STAGE
+        if: steps.env.outputs.env == 'stage'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGE_SSH_HOST }}
+          username: ${{ secrets.STAGE_SSH_USER }}
+          key: ${{ secrets.STAGE_SSH_KEY }}
+          port: ${{ secrets.STAGE_SSH_PORT }}
+          script: |
+            echo "🚀 Deploying Concero Relayer → STAGE"
+            cd /root/relayer
+            git fetch --all
+            git reset --hard origin/stage
+            docker compose --env-file .env -f docker/docker-compose.yml up --build -d
+            echo "✅ STAGE done at $(date)"
+
+      # ---------- MAINNET DEPLOY ----------
+      - name: Deploy to MAINNET
+        if: steps.env.outputs.env == 'mainnet'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.MAINNET_SSH_HOST }}
+          username: ${{ secrets.MAINNET_SSH_USER }}
+          key: ${{ secrets.MAINNET_SSH_KEY }}
+          port: ${{ secrets.MAINNET_SSH_PORT }}
+          script: |
+            echo "🚀 Deploying Concero Relayer → MAINNET"
+            cd /root/relayer
+            git fetch --all
+            git reset --hard origin/mainnet
+            docker compose --env-file .env -f docker/docker-compose.yml up --build -d
+            echo "✅ MAINNET done at $(date)"
