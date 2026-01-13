@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ----------------- Checkout -----------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ----------------- Define environment -----------------
       - name: Define environment
         id: env
         run: |
@@ -35,40 +40,48 @@ jobs:
               ;;
           esac
 
+      # ----------------- Export SSH secrets -----------------
       - name: Export SSH secrets
         run: |
           case "${{ steps.env.outputs.ENV }}" in
             MAINNET)
               echo "SSH_HOST=${{ secrets.MAINNET_HOST }}" >> $GITHUB_ENV
               echo "SSH_USER=${{ secrets.MAINNET_USER }}" >> $GITHUB_ENV
-              echo "SSH_KEY=${{ secrets.MAINNET_KEY }}" >> $GITHUB_ENV
               echo "SSH_PORT=${{ secrets.MAINNET_PORT }}" >> $GITHUB_ENV
-              ;;
-            TESTNET)
-              echo "SSH_HOST=${{ secrets.TESTNET_HOST }}" >> $GITHUB_ENV
-              echo "SSH_USER=${{ secrets.TESTNET_USER }}" >> $GITHUB_ENV
-              echo "SSH_KEY=${{ secrets.TESTNET_KEY }}" >> $GITHUB_ENV
-              echo "SSH_PORT=${{ secrets.TESTNET_PORT }}" >> $GITHUB_ENV
-              ;;
-            STAGE)
-              echo "SSH_HOST=${{ secrets.STAGE_HOST }}" >> $GITHUB_ENV
-              echo "SSH_USER=${{ secrets.STAGE_USER }}" >> $GITHUB_ENV
-              echo "SSH_KEY=${{ secrets.STAGE_KEY }}" >> $GITHUB_ENV
-              echo "SSH_PORT=${{ secrets.STAGE_PORT }}" >> $GITHUB_ENV
-              ;;
-          esac
+              cat <<'EOF' >> $GITHUB_ENV
+  SSH_KEY=${{ secrets.MAINNET_KEY }}
+  EOF
+  ;;
+  TESTNET)
+  echo "SSH_HOST=${{ secrets.TESTNET_HOST }}" >> $GITHUB_ENV
+  echo "SSH_USER=${{ secrets.TESTNET_USER }}" >> $GITHUB_ENV
+  echo "SSH_PORT=${{ secrets.TESTNET_PORT }}" >> $GITHUB_ENV
+  cat <<'EOF' >> $GITHUB_ENV
+  SSH_KEY=${{ secrets.TESTNET_KEY }}
+  EOF
+  ;;
+  STAGE)
+  echo "SSH_HOST=${{ secrets.STAGE_HOST }}" >> $GITHUB_ENV
+  echo "SSH_USER=${{ secrets.STAGE_USER }}" >> $GITHUB_ENV
+  echo "SSH_PORT=${{ secrets.STAGE_PORT }}" >> $GITHUB_ENV
+  cat <<'EOF' >> $GITHUB_ENV
+  SSH_KEY=${{ secrets.STAGE_KEY }}
+  EOF
+  ;;
+  esac
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          key: ${{ env.SSH_KEY }}
-          port: ${{ env.SSH_PORT }}
-          script: |
-            echo "🚀 Deploying Concero Relayer → ${{ steps.env.outputs.ENV }}"
-            cd /root/relayer
-            git fetch --all
-            git reset --hard ${{ steps.env.outputs.GIT_BRANCH }}
-            docker compose --env-file .env -f docker/docker-compose.yml up --build -d
-            echo "✅ Done at $(date)"
+  # ----------------- Deploy via SSH -----------------
+  - name: Deploy via SSH
+    uses: appleboy/ssh-action@v1.2.0
+    with:
+      host: ${{ env.SSH_HOST }}
+      username: ${{ env.SSH_USER }}
+      key: ${{ env.SSH_KEY }}
+      port: ${{ env.SSH_PORT }}
+      script: |
+        echo "🚀 Deploying Concero Relayer → ${{ steps.env.outputs.ENV }}"
+        cd /root/relayer
+        git fetch --all
+        git reset --hard ${{ steps.env.outputs.GIT_BRANCH }}
+        docker compose --env-file .env -f docker/docker-compose.yml up --build -d
+        echo "✅ ${{ steps.env.outputs.ENV }} done at $(date)"
