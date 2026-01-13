@@ -49,24 +49,24 @@ jobs:
               echo "SSH_USER=${{ secrets.MAINNET_USER }}" >> $GITHUB_ENV
               echo "SSH_PORT=${{ secrets.MAINNET_PORT }}" >> $GITHUB_ENV
               cat <<'EOF' >> $GITHUB_ENV
-SSH_KEY=${{ secrets.MAINNET_KEY }}
-EOF
+          SSH_KEY=${{ secrets.MAINNET_KEY }}
+          EOF
               ;;
             TESTNET)
               echo "SSH_HOST=${{ secrets.TESTNET_HOST }}" >> $GITHUB_ENV
               echo "SSH_USER=${{ secrets.TESTNET_USER }}" >> $GITHUB_ENV
               echo "SSH_PORT=${{ secrets.TESTNET_PORT }}" >> $GITHUB_ENV
               cat <<'EOF' >> $GITHUB_ENV
-SSH_KEY=${{ secrets.TESTNET_KEY }}
-EOF
+            SSH_KEY=${{ secrets.TESTNET_KEY }}
+            EOF
               ;;
             STAGE)
               echo "SSH_HOST=${{ secrets.STAGE_HOST }}" >> $GITHUB_ENV
               echo "SSH_USER=${{ secrets.STAGE_USER }}" >> $GITHUB_ENV
               echo "SSH_PORT=${{ secrets.STAGE_PORT }}" >> $GITHUB_ENV
               cat <<'EOF' >> $GITHUB_ENV
-SSH_KEY=${{ secrets.STAGE_KEY }}
-EOF
+            SSH_KEY=${{ secrets.STAGE_KEY }}
+            EOF
               ;;
           esac
 
