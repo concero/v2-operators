@@ -39,22 +39,22 @@ jobs:
         run: |
           case "${{ steps.env.outputs.ENV }}" in
             MAINNET)
-              echo "SSH_HOST=${{ secrets.MAINNET_SSH_HOST }}" >> $GITHUB_ENV
-              echo "SSH_USER=${{ secrets.MAINNET_SSH_USER }}" >> $GITHUB_ENV
-              echo "SSH_KEY=${{ secrets.MAINNET_SSH_KEY }}" >> $GITHUB_ENV
-              echo "SSH_PORT=${{ secrets.MAINNET_SSH_PORT }}" >> $GITHUB_ENV
+              echo "SSH_HOST=${{ secrets.MAINNET_HOST }}" >> $GITHUB_ENV
+              echo "SSH_USER=${{ secrets.MAINNET_USER }}" >> $GITHUB_ENV
+              echo "SSH_KEY=${{ secrets.MAINNET_KEY }}" >> $GITHUB_ENV
+              echo "SSH_PORT=${{ secrets.MAINNET_PORT }}" >> $GITHUB_ENV
               ;;
             TESTNET)
-              echo "SSH_HOST=${{ secrets.TESTNET_SSH_HOST }}" >> $GITHUB_ENV
-              echo "SSH_USER=${{ secrets.TESTNET_SSH_USER }}" >> $GITHUB_ENV
-              echo "SSH_KEY=${{ secrets.TESTNET_SSH_KEY }}" >> $GITHUB_ENV
-              echo "SSH_PORT=${{ secrets.TESTNET_SSH_PORT }}" >> $GITHUB_ENV
+              echo "SSH_HOST=${{ secrets.TESTNET_HOST }}" >> $GITHUB_ENV
+              echo "SSH_USER=${{ secrets.TESTNET_USER }}" >> $GITHUB_ENV
+              echo "SSH_KEY=${{ secrets.TESTNET_KEY }}" >> $GITHUB_ENV
+              echo "SSH_PORT=${{ secrets.TESTNET_PORT }}" >> $GITHUB_ENV
               ;;
             STAGE)
-              echo "SSH_HOST=${{ secrets.STAGE_SSH_HOST }}" >> $GITHUB_ENV
-              echo "SSH_USER=${{ secrets.STAGE_SSH_USER }}" >> $GITHUB_ENV
-              echo "SSH_KEY=${{ secrets.STAGE_SSH_KEY }}" >> $GITHUB_ENV
-              echo "SSH_PORT=${{ secrets.STAGE_SSH_PORT }}" >> $GITHUB_ENV
+              echo "SSH_HOST=${{ secrets.STAGE_HOST }}" >> $GITHUB_ENV
+              echo "SSH_USER=${{ secrets.STAGE_USER }}" >> $GITHUB_ENV
+              echo "SSH_KEY=${{ secrets.STAGE_KEY }}" >> $GITHUB_ENV
+              echo "SSH_PORT=${{ secrets.STAGE_PORT }}" >> $GITHUB_ENV
               ;;
           esac
 
