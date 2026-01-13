@@ -30,13 +30,20 @@ jobs:
             exit 1
           fi
 
+      - name: Export SSH secrets
+        run: |
+          echo "SSH_HOST=${{ secrets[format('{0}_SSH_HOST', steps.env.outputs.ENV_PREFIX)] }}" >> $GITHUB_ENV
+          echo "SSH_USER=${{ secrets[format('{0}_SSH_USER', steps.env.outputs.ENV_PREFIX)] }}" >> $GITHUB_ENV
+          echo "SSH_KEY=${{ secrets[format('{0}_SSH_KEY', steps.env.outputs.ENV_PREFIX)] }}" >> $GITHUB_ENV
+          echo "SSH_PORT=${{ secrets[format('{0}_SSH_PORT', steps.env.outputs.ENV_PREFIX)] }}" >> $GITHUB_ENV
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets[format('{0}_SSH_HOST', steps.env.outputs.ENV_PREFIX)] }}
-          username: ${{ secrets[format('{0}_SSH_USER', steps.env.outputs.ENV_PREFIX)] }}
-          key: ${{ secrets[format('{0}_SSH_KEY', steps.env.outputs.ENV_PREFIX)] }}
-          port: ${{ secrets[format('{0}_SSH_PORT', steps.env.outputs.ENV_PREFIX)] }}
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ env.SSH_KEY }}
+          port: ${{ env.SSH_PORT }}
           script: |
             echo "🚀 Deploying Concero Relayer → ${{ steps.env.outputs.ENV_PREFIX }}"
             cd /root/relayer
