@@ -3,7 +3,9 @@ name: Deploy Concero Relayer
 on:
   push:
     branches:
-      - feature/support-cre
+      - mainnet
+      - testnet
+      - stage
 
 jobs:
   deploy:
@@ -11,17 +13,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to DEV
+      - name: Set environment variables
+        id: env
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "mainnet" ]]; then
+            echo "ENV_PREFIX=MAINNET" >> $GITHUB_OUTPUT
+            echo "GIT_BRANCH=origin/mainnet" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == "testnet" ]]; then
+            echo "ENV_PREFIX=TESTNET" >> $GITHUB_OUTPUT
+            echo "GIT_BRANCH=origin/testnet" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == "stage" ]]; then
+            echo "ENV_PREFIX=STAGE" >> $GITHUB_OUTPUT
+            echo "GIT_BRANCH=origin/stage" >> $GITHUB_OUTPUT
+          else
+            echo "Unsupported branch"
+            exit 1
+          fi
+
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.DEV_SSH_HOST }}
-          username: ${{ secrets.DEV_SSH_USER }}
-          key: ${{ secrets.DEV_SSH_KEY }}
-          port: ${{ secrets.DEV_SSH_PORT }}
+          host: ${{ secrets[format('{0}_SSH_HOST', steps.env.outputs.ENV_PREFIX)] }}
+          username: ${{ secrets[format('{0}_SSH_USER', steps.env.outputs.ENV_PREFIX)] }}
+          key: ${{ secrets[format('{0}_SSH_KEY', steps.env.outputs.ENV_PREFIX)] }}
+          port: ${{ secrets[format('{0}_SSH_PORT', steps.env.outputs.ENV_PREFIX)] }}
           script: |
-            echo "Deploying Concero Relayer → DEV"
+            echo "🚀 Deploying Concero Relayer → ${{ steps.env.outputs.ENV_PREFIX }}"
             cd /root/relayer
             git fetch --all
-            git reset --hard origin/feature/support-cre
+            git reset --hard ${{ steps.env.outputs.GIT_BRANCH }}
             docker compose --env-file .env -f docker/docker-compose.yml up --build -d
-            echo "✅ DEV done at $(date)"
+            echo "✅ ${{ steps.env.outputs.ENV_PREFIX }} done at $(date)"
