@@ -64,8 +64,25 @@ jobs:
       # ----------------- Deploy via SSH -----------------
       - name: Deploy via SSH
         run: |
-          ssh -i "${{ steps.sshkey.outputs.KEY_FILE }}" -p ${{ secrets[ steps.env.outputs.ENV + "_PORT" ] }} \
-            ${{ secrets[ steps.env.outputs.ENV + "_USER" ] }}@${{ secrets[ steps.env.outputs.ENV + "_HOST" ] }} << 'EOF'
+          case "${{ steps.env.outputs.ENV }}" in
+            MAINNET)
+              HOST=${{ secrets.MAINNET_HOST }}
+              USER=${{ secrets.MAINNET_USER }}
+              PORT=${{ secrets.MAINNET_PORT }}
+              ;;
+            TESTNET)
+              HOST=${{ secrets.TESTNET_HOST }}
+              USER=${{ secrets.TESTNET_USER }}
+              PORT=${{ secrets.TESTNET_PORT }}
+              ;;
+            STAGE)
+              HOST=${{ secrets.STAGE_HOST }}
+              USER=${{ secrets.STAGE_USER }}
+              PORT=${{ secrets.STAGE_PORT }}
+              ;;
+          esac
+
+          ssh -i "${{ steps.sshkey.outputs.KEY_FILE }}" -p "$PORT" "$USER@$HOST" << 'EOF'
           echo "🚀 Deploying Concero Relayer → ${{ steps.env.outputs.ENV }}"
           cd /root/relayer
           git fetch --all
