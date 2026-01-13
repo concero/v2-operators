@@ -40,48 +40,35 @@ jobs:
               ;;
           esac
 
-      # ----------------- Export SSH secrets -----------------
-      - name: Export SSH secrets
+      # ----------------- Create temporary SSH key file -----------------
+      - name: Write SSH key to temp file
+        id: sshkey
         run: |
+          KEY_FILE=$(mktemp)
+          chmod 600 "$KEY_FILE"
+
           case "${{ steps.env.outputs.ENV }}" in
             MAINNET)
-              echo "SSH_HOST=${{ secrets.MAINNET_HOST }}" >> $GITHUB_ENV
-              echo "SSH_USER=${{ secrets.MAINNET_USER }}" >> $GITHUB_ENV
-              echo "SSH_PORT=${{ secrets.MAINNET_PORT }}" >> $GITHUB_ENV
-              cat <<'EOF' >> $GITHUB_ENV
-          SSH_KEY=${{ secrets.MAINNET_KEY }}
-          EOF
+              echo "${{ secrets.MAINNET_KEY }}" > "$KEY_FILE"
               ;;
             TESTNET)
-              echo "SSH_HOST=${{ secrets.TESTNET_HOST }}" >> $GITHUB_ENV
-              echo "SSH_USER=${{ secrets.TESTNET_USER }}" >> $GITHUB_ENV
-              echo "SSH_PORT=${{ secrets.TESTNET_PORT }}" >> $GITHUB_ENV
-              cat <<'EOF' >> $GITHUB_ENV
-          SSH_KEY=${{ secrets.TESTNET_KEY }}
-          EOF
+              echo "${{ secrets.TESTNET_KEY }}" > "$KEY_FILE"
               ;;
             STAGE)
-              echo "SSH_HOST=${{ secrets.STAGE_HOST }}" >> $GITHUB_ENV
-              echo "SSH_USER=${{ secrets.STAGE_USER }}" >> $GITHUB_ENV
-              echo "SSH_PORT=${{ secrets.STAGE_PORT }}" >> $GITHUB_ENV
-              cat <<'EOF' >> $GITHUB_ENV
-          SSH_KEY=${{ secrets.STAGE_KEY }}
-          EOF
+              echo "${{ secrets.STAGE_KEY }}" > "$KEY_FILE"
               ;;
           esac
 
+          echo "KEY_FILE=$KEY_FILE" >> $GITHUB_OUTPUT
+
       # ----------------- Deploy via SSH -----------------
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          key: ${{ env.SSH_KEY }}
-          port: ${{ env.SSH_PORT }}
-          script: |
-            echo "🚀 Deploying Concero Relayer → ${{ steps.env.outputs.ENV }}"
-            cd /root/relayer
-            git fetch --all
-            git reset --hard ${{ steps.env.outputs.GIT_BRANCH }}
-            docker compose --env-file .env -f docker/docker-compose.yml up --build -d
-            echo "✅ ${{ steps.env.outputs.ENV }} done at $(date)"
+        run: |
+          ssh -i "${{ steps.sshkey.outputs.KEY_FILE }}" -p ${{ secrets[ steps.env.outputs.ENV + "_PORT" ] }} \
+            ${{ secrets[ steps.env.outputs.ENV + "_USER" ] }}@${{ secrets[ steps.env.outputs.ENV + "_HOST" ] }} << 'EOF'
+          echo "🚀 Deploying Concero Relayer → ${{ steps.env.outputs.ENV }}"
+          cd /root/relayer
+          git fetch --all
+          git reset --hard ${{ steps.env.outputs.GIT_BRANCH }}
+          docker compose --env-file .env -f docker/docker-compose.yml up --build -d
+          echo "✅ ${{ steps.env.outputs.ENV }} done at $(date)"
