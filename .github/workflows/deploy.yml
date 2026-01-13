@@ -49,8 +49,8 @@ jobs:
               echo "SSH_USER=${{ secrets.MAINNET_USER }}" >> $GITHUB_ENV
               echo "SSH_PORT=${{ secrets.MAINNET_PORT }}" >> $GITHUB_ENV
               cat <<'EOF' >> $GITHUB_ENV
-        SSH_KEY=${{ secrets.MAINNET_KEY }}
-        EOF
+          SSH_KEY=${{ secrets.MAINNET_KEY }}
+          EOF
               ;;
             TESTNET)
               echo "SSH_HOST=${{ secrets.TESTNET_HOST }}" >> $GITHUB_ENV
