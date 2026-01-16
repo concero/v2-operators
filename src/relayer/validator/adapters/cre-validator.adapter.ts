@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { encodeAbiParameters, encodePacked, Hex } from 'viem';
+import { concatHex, encodeAbiParameters, Hex } from 'viem';
 import { BaseValidatorAdapter } from './base-validator.adapter';
 import { IValidatorAdapter } from './validator-adapter.interface';
 import axios from 'axios';
@@ -166,27 +166,24 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         for (const batch of batches) {
             const promises = await Promise.allSettled(
-                batch.map(async i => {
-                    const parsedPayload = JSON.parse(i.payload) as JobPayload;
+                batch.map(async item => {
+                    const itemPayload = JSON.parse(item.payload) as JobPayload;
 
-                    const rawCallbacks = await this.context.dbClient.creCallback.findMany({
-                        where: { messageId: i.messageId },
-                    });
-                    const callbacks = rawCallbacks.map(i =>
-                        JSON.parse(i.payload),
-                    ) as CRE.Response.Item[];
-                    const validations = await this.packCREValidations(callbacks);
+                    const validations = await this.packCREValidationFromResponse(
+                        itemPayload.creResponse,
+                        item.messageId as Hex,
+                    );
 
                     this.logger.info(
-                        `Submit message [${i.messageId}] to chain ${i.dstChainSelector}`,
+                        `Submit message [${item.messageId}] to chain ${item.dstChainSelector}`,
                     );
 
-                    const dst = await this.submitMessage(parsedPayload, [validations]);
+                    const dst = await this.submitMessage(itemPayload, [validations]);
                     await this.context.jobQueue.updateOne(
-                        { id: i.id },
+                        { id: item.id },
                         { dstBlockNumber: String(dst.blockNumber), dstTxHash: dst.hash },
                     );
-                    return i.id;
+                    return item.id;
                 }),
             );
             const batchJobIds = promises.filter(i => i.status === 'fulfilled').map(i => i.value);
@@ -242,30 +239,27 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         this.logger.info(`pumpStuckVerificationRequests took: ${(Date.now() - start) / 1000}s`);
     }
 
-    private async packCREValidations(creCallbacks: CRE.Response.Item[]) {
-        const rawReport = creCallbacks[0].rawReport as Hex;
-        const reportContext = creCallbacks[0].reportContext as Hex;
+    private async packCREValidationFromResponse(
+        creResponse: CRE.Response,
+        messageId: CRE.MessageId,
+    ): Promise<Hex> {
+        const rawReport = creResponse.report.rawReport as Hex;
+        const reportContext = creResponse.report.reportContext as Hex;
+        const signatures: Hex[] = creResponse.report.signs.map(s => s.signature as Hex);
 
-        const signatures = Array.from(
-            new Set(
-                creCallbacks.flatMap(item =>
-                    item.signs.map(sign => {
-                        const hex = sign.signature.startsWith('0x')
-                            ? sign.signature
-                            : `0x${sign.signature}`;
-                        return hex as Hex;
-                    }),
-                ),
-            ),
-        ).slice(0, 7);
+        const proofs = creResponse.proofs[messageId];
+        if (!proofs || !proofs.length) {
+            throw new Error(`Missing merkle proof for messageId=${messageId}`);
+        }
 
-        // this.logger.info(`Got signatures: ${signatures.join(', ')}`);
-        const encodedSignatures = encodeAbiParameters([{ type: 'bytes[]' }], [signatures as Hex[]]);
-        // this.logger.info(`Encoded signatures: ${encodedSignatures}`);
-
-        return encodePacked(
-            ['bytes', 'bytes', 'bytes'],
-            [rawReport, reportContext, encodedSignatures],
+        const encodedSignaturesAndProof = encodeAbiParameters(
+            [
+                { name: 'signatures', type: 'bytes[]' },
+                { name: 'proof', type: 'bytes32[]' },
+            ],
+            [signatures, proofs],
         );
+
+        return concatHex([rawReport, reportContext, encodedSignaturesAndProof]);
     }
 }

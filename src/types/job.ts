@@ -1,3 +1,4 @@
+import { CRE } from './cre';
 import { MessageSentLogData, ParsedMessageLogReceipt } from './message-sent-log';
 import { ParsedLog } from './parsedLog';
 
@@ -16,5 +17,6 @@ export type JobPayload = Omit<
     ParsedLog<MessageSentLogData>,
     'eventName' | 'eventHash' | 'blockNumber' | 'transactionHash'
 > & {
+    creResponse: CRE.Response;
     parsedReceipt: ParsedMessageLogReceipt;
 };

@@ -23,6 +23,7 @@
     },
     "dependencies": {
         "@concero/operator-utils": "https://github.com/concero/operator-utils.git#feature/new-balance-manager",
+        "@openzeppelin/merkle-tree": "^1.0.8",
         "@prisma/client": "6.16.2",
         "@slack/web-api": "7.9.1",
         "axios": "^1.13.2",

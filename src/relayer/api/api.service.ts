@@ -1,8 +1,8 @@
-import { concatHex, Hash, Hex, hexToBytes, keccak256, recoverAddress } from 'viem';
+import { concatHex, encodeAbiParameters, Hash, Hex, hexToBytes, keccak256, recoverAddress, } from 'viem';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { allowedSignerAddresses } from '../../constants';
-import { CRE, JobStatus } from '../../types';
+import { CRE, JobPayload, JobStatus } from '../../types';
 import { ObjectLib } from '../../utils';
 import { LogModule } from '../log';
 import { ContextProvider } from '../services';
@@ -20,43 +20,56 @@ export class ApiService extends ContextProvider {
         try {
             const start = Date.now();
 
-            const body = req.body as CRE.Response;
-            const validBody = await this.extractValidResponse(body);
-            this.logger.info(`handleCRECallback Got: ${ObjectLib.stringify(body)}`);
+            const creResponse = req.body as CRE.Response;
+            this.logger.info(`handleCRECallback Got: ${ObjectLib.stringify(creResponse)}`);
 
-            const items = Object.entries(validBody || {});
-            if (items.length === 0) {
-                return;
-            }
+            const rawReport = creResponse.report.rawReport;
+            const reportContext = creResponse.report.reportContext;
+            const signatures = Array.from(new Set(creResponse.report.signs.map(i => i.signature)));
+            const hash = keccak256(concatHex([rawReport, reportContext]));
 
-            const messageIds = Array.from(new Set(items.map(([messageId]) => messageId)));
+            await this.validateWorkflowId(rawReport);
+            await this.validateSignatures(signatures, hash);
 
-            await this.context.dbClient.$transaction(async tx => {
-                await tx.creCallback.createMany({
-                    data: items.map(([messageId, payload]) => ({
-                        messageId,
-                        payload: JSON.stringify(payload),
-                    })),
-                });
+            const promises = Object.entries(creResponse.proofs).map(async ([messageId, proofs]) => {
+                try {
+                    const foundJob = await this.context.jobQueue.findOne({ messageId });
+                    if (!foundJob) {
+                        throw new Error(`Could not find job with id ${messageId}`);
+                    }
 
-                const jobs = await tx.job.updateManyAndReturn({
-                    where: { messageId: { in: messageIds } },
-                    data: { callbacksCount: { increment: 1 } },
-                });
-                const succeededCRECallsCount = jobs.filter(job => job.callbacksCount > 3).length;
-                if (succeededCRECallsCount > 0) {
-                    await tx.counter.upsert({
-                        where: { type: 'creBufferSize' },
-                        update: {
-                            value: { decrement: succeededCRECallsCount },
-                        },
-                        create: {
-                            type: 'creBufferSize',
-                            value: -succeededCRECallsCount,
-                        },
-                    });
+                    const payload = JSON.parse(foundJob?.payload ?? '{}') as JobPayload;
+                    payload.creResponse = creResponse;
+
+                    const merkleRootOffsetStart = 2 + 109 * 2; // RAW_REPORT_METADATA_LENGTH
+                    const merkleRootOffsetEnd = 2 + 141 * 2; // RAW_REPORT_LENGTH
+                    const merkleRoot =
+                        `0x${rawReport.slice(merkleRootOffsetStart, merkleRootOffsetEnd)}` as Hex;
+
+                    const messageHash = keccak256(payload.data.messageReceipt);
+                    const inner = keccak256(
+                        encodeAbiParameters([{ type: 'bytes32' }], [messageHash]),
+                    );
+                    const leaf = keccak256(inner);
+
+                    const valid = this.verifyMerkleProof(proofs, merkleRoot, leaf);
+                    if (!valid) {
+                        throw new Error(`Invalid Merkle proof for messageId=${messageId}`);
+                    }
+
+                    await this.context.jobQueue.updateMany(
+                        { messageId },
+                        { payload: JSON.stringify(payload) },
+                    );
+                } catch (e) {
+                    this.logger.error(
+                        `handleCRECallback Failed proof (messageId=${messageId}): ${e}`,
+                    );
                 }
+
+                await Promise.all(promises);
             });
+            await Promise.all(promises);
 
             this.logger.info(`handleCRECallback took: ${(Date.now() - start) / 1000}s`);
         } catch (e) {
@@ -152,72 +165,59 @@ export class ApiService extends ContextProvider {
 
     // helpers
 
-    private async extractValidResponse(creResponse: CRE.Response): Promise<CRE.Response> {
-        let result: CRE.Response = {};
+    private async validateWorkflowId(rawReport: Hex): Promise<void> {
+        const bytes = hexToBytes(rawReport);
 
-        const validateWorkflowId = (rawReport: Hex): void => {
-            const bytes = hexToBytes(rawReport);
+        // TODO: move to constants
+        const workflowIdOffset = 44;
+        const workflowIdLength = 32; // bytes32 length
 
-            // TODO: move to constants
-            const workflowIdOffset = 44;
-            const workflowIdLength = 32; // bytes32 length
+        const workflowId = Buffer.from(
+            bytes.slice(workflowIdOffset, workflowIdOffset + workflowIdLength),
+        ).toString('hex');
+        if (workflowId.toLowerCase() !== process.env.CRE_WORKFLOW_ID?.toLowerCase()) {
+            throw new Error(
+                `CRE Workflow Id is invalid. Received: ${workflowId}, expected: ${process.env.CRE_WORKFLOW_ID}`,
+            );
+        }
+    }
+    private async validateSignatures(signatures: string[], hash: Hash): Promise<void> {
+        if (signatures.length !== 4) {
+            throw new Error(`Invalid number of signatures: got ${signatures.length}, required 4`);
+        }
 
-            const workflowId = Buffer.from(
-                bytes.slice(workflowIdOffset, workflowIdOffset + workflowIdLength),
-            ).toString('hex');
-            if (workflowId.toLowerCase() !== process.env.CRE_WORKFLOW_ID?.toLowerCase()) {
-                throw new Error(
-                    `CRE Workflow Id is invalid. Received: ${workflowId}, expected: ${process.env.CRE_WORKFLOW_ID}`,
-                );
+        let recovered: Hex[] = [];
+
+        for (const signature of signatures) {
+            const rawSigner = await recoverAddress({
+                hash,
+                signature: signature as Hex,
+            });
+            const normalizedSigner = rawSigner.toLowerCase() as Hex;
+
+            if (!allowedSignerAddresses.includes(normalizedSigner)) {
+                throw new Error(`Signer ${normalizedSigner} is not allowed`);
             }
-        };
 
-        const validateSignatures = async (signatures: string[], hash: Hash) => {
-            // TODO: adjust it. we receive only 4 sigs in one callback
-            // if (signatures.length < 7) {
-            //     throw new Error(
-            //         `Invalid number of signatures: got ${signatures.length}, required 7`,
-            //     );
-            // }
-
-            const recovered: Hex[] = [];
-
-            for (const signature of signatures) {
-                const rawSigner = await recoverAddress({
-                    hash,
-                    signature: signature as Hex,
-                });
-                const normalizedSigner = rawSigner.toLowerCase() as Hex;
-
-                if (!allowedSignerAddresses.includes(normalizedSigner)) {
-                    throw new Error(`Signer ${normalizedSigner} is not allowed`);
-                }
-
-                if (recovered.includes(normalizedSigner)) {
-                    throw new Error(`Duplicate signer ${normalizedSigner}`);
-                }
-
-                recovered.push(normalizedSigner);
+            if (recovered.includes(normalizedSigner)) {
+                throw new Error(`Duplicate signer ${normalizedSigner}`);
             }
-        };
 
-        Object.entries(creResponse).map(async ([messageId, item]) => {
-            try {
-                const { rawReport, reportContext, signs } = item;
-                validateWorkflowId(rawReport as Hex);
+            recovered.push(normalizedSigner);
+        }
+    }
+    private verifyMerkleProof(proof: Hex[], root: Hex, leaf: Hex): boolean {
+        let computedHash = leaf;
 
-                const signatures = signs.map(i => i.signature);
-                const hash = keccak256(concatHex([rawReport as Hex, reportContext as Hex]));
-                // TODO: fix it. Error: invalid signature length
-                // await validateSignatures(signatures, hash);
-
-                result[messageId] = item;
-            } catch (e) {
-                this.logger.error(`extractValidItems failed: ${e}`);
+        for (const proofElement of proof) {
+            if (computedHash.toLowerCase() < proofElement.toLowerCase()) {
+                computedHash = keccak256(concatHex([computedHash, proofElement]));
+            } else {
+                computedHash = keccak256(concatHex([proofElement, computedHash]));
             }
-        });
+        }
 
-        return result;
+        return computedHash.toLowerCase() === root.toLowerCase();
     }
 
     private respond(res: FastifyReply, json: Record<string, unknown>, status = 200) {
