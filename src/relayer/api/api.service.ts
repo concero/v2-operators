@@ -1,12 +1,13 @@
-import { concatHex, encodeAbiParameters, Hash, Hex, hexToBytes, keccak256, recoverAddress, } from 'viem';
+import { concatHex, Hash, Hex, hexToBytes, keccak256, recoverAddress } from 'viem';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { allowedSignerAddresses } from '../../constants';
-import { CRE, JobPayload, JobStatus } from '../../types';
-import { ObjectLib } from '../../utils';
+import { CRE, JobStatus } from '../../types';
+import { ArrayLib, ObjectLib } from '../../utils';
 import { LogModule } from '../log';
 import { ContextProvider } from '../services';
 import { Context } from '../types';
+import { requiredCallbacksCount } from '../validator/adapters';
 
 const secretTokenHeader = 'x-concero-management-token';
 export class ApiService extends ContextProvider {
@@ -25,51 +26,68 @@ export class ApiService extends ContextProvider {
 
             const rawReport = creResponse.report.rawReport;
             const reportContext = creResponse.report.reportContext;
-            const signatures = Array.from(new Set(creResponse.report.signs.map(i => i.signature)));
+            const signatures = ArrayLib.deduplicate(creResponse.report.signs.map(i => i.signature));
             const hash = keccak256(concatHex([rawReport, reportContext]));
 
+            // validation & auth
             await this.validateWorkflowId(rawReport);
             await this.validateSignatures(signatures, hash);
+            // @todo: test validation
+            /*  await Promise.all(
+                Object.entries(creResponse.proofs).map(async ([messageId, proofs]) => {
+                    try {
+                        const foundJob = await this.context.jobQueue.findOne({ messageId });
+                        if (!foundJob) {
+                            throw new Error(`Could not find job with id ${messageId}`);
+                        }
 
-            const promises = Object.entries(creResponse.proofs).map(async ([messageId, proofs]) => {
-                try {
-                    const foundJob = await this.context.jobQueue.findOne({ messageId });
-                    if (!foundJob) {
-                        throw new Error(`Could not find job with id ${messageId}`);
+                        const jobPayload = JSON.parse(foundJob?.payload ?? '{}') as JobPayload;
+
+                        const merkleRootOffsetStart = 2 + 109 * 2; // RAW_REPORT_METADATA_LENGTH
+                        const merkleRootOffsetEnd = 2 + 141 * 2; // RAW_REPORT_LENGTH
+                        const merkleRoot =
+                            `0x${rawReport.slice(merkleRootOffsetStart, merkleRootOffsetEnd)}` as Hex;
+
+                        const messageHash = keccak256(jobPayload.data.messageReceipt);
+                        const inner = keccak256(
+                            encodeAbiParameters([{ type: 'bytes32' }], [messageHash]),
+                        );
+                        const leaf = keccak256(inner);
+
+                        const valid = this.verifyMerkleProof(proofs, merkleRoot, leaf);
+                        if (!valid) {
+                            throw new Error(`Invalid Merkle proof for messageId=${messageId}`);
+                        }
+                    } catch (e) {
+                        this.logger.error(
+                            `handleCRECallback Failed proof (messageId=${messageId}): ${e}`,
+                        );
                     }
+                }),
+            );*/
 
-                    const payload = JSON.parse(foundJob?.payload ?? '{}') as JobPayload;
-                    payload.creResponse = creResponse;
+            const messageIds = ArrayLib.deduplicate(
+                Object.keys(creResponse.proofs),
+            ) as CRE.MessageId[];
 
-                    const merkleRootOffsetStart = 2 + 109 * 2; // RAW_REPORT_METADATA_LENGTH
-                    const merkleRootOffsetEnd = 2 + 141 * 2; // RAW_REPORT_LENGTH
-                    const merkleRoot =
-                        `0x${rawReport.slice(merkleRootOffsetStart, merkleRootOffsetEnd)}` as Hex;
-
-                    const messageHash = keccak256(payload.data.messageReceipt);
-                    const inner = keccak256(
-                        encodeAbiParameters([{ type: 'bytes32' }], [messageHash]),
-                    );
-                    const leaf = keccak256(inner);
-
-                    const valid = this.verifyMerkleProof(proofs, merkleRoot, leaf);
-                    if (!valid) {
-                        throw new Error(`Invalid Merkle proof for messageId=${messageId}`);
-                    }
-
-                    await this.context.jobQueue.updateMany(
-                        { messageId },
-                        { payload: JSON.stringify(payload) },
-                    );
-                } catch (e) {
-                    this.logger.error(
-                        `handleCRECallback Failed proof (messageId=${messageId}): ${e}`,
-                    );
-                }
-
-                await Promise.all(promises);
+            // bulk create cre callbacks
+            await this.context.dbClient.$transaction(async client => {
+                await client.creCallback.createMany({
+                    data: messageIds.map(messageId => ({
+                        messageId,
+                        payload: JSON.stringify(creResponse),
+                    })),
+                });
+                await client.job.updateMany({
+                    where: {
+                        messageId: { in: messageIds },
+                        callbacksCount: { lt: requiredCallbacksCount },
+                    },
+                    data: {
+                        callbacksCount: { increment: 1 },
+                    },
+                });
             });
-            await Promise.all(promises);
 
             this.logger.info(`handleCRECallback took: ${(Date.now() - start) / 1000}s`);
         } catch (e) {

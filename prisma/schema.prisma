@@ -67,8 +67,9 @@ model CreCallback {
 }
 
 enum CounterType {
-  creBufferSize
+  creBufferSize // count of waiting for response from CRE side
 }
+
 model Counter {
   type  CounterType @unique
   value Int

@@ -8,4 +8,8 @@ export namespace ArrayLib {
 
         return chunks;
     };
+
+    export const deduplicate = <T extends string | number>(list: T[]): T[] => {
+        return Array.from(new Set(list));
+    };
 }

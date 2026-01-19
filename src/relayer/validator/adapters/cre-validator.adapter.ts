@@ -6,9 +6,10 @@ import axios from 'axios';
 
 import { CRE, JobPayload, JobStatus } from '../../../types';
 import { ArrayLib, createCREJWT, CRERequestBody } from '../../../utils';
-import { Context, ValidatorType } from '../../types';
+import { Context, ValidatorType } from '../../types'; // @todo: move to global constants
 
-const requiredCallbacksCount = 4;
+// @todo: move to global constants
+export const requiredCallbacksCount = 4;
 const msInMin = 60_000;
 const creRequestExpirationMs = 5 * msInMin;
 const messageSubmissionExpirationMs = 3 * msInMin;
@@ -101,28 +102,20 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         const jobs = await this.context.jobQueue.getList(
             {
-                OR: [
-                    // failed
-                    { status: JobStatus.RequestFailed, validatorType: ValidatorType.CRE },
-                    // timeout
-                    {
-                        status: JobStatus.ProcessingRequest,
-                        updatedAt: { lte: new Date(Date.now() - 5 * 60_000) },
-                        validatorType: ValidatorType.CRE,
-                        callbacksCount: { lt: 4 },
-                        // no submit retry
-                    },
-                ],
+                status: JobStatus.RequestFailed,
+                validatorType: ValidatorType.CRE,
             },
             { take: size },
         );
 
-        if (jobs.length === 0) return;
+        if (jobs.length === 0) {
+            return;
+        }
 
         await this.context.dbClient.creCallback.deleteMany({
             where: {
                 messageId: {
-                    in: Array.from(new Set(jobs.map(i => i.messageId))),
+                    in: ArrayLib.deduplicate(jobs.map(i => i.messageId)),
                 },
             },
         });
@@ -155,7 +148,9 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             { take: size },
         );
 
-        if (jobs.length === 0) return;
+        if (jobs.length === 0) {
+            return;
+        }
 
         await this.context.jobQueue.updateMany(
             { id: { in: jobs.map(i => i.id) } },
@@ -168,9 +163,14 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             const promises = await Promise.allSettled(
                 batch.map(async item => {
                     const itemPayload = JSON.parse(item.payload) as JobPayload;
+                    const creCallback = await this.context.dbClient.creCallback.findFirst({
+                        where: {
+                            messageId: item.messageId,
+                        },
+                    });
 
-                    const validations = await this.packCREValidationFromResponse(
-                        itemPayload.creResponse,
+                    const validation = await this.packCREValidationFromResponse(
+                        JSON.parse(creCallback?.payload ?? '{}') as CRE.Response,
                         item.messageId as Hex,
                     );
 
@@ -178,7 +178,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         `Submit message [${item.messageId}] to chain ${item.dstChainSelector}`,
                     );
 
-                    const dst = await this.submitMessage(itemPayload, [validations]);
+                    const dst = await this.submitMessage(itemPayload, [validation]);
                     await this.context.jobQueue.updateOne(
                         { id: item.id },
                         { dstBlockNumber: String(dst.blockNumber), dstTxHash: dst.hash },
@@ -186,14 +186,14 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     return item.id;
                 }),
             );
-            const batchJobIds = promises.filter(i => i.status === 'fulfilled').map(i => i.value);
+            const successJobIds = promises.filter(i => i.status === 'fulfilled').map(i => i.value);
             const batchErrors = promises.filter(i => i.status === 'rejected').map(i => i.reason);
             if (batchErrors.length > 0) {
                 this.logger.error(batchErrors.join(';'));
             }
 
             await this.context.jobQueue.updateMany(
-                { id: { in: batchJobIds } },
+                { id: { in: successJobIds } },
                 { status: JobStatus.WaitingTxFinality },
             );
         }
@@ -223,15 +223,16 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         this.logger.info(`${stuckRequests.length} stuck requests`);
 
+        const messageIds = ArrayLib.deduplicate(stuckRequests.map(i => i.messageId));
+
         await this.context.dbClient.creCallback.deleteMany({
-            where: { messageId: { in: Array.from(new Set(stuckRequests.map(i => i.messageId))) } },
+            where: { messageId: { in: messageIds } },
         });
 
         await this.context.jobQueue.updateMany(
-            { id: { in: stuckRequests.map(i => i.id) } },
+            { messageId: { in: messageIds } },
             {
                 status: JobStatus.ProcessingRequest,
-                lastVerificationRequestedAt: null,
                 callbacksCount: 0,
             },
         );
