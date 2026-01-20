@@ -249,7 +249,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         const signatures: Hex[] = creResponse.report.signs.map(s => s.signature as Hex);
 
         const proofs = creResponse.proofs[messageId];
-        if (!proofs || !proofs.length) {
+        if (!proofs) {
             throw new Error(`Missing merkle proof for messageId=${messageId}`);
         }
 
