@@ -169,7 +169,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         },
                     });
 
-                    const validation = await this.packCREValidationFromResponse(
+                    const validation = this.packCREValidationFromResponse(
                         JSON.parse(creCallback?.payload ?? '{}') as CRE.Response,
                         item.messageId as Hex,
                     );
@@ -221,7 +221,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             return;
         }
 
-        this.logger.info(`${stuckRequests.length} stuck requests`);
+        this.logger.info(`${stuckRequests.length} stuck requests.`);
 
         const messageIds = ArrayLib.deduplicate(stuckRequests.map(i => i.messageId));
 
@@ -240,10 +240,10 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         this.logger.info(`pumpStuckVerificationRequests took: ${(Date.now() - start) / 1000}s`);
     }
 
-    private async packCREValidationFromResponse(
+    private packCREValidationFromResponse(
         creResponse: CRE.Response,
         messageId: CRE.MessageId,
-    ): Promise<Hex> {
+    ): Hex {
         const rawReport = creResponse.report.rawReport as Hex;
         const reportContext = creResponse.report.reportContext as Hex;
         const signatures: Hex[] = creResponse.report.signs.map(s => `0x${s.signature}` as Hex);
@@ -254,10 +254,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         }
 
         const encodedSignaturesAndProof = encodeAbiParameters(
-            [
-                { name: 'signatures', type: 'bytes[]' },
-                { name: 'proof', type: 'bytes32[]' },
-            ],
+            [{ type: 'bytes[]' }, { type: 'bytes32[]' }],
             [signatures, proofs],
         );
 
