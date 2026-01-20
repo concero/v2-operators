@@ -163,14 +163,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             const promises = await Promise.allSettled(
                 batch.map(async item => {
                     const itemPayload = JSON.parse(item.payload) as JobPayload;
-                    const creCallback = await this.context.dbClient.creCallback.findFirst({
-                        where: {
-                            messageId: item.messageId,
-                        },
+
+                    const callbacks = await this.context.dbClient.creCallback.findMany({
+                        where: { messageId: item.messageId },
                     });
 
                     const validation = this.packCREValidationFromResponse(
-                        JSON.parse(creCallback?.payload ?? '{}') as CRE.Response,
+                        callbacks,
                         item.messageId as Hex,
                     );
 
@@ -241,14 +240,26 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     }
 
     private packCREValidationFromResponse(
-        creResponse: CRE.Response,
+        creResponses: CRE.Response[],
         messageId: CRE.MessageId,
     ): Hex {
-        const rawReport = creResponse.report.rawReport as Hex;
-        const reportContext = creResponse.report.reportContext as Hex;
-        const signatures: Hex[] = creResponse.report.signs.map(s => `0x${s.signature}` as Hex);
+        const rawReport = creResponses[0].report.rawReport as Hex;
+        const reportContext = creResponses[0].report.reportContext as Hex;
+        const proofs = creResponses[0].proofs[messageId];
 
-        const proofs = creResponse.proofs[messageId];
+        const signatures = Array.from(
+            new Set(
+                creResponses.flatMap(item =>
+                    item.report.signs.map(sign => {
+                        const hex = sign.signature.startsWith('0x')
+                            ? sign.signature
+                            : `0x${sign.signature}`;
+                        return hex as Hex;
+                    }),
+                ),
+            ),
+        ).slice(0, 7);
+
         if (!proofs) {
             throw new Error(`Missing merkle proof for messageId=${messageId}`);
         }
