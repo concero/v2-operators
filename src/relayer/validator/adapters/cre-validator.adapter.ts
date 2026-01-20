@@ -246,7 +246,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     ): Promise<Hex> {
         const rawReport = creResponse.report.rawReport as Hex;
         const reportContext = creResponse.report.reportContext as Hex;
-        const signatures: Hex[] = creResponse.report.signs.map(s => s.signature as Hex);
+        const signatures: Hex[] = creResponse.report.signs.map(s => `0x${s.signature}` as Hex);
 
         const proofs = creResponse.proofs[messageId];
         if (!proofs) {
