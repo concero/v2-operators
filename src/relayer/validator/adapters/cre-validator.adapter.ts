@@ -168,10 +168,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         where: { messageId: item.messageId },
                     });
 
-                    console.log(JSON.stringify(callbacks));
-
                     const validation = this.packCREValidationFromResponse(
-                        callbacks,
+                        callbacks.map(c => JSON.parse(c.payload)),
                         item.messageId as Hex,
                     );
 
