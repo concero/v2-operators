@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { concatHex, encodeAbiParameters, Hex } from 'viem';
+import { encodeAbiParameters, encodePacked, Hex } from 'viem';
 import { BaseValidatorAdapter } from './base-validator.adapter';
 import { IValidatorAdapter } from './validator-adapter.interface';
 import axios from 'axios';
@@ -261,6 +261,9 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             [signatures, proofs],
         );
 
-        return concatHex([rawReport, reportContext, encodedSignaturesAndProof]);
+        return encodePacked(
+            ['bytes', 'bytes', 'bytes'],
+            [rawReport, reportContext, encodedSignaturesAndProof],
+        );
     }
 }
