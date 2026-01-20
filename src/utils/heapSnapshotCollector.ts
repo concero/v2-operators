@@ -25,7 +25,7 @@ export function startHeapSnapshotCollection(
         createHeapSnapshot(logDir, log);
     }, intervalMs);
 
-    // Return cleanup function to stop collection
+    // Return cleanup function to stop collection.
     return () => {
         clearInterval(intervalId);
         log.info('Heap snapshot collection stopped');
