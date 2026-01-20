@@ -1,4 +1,8 @@
-import { getEnvInt, getEnvString, globalConfig as operatorUtilsGlobalConfig, } from '@concero/operator-utils';
+import {
+    getEnvInt,
+    getEnvString,
+    globalConfig as operatorUtilsGlobalConfig,
+} from '@concero/operator-utils';
 
 import { RelayerGlobalConfig } from '../types/GlobalConfig';
 

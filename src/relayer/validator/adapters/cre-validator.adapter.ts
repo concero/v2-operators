@@ -97,13 +97,21 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         this.logger.info(`pumpPendingRequest took: ${(Date.now() - start) / 1000}s`);
     }
 
+    // CRE request failed => retry
+    // CRE callbacks count in creRequestExpirationMs less than requiredCallbacksCount => retry
     async pumpFailedRequest(size: number): Promise<void> {
         const start = Date.now();
 
         const jobs = await this.context.jobQueue.getList(
             {
-                status: JobStatus.RequestFailed,
                 validatorType: ValidatorType.CRE,
+                OR: [
+                    { status: JobStatus.RequestFailed },
+                    {
+                        callbacksCount: { lt: requiredCallbacksCount },
+                        lastVerificationRequestedAt: new Date(Date.now() - creRequestExpirationMs),
+                    },
+                ],
             },
             { take: size },
         );
@@ -200,18 +208,25 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         this.logger.info(`pumpPendingConfirm took: ${(Date.now() - start) / 1000}s`);
     }
 
-    // change status to failed and reset callbackCount based on timeout
+    // tx submission does not succeed in messageSubmissionExpirationMs timeout => re-request
+    // if callbacksCount is not valid => re-request
     async pumpStuckVerificationRequests(size: number): Promise<void> {
         const start = Date.now();
 
         const stuckRequests = await this.context.jobQueue.getList(
             {
-                status: JobStatus.RequestFailed,
+                status: JobStatus.ProcessingConfirm,
                 validatorType: ValidatorType.CRE,
-                lastVerificationRequestedAt: {
-                    lte: new Date(Date.now() - creRequestExpirationMs),
-                },
-                callbacksCount: { lte: requiredCallbacksCount },
+                OR: [
+                    {
+                        lastVerificationRequestedAt: {
+                            lte: new Date(Date.now() - messageSubmissionExpirationMs),
+                        },
+                    },
+                    {
+                        callbacksCount: { lt: requiredCallbacksCount },
+                    },
+                ],
             },
             { take: size },
         );
