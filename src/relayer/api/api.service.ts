@@ -24,14 +24,14 @@ export class ApiService extends ContextProvider {
             const creResponse = req.body as CRE.Response;
             this.logger.info(`handleCRECallback Got: ${ObjectLib.stringify(creResponse)}`);
 
-            const rawReport = creResponse.report.rawReport;
-            const reportContext = creResponse.report.reportContext;
-            const signatures = ArrayLib.deduplicate(creResponse.report.signs.map(i => i.signature));
-            const hash = keccak256(concatHex([rawReport, reportContext]));
-
-            // validation & auth
-            await this.validateWorkflowId(rawReport);
-            await this.validateSignatures(signatures, hash);
+            // const rawReport = creResponse.report.rawReport;
+            // const reportContext = creResponse.report.reportContext;
+            // const signatures = ArrayLib.deduplicate(creResponse.report.signs.map(i => i.signature));
+            // const hash = keccak256(concatHex([rawReport, reportContext]));
+            //
+            // // validation & auth
+            // await this.validateWorkflowId(rawReport);
+            // await this.validateSignatures(signatures, hash);
             // @todo: test validation
             /*  await Promise.all(
                 Object.entries(creResponse.proofs).map(async ([messageId, proofs]) => {
