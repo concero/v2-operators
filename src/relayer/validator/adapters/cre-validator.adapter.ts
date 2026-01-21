@@ -10,6 +10,8 @@ import { Context, ValidatorType } from '../../types'; // @todo: move to global c
 
 // @todo: move to global constants
 export const requiredCallbacksCount = 4;
+export const creBatchSize = 7;
+export const pumpBatchCountPerTick = 7;
 const msInMin = 60_000;
 const creRequestExpirationMs = 5 * msInMin;
 const messageSubmissionExpirationMs = 3 * msInMin;
@@ -31,7 +33,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             return;
         }
 
-        const batches = ArrayLib.toChunks(jobs, 5);
+        const batches = ArrayLib.toChunks(jobs, pumpBatchCountPerTick);
 
         for (const batch of batches) {
             try {
