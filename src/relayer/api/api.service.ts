@@ -1,8 +1,9 @@
 import { concatHex, Hash, Hex, hexToBytes, keccak256, recoverAddress } from 'viem';
+import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { allowedSignerAddresses } from '../../constants';
-import { CRE, JobStatus } from '../../types';
+import { CRE, JobPayload, JobStatus } from '../../types';
 import { ArrayLib, ObjectLib } from '../../utils';
 import { LogModule } from '../log';
 import { ContextProvider } from '../services';
@@ -24,16 +25,16 @@ export class ApiService extends ContextProvider {
             const creResponse = req.body as CRE.Response;
             this.logger.info(`handleCRECallback Got: ${ObjectLib.stringify(creResponse)}`);
 
-            // const rawReport = creResponse.report.rawReport;
-            // const reportContext = creResponse.report.reportContext;
-            // const signatures = ArrayLib.deduplicate(creResponse.report.signs.map(i => i.signature));
-            // const hash = keccak256(concatHex([rawReport, reportContext]));
-            //
-            // // validation & auth
-            // await this.validateWorkflowId(rawReport);
-            // await this.validateSignatures(signatures, hash);
+            const rawReport = creResponse.report.rawReport;
+            const reportContext = creResponse.report.reportContext;
+            const signatures = ArrayLib.deduplicate(creResponse.report.signs.map(i => i.signature));
+            const hash = keccak256(concatHex([rawReport, reportContext]));
+
+            // validation & auth
+            await this.validateWorkflowId(rawReport);
+            await this.validateSignatures(signatures, hash);
             // @todo: test validation
-            /*  await Promise.all(
+            await Promise.all(
                 Object.entries(creResponse.proofs).map(async ([messageId, proofs]) => {
                     try {
                         const foundJob = await this.context.jobQueue.findOne({ messageId });
@@ -48,13 +49,11 @@ export class ApiService extends ContextProvider {
                         const merkleRoot =
                             `0x${rawReport.slice(merkleRootOffsetStart, merkleRootOffsetEnd)}` as Hex;
 
-                        const messageHash = keccak256(jobPayload.data.messageReceipt);
-                        const inner = keccak256(
-                            encodeAbiParameters([{ type: 'bytes32' }], [messageHash]),
+                        const valid = this.verifyMerkleProof(
+                            proofs,
+                            merkleRoot,
+                            jobPayload.data.messageReceipt,
                         );
-                        const leaf = keccak256(inner);
-
-                        const valid = this.verifyMerkleProof(proofs, merkleRoot, leaf);
                         if (!valid) {
                             throw new Error(`Invalid Merkle proof for messageId=${messageId}`);
                         }
@@ -64,7 +63,7 @@ export class ApiService extends ContextProvider {
                         );
                     }
                 }),
-            );*/
+            );
 
             const messageIds = ArrayLib.deduplicate(
                 Object.keys(creResponse.proofs),
@@ -225,17 +224,11 @@ export class ApiService extends ContextProvider {
         }
     }
     private verifyMerkleProof(proof: Hex[], root: Hex, leaf: Hex): boolean {
-        let computedHash = leaf;
-
-        for (const proofElement of proof) {
-            if (computedHash.toLowerCase() < proofElement.toLowerCase()) {
-                computedHash = keccak256(concatHex([computedHash, proofElement]));
-            } else {
-                computedHash = keccak256(concatHex([proofElement, computedHash]));
-            }
+        try {
+            return StandardMerkleTree.verify(root, ['bytes'], [leaf], proof);
+        } catch {
+            return false;
         }
-
-        return computedHash.toLowerCase() === root.toLowerCase();
     }
 
     private respond(res: FastifyReply, json: Record<string, unknown>, status = 200) {
