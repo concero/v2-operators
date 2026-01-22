@@ -25,7 +25,20 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         const start = Date.now();
 
         const jobs = await this.context.jobQueue.getList(
-            { status: JobStatus.ProcessingRequest, validatorType: ValidatorType.CRE },
+            {
+                status: JobStatus.ProcessingRequest,
+                validatorType: ValidatorType.CRE,
+                OR: [
+                    {
+                        lastVerificationRequestedAt: {
+                            lt: new Date(Date.now() - creRequestExpirationMs),
+                        },
+                    },
+                    {
+                        lastVerificationRequestedAt: null,
+                    },
+                ],
+            },
             { take: size },
         );
 
