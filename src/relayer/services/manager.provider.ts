@@ -1,5 +1,6 @@
 import {
     BlockManagerRegistry,
+    ConceroNetwork,
     ConceroNetworkManager,
     HttpClient,
     Logger,
@@ -14,12 +15,7 @@ import { JobQueueService } from './job-queue.service';
 import { PrismaClient } from '@prisma/client';
 
 import { globalConfig } from '../../constants';
-import {
-    DbManager,
-    DeploymentManager,
-    LogsListenerStore,
-    RelayerBalanceManager,
-} from '../../managers';
+import { DbManager, DeploymentManager, LogsListenerStore, RelayerBalanceManager, } from '../../managers';
 import { Config } from '../../types';
 import { Context } from '../types';
 
@@ -127,11 +123,12 @@ export abstract class ManagerProvider {
         this.networkManager.registerUpdateListener(this.deploymentManager);
         this.networkManager.registerUpdateListener(this.viemClientManager);
         this.networkManager.registerUpdateListener(this.blockManagerRegistry);
-
-        /*this.networkManager.registerUpdateListener({
-            onNetworksUpdated: (networks: ConceroNetwork[]) =>
-                this.balanceManager.setActiveNetworks(networks),
-        });*/
+        this.networkManager.registerUpdateListener({
+            onNetworksUpdated: (networks: ConceroNetwork[]) => {
+                this.balanceManager.setNetworks(networks);
+                this.deploymentManager.chains;
+            },
+        });
 
         // Start polling for network updates which will also trigger initial updates
         await this.networkManager.startPolling();

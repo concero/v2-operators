@@ -196,7 +196,7 @@ export class ApiService extends ContextProvider {
             throw new Error(
                 `CRE Workflow Id is invalid. Received: ${workflowId}, expected: ${process.env.CRE_WORKFLOW_ID}`,
             );
-        }
+        } 
     }
     private async validateSignatures(signatures: string[], hash: Hash): Promise<void> {
         if (signatures.length !== 4) {

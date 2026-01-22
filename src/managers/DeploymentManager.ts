@@ -39,6 +39,10 @@ export class DeploymentManager implements NetworkUpdateListener {
         return DeploymentManager.instance;
     }
 
+    get chains() {
+        return Object.values(this.chainOptions);
+    }
+
     getConceroRouters(): Record<string, Address> {
         let routers: Record<string, Address> = {};
         Object.values(this.chainOptions).map(i => {
