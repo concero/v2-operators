@@ -215,7 +215,9 @@ export class ApiService extends ContextProvider {
             const normalizedSigner = rawSigner.toLowerCase() as Hex;
 
             if (!allowedSignerAddresses.includes(normalizedSigner)) {
-                throw new Error(`Signer ${normalizedSigner} is not allowed`);
+                throw new Error(
+                    `Signer ${normalizedSigner} is not allowed in ${signatures.join(',')}`,
+                );
             }
 
             if (recovered.includes(normalizedSigner)) {
