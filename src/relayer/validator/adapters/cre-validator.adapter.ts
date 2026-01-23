@@ -200,7 +200,15 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         `Submit message [${item.messageId}] to chain ${item.dstChainSelector}`,
                     );
 
-                    const dst = await this.submitMessage(itemPayload, [validation]);
+                    const dst = await this.submitMessage(
+                        itemPayload,
+                        [validation],
+                        [
+                            this.context.deploymentManager.getConceroValidatorLibByChainSelector(
+                                itemPayload.parsedReceipt.dstChainSelector,
+                            ),
+                        ],
+                    );
                     await this.context.jobQueue.updateOne(
                         { id: item.id },
                         { dstBlockNumber: String(dst.blockNumber), dstTxHash: dst.hash },
