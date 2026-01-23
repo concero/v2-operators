@@ -29,10 +29,14 @@ export class ApiService extends ContextProvider {
             const reportContext = creResponse.report.reportContext;
             const signatures = ArrayLib.deduplicate(
                 creResponse.report.signs.map(i => `0x${i.signature}`),
-            );
+            ) as Hex[];
+
             const rawReportBytes = hexToBytes(rawReport);
             const reportContextBytes = hexToBytes(reportContext);
-            const hash = keccak256(concat([keccak256(rawReportBytes), reportContextBytes]));
+            const rawReportHashBytes = hexToBytes(keccak256(rawReportBytes));
+            const hashBytes = concat([rawReportHashBytes, reportContextBytes]);
+            const hash = keccak256(hashBytes);
+
             // validation & auth
             await this.validateWorkflowId(rawReport);
             await this.validateSignatures(signatures, hash);
@@ -201,7 +205,7 @@ export class ApiService extends ContextProvider {
             );
         }
     }
-    private async validateSignatures(signatures: string[], hash: Hash): Promise<void> {
+    private async validateSignatures(signatures: Hex[], hash: Hash): Promise<void> {
         if (signatures.length !== 4) {
             throw new Error(`Invalid number of signatures: got ${signatures.length}, required 4`);
         }
@@ -211,7 +215,7 @@ export class ApiService extends ContextProvider {
         for (const signature of signatures) {
             const rawSigner = await recoverAddress({
                 hash,
-                signature: signature as Hex,
+                signature: signature,
             });
             const normalizedSigner = rawSigner.toLowerCase() as Hex;
 
