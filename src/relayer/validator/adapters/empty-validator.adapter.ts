@@ -39,6 +39,9 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
             jobs.map(async i => {
                 const payload = JSON.parse(i.payload) as JobPayload;
                 const dst = await this.submitMessage(payload, []);
+                this.logger.info(
+                    `Submitted message hash=${dst.hash}, blockNumber=${String(dst.blockNumber)}`,
+                );
                 await this.context.jobQueue.updateOne(
                     { id: i.id },
                     { dstBlockNumber: String(dst.blockNumber) },
