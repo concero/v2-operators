@@ -14,7 +14,7 @@ export const creBatchSize = 7;
 export const pumpBatchCountPerTick = 7;
 const msInMin = 60_000;
 const creRequestExpirationMs = 5 * msInMin;
-const messageSubmissionExpirationMs = 3 * msInMin;
+export const messageSubmissionExpirationMs = 3 * msInMin;
 
 export class CREValidatorAdapter extends BaseValidatorAdapter implements IValidatorAdapter {
     constructor(context: Context) {

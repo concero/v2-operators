@@ -1,4 +1,5 @@
 import { BaseValidatorAdapter } from './base-validator.adapter';
+import { messageSubmissionExpirationMs } from './cre-validator.adapter';
 import { IValidatorAdapter } from './validator-adapter.interface';
 
 import { JobPayload, JobStatus } from '../../../types';
@@ -31,8 +32,26 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
 
     async pumpPendingConfirm(size: number): Promise<void> {
         const jobs = await this.context.jobQueue.getList(
-            { status: JobStatus.ProcessingConfirm, validatorType: ValidatorType.Empty },
+            {
+                status: JobStatus.ProcessingConfirm,
+                validatorType: ValidatorType.Empty,
+                OR: [
+                    {
+                        lastSubmittedAt: {
+                            lte: new Date(Date.now() - messageSubmissionExpirationMs),
+                        },
+                    },
+                    { lastSubmittedAt: null },
+                ],
+            },
             { take: size },
+        );
+
+        if (jobs.length === 0) return;
+
+        await this.context.jobQueue.updateMany(
+            { id: { in: jobs.map(i => i.id) } },
+            { lastSubmittedAt: new Date(Date.now()) },
         );
 
         const promises = await Promise.allSettled(
