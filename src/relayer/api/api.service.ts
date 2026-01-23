@@ -1,4 +1,4 @@
-import { concatHex, Hash, Hex, hexToBytes, keccak256, recoverAddress } from 'viem';
+import { concat, Hash, Hex, hexToBytes, keccak256, recoverAddress } from 'viem';
 import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
@@ -30,8 +30,9 @@ export class ApiService extends ContextProvider {
             const signatures = ArrayLib.deduplicate(
                 creResponse.report.signs.map(i => `0x${i.signature}`),
             );
-            const hash = keccak256(concatHex([rawReport, reportContext]));
-
+            const rawReportBytes = hexToBytes(rawReport);
+            const reportContextBytes = hexToBytes(reportContext);
+            const hash = keccak256(concat([keccak256(rawReportBytes), reportContextBytes]));
             // validation & auth
             await this.validateWorkflowId(rawReport);
             await this.validateSignatures(signatures, hash);
