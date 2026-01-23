@@ -27,7 +27,9 @@ export class ApiService extends ContextProvider {
 
             const rawReport = creResponse.report.rawReport;
             const reportContext = creResponse.report.reportContext;
-            const signatures = ArrayLib.deduplicate(creResponse.report.signs.map(i => i.signature));
+            const signatures = ArrayLib.deduplicate(
+                creResponse.report.signs.map(i => `0x${i.signature}`),
+            );
             const hash = keccak256(concatHex([rawReport, reportContext]));
 
             // validation & auth
@@ -196,7 +198,7 @@ export class ApiService extends ContextProvider {
             throw new Error(
                 `CRE Workflow Id is invalid. Received: ${workflowId}, expected: ${process.env.CRE_WORKFLOW_ID}`,
             );
-        } 
+        }
     }
     private async validateSignatures(signatures: string[], hash: Hash): Promise<void> {
         if (signatures.length !== 4) {
