@@ -44,7 +44,7 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
                 );
                 await this.context.jobQueue.updateOne(
                     { id: i.id },
-                    { dstBlockNumber: String(dst.blockNumber) },
+                    { dstBlockNumber: String(dst.blockNumber), dstTxHash: dst.hash },
                 );
                 return i.id;
             }),
