@@ -31,11 +31,10 @@ export class ApiService extends ContextProvider {
                 creResponse.report.signs.map(i => `0x${i.signature}`),
             ) as Hex[];
 
-            const rawReportBytes = hexToBytes('0x' + rawReport);
-            const rawReportHashBytes = keccak256(rawReportBytes);
+            const rawReportHashBytes = keccak256(rawReport);
             const hashBytes = encodePacked(
                 ['bytes32', 'bytes'],
-                [rawReportHashBytes, '0x' + reportContext],
+                [rawReportHashBytes, reportContext],
             );
             const hash = keccak256(hashBytes);
 
