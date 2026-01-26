@@ -1,4 +1,10 @@
-import { creBatchSize, CREValidatorAdapter, EmptyValidatorAdapter, IValidatorAdapter, } from './adapters';
+import {
+    creBatchSize,
+    CREValidatorAdapter,
+    EmptyValidatorAdapter,
+    IValidatorAdapter,
+    pumpBatchCountPerTick,
+} from './adapters';
 
 import { Context, ValidatorType } from '../types';
 
@@ -22,14 +28,14 @@ export class ValidatorModule {
 
         | Flow          | Tick Interval | Batch Size | Max req/min |
         |---------------|---------------|------------|-------------|
-        | Pending       | 1 second      | 7          | 420         | pumpBatchCountPerTick = 5
+        | Pending       | 1 second      | 7          | 420         | pumpBatchCountPerTick = 7
         | Failed        | 4 seconds     | 6          | 90          |
         */
 
         setInterval(async () => {
             await Promise.all(
                 Object.values(this.adapters).map(async adapter =>
-                    adapter.pumpPendingRequest(1 * 7),
+                    adapter.pumpPendingRequest(1 * pumpBatchCountPerTick),
                 ),
             );
         }, 1000);
