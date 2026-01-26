@@ -1,4 +1,4 @@
-import { concat, Hash, Hex, hexToBytes, keccak256, recoverAddress } from 'viem';
+import { encodePacked, Hash, Hex, hexToBytes, keccak256, recoverAddress } from 'viem';
 import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
@@ -32,9 +32,11 @@ export class ApiService extends ContextProvider {
             ) as Hex[];
 
             const rawReportBytes = hexToBytes(rawReport);
-            const reportContextBytes = hexToBytes(reportContext);
-            const rawReportHashBytes = hexToBytes(keccak256(rawReportBytes));
-            const hashBytes = concat([rawReportHashBytes, reportContextBytes]);
+            const rawReportHashBytes = keccak256(rawReportBytes);
+            const hashBytes = encodePacked(
+                ['bytes32', 'bytes'],
+                [rawReportHashBytes, reportContext],
+            );
             const hash = keccak256(hashBytes);
 
             // validation & auth
@@ -221,7 +223,7 @@ export class ApiService extends ContextProvider {
 
             if (!allowedSignerAddresses.includes(normalizedSigner)) {
                 throw new Error(
-                    `Signer ${normalizedSigner} is not allowed in ${signatures.join(',')}`,
+                    `Signer ${normalizedSigner} is not allowed in ${allowedSignerAddresses.join(',')}`,
                 );
             }
 
