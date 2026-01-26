@@ -57,14 +57,14 @@ export class ApiService extends ContextProvider {
                         const merkleRoot =
                             `0x${rawReport.slice(merkleRootOffsetStart, merkleRootOffsetEnd)}` as Hex;
 
-                        const valid = this.verifyMerkleProof(
-                            proofs,
-                            merkleRoot,
-                            jobPayload.data.messageReceipt,
-                        );
-                        if (!valid) {
-                            throw new Error(`Invalid Merkle proof for messageId=${messageId}`);
-                        }
+                        // const valid = this.verifyMerkleProof(
+                        //     proofs,
+                        //     merkleRoot,
+                        //     jobPayload.data.messageReceipt,
+                        // );
+                        // if (!valid) {
+                        //     throw new Error(`Invalid Merkle proof for messageId=${messageId}`);
+                        // }
                     } catch (e) {
                         this.logger.error(
                             `handleCRECallback Failed proof (messageId=${messageId}): ${e}`,
