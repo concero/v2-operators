@@ -296,7 +296,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     }),
                 ),
             ),
-        ).slice(0, 7);
+        ).slice(0, 4);
 
         if (!proofs) {
             throw new Error(`Missing merkle proof for messageId=${messageId}`);
