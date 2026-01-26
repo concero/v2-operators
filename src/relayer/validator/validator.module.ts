@@ -22,7 +22,7 @@ export class ValidatorModule {
 
         | Flow          | Tick Interval | Batch Size | Max req/min |
         |---------------|---------------|------------|-------------|
-        | Pending       | 2 seconds     | 7          | 210         | pumpBatchCountPerTick = 7
+        | Pending       | 1 second      | 7          | 420         | pumpBatchCountPerTick = 5
         | Failed        | 4 seconds     | 6          | 90          |
         */
 

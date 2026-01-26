@@ -2,7 +2,7 @@ import process from 'node:process';
 import { encodeAbiParameters, encodePacked, Hex } from 'viem';
 import { BaseValidatorAdapter } from './base-validator.adapter';
 import { IValidatorAdapter } from './validator-adapter.interface';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 import { CRE, JobPayload, JobStatus } from '../../../types';
 import { ArrayLib, createCREJWT, CRERequestBody } from '../../../utils';
@@ -88,7 +88,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     },
                 });
             } catch (e) {
-                this.logger.error(`Failed CRE request ${e}`);
+                if (e instanceof AxiosError) {
+                    this.logger.error(
+                        `Failed AXIOS CRE request (status=${e.response?.status}): ${e.response?.data ? JSON.stringify(e.response.data ?? null) : ''}`,
+                    );
+                } else {
+                    this.logger.error(`Failed CRE request ${e}`);
+                }
                 await this.context.jobQueue.updateMany(
                     { id: { in: batch.map(i => i.id) } },
                     { status: JobStatus.RequestFailed },
