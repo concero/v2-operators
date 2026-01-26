@@ -223,7 +223,7 @@ export class ApiService extends ContextProvider {
 
             if (!allowedSignerAddresses.includes(normalizedSigner)) {
                 throw new Error(
-                    `Signer ${normalizedSigner} is not allowed in ${signatures.join(',')}`,
+                    `Signer ${normalizedSigner} is not allowed in ${allowedSignerAddresses.join(',')}`,
                 );
             }
 
