@@ -39,8 +39,8 @@ export class ApiService extends ContextProvider {
             const hash = keccak256(hashBytes);
 
             // validation & auth
-            await this.validateWorkflowId(rawReport);
             await this.validateSignatures(signatures, hash);
+            await this.validateWorkflowId(rawReport);
             // @todo: test validation
             await Promise.all(
                 Object.entries(creResponse.proofs).map(async ([messageId, proofs]) => {
@@ -57,14 +57,14 @@ export class ApiService extends ContextProvider {
                         const merkleRoot =
                             `0x${rawReport.slice(merkleRootOffsetStart, merkleRootOffsetEnd)}` as Hex;
 
-                        // const valid = this.verifyMerkleProof(
-                        //     proofs,
-                        //     merkleRoot,
-                        //     jobPayload.data.messageReceipt,
-                        // );
-                        // if (!valid) {
-                        //     throw new Error(`Invalid Merkle proof for messageId=${messageId}`);
-                        // }
+                        const valid = this.verifyMerkleProof(
+                            proofs,
+                            merkleRoot,
+                            jobPayload.data.messageReceipt,
+                        );
+                        if (!valid) {
+                            throw new Error(`Invalid Merkle proof for messageId=${messageId}`);
+                        }
                     } catch (e) {
                         this.logger.error(
                             `handleCRECallback Failed proof (messageId=${messageId}): ${e}`,
@@ -235,7 +235,7 @@ export class ApiService extends ContextProvider {
     }
     private verifyMerkleProof(proof: Hex[], root: Hex, leaf: Hex): boolean {
         try {
-            return StandardMerkleTree.verify(root, ['bytes'], [leaf], proof);
+            return StandardMerkleTree.verify(root, ['bytes32'], [leaf], proof);
         } catch {
             return false;
         }
