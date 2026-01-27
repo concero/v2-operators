@@ -206,6 +206,7 @@ export class ApiService extends ContextProvider {
             );
         }
     }
+
     private async validateSignatures(signatures: Hex[], hash: Hash): Promise<void> {
         if (signatures.length !== 4) {
             throw new Error(`Invalid number of signatures: got ${signatures.length}, required 4`);
@@ -233,9 +234,12 @@ export class ApiService extends ContextProvider {
             recovered.push(normalizedSigner);
         }
     }
+
     private verifyMerkleProof(proof: Hex[], root: Hex, leaf: Hex): boolean {
         try {
-            this.logger.info(`Verifying root: ${root} , proof: ${proof.join(', ')} , ${leaf}`);
+            this.logger.info(
+                `Verifying root: ${root} , proof: ${proof.join(', ')} , leaf: ${leaf}`,
+            );
             return StandardMerkleTree.verify(root, ['bytes32'], [leaf], proof);
         } catch (e) {
             this.logger.info(`Merkle tree verification failed ${JSON.stringify(e)}`);
