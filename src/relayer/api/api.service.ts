@@ -60,7 +60,7 @@ export class ApiService extends ContextProvider {
                         const valid = this.verifyMerkleProof(
                             proofs,
                             merkleRoot,
-                            jobPayload.data.messageReceipt,
+                            jobPayload.data.messageId,
                         );
                         if (!valid) {
                             throw new Error(`Invalid Merkle proof for messageId=${messageId}`);

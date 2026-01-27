@@ -1,6 +1,5 @@
 import './utils/configureDotEnv';
 
-import { Profiler } from '@concero/operator-utils';
 import { AppErrorEnum, globalConfig, messageSentEventAbi, routerContractAbi } from './constants';
 import { RelayerApp } from './relayer';
 import { AppError, startHeapSnapshotCollection } from './utils';
@@ -48,6 +47,6 @@ main().catch(globalErrorHandler);
 
 // @ts-ignore @todo add global Bun object declaration
 if (typeof Bun === 'undefined') {
-    const profiler = new Profiler({ intervalMs: 10 * 60 * 1000, profileDir: 'profiles' });
-    profiler.start();
+    // const profiler = new Profiler({ intervalMs: 10 * 60 * 1000, profileDir: 'profiles' });
+    // profiler.start();
 }
