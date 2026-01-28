@@ -53,7 +53,7 @@ export class ApiService extends ContextProvider {
                         const jobPayload = JSON.parse(foundJob?.payload ?? '{}') as JobPayload;
 
                         const merkleRootOffsetStart = 109 * 2; // RAW_REPORT_METADATA_LENGTH
-                        const merkleRootOffsetEnd = 2 + 141 * 2; // RAW_REPORT_LENGTH
+                        const merkleRootOffsetEnd = 141 * 2; // RAW_REPORT_LENGTH
                         const merkleRoot =
                             `0x${rawReport.slice(merkleRootOffsetStart, merkleRootOffsetEnd)}` as Hex;
 
