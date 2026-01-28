@@ -237,9 +237,6 @@ export class ApiService extends ContextProvider {
 
     private verifyMerkleProof(proof: Hex[], root: Hex, leaf: Hex): boolean {
         try {
-            this.logger.info(
-                `Verifying root: ${root} , proof: ${proof.join(', ')} , leaf: ${leaf}`,
-            );
             return StandardMerkleTree.verify(root, ['bytes32'], [leaf], proof);
         } catch (e) {
             this.logger.info(`Merkle tree verification failed ${JSON.stringify(e)}`);
