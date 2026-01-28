@@ -1,8 +1,8 @@
 import './utils/configureDotEnv';
 
-import { AppErrorEnum, globalConfig, messageSentEventAbi, routerContractAbi } from './constants';
+import { AppErrorEnum, messageSentEventAbi, routerContractAbi } from './constants';
 import { RelayerApp } from './relayer';
-import { AppError, startHeapSnapshotCollection } from './utils';
+import { AppError } from './utils';
 
 const globalErrorHandler = (error: Error) => {
     if (error instanceof AppError) {
@@ -37,10 +37,6 @@ export async function main() {
     });
 
     await app.init();
-
-    if (process.env.ENABLE_HEAP_SNAPSHOTS === 'true') {
-        startHeapSnapshotCollection(globalConfig.LOGGER.logDir);
-    }
 }
 
 main().catch(globalErrorHandler);
