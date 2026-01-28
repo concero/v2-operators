@@ -21,12 +21,12 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         super('CREValidatorAdapter', context);
     }
 
-    async pumpPendingRequest(size: number): Promise<void> {
+    async pumpPendingVerification(size: number): Promise<void> {
         const start = Date.now();
 
         const jobs = await this.context.jobQueue.getList(
             {
-                status: JobStatus.ProcessingRequest,
+                status: JobStatus.PendingVerification,
                 validatorType: ValidatorType.CRE,
                 OR: [
                     {
@@ -86,7 +86,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 await this.context.jobQueue.updateMany(
                     { id: { in: batch.map(i => i.id) } },
                     {
-                        status: JobStatus.ProcessingConfirm,
+                        status: JobStatus.PendingSubmit,
                         lastVerificationRequestedAt: new Date(Date.now()),
                     },
                 );
@@ -104,7 +104,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 this.logger.error(`Failed CRE request ${e}`);
                 await this.context.jobQueue.updateMany(
                     { id: { in: batch.map(i => i.id) } },
-                    { status: JobStatus.RequestFailed },
+                    { status: JobStatus.FailedVerification },
                 );
             }
         }
@@ -114,14 +114,14 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
     // CRE request failed => retry
     // CRE callbacks count in creRequestExpirationMs less than requiredCallbacksCount => retry
-    async pumpFailedRequest(size: number): Promise<void> {
+    async pumpFailedVerification(size: number): Promise<void> {
         const start = Date.now();
 
         const jobs = await this.context.jobQueue.getList(
             {
                 validatorType: ValidatorType.CRE,
                 OR: [
-                    { status: JobStatus.RequestFailed },
+                    { status: JobStatus.FailedVerification },
                     {
                         callbacksCount: { lt: requiredCallbacksCount },
                         lastVerificationRequestedAt: new Date(Date.now() - creRequestExpirationMs),
@@ -145,18 +145,18 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         await this.context.jobQueue.updateMany(
             { id: { in: jobs.map(i => i.id) } },
-            { status: JobStatus.ProcessingRequest, callbacksCount: 0 },
+            { status: JobStatus.PendingVerification, callbacksCount: 0 },
         );
 
         this.logger.info(`pumpFailedRequest took: ${(Date.now() - start) / 1000}s`);
     }
 
-    async pumpPendingConfirm(size: number): Promise<void> {
+    async pumpPendingSubmit(size: number): Promise<void> {
         const start = Date.now();
 
         const jobs = await this.context.jobQueue.getList(
             {
-                status: JobStatus.ProcessingConfirm,
+                status: JobStatus.PendingSubmit,
                 validatorType: ValidatorType.CRE,
                 callbacksCount: { gte: requiredCallbacksCount },
                 OR: [
@@ -224,7 +224,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
             await this.context.jobQueue.updateMany(
                 { id: { in: successJobIds } },
-                { status: JobStatus.WaitingTxFinality },
+                { status: JobStatus.WaitingDstFinality },
             );
         }
 
@@ -238,7 +238,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         const stuckRequests = await this.context.jobQueue.getList(
             {
-                status: JobStatus.ProcessingConfirm,
+                status: JobStatus.PendingSubmit,
                 validatorType: ValidatorType.CRE,
                 OR: [
                     {
@@ -269,7 +269,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         await this.context.jobQueue.updateMany(
             { messageId: { in: messageIds } },
             {
-                status: JobStatus.ProcessingRequest,
+                status: JobStatus.PendingVerification,
                 callbacksCount: 0,
             },
         );

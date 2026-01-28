@@ -10,19 +10,19 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
         super('EmptyValidatorAdapter', context);
     }
 
-    async pumpPendingRequest(size: number): Promise<void> {
+    async pumpPendingVerification(size: number): Promise<void> {
         const jobs = await this.context.jobQueue.getList(
-            { status: JobStatus.ProcessingRequest, validatorType: ValidatorType.Empty },
+            { status: JobStatus.PendingVerification, validatorType: ValidatorType.Empty },
             { take: size },
         );
 
         await this.context.jobQueue.updateMany(
             { id: { in: jobs.map(i => i.id) } },
-            { status: JobStatus.ProcessingConfirm },
+            { status: JobStatus.PendingSubmit },
         );
     }
 
-    async pumpFailedRequest(size: number): Promise<void> {
+    async pumpFailedVerification(size: number): Promise<void> {
         // not used
     }
 
@@ -30,10 +30,10 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
         // not used
     }
 
-    async pumpPendingConfirm(size: number): Promise<void> {
+    async pumpPendingSubmit(size: number): Promise<void> {
         const jobs = await this.context.jobQueue.getList(
             {
-                status: JobStatus.ProcessingConfirm,
+                status: JobStatus.PendingSubmit,
                 validatorType: ValidatorType.Empty,
                 OR: [
                     {
@@ -71,7 +71,7 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
         const jobIds = promises.filter(i => i.status === 'fulfilled').map(i => i.value);
         await this.context.jobQueue.updateMany(
             { id: { in: jobIds } },
-            { status: JobStatus.WaitingTxFinality },
+            { status: JobStatus.WaitingDstFinality },
         );
     }
 }

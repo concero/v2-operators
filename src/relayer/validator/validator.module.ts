@@ -35,7 +35,7 @@ export class ValidatorModule {
         setInterval(async () => {
             await Promise.all(
                 Object.values(this.adapters).map(async adapter =>
-                    adapter.pumpPendingRequest(pumpBatchCountPerTick * creBatchSize),
+                    adapter.pumpPendingVerification(pumpBatchCountPerTick * creBatchSize),
                 ),
             );
         }, 2000);
@@ -43,7 +43,7 @@ export class ValidatorModule {
         setInterval(async () => {
             await Promise.all(
                 Object.values(this.adapters).map(async adapter =>
-                    adapter.pumpFailedRequest(6 * creBatchSize),
+                    adapter.pumpFailedVerification(6 * creBatchSize),
                 ),
             );
         }, 4000);
@@ -61,7 +61,7 @@ export class ValidatorModule {
         // tx submit (no rate limit because of viem batching), limited by RPCs
         setInterval(async () => {
             await Promise.all(
-                Object.values(this.adapters).map(async adapter => adapter.pumpPendingConfirm(100)),
+                Object.values(this.adapters).map(async adapter => adapter.pumpPendingSubmit(100)),
             );
         }, 1000);
     }

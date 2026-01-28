@@ -54,7 +54,7 @@ export class FinalityProcessor extends ContextProvider {
                             await publicClient.getTransaction({ hash: job.srcTxHash as Hex });
                             await this.context.jobQueue.updateOne(
                                 { id: job.id },
-                                { status: JobStatus.ProcessingRequest },
+                                { status: JobStatus.PendingVerification },
                             );
                         } catch (e) {
                             this.logger.warn(`Job inclusion failed [srcTxHash=${job.srcTxHash}]`);
@@ -74,7 +74,7 @@ export class FinalityProcessor extends ContextProvider {
                             this.logger.info(`Job inclusion failed [dstTxHash=${job.srcTxHash}]`);
                             await this.context.jobQueue.updateOne(
                                 { id: job.id },
-                                { status: JobStatus.ProcessingConfirm },
+                                { status: JobStatus.PendingSubmit },
                             );
                         }
                     }

@@ -34,15 +34,8 @@ export class LogPipelineService extends ContextProvider {
             }
             const parsedReceipt = MessagingCodec.decodeReceipt(parsedLog.data.messageReceipt);
             const srcBlocksDelta = this.extractSrcBlocksDelta(parsedReceipt);
-            const dstBlocksDelta = this.extractDstBlocksDelta(parsedReceipt);
             const validatorType = this.extractLogValidatorType(parsedReceipt);
-            await this.upsertLog(
-                parsedLog,
-                parsedReceipt,
-                validatorType,
-                srcBlocksDelta,
-                dstBlocksDelta,
-            );
+            await this.upsertLog(parsedLog, parsedReceipt, validatorType, srcBlocksDelta);
         } catch (e) {
             // @todo upsert raw log to reparse & restart
             this.logger.error(`Unhandled error: ${e}`);
@@ -92,20 +85,6 @@ export class LogPipelineService extends ContextProvider {
         return parsedReceipt.srcChainData.blockConfirmations;
     }
 
-    private extractDstBlocksDelta(parsedReceipt: ParsedMessageLogReceipt): JobBlocksDelta {
-        const isEnabledFinalized = this.context.deploymentManager.getFinalityTagEnabled(
-            parsedReceipt.dstChainSelector,
-        );
-
-        if (isEnabledFinalized) {
-            return 'finalized';
-        }
-
-        return this.context.deploymentManager.getFinalityBlockConformationsByChainSelector(
-            parsedReceipt.dstChainSelector,
-        );
-    }
-
     private extractLogValidatorType(parsedReceipt: ParsedMessageLogReceipt): ValidatorType {
         return parsedReceipt.validatorLibs.length > 0 ? ValidatorType.CRE : ValidatorType.Empty;
     }
@@ -115,7 +94,6 @@ export class LogPipelineService extends ContextProvider {
         parsedReceipt: ParsedMessageLogReceipt,
         validatorType: ValidatorType,
         srcBlocksDelta: JobBlocksDelta,
-        dstBlocksDelta: JobBlocksDelta,
     ): Promise<void> {
         await this.context.jobQueue.create({
             messageId: parsedLog.data.messageId,
@@ -123,16 +101,16 @@ export class LogPipelineService extends ContextProvider {
             callbacksCount: 0,
             validatorType,
             payload: { data: parsedLog.data, parsedReceipt },
+            errorCode: null,
             // src
             srcTxHash: parsedLog.transactionHash,
             srcBlockNumber: String(parsedLog.blockNumber),
             srcChainSelector: parsedReceipt.srcChainSelector,
-            dstChainSelector: parsedReceipt.dstChainSelector,
+            srcBlockNumberDelta: String(srcBlocksDelta),
             // dst
             dstTxHash: null,
             dstBlockNumber: null,
-            srcBlockNumberDelta: String(srcBlocksDelta),
-            dstBlockNumberDelta: String(dstBlocksDelta),
+            dstChainSelector: parsedReceipt.dstChainSelector,
         });
     }
 }

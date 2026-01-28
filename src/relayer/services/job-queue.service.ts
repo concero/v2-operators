@@ -43,7 +43,6 @@ export class JobQueueService {
                 dstTxHash: null,
                 dstBlockNumber: null,
                 srcBlockNumberDelta: entity.srcBlockNumberDelta,
-                dstBlockNumberDelta: entity.dstBlockNumberDelta,
             },
         });
     }

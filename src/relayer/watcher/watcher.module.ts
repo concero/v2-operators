@@ -2,7 +2,7 @@ import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
 import { FinalityProcessor } from './finality.processor';
 import { Job } from '@prisma/client';
 
-import { JobStatus } from '../../types';
+import { JobErrorCode, JobStatus } from '../../types';
 import { ChainsSetupService } from '../services/chains-setup.service';
 import { Context } from '../types';
 
@@ -31,35 +31,54 @@ export class WatcherModule extends ChainsSetupService {
                     srcBlockNumberDelta: 'finalized',
                 }),
                 inclusion: 'src',
-                filter: (job: Job, _, lastFinalizedBlock: bigint) =>
-                    BigInt(job.srcBlockNumber) < lastFinalizedBlock,
+                filter: (job: Job, _, lastFinalizedBlock: bigint) => {
+                    const isEnabled = this.checkFinalityEnabled(job.id, job.srcChainSelector);
+                    if (!isEnabled) {
+                        return false;
+                    }
+
+                    return BigInt(job.srcBlockNumber) < lastFinalizedBlock;
+                },
             },
-            // dst common
+            // dst (use only finalized on dst side)
             {
                 buildQuery: network => ({
-                    status: JobStatus.WaitingTxFinality,
+                    status: JobStatus.WaitingDstFinality,
                     dstChainSelector: Number(network.chainSelector),
-                    dstBlockNumberDelta: { not: 'finalized' },
                     dstTxHash: { not: null },
                 }),
                 inclusion: 'dst',
-                filter: (job: Job, lastChainBlock: bigint) =>
-                    BigInt(job.dstBlockNumber ?? 0) + BigInt(job.dstBlockNumberDelta) <
-                    lastChainBlock,
-            },
-            // dst finalized
-            {
-                buildQuery: network => ({
-                    status: JobStatus.WaitingTxFinality,
-                    dstChainSelector: Number(network.chainSelector),
-                    dstBlockNumberDelta: 'finalized',
-                    dstTxHash: { not: null },
-                }),
-                inclusion: 'dst',
-                filter: (job: Job, _, lastFinalizedBlock: bigint) =>
-                    BigInt(job.dstBlockNumber ?? 0) < lastFinalizedBlock,
+                filter: (job: Job, lastChainBlock: bigint) => {
+                    // if not enabled - mark as failed
+                    const isEnabled = this.checkFinalityEnabled(job.id, job.dstChainSelector);
+                    if (!isEnabled) {
+                        return false;
+                    }
+
+                    const delta =
+                        this.context.deploymentManager.getFinalityBlockConformationsByChainSelector(
+                            job.dstChainSelector,
+                        );
+                    return BigInt(job.dstBlockNumber ?? 0) + delta < lastChainBlock;
+                },
             },
         ]);
+    }
+
+    private checkFinalityEnabled(jobId: number, chainSelector: number): boolean {
+        if (!this.context.deploymentManager.getFinalityTagEnabled(chainSelector)) {
+            this.context.jobQueue.updateOne(
+                { id: jobId },
+                {
+                    status: JobStatus.Failed,
+                    errorCode: JobErrorCode.ChainFinalityTagNotEnabled,
+                },
+            );
+
+            return false;
+        }
+
+        return true;
     }
 
     protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {

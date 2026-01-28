@@ -1,5 +1,6 @@
 import { encodePacked, Hash, Hex, hexToBytes, keccak256, recoverAddress } from 'viem';
 import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
+import { Job } from '@prisma/client';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { allowedSignerAddresses } from '../../constants';
@@ -42,40 +43,41 @@ export class ApiService extends ContextProvider {
             await this.validateSignatures(signatures, hash);
             await this.validateWorkflowId(rawReport);
             // @todo: test validation
+
+            const messageIds = Object.keys(creResponse.proofs) as CRE.MessageId[];
+
+            const jobs = await this.context.jobQueue.getList({
+                messageId: { in: messageIds },
+            });
+            const jobHashmap: Record<Job['messageId'], Job> = {};
+            for (const job of jobs) {
+                jobHashmap[job.messageId] = job;
+            }
+
             await Promise.all(
                 Object.entries(creResponse.proofs).map(async ([messageId, proofs]) => {
-                    try {
-                        const foundJob = await this.context.jobQueue.findOne({ messageId });
-                        if (!foundJob) {
-                            throw new Error(`Could not find job with id ${messageId}`);
-                        }
+                    const foundJob = await this.context.jobQueue.findOne({ messageId });
+                    if (!foundJob) {
+                        throw new Error(`Could not find job with id ${messageId}`);
+                    }
 
-                        const jobPayload = JSON.parse(foundJob?.payload ?? '{}') as JobPayload;
+                    const jobPayload = JSON.parse(foundJob?.payload ?? '{}') as JobPayload;
 
-                        const merkleRootOffsetStart = 109 * 2; // RAW_REPORT_METADATA_LENGTH
-                        const merkleRootOffsetEnd = 141 * 2; // RAW_REPORT_LENGTH
-                        const merkleRoot =
-                            `0x${rawReport.slice(merkleRootOffsetStart, merkleRootOffsetEnd)}` as Hex;
+                    const merkleRootOffsetStart = 109 * 2; // RAW_REPORT_METADATA_LENGTH
+                    const merkleRootOffsetEnd = 141 * 2; // RAW_REPORT_LENGTH
+                    const merkleRoot =
+                        `0x${rawReport.slice(merkleRootOffsetStart, merkleRootOffsetEnd)}` as Hex;
 
-                        const valid = this.verifyMerkleProof(
-                            proofs,
-                            merkleRoot,
-                            jobPayload.data.messageId,
-                        );
-                        if (!valid) {
-                            throw new Error(`Invalid Merkle proof for messageId=${messageId}`);
-                        }
-                    } catch (e) {
-                        this.logger.error(
-                            `handleCRECallback Failed proof (messageId=${messageId}): ${e}`,
-                        );
+                    const isValid = this.verifyMerkleProof(
+                        proofs,
+                        merkleRoot,
+                        jobPayload.data.messageId,
+                    );
+                    if (!isValid) {
+                        throw new Error(`Invalid Merkle proof for messageId=${messageId}`);
                     }
                 }),
             );
-
-            const messageIds = ArrayLib.deduplicate(
-                Object.keys(creResponse.proofs),
-            ) as CRE.MessageId[];
 
             // bulk create cre callbacks
             await this.context.dbClient.$transaction(async client => {
@@ -148,15 +150,15 @@ export class ApiService extends ContextProvider {
         if (expectedJob) {
             const buildDowngradedStatus = (jobStatus: JobStatus): JobStatus => {
                 switch (jobStatus) {
-                    case JobStatus.ProcessingRequest:
+                    case JobStatus.PendingVerification:
                         return JobStatus.WaitingSrcConfirmation;
-                    case JobStatus.RequestFailed:
-                        return JobStatus.ProcessingRequest;
-                    case JobStatus.ProcessingConfirm:
-                        return JobStatus.ProcessingRequest;
-                    case JobStatus.WaitingTxFinality:
-                        return JobStatus.ProcessingConfirm;
-                    // Reorged, WaitingSrcConfirmation, Successs - the same
+                    case JobStatus.FailedVerification:
+                        return JobStatus.PendingVerification;
+                    case JobStatus.PendingSubmit:
+                        return JobStatus.PendingVerification;
+                    case JobStatus.WaitingDstFinality:
+                        return JobStatus.PendingSubmit;
+                    // Reorged, WaitingSrcConfirmation, Successs, Failed - the same
                     default:
                         return jobStatus;
                 }

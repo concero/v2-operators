@@ -4,11 +4,16 @@ import { ParsedLog } from './parsedLog';
 export enum JobStatus {
     Reorged = 'reorged',
     WaitingSrcConfirmation = 'waiting_src_confirmation', // wait for finalization / block confirmation proof on src
-    ProcessingRequest = 'processing_request', // planned to be requested
-    RequestFailed = 'request_failed', // planned request failed, should be retried
-    ProcessingConfirm = 'processing_verify', // planned to be verified
-    WaitingTxFinality = 'waiting_tx_finality', // planned to check finality on dst
+    PendingVerification = 'pending_verification', // verification planned, pending request
+    FailedVerification = 'failed_verification', // verification failed, should be retried
+    PendingSubmit = 'pending_submit', // tx submit planned, pending request
+    WaitingDstFinality = 'waiting_dst_finality', // wait for finalization proof on dst
     Success = 'success', // tx executed and on dst side
+    Failed = 'failed', // failed by reason JobErrorCode
+}
+
+export enum JobErrorCode {
+    ChainFinalityTagNotEnabled = 'chain_finality_tag_not_enabled',
 }
 
 export type JobBlocksDelta = bigint | 'finalized';
