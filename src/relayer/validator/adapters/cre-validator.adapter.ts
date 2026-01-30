@@ -201,7 +201,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         await this.context.jobQueue.updateMany(
             { id: { in: jobs.map(i => i.id) } },
-            { lastSubmittedAt: new Date(Date.now()) },
+            { lastSubmittedAt: new Date() },
         );
 
         const batches = ArrayLib.toChunks(jobs, 10);
@@ -309,7 +309,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         const reportContext = creResponses[0].report.reportContext as Hex;
         const proofs = creResponses[0].proofs[messageId];
 
-        const signatures = Array.from(
+        const allSignatures = Array.from(
             new Set(
                 creResponses.flatMap(item =>
                     item.report.signs.map(sign => {
@@ -320,7 +320,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     }),
                 ),
             ),
-        ).slice(0, 7);
+        );
+        const signatures = allSignatures.slice(0, Math.min(allSignatures.length, 4));
 
         if (!proofs) {
             throw new Error(`Missing merkle proof for messageId=${messageId}`);
