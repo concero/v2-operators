@@ -10,7 +10,6 @@ type CreateEntity = Omit<
     | 'id'
     | 'status'
     | 'payload'
-    | 'attempts'
     | 'nextRetryAt'
     | 'createdAt'
     | 'updatedAt'

@@ -41,7 +41,6 @@ model Job {
   lastVerificationRequestedAt DateTime?
   lastSubmittedAt             DateTime?
   callbacksCount              Int       @default(0)
-  attempts                    Int       @default(0)
 
   // src
   srcTxHash           String
