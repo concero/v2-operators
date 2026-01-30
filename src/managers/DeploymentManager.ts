@@ -117,7 +117,7 @@ export class DeploymentManager implements NetworkUpdateListener {
 
         if (typeof minBlockConfirmations !== 'number') {
             throw new Error(
-                `FinalityConfirmations not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+                `MinBlockConfirmations not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
             );
         }
 
