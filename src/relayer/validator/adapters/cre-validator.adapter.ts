@@ -130,11 +130,30 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             },
             { take: size },
         );
+        const messageIds = ArrayLib.deduplicate(jobs.map(i => i.messageId));
 
         if (jobs.length === 0) {
             return;
         }
 
+        await this.context.dbClient.$transaction(async client => {
+            client.creCallback.deleteMany({
+                where: {
+                    messageId: {
+                        in: messageIds,
+                    },
+                },
+            });
+            client.job.updateMany({
+                where: {
+                    messageId: { in: messageIds },
+                },
+                data: {
+                    status: JobStatus.PendingVerification,
+                    callbacksCount: 0,
+                },
+            });
+        });
         await this.context.dbClient.creCallback.deleteMany({
             where: {
                 messageId: {
@@ -144,8 +163,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         });
 
         await this.context.jobQueue.updateMany(
-            { id: { in: jobs.map(i => i.id) } },
-            { status: JobStatus.PendingVerification, callbacksCount: 0 },
+            {
+                messageId: { in: messageIds },
+            },
+            {
+                status: JobStatus.PendingVerification,
+                callbacksCount: 0,
+            },
         );
 
         this.logger.info(`pumpFailedRequest took: ${(Date.now() - start) / 1000}s`);
