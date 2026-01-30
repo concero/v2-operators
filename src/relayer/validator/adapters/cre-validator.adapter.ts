@@ -37,6 +37,14 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         for (const batch of batches) {
             try {
+                await this.context.jobQueue.updateMany(
+                    { id: { in: batch.map(i => i.id) } },
+                    {
+                        status: JobStatus.ProcessingConfirm,
+                        lastVerificationRequestedAt: new Date(Date.now()),
+                    },
+                );
+
                 const requestBody: CRERequestBody<CRE.Request> = {
                     jsonrpc: '2.0',
                     id: crypto.randomUUID(),
@@ -70,13 +78,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     },
                 );
 
-                await this.context.jobQueue.updateMany(
-                    { id: { in: batch.map(i => i.id) } },
-                    {
-                        status: JobStatus.ProcessingConfirm,
-                        lastVerificationRequestedAt: new Date(Date.now()),
-                    },
-                );
                 await this.context.dbClient.counter.upsert({
                     where: { type: 'creBufferSize' },
                     update: {
