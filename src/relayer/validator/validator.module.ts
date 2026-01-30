@@ -38,7 +38,7 @@ export class ValidatorModule {
                     adapter.pumpPendingVerification(pumpBatchCountPerTick * creBatchSize),
                 ),
             );
-        }, 30_000);
+        }, 2000);
 
         setInterval(async () => {
             await Promise.all(
