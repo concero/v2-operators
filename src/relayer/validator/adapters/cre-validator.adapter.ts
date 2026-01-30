@@ -33,18 +33,18 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             return;
         }
 
+        await this.context.jobQueue.updateMany(
+            { id: { in: jobs.map(i => i.id) } },
+            {
+                status: JobStatus.ProcessingConfirm,
+                lastVerificationRequestedAt: new Date(Date.now()),
+            },
+        );
+
         const batches = ArrayLib.toChunks(jobs, pumpBatchCountPerTick);
 
         for (const batch of batches) {
             try {
-                await this.context.jobQueue.updateMany(
-                    { id: { in: batch.map(i => i.id) } },
-                    {
-                        status: JobStatus.ProcessingConfirm,
-                        lastVerificationRequestedAt: new Date(Date.now()),
-                    },
-                );
-
                 const requestBody: CRERequestBody<CRE.Request> = {
                     jsonrpc: '2.0',
                     id: crypto.randomUUID(),
