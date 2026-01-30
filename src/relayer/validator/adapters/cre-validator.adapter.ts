@@ -11,7 +11,7 @@ import { Context, ValidatorType } from '../../types'; // @todo: move to global c
 // @todo: move to global constants
 export const requiredCallbacksCount = 4;
 export const creBatchSize = 5;
-export const pumpBatchCountPerTick = 30;
+export const pumpBatchCountPerTick = 7;
 const msInMin = 60_000;
 const creRequestExpirationMs = 5 * msInMin;
 const messageSubmissionExpirationMs = 3 * msInMin;
@@ -32,14 +32,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         if (jobs.length === 0) {
             return;
         }
-
-        await this.context.jobQueue.updateMany(
-            { id: { in: jobs.map(i => i.id) } },
-            {
-                status: JobStatus.ProcessingConfirm,
-                lastVerificationRequestedAt: new Date(Date.now()),
-            },
-        );
 
         const batches = ArrayLib.toChunks(jobs, pumpBatchCountPerTick);
 
@@ -78,6 +70,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     },
                 );
 
+                await this.context.jobQueue.updateMany(
+                    { id: { in: batch.map(i => i.id) } },
+                    {
+                        status: JobStatus.ProcessingConfirm,
+                        lastVerificationRequestedAt: new Date(Date.now()),
+                    },
+                );
                 await this.context.dbClient.counter.upsert({
                     where: { type: 'creBufferSize' },
                     update: {
