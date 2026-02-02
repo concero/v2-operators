@@ -5,9 +5,11 @@ import { IValidatorAdapter } from './validator-adapter.interface';
 import { CRE, JobPayload, JobStatus } from '../../../types';
 import { ArrayLib } from '../../../utils';
 import { CREExecutorService } from '../../services';
-import { Context, ValidatorType } from '../../types';
+import { Context, ValidatorType } from '../../types'; // @todo: move to global constants
 
 // @todo: move to global constants
+const baseTimeoutMs = 5 * 1000; // 5 sec
+const maxTimeoutMs = 20 * 60 * 1000; // 20 min
 export const requiredCallbacksCount = 4;
 export const creBatchSize = 40;
 export const pumpBatchCountPerTick = 2;
@@ -17,6 +19,15 @@ const msInMin = 60_000;
 const creRequestExpirationMs = 5 * msInMin;
 export const messageSubmissionExpirationMs = 3 * msInMin;
 
+/* Job pipeline:
+    PendingVerification
+        ↓ (execute CRE request)
+    PendingSubmit   ← waiting for callbacks (verification phase)
+        ↓ (callbacksCount >= 4)
+    PendingSubmit   ← ready to submit on-chain
+        ↓ (submit success)
+    WaitingDstFinality
+ */
 export class CREValidatorAdapter extends BaseValidatorAdapter implements IValidatorAdapter {
     private readonly creExecutorService: CREExecutorService;
 
@@ -25,6 +36,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         this.creExecutorService = new CREExecutorService();
     }
 
+    // pump only planned verification with rate limits based on constants
     async pumpPendingVerification(size: number): Promise<void> {
         const start = Date.now();
 
@@ -33,35 +45,32 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 status: JobStatus.PendingVerification,
                 validatorType: ValidatorType.CRE,
                 OR: [
-                    {
-                        lastVerificationRequestedAt: {
-                            lt: new Date(Date.now() - creRequestExpirationMs),
-                        },
-                    },
-                    {
-                        lastVerificationRequestedAt: null,
-                    },
+                    { verificationPlannedTo: { lt: new Date() } },
+                    { verificationPlannedTo: null },
                 ],
             },
             { take: size },
         );
+        const allJobIds = jobs.map(i => i.id);
 
-        if (jobs.length === 0) {
+        if (!jobs.length) {
             return;
         }
 
+        // set last verification requested date
+        await this.context.jobQueue.updateMany(
+            { id: { in: allJobIds } },
+            {
+                lastVerificationAt: new Date(),
+            },
+        );
+
         const batches = ArrayLib.toChunks(jobs, pumpBatchCountPerTick);
 
-        for (const batch of batches) {
+        const batchPromises = batches.map(async batch => {
             const batchJobIds = batch.map(i => i.id);
+
             try {
-                // set last verification requested date
-                await this.context.jobQueue.updateMany(
-                    { id: { in: batchJobIds } },
-                    {
-                        lastVerificationRequestedAt: new Date(),
-                    },
-                );
                 // execute workflow for CRE batch
                 const creBatch: CRE.Request['batch'] = batch.map(i => ({
                     blockNumber: String(i.srcBlockNumber),
@@ -74,44 +83,53 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     { id: { in: batchJobIds } },
                     {
                         status: JobStatus.PendingSubmit,
+                        verificationAttempts: 0,
+                        verificationPlannedTo: null,
+                        submitPlannedTo: new Date(), // should be planned to just now
                     },
                 );
             } catch (e) {
-                this.logger.error(`Failed CRE request ${e}`);
+                this.logger.error(`pumpPendingVerification Execution failed: ${e}`);
                 // move to verification request failed if batch was not executed
-                await this.context.jobQueue.updateMany(
-                    { id: { in: batchJobIds } },
-                    { status: JobStatus.FailedVerification },
-                );
+                await this.context.dbClient.$transaction(async client => {
+                    const jobPromises = batch.map(async i => {
+                        client.job.update({
+                            where: { id: i.id },
+                            data: {
+                                status: JobStatus.FailedVerification,
+                                verificationAttempts: { increment: 1 },
+                                verificationPlannedTo: this.calculateNextPlannedTo(
+                                    i.verificationAttempts + 1,
+                                ),
+                            },
+                        });
+                    });
+                    await Promise.all(jobPromises);
+                });
             }
-        }
+        });
+        await Promise.all(batchPromises);
 
-        this.logger.info(`pumpPendingRequest took: ${(Date.now() - start) / 1000}s`);
+        this.logger.info(`pumpPendingVerification took: ${(Date.now() - start) / 1000}s`);
     }
 
-    // CRE request failed => retry
-    // CRE callbacks count in creRequestExpirationMs less than requiredCallbacksCount => retry
+    // retry only failed verification request (verificationPlannedTo re-calc not needed, calculated in catch block of "pumpPendingVerification")
     async pumpFailedVerification(size: number): Promise<void> {
         const start = Date.now();
 
         const jobs = await this.context.jobQueue.getList(
             {
                 validatorType: ValidatorType.CRE,
-                OR: [
-                    { status: JobStatus.FailedVerification },
-                    {
-                        callbacksCount: { lt: requiredCallbacksCount },
-                        lastVerificationRequestedAt: new Date(Date.now() - creRequestExpirationMs),
-                    },
-                ],
+                status: JobStatus.FailedVerification,
+                verificationPlannedTo: { lt: new Date(Date.now() + 20_000) }, // < 20 sec ahead to increase tick performance
             },
             { take: size },
         );
-        const messageIds = ArrayLib.deduplicate(jobs.map(i => i.messageId));
-
-        if (jobs.length === 0) {
+        if (!jobs.length) {
             return;
         }
+
+        const messageIds = jobs.map(i => i.messageId);
 
         await this.context.dbClient.$transaction(async client => {
             client.creCallback.deleteMany({
@@ -131,25 +149,58 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 },
             });
         });
-        await this.context.dbClient.creCallback.deleteMany({
-            where: {
-                messageId: {
-                    in: ArrayLib.deduplicate(jobs.map(i => i.messageId)),
-                },
-            },
-        });
 
-        await this.context.jobQueue.updateMany(
+        this.logger.info(`pumpFailedVerification took: ${(Date.now() - start) / 1000}s`);
+    }
+
+    // retry verification in case request "expired" and we did not receive enough creCallbacks for it (verificationPlannedTo re-calc needed before moving to planned verification queue)
+    async pumpStuckVerificationRequests(size: number): Promise<void> {
+        const start = Date.now();
+
+        const jobs = await this.context.jobQueue.getList(
             {
-                messageId: { in: messageIds },
+                status: JobStatus.PendingSubmit,
+                validatorType: ValidatorType.CRE,
+                lastVerificationAt: {
+                    lte: new Date(Date.now() - creRequestExpirationMs),
+                },
+                callbacksCount: { lt: requiredCallbacksCount },
             },
-            {
-                status: JobStatus.PendingVerification,
-                callbacksCount: 0,
-            },
+            { take: size },
         );
 
-        this.logger.info(`pumpFailedRequest took: ${(Date.now() - start) / 1000}s`);
+        if (!jobs.length) {
+            return;
+        }
+
+        this.logger.info(`${jobs.length} stuck requests.`);
+
+        const messageIds = jobs.map(i => i.messageId);
+
+        await this.context.dbClient.$transaction(async client => {
+            await client.creCallback.deleteMany({
+                where: { messageId: { in: messageIds } },
+            });
+            const jobs = await client.job.findMany({ where: { messageId: { in: messageIds } } });
+            const jobPromises = jobs.map(i => {
+                return client.job.update({
+                    where: {
+                        id: i.id,
+                    },
+                    data: {
+                        status: JobStatus.PendingVerification,
+                        callbacksCount: 0,
+                        verificationPlannedTo: this.calculateNextPlannedTo(
+                            i.verificationAttempts + 1,
+                        ),
+                        verificationAttempts: { increment: 1 },
+                    },
+                });
+            });
+            await Promise.all(jobPromises);
+        });
+
+        this.logger.info(`pumpStuckVerificationRequests took: ${(Date.now() - start) / 1000}s`);
     }
 
     async pumpPendingSubmit(size: number): Promise<void> {
@@ -160,45 +211,41 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 status: JobStatus.PendingSubmit,
                 validatorType: ValidatorType.CRE,
                 callbacksCount: { gte: requiredCallbacksCount },
-                OR: [
-                    {
-                        lastSubmittedAt: {
-                            lte: new Date(Date.now() - messageSubmissionExpirationMs),
-                        },
-                    },
-                    { lastSubmittedAt: null },
-                ],
+                submitPlannedTo: {
+                    lte: new Date(),
+                },
             },
             { take: size },
         );
-
-        if (jobs.length === 0) {
+        const allJobIds = jobs.map(i => i.id);
+        if (!jobs.length) {
             return;
         }
 
         await this.context.jobQueue.updateMany(
-            { id: { in: jobs.map(i => i.id) } },
-            { lastSubmittedAt: new Date() },
+            { id: { in: allJobIds } },
+            { lastSubmitAt: new Date(), submitAttempts: { increment: 1 } },
         );
 
         const batches = ArrayLib.toChunks(jobs, 10);
 
         for (const batch of batches) {
-            const promises = await Promise.allSettled(
-                batch.map(async item => {
+            const batchPromises = batch.map(async item => {
+                const jobId = item.id;
+                const messageId = item.messageId as Hex;
+
+                try {
                     const itemPayload = JSON.parse(item.payload) as JobPayload;
-
                     const callbacks = await this.context.dbClient.creCallback.findMany({
-                        where: { messageId: item.messageId },
+                        where: { messageId },
+                        take: 4,
                     });
-
                     const validation = this.packCREValidationFromResponse(
                         callbacks.map(c => JSON.parse(c.payload)),
-                        item.messageId as Hex,
+                        messageId,
                     );
-
                     this.logger.info(
-                        `Submit message [${item.messageId}] to chain ${item.dstChainSelector}`,
+                        `pumpPendingSubmit Processing Message (id=${messageId}, jobId=${jobId}) submit to chain (selector=${item.dstChainSelector})`,
                     );
 
                     const dst = await this.submitMessage(
@@ -210,72 +257,44 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                             ),
                         ],
                     );
-                    await this.context.jobQueue.updateOne(
-                        { id: item.id },
-                        { dstBlockNumber: String(dst.blockNumber), dstTxHash: dst.hash },
+
+                    return { jobId, type: 'success', dst };
+                } catch (e) {
+                    this.logger.error(
+                        `pumpPendingSubmit Message (id=${messageId}, jobId=${jobId}) submit failed: ${e}`,
                     );
-                    return item.id;
-                }),
-            );
-            const successJobIds = promises.filter(i => i.status === 'fulfilled').map(i => i.value);
-            const batchErrors = promises.filter(i => i.status === 'rejected').map(i => i.reason);
-            if (batchErrors.length > 0) {
-                this.logger.error(batchErrors.join(';'));
-            }
+                    return { jobId, type: 'failed', attempts: item.submitAttempts };
+                }
+            });
+            const results = await Promise.all(batchPromises);
+            const successResults = results.filter(i => i.type === 'success');
+            const successJobIds = successResults.map(i => i.jobId);
+            const failedResults = results.filter(i => i.type === 'failed');
 
-            await this.context.jobQueue.updateMany(
-                { id: { in: successJobIds } },
-                { status: JobStatus.WaitingDstFinality },
-            );
-        }
-
-        this.logger.info(`pumpPendingConfirm took: ${(Date.now() - start) / 1000}s`);
-    }
-
-    // tx submission does not succeed in messageSubmissionExpirationMs timeout => re-request
-    // if callbacksCount is not valid => re-request
-    async pumpStuckVerificationRequests(size: number): Promise<void> {
-        const start = Date.now();
-
-        const stuckRequests = await this.context.jobQueue.getList(
-            {
-                status: JobStatus.PendingSubmit,
-                validatorType: ValidatorType.CRE,
-                OR: [
-                    {
-                        lastVerificationRequestedAt: {
-                            lte: new Date(Date.now() - messageSubmissionExpirationMs),
+            await this.context.dbClient.$transaction(async client => {
+                await client.job.updateMany({
+                    where: { id: { in: successJobIds } },
+                    data: {
+                        status: JobStatus.WaitingDstFinality,
+                        submitAttempts: 0,
+                        submitPlannedTo: null,
+                    },
+                });
+                const failedPromises = failedResults.map(i => {
+                    return client.job.update({
+                        where: { id: i.jobId },
+                        data: {
+                            submitPlannedTo: this.calculateNextPlannedTo(
+                                (i.attempts as number) + 1,
+                            ),
                         },
-                    },
-                    {
-                        callbacksCount: { lt: requiredCallbacksCount },
-                    },
-                ],
-            },
-            { take: size },
-        );
-
-        if (stuckRequests.length === 0) {
-            return;
+                    });
+                });
+                await Promise.all(failedPromises);
+            });
         }
 
-        this.logger.info(`${stuckRequests.length} stuck requests.`);
-
-        const messageIds = ArrayLib.deduplicate(stuckRequests.map(i => i.messageId));
-
-        await this.context.dbClient.creCallback.deleteMany({
-            where: { messageId: { in: messageIds } },
-        });
-
-        await this.context.jobQueue.updateMany(
-            { messageId: { in: messageIds } },
-            {
-                status: JobStatus.PendingVerification,
-                callbacksCount: 0,
-            },
-        );
-
-        this.logger.info(`pumpStuckVerificationRequests took: ${(Date.now() - start) / 1000}s`);
+        this.logger.info(`pumpPendingSubmit took: ${(Date.now() - start) / 1000}s`);
     }
 
     private packCREValidationFromResponse(
@@ -313,5 +332,14 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             ['bytes', 'bytes', 'bytes'],
             [rawReport, reportContext, encodedSignaturesAndProof],
         );
+    }
+
+    private calculateNextPlannedTo(attempts: number): Date {
+        const delay = Math.min(baseTimeoutMs * 2 ** attempts, maxTimeoutMs);
+
+        // to avoid DDoS due to critical issue we use jitter (randomizer for delay)
+        const jitter = delay * (0.5 + Math.random() * 0.5);
+
+        return new Date(Date.now() + jitter);
     }
 }

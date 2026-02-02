@@ -30,17 +30,17 @@ model Job {
   status        String
   errorCode     String?
 
-  // @todo: exponential backoff
-  // lastVerificationRequestedAt DateTime?
-  // verificationAttempts        Int?      @default(0)
-  // lastSubmittedAt             DateTime?
-  // submitAttempts              Int?      @default(0)
-  //
-  // callbacksCount Int @default(0)
+  // VERIFICATION
+  verificationAttempts  Int       @default(0)
+  lastVerificationAt    DateTime?
+  verificationPlannedTo DateTime?
 
-  lastVerificationRequestedAt DateTime?
-  lastSubmittedAt             DateTime?
-  callbacksCount              Int       @default(0)
+  // SUBMIT
+  submitAttempts  Int       @default(0)
+  lastSubmitAt    DateTime?
+  submitPlannedTo DateTime?
+
+  callbacksCount Int @default(0)
 
   // src
   srcTxHash           String
