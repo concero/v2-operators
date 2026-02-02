@@ -1,24 +1,28 @@
-import process from 'node:process';
 import { encodeAbiParameters, encodePacked, Hex } from 'viem';
 import { BaseValidatorAdapter } from './base-validator.adapter';
 import { IValidatorAdapter } from './validator-adapter.interface';
-import axios from 'axios';
 
 import { CRE, JobPayload, JobStatus } from '../../../types';
-import { ArrayLib, createCREJWT, CRERequestBody } from '../../../utils';
-import { Context, ValidatorType } from '../../types'; // @todo: move to global constants
+import { ArrayLib } from '../../../utils';
+import { CREExecutorService } from '../../services';
+import { Context, ValidatorType } from '../../types';
 
 // @todo: move to global constants
 export const requiredCallbacksCount = 4;
 export const creBatchSize = 7;
 export const pumpBatchCountPerTick = 30;
+
+// @todo: move to time utils
 const msInMin = 60_000;
 const creRequestExpirationMs = 5 * msInMin;
 export const messageSubmissionExpirationMs = 3 * msInMin;
 
 export class CREValidatorAdapter extends BaseValidatorAdapter implements IValidatorAdapter {
+    private readonly creExecutorService: CREExecutorService;
+
     constructor(context: Context) {
         super('CREValidatorAdapter', context);
+        this.creExecutorService = new CREExecutorService();
     }
 
     async pumpPendingVerification(size: number): Promise<void> {
@@ -49,61 +53,34 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         const batches = ArrayLib.toChunks(jobs, pumpBatchCountPerTick);
 
         for (const batch of batches) {
+            const batchJobIds = batch.map(i => i.id);
             try {
-                const requestBody: CRERequestBody<CRE.Request> = {
-                    jsonrpc: '2.0',
-                    id: crypto.randomUUID(),
-                    method: 'workflows.execute',
-                    params: {
-                        input: {
-                            batch: batch.map(i => {
-                                return {
-                                    messageId: i.messageId as Hex,
-                                    blockNumber: i.srcBlockNumber,
-                                    srcChainSelector: i.srcChainSelector,
-                                };
-                            }),
-                        },
-                        workflow: { workflowID: process.env.CRE_WORKFLOW_ID as string },
-                    },
-                };
-                const token = await createCREJWT(
-                    requestBody,
-                    process.env.CRE_REQUESTER_PRIVATE_KEY as Hex,
-                );
-                await axios.post(
-                    // @todo: fix types
-                    process.env.CRE_BASE_URL as string,
-                    requestBody,
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}`,
-                        },
-                    },
-                );
-
+                // set last verification requested date
                 await this.context.jobQueue.updateMany(
-                    { id: { in: batch.map(i => i.id) } },
+                    { id: { in: batchJobIds } },
+                    {
+                        lastVerificationRequestedAt: new Date(),
+                    },
+                );
+                // execute workflow for CRE batch
+                const creBatch: CRE.Request['batch'] = batch.map(i => ({
+                    blockNumber: String(i.srcBlockNumber),
+                    messageId: i.messageId as Hex,
+                    srcChainSelector: i.srcChainSelector,
+                }));
+                await this.creExecutorService.execute(creBatch);
+                // move to submit waiting if batch was executed
+                await this.context.jobQueue.updateMany(
+                    { id: { in: batchJobIds } },
                     {
                         status: JobStatus.PendingSubmit,
-                        lastVerificationRequestedAt: new Date(Date.now()),
                     },
                 );
-                await this.context.dbClient.counter.upsert({
-                    where: { type: 'creBufferSize' },
-                    update: {
-                        value: { increment: batch.length },
-                    },
-                    create: {
-                        type: 'creBufferSize',
-                        value: batch.length,
-                    },
-                });
             } catch (e) {
                 this.logger.error(`Failed CRE request ${e}`);
+                // move to verification request failed if batch was not executed
                 await this.context.jobQueue.updateMany(
-                    { id: { in: batch.map(i => i.id) } },
+                    { id: { in: batchJobIds } },
                     { status: JobStatus.FailedVerification },
                 );
             }

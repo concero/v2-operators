@@ -21,16 +21,17 @@ export class ValidatorModule {
     async init() {
         /*
         Rate allocation:
-        - New requests: 210 req/min (70%)
-        - Failed:       90  req/min (30%)
+        - New requests: 900  req/min (~70%)
+        - Failed:       450  req/min (~30%)
 
         Tick configuration:
 
-        | Flow          | Tick Interval | Batch Size | Max req/min |
-        |---------------|---------------|------------|-------------|
-        | Pending       | 2 seconds     | 7          | 210         | pumpBatchCountPerTick = 7
-        | Failed        | 4 seconds     | 6          | 90          |
-        */
+        | Flow          | Tick Interval | Batch Size | Batch count | Max req/min | Max tx/min  |
+        |---------------|---------------|------------|-------------|-------------|-------------|
+        | Pending       | 2 seconds     | 7          | 30          | 900         | 6300        |
+        | Failed        | 4 seconds     | 7          | 30          | 450         | 3150        |
+        | Total         | -             | -          | -           | 1350        | 9450        |
+   */
 
         setInterval(async () => {
             await Promise.all(
