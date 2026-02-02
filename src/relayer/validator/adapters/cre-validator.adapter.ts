@@ -9,8 +9,8 @@ import { Context, ValidatorType } from '../../types';
 
 // @todo: move to global constants
 export const requiredCallbacksCount = 4;
-export const creBatchSize = 7;
-export const pumpBatchCountPerTick = 30;
+export const creBatchSize = 40;
+export const pumpBatchCountPerTick = 2;
 
 // @todo: move to time utils
 const msInMin = 60_000;

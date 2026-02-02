@@ -20,17 +20,14 @@ export class ValidatorModule {
 
     async init() {
         /*
-        Rate allocation:
-        - New requests: 900  req/min (~70%)
-        - Failed:       450  req/min (~30%)
 
         Tick configuration:
 
         | Flow          | Tick Interval | Batch Size | Batch count | Max req/min | Max tx/min  |
         |---------------|---------------|------------|-------------|-------------|-------------|
-        | Pending       | 2 seconds     | 7          | 30          | 900         | 6300        |
-        | Failed        | 4 seconds     | 7          | 30          | 450         | 3150        |
-        | Total         | -             | -          | -           | 1350        | 9450        |
+        | Pending       | 5 seconds     | 40         | 2           | 24          | 960         |
+        | Failed        | 4 seconds     | 40         | 2           | -           | 1200        |
+        | Total         | -             | -          | -           | 24          | 2760        |
        */
 
         setInterval(async () => {
@@ -39,7 +36,7 @@ export class ValidatorModule {
                     adapter.pumpPendingVerification(pumpBatchCountPerTick * creBatchSize),
                 ),
             );
-        }, 2000);
+        }, 5000);
 
         setInterval(async () => {
             await Promise.all(
