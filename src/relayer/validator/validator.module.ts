@@ -41,7 +41,7 @@ export class ValidatorModule {
         setInterval(async () => {
             await Promise.all(
                 Object.values(this.adapters).map(async adapter =>
-                    adapter.pumpFailedVerification(6 * creBatchSize),
+                    adapter.pumpFailedVerification(2 * creBatchSize),
                 ),
             );
         }, 4000);
