@@ -31,7 +31,7 @@ export class ValidatorModule {
         | Pending       | 2 seconds     | 7          | 30          | 900         | 6300        |
         | Failed        | 4 seconds     | 7          | 30          | 450         | 3150        |
         | Total         | -             | -          | -           | 1350        | 9450        |
-   */
+       */
 
         setInterval(async () => {
             await Promise.all(
