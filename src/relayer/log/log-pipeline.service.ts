@@ -1,13 +1,7 @@
 import { Abi, decodeEventLog, Hex, Log, maxUint64 } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
-import {
-    JobBlocksDelta,
-    JobStatus,
-    MessageSentLogData,
-    ParsedLog,
-    ParsedMessageLogReceipt,
-} from '../../types';
+import { JobBlocksDelta, JobStatus, MessageSentLogData, ParsedLog, ParsedMessageLogReceipt, } from '../../types';
 import { MessagingCodec } from '../../utils';
 import { ContextProvider } from '../services';
 import { Context, ValidatorType } from '../types';
@@ -101,7 +95,7 @@ export class LogPipelineService extends ContextProvider {
             callbacksCount: 0,
             validatorType,
             payload: { data: parsedLog.data, parsedReceipt },
-            errorCode: null,
+            //
             // src
             srcTxHash: parsedLog.transactionHash,
             srcBlockNumber: String(parsedLog.blockNumber),

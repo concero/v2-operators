@@ -10,11 +10,15 @@ type CreateEntity = Omit<
     | 'id'
     | 'status'
     | 'payload'
-    | 'nextRetryAt'
+    | 'errorCode'
+    | 'verificationAttempts'
+    | 'verificationPlannedTo'
+    | 'lastVerificationAt'
+    | 'submitAttempts'
+    | 'submitPlannedTo'
+    | 'lastSubmitAt'
     | 'createdAt'
     | 'updatedAt'
-    | 'lastVerificationRequestedAt'
-    | 'lastSubmittedAt'
 > & { status: JobStatus; payload: JobPayload };
 
 export class JobQueueService {
