@@ -46,10 +46,11 @@ export class WatcherModule extends ChainsSetupService {
                 buildQuery: network => ({
                     status: JobStatus.WaitingDstFinality,
                     dstChainSelector: Number(network.chainSelector),
+                    dstBlockNumber: { not: null },
                     dstTxHash: { not: null },
                 }),
                 inclusion: 'dst',
-                filter: (job: Job, lastChainBlock: bigint) => {
+                filter: (job: Job, _, lastFinalizedBlock) => {
                     const isEnabled = this.context.deploymentManager.getFinalityTagEnabled(
                         job.dstChainSelector,
                     );
@@ -58,11 +59,7 @@ export class WatcherModule extends ChainsSetupService {
                         return false;
                     }
 
-                    const delta =
-                        this.context.deploymentManager.getFinalityBlockConformationsByChainSelector(
-                            job.dstChainSelector,
-                        );
-                    return BigInt(job.dstBlockNumber ?? 0) + delta < lastChainBlock;
+                    return BigInt(job.dstBlockNumber as string) < lastFinalizedBlock;
                 },
             },
         ]);
