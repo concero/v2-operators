@@ -1,7 +1,13 @@
 import { Abi, decodeEventLog, Hex, Log, maxUint64 } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
-import { JobBlocksDelta, JobStatus, MessageSentLogData, ParsedLog, ParsedMessageLogReceipt, } from '../../types';
+import {
+    JobBlocksDelta,
+    JobStatus,
+    MessageSentLogData,
+    ParsedLog,
+    ParsedMessageLogReceipt,
+} from '../../types';
 import { MessagingCodec } from '../../utils';
 import { ContextProvider } from '../services';
 import { Context, ValidatorType } from '../types';

@@ -1,5 +1,4 @@
 import { BaseValidatorAdapter } from './base-validator.adapter';
-import { messageSubmissionExpirationMs } from './cre-validator.adapter';
 import { IValidatorAdapter } from './validator-adapter.interface';
 
 import { JobPayload, JobStatus } from '../../../types';
@@ -15,10 +14,14 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
             { status: JobStatus.PendingVerification, validatorType: ValidatorType.Empty },
             { take: size },
         );
+        if (!jobs.length) {
+            return;
+        }
 
+        const jobIds = jobs.map(i => i.id);
         await this.context.jobQueue.updateMany(
-            { id: { in: jobs.map(i => i.id) } },
-            { status: JobStatus.PendingSubmit },
+            { id: { in: jobIds } },
+            { status: JobStatus.PendingSubmit, submitPlannedTo: new Date() },
         );
     }
 
@@ -37,21 +40,22 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
                 validatorType: ValidatorType.Empty,
                 OR: [
                     {
-                        lastSubmittedAt: {
-                            lte: new Date(Date.now() - messageSubmissionExpirationMs),
+                        submitPlannedTo: {
+                            lt: new Date(),
                         },
                     },
-                    { lastSubmittedAt: null },
                 ],
             },
             { take: size },
         );
 
-        if (jobs.length === 0) return;
+        if (!jobs.length) {
+            return;
+        }
 
         await this.context.jobQueue.updateMany(
             { id: { in: jobs.map(i => i.id) } },
-            { lastSubmittedAt: new Date(Date.now()) },
+            { lastSubmitAt: new Date(Date.now()) },
         );
 
         const promises = await Promise.allSettled(
