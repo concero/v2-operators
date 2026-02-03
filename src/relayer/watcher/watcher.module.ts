@@ -35,8 +35,14 @@ export class WatcherModule extends ChainsSetupService {
                         }
                         return BigInt(job.srcBlockNumber) < lastFinalizedBlock;
                     } else {
-                        // src conformations offset
-                        return BigInt(job.srcBlockNumber) + delta < lastChainBlock;
+                        // src confirmations offset
+                        const result = BigInt(job.srcBlockNumber) + delta < lastChainBlock;
+                        this.logger.info(
+                            `srcFilter ${job.srcBlockNumber}+${Number(delta)}<${lastChainBlock} is ${
+                                result ? 'true' : 'false'
+                            }`,
+                        );
+                        return result;
                     }
                 },
                 inclusion: 'src',
