@@ -268,17 +268,20 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             });
             const results = await Promise.all(batchPromises);
             const successResults = results.filter(i => i.type === 'success');
-            const successJobIds = successResults.map(i => i.jobId);
             const failedResults = results.filter(i => i.type === 'failed');
 
             await this.context.dbClient.$transaction(async client => {
-                await client.job.updateMany({
-                    where: { id: { in: successJobIds } },
-                    data: {
-                        status: JobStatus.WaitingDstFinality,
-                        submitAttempts: 0,
-                        submitPlannedTo: null,
-                    },
+                const successPromises = successResults.map(i => {
+                    return client.job.update({
+                        where: { id: i.jobId },
+                        data: {
+                            status: JobStatus.WaitingDstFinality,
+                            submitAttempts: 0,
+                            submitPlannedTo: null,
+                            dstBlockNumber: String(i?.dst?.blockNumber),
+                            dstTxHash: String(i?.dst?.hash),
+                        },
+                    });
                 });
                 const failedPromises = failedResults.map(i => {
                     return client.job.update({
@@ -290,7 +293,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         },
                     });
                 });
-                await Promise.all(failedPromises);
+                const totalPromises = successPromises.concat(failedPromises);
+                await Promise.all(totalPromises);
             });
         }
 
