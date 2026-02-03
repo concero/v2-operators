@@ -22,6 +22,7 @@ export class WatcherModule extends ChainsSetupService {
                 filter: (job: Job, lastChainBlock: bigint, lastFinalizedBlock: bigint) => {
                     const jobPayload = JSON.parse(job.payload) as JobPayload;
                     const delta = this.extractSrcBlocksDelta(jobPayload.parsedReceipt);
+                    this.logger.info(`srcFilter for job (id=${job.id}) delta=${String(delta)}`);
 
                     if (delta === 'finalized') {
                         // src finalized
