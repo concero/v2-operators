@@ -57,14 +57,11 @@ export class FinalityProcessor extends ContextProvider {
                                 {
                                     status: JobStatus.PendingVerification,
                                     verificationPlannedTo: new Date(),
+                                    verificationAttempts: 0,
                                 },
                             );
                         } catch (e) {
                             this.logger.warn(`Job inclusion failed [srcTxHash=${job.srcTxHash}]`);
-                            await this.context.jobQueue.updateOne(
-                                { id: job.id },
-                                { status: JobStatus.Reorged },
-                            );
                         }
                     } else {
                         try {
@@ -77,7 +74,11 @@ export class FinalityProcessor extends ContextProvider {
                             this.logger.info(`Job inclusion failed [dstTxHash=${job.srcTxHash}]`);
                             await this.context.jobQueue.updateOne(
                                 { id: job.id },
-                                { status: JobStatus.PendingSubmit },
+                                {
+                                    status: JobStatus.PendingSubmit,
+                                    submitPlannedTo: new Date(),
+                                    submitAttempts: 0,
+                                },
                             );
                         }
                     }

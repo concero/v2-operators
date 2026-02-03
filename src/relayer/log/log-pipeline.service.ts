@@ -1,13 +1,7 @@
-import { Abi, decodeEventLog, Hex, Log, maxUint64 } from 'viem';
+import { Abi, decodeEventLog, Hex, Log } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
-import {
-    JobBlocksDelta,
-    JobStatus,
-    MessageSentLogData,
-    ParsedLog,
-    ParsedMessageLogReceipt,
-} from '../../types';
+import { JobStatus, MessageSentLogData, ParsedLog, ParsedMessageLogReceipt } from '../../types';
 import { MessagingCodec } from '../../utils';
 import { ContextProvider } from '../services';
 import { Context, ValidatorType } from '../types';
@@ -33,9 +27,8 @@ export class LogPipelineService extends ContextProvider {
                 return;
             }
             const parsedReceipt = MessagingCodec.decodeReceipt(parsedLog.data.messageReceipt);
-            const srcBlocksDelta = this.extractSrcBlocksDelta(parsedReceipt);
             const validatorType = this.extractLogValidatorType(parsedReceipt);
-            await this.upsertLog(parsedLog, parsedReceipt, validatorType, srcBlocksDelta);
+            await this.upsertLog(parsedLog, parsedReceipt, validatorType);
         } catch (e) {
             // @todo upsert raw log to reparse & restart
             this.logger.error(`Unhandled error: ${e}`);
@@ -63,28 +56,6 @@ export class LogPipelineService extends ContextProvider {
         }
     }
 
-    private extractSrcBlocksDelta(parsedReceipt: ParsedMessageLogReceipt): JobBlocksDelta {
-        if (parsedReceipt.srcChainData.blockConfirmations === maxUint64) {
-            const isEnabledFinalized = this.context.deploymentManager.getFinalityTagEnabled(
-                parsedReceipt.srcChainSelector,
-            );
-
-            if (isEnabledFinalized) {
-                return 'finalized';
-            }
-
-            return this.context.deploymentManager.getFinalityBlockConformationsByChainSelector(
-                parsedReceipt.srcChainSelector,
-            );
-        } else if (parsedReceipt.srcChainData.blockConfirmations === 0n) {
-            return this.context.deploymentManager.getMinBlockConformationsByChainSelector(
-                parsedReceipt.srcChainSelector,
-            );
-        }
-
-        return parsedReceipt.srcChainData.blockConfirmations;
-    }
-
     private extractLogValidatorType(parsedReceipt: ParsedMessageLogReceipt): ValidatorType {
         return parsedReceipt.validatorLibs.length > 0 ? ValidatorType.CRE : ValidatorType.Empty;
     }
@@ -93,7 +64,6 @@ export class LogPipelineService extends ContextProvider {
         parsedLog: ParsedLog<MessageSentLogData>,
         parsedReceipt: ParsedMessageLogReceipt,
         validatorType: ValidatorType,
-        srcBlocksDelta: JobBlocksDelta,
     ): Promise<void> {
         await this.context.jobQueue.create({
             messageId: parsedLog.data.messageId,
@@ -101,12 +71,10 @@ export class LogPipelineService extends ContextProvider {
             callbacksCount: 0,
             validatorType,
             payload: { data: parsedLog.data, parsedReceipt },
-            //
             // src
             srcTxHash: parsedLog.transactionHash,
             srcBlockNumber: String(parsedLog.blockNumber),
             srcChainSelector: parsedReceipt.srcChainSelector,
-            srcBlockNumberDelta: String(srcBlocksDelta),
             // dst
             dstTxHash: null,
             dstBlockNumber: null,

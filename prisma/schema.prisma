@@ -43,10 +43,9 @@ model Job {
   callbacksCount Int @default(0)
 
   // src
-  srcTxHash           String
-  srcChainSelector    Int
-  srcBlockNumber      String
-  srcBlockNumberDelta String
+  srcTxHash        String
+  srcChainSelector Int
+  srcBlockNumber   String
 
   // dst
   dstTxHash        String?

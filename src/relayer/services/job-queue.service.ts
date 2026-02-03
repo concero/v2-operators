@@ -41,11 +41,10 @@ export class JobQueueService {
                 srcTxHash: entity.srcTxHash,
                 srcBlockNumber: entity.srcBlockNumber,
                 srcChainSelector: entity.srcChainSelector,
-                dstChainSelector: entity.dstChainSelector,
                 // dst
                 dstTxHash: null,
                 dstBlockNumber: null,
-                srcBlockNumberDelta: entity.srcBlockNumberDelta,
+                dstChainSelector: entity.dstChainSelector,
             },
         });
     }

@@ -16,7 +16,6 @@ export enum JobErrorCode {
     ChainFinalityTagNotEnabled = 'chain_finality_tag_not_enabled',
 }
 
-export type JobBlocksDelta = bigint | 'finalized';
 export type JobPayload = Omit<
     ParsedLog<MessageSentLogData>,
     'eventName' | 'eventHash' | 'blockNumber' | 'transactionHash'
