@@ -37,9 +37,9 @@ export class WatcherModule extends ChainsSetupService {
                         return BigInt(job.srcBlockNumber) < lastFinalizedBlock;
                     } else {
                         // src confirmations offset
-                        const result = BigInt(job.srcBlockNumber) + delta < lastChainBlock;
+                        const result = BigInt(job.srcBlockNumber) + BigInt(delta) < lastChainBlock;
                         this.logger.info(
-                            `srcFilter ${job.srcBlockNumber}+${Number(delta)}<${lastChainBlock} is ${
+                            `srcFilter ${job.srcBlockNumber}+${String(delta)}<${lastChainBlock} is ${
                                 result ? 'true' : 'false'
                             }`,
                         );
@@ -85,7 +85,7 @@ export class WatcherModule extends ChainsSetupService {
             return this.context.deploymentManager.getFinalityBlockConformationsByChainSelector(
                 parsedReceipt.srcChainSelector,
             );
-        } else if (parsedReceipt.srcChainData.blockConfirmations === 0n) {
+        } else if (BigInt(parsedReceipt.srcChainData.blockConfirmations) === 0n) {
             return this.context.deploymentManager.getMinBlockConformationsByChainSelector(
                 parsedReceipt.srcChainSelector,
             );
