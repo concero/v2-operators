@@ -122,7 +122,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             {
                 validatorType: ValidatorType.CRE,
                 status: JobStatus.FailedVerification,
-                verificationPlannedTo: { lt: new Date(Date.now() + 20_000) }, // < 20 sec ahead to increase tick performance
             },
             { take: size },
         );
@@ -146,6 +145,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 },
                 data: {
                     status: JobStatus.PendingVerification,
+                    verificationPlannedTo: new Date(),
                     callbacksCount: 0,
                 },
             });
@@ -218,7 +218,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 validatorType: ValidatorType.CRE,
                 callbacksCount: { gte: requiredCallbacksCount },
                 submitPlannedTo: {
-                    lte: new Date(),
+                    lt: new Date(),
                 },
             },
             { take: size },
@@ -320,16 +320,14 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         const reportContext = creResponses[0].report.reportContext as Hex;
         const proofs = creResponses[0].proofs[messageId];
 
-        const allSignatures = Array.from(
-            new Set(
-                creResponses.flatMap(item =>
-                    item.report.signs.map(sign => {
-                        const hex = sign.signature.startsWith('0x')
-                            ? sign.signature
-                            : `0x${sign.signature}`;
-                        return hex as Hex;
-                    }),
-                ),
+        const allSignatures = ArrayLib.deduplicate(
+            creResponses.flatMap(item =>
+                item.report.signs.map(sign => {
+                    const hex = sign.signature.startsWith('0x')
+                        ? sign.signature
+                        : `0x${sign.signature}`;
+                    return hex as Hex;
+                }),
             ),
         );
         const signatures = allSignatures.slice(0, Math.min(allSignatures.length, 4));
@@ -350,7 +348,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     }
 
     private calculateNextPlannedTo(attempts: number): Date {
-        const delay = Math.min(baseTimeoutMs * 2 ** attempts, maxTimeoutMs);
+        const delay = Math.min(baseTimeoutMs * 1.2 ** attempts, maxTimeoutMs);
 
         // to avoid DDoS due to critical issue we use jitter (randomizer for delay)
         const jitter = delay * (0.5 + Math.random() * 0.5);
