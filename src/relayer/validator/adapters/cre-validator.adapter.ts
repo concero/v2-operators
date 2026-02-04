@@ -44,15 +44,16 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             {
                 status: JobStatus.PendingVerification,
                 validatorType: ValidatorType.CRE,
+                lastVerificationAt: { lt: new Date(Date.now() - creRequestExpirationMs) },
                 verificationPlannedTo: { lt: new Date() },
             },
             { take: size },
         );
+        const allJobIds = jobs.map(i => i.id);
+
         if (!jobs.length) {
             return;
         }
-
-        const allJobIds = jobs.map(i => i.id);
 
         // set last verification requested date
         await this.context.jobQueue.updateMany(
@@ -90,17 +91,13 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 // move to verification request failed if batch was not executed
                 await this.context.dbClient.$transaction(async client => {
                     const jobPromises = batch.map(async i => {
-                        const expectedJob = await client.job.findUnique({
-                            where: { id: i.id },
-                            select: { verificationAttempts: true },
-                        });
                         client.job.update({
                             where: { id: i.id },
                             data: {
                                 status: JobStatus.FailedVerification,
                                 verificationAttempts: { increment: 1 },
                                 verificationPlannedTo: this.calculateNextPlannedTo(
-                                    (expectedJob?.verificationAttempts || 0) + 1,
+                                    i.verificationAttempts + 1,
                                 ),
                             },
                         });
@@ -145,7 +142,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 },
                 data: {
                     status: JobStatus.PendingVerification,
-                    verificationPlannedTo: new Date(),
                     callbacksCount: 0,
                 },
             });
@@ -183,12 +179,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 where: { messageId: { in: messageIds } },
             });
             const jobs = await client.job.findMany({ where: { messageId: { in: messageIds } } });
-            const jobPromises = jobs.map(async i => {
-                const expectedJob = await client.job.findUnique({
-                    where: { id: i.id },
-                    select: { verificationAttempts: true },
-                });
-
+            const jobPromises = jobs.map(i => {
                 return client.job.update({
                     where: {
                         id: i.id,
@@ -197,7 +188,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         status: JobStatus.PendingVerification,
                         callbacksCount: 0,
                         verificationPlannedTo: this.calculateNextPlannedTo(
-                            (expectedJob?.verificationAttempts || 0) + 1,
+                            i.verificationAttempts + 1,
                         ),
                         verificationAttempts: { increment: 1 },
                     },
@@ -219,6 +210,9 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 callbacksCount: { gte: requiredCallbacksCount },
                 submitPlannedTo: {
                     lt: new Date(),
+                },
+                lastSubmitAt: {
+                    lt: new Date(Date.now() - messageSubmissionExpirationMs),
                 },
             },
             { take: size },
@@ -277,7 +271,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             const failedResults = results.filter(i => i.type === 'failed');
 
             await this.context.dbClient.$transaction(async client => {
-                const successPromises = successResults.map(async i => {
+                const successPromises = successResults.map(i => {
                     return client.job.update({
                         where: { id: i.jobId },
                         data: {
@@ -289,16 +283,12 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         },
                     });
                 });
-                const failedPromises = failedResults.map(async i => {
-                    const expectedJob = await client.job.findUnique({
-                        where: { id: i.jobId },
-                        select: { submitAttempts: true },
-                    });
+                const failedPromises = failedResults.map(i => {
                     return client.job.update({
                         where: { id: i.jobId },
                         data: {
                             submitPlannedTo: this.calculateNextPlannedTo(
-                                (expectedJob?.submitAttempts || 0) + 1,
+                                (i.attempts as number) + 1,
                             ),
                             submitAttempts: { increment: 1 },
                         },
@@ -320,14 +310,16 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         const reportContext = creResponses[0].report.reportContext as Hex;
         const proofs = creResponses[0].proofs[messageId];
 
-        const allSignatures = ArrayLib.deduplicate(
-            creResponses.flatMap(item =>
-                item.report.signs.map(sign => {
-                    const hex = sign.signature.startsWith('0x')
-                        ? sign.signature
-                        : `0x${sign.signature}`;
-                    return hex as Hex;
-                }),
+        const allSignatures = Array.from(
+            new Set(
+                creResponses.flatMap(item =>
+                    item.report.signs.map(sign => {
+                        const hex = sign.signature.startsWith('0x')
+                            ? sign.signature
+                            : `0x${sign.signature}`;
+                        return hex as Hex;
+                    }),
+                ),
             ),
         );
         const signatures = allSignatures.slice(0, Math.min(allSignatures.length, 4));
@@ -348,7 +340,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     }
 
     private calculateNextPlannedTo(attempts: number): Date {
-        const delay = Math.min(baseTimeoutMs * 1.2 ** attempts, maxTimeoutMs);
+        const delay = Math.min(baseTimeoutMs * 2 ** attempts, maxTimeoutMs);
 
         // to avoid DDoS due to critical issue we use jitter (randomizer for delay)
         const jitter = delay * (0.5 + Math.random() * 0.5);
