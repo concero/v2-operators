@@ -44,18 +44,15 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             {
                 status: JobStatus.PendingVerification,
                 validatorType: ValidatorType.CRE,
-                OR: [
-                    { verificationPlannedTo: { lt: new Date() } },
-                    { verificationPlannedTo: null },
-                ],
+                verificationPlannedTo: { lt: new Date() },
             },
             { take: size },
         );
-        const allJobIds = jobs.map(i => i.id);
-
         if (!jobs.length) {
             return;
         }
+
+        const allJobIds = jobs.map(i => i.id);
 
         // set last verification requested date
         await this.context.jobQueue.updateMany(
@@ -93,13 +90,17 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 // move to verification request failed if batch was not executed
                 await this.context.dbClient.$transaction(async client => {
                     const jobPromises = batch.map(async i => {
+                        const expectedJob = await client.job.findUnique({
+                            where: { id: i.id },
+                            select: { verificationAttempts: true },
+                        });
                         client.job.update({
                             where: { id: i.id },
                             data: {
                                 status: JobStatus.FailedVerification,
                                 verificationAttempts: { increment: 1 },
                                 verificationPlannedTo: this.calculateNextPlannedTo(
-                                    i.verificationAttempts + 1,
+                                    (expectedJob?.verificationAttempts || 0) + 1,
                                 ),
                             },
                         });
@@ -162,7 +163,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 status: JobStatus.PendingSubmit,
                 validatorType: ValidatorType.CRE,
                 lastVerificationAt: {
-                    lte: new Date(Date.now() - creRequestExpirationMs),
+                    lt: new Date(Date.now() - creRequestExpirationMs),
                 },
                 callbacksCount: { lt: requiredCallbacksCount },
             },
@@ -182,7 +183,12 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 where: { messageId: { in: messageIds } },
             });
             const jobs = await client.job.findMany({ where: { messageId: { in: messageIds } } });
-            const jobPromises = jobs.map(i => {
+            const jobPromises = jobs.map(async i => {
+                const expectedJob = await client.job.findUnique({
+                    where: { id: i.id },
+                    select: { verificationAttempts: true },
+                });
+
                 return client.job.update({
                     where: {
                         id: i.id,
@@ -191,7 +197,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         status: JobStatus.PendingVerification,
                         callbacksCount: 0,
                         verificationPlannedTo: this.calculateNextPlannedTo(
-                            i.verificationAttempts + 1,
+                            (expectedJob?.verificationAttempts || 0) + 1,
                         ),
                         verificationAttempts: { increment: 1 },
                     },
@@ -224,7 +230,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         await this.context.jobQueue.updateMany(
             { id: { in: allJobIds } },
-            { lastSubmitAt: new Date(), submitAttempts: { increment: 1 } },
+            { lastSubmitAt: new Date() },
         );
 
         const batches = ArrayLib.toChunks(jobs, 10);
@@ -271,7 +277,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             const failedResults = results.filter(i => i.type === 'failed');
 
             await this.context.dbClient.$transaction(async client => {
-                const successPromises = successResults.map(i => {
+                const successPromises = successResults.map(async i => {
                     return client.job.update({
                         where: { id: i.jobId },
                         data: {
@@ -283,13 +289,18 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         },
                     });
                 });
-                const failedPromises = failedResults.map(i => {
+                const failedPromises = failedResults.map(async i => {
+                    const expectedJob = await client.job.findUnique({
+                        where: { id: i.jobId },
+                        select: { submitAttempts: true },
+                    });
                     return client.job.update({
                         where: { id: i.jobId },
                         data: {
                             submitPlannedTo: this.calculateNextPlannedTo(
-                                (i.attempts as number) + 1,
+                                (expectedJob?.submitAttempts || 0) + 1,
                             ),
+                            submitAttempts: { increment: 1 },
                         },
                     });
                 });
