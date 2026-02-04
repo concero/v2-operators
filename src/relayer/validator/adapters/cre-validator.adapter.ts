@@ -44,8 +44,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             {
                 status: JobStatus.PendingVerification,
                 validatorType: ValidatorType.CRE,
-                lastVerificationAt: { lt: new Date(Date.now() - creRequestExpirationMs) },
                 verificationPlannedTo: { lt: new Date() },
+                // lastVerificationAt: { lt: new Date(Date.now() - creRequestExpirationMs) },
             },
             { take: size },
         );
@@ -211,9 +211,9 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 submitPlannedTo: {
                     lt: new Date(),
                 },
-                lastSubmitAt: {
-                    lt: new Date(Date.now() - messageSubmissionExpirationMs),
-                },
+                // lastSubmitAt: {
+                //     lt: new Date(Date.now() - messageSubmissionExpirationMs),
+                // },
             },
             { take: size },
         );
