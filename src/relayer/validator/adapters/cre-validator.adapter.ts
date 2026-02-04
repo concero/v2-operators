@@ -63,7 +63,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             },
         );
 
-        const batches = ArrayLib.toChunks(jobs, pumpBatchCountPerTick);
+        const batches = ArrayLib.toChunks(jobs, creBatchSize);
 
         const batchPromises = batches.map(async batch => {
             const batchJobIds = batch.map(i => i.id);
