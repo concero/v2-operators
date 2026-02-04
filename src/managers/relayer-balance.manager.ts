@@ -5,15 +5,40 @@ import {
     IViemClientManager,
     NewBalanceManager,
 } from '@concero/operator-utils';
+import { WebClient } from '@slack/web-api';
 
 class SlackSender implements IBalanceManagerSender {
+    private readonly client: WebClient;
+    private readonly slackBotToken = process.env.NOTIFICATIONS_SLACK_BOT_TOKEN as string;
+    private readonly slackMonitoringChannelId = process.env
+        .NOTIFICATIONS_SLACK_MONITORING_SYSTEM_CHANNEL_ID as string;
+
+    constructor() {
+        this.client = new WebClient(this.slackBotToken);
+
+        if (!this.slackBotToken) {
+            throw new Error('No slack bot token found.');
+        }
+
+        if (!this.slackMonitoringChannelId) {
+            throw new Error('No slack monitoring channelId found.');
+        }
+    }
+
     async send(data: {
         chain: ConceroChain;
         network: ConceroNetwork;
         expectedBalance: bigint;
         actualBalance: bigint;
     }): Promise<void> {
-        console.log('Sending to slack ...');
+        try {
+            await this.client.chat.postMessage({
+                text: `Stage balance for ${data.chain.nativeCurrency.name} on ${data.chain.name} is below minimum!\nCurrent balance: ${String(data.actualBalance)}\nTop-up required: ${String(data.expectedBalance - data.actualBalance)}`,
+                channel: this.slackMonitoringChannelId,
+            });
+        } catch (e) {
+            console.log(`Slack sender Failed: ${e}`);
+        }
     }
 }
 

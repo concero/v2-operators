@@ -10,12 +10,15 @@ type CreateEntity = Omit<
     | 'id'
     | 'status'
     | 'payload'
-    | 'attempts'
-    | 'nextRetryAt'
+    | 'errorCode'
+    | 'verificationAttempts'
+    | 'verificationPlannedTo'
+    | 'lastVerificationAt'
+    | 'submitAttempts'
+    | 'submitPlannedTo'
+    | 'lastSubmitAt'
     | 'createdAt'
     | 'updatedAt'
-    | 'lastVerificationRequestedAt'
-    | 'lastSubmittedAt'
 > & { status: JobStatus; payload: JobPayload };
 
 export class JobQueueService {
@@ -38,12 +41,10 @@ export class JobQueueService {
                 srcTxHash: entity.srcTxHash,
                 srcBlockNumber: entity.srcBlockNumber,
                 srcChainSelector: entity.srcChainSelector,
-                dstChainSelector: entity.dstChainSelector,
                 // dst
                 dstTxHash: null,
                 dstBlockNumber: null,
-                srcBlockNumberDelta: entity.srcBlockNumberDelta,
-                dstBlockNumberDelta: entity.dstBlockNumberDelta,
+                dstChainSelector: entity.dstChainSelector,
             },
         });
     }

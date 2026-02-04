@@ -9,19 +9,23 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
         super('EmptyValidatorAdapter', context);
     }
 
-    async pumpPendingRequest(size: number): Promise<void> {
+    async pumpPendingVerification(size: number): Promise<void> {
         const jobs = await this.context.jobQueue.getList(
-            { status: JobStatus.ProcessingRequest, validatorType: ValidatorType.Empty },
+            { status: JobStatus.PendingVerification, validatorType: ValidatorType.Empty },
             { take: size },
         );
+        if (!jobs.length) {
+            return;
+        }
 
+        const jobIds = jobs.map(i => i.id);
         await this.context.jobQueue.updateMany(
-            { id: { in: jobs.map(i => i.id) } },
-            { status: JobStatus.ProcessingConfirm },
+            { id: { in: jobIds } },
+            { status: JobStatus.PendingSubmit, submitPlannedTo: new Date() },
         );
     }
 
-    async pumpFailedRequest(size: number): Promise<void> {
+    async pumpFailedVerification(size: number): Promise<void> {
         // not used
     }
 
@@ -29,19 +33,41 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
         // not used
     }
 
-    async pumpPendingConfirm(size: number): Promise<void> {
+    async pumpPendingSubmit(size: number): Promise<void> {
         const jobs = await this.context.jobQueue.getList(
-            { status: JobStatus.ProcessingConfirm, validatorType: ValidatorType.Empty },
+            {
+                status: JobStatus.PendingSubmit,
+                validatorType: ValidatorType.Empty,
+                OR: [
+                    {
+                        submitPlannedTo: {
+                            lt: new Date(),
+                        },
+                    },
+                ],
+            },
             { take: size },
+        );
+
+        if (!jobs.length) {
+            return;
+        }
+
+        await this.context.jobQueue.updateMany(
+            { id: { in: jobs.map(i => i.id) } },
+            { lastSubmitAt: new Date(Date.now()) },
         );
 
         const promises = await Promise.allSettled(
             jobs.map(async i => {
                 const payload = JSON.parse(i.payload) as JobPayload;
-                const dst = await this.submitMessage(payload, payload.parsedReceipt.validatorLibs);
+                const dst = await this.submitMessage(payload, [], []);
+                this.logger.info(
+                    `Submitted message hash=${dst.hash}, blockNumber=${String(dst.blockNumber)}`,
+                );
                 await this.context.jobQueue.updateOne(
                     { id: i.id },
-                    { dstBlockNumber: String(dst.blockNumber) },
+                    { dstBlockNumber: String(dst.blockNumber), dstTxHash: dst.hash },
                 );
                 return i.id;
             }),
@@ -49,7 +75,7 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
         const jobIds = promises.filter(i => i.status === 'fulfilled').map(i => i.value);
         await this.context.jobQueue.updateMany(
             { id: { in: jobIds } },
-            { status: JobStatus.WaitingTxFinality },
+            { status: JobStatus.WaitingDstFinality },
         );
     }
 }

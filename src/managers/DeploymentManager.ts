@@ -39,6 +39,10 @@ export class DeploymentManager implements NetworkUpdateListener {
         return DeploymentManager.instance;
     }
 
+    get chains() {
+        return Object.values(this.chainOptions);
+    }
+
     getConceroRouters(): Record<string, Address> {
         let routers: Record<string, Address> = {};
         Object.values(this.chainOptions).map(i => {
@@ -113,7 +117,7 @@ export class DeploymentManager implements NetworkUpdateListener {
 
         if (typeof minBlockConfirmations !== 'number') {
             throw new Error(
-                `FinalityConfirmations not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+                `MinBlockConfirmations not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
             );
         }
 

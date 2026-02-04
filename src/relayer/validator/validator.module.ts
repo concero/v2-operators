@@ -20,30 +20,28 @@ export class ValidatorModule {
 
     async init() {
         /*
-        Rate allocation:
-        - New requests: 210 req/min (70%)
-        - Failed:       90  req/min (30%)
 
         Tick configuration:
 
-        | Flow          | Tick Interval | Batch Size | Max req/min |
-        |---------------|---------------|------------|-------------|
-        | Pending       | 1 second      | 7          | 420         | pumpBatchCountPerTick = 7
-        | Failed        | 4 seconds     | 6          | 90          |
-        */
+        | Flow          | Tick Interval | Batch Size | Batch count | Max req/min | Max tx/min  |
+        |---------------|---------------|------------|-------------|-------------|-------------|
+        | Pending       | 5 seconds     | 40         | 2           | 24          | 960         |
+        | Failed        | 4 seconds     | 40         | 2           | -           | 1200        |
+        | Total         | -             | -          | -           | 24          | 2760        |
+       */
 
         setInterval(async () => {
             await Promise.all(
                 Object.values(this.adapters).map(async adapter =>
-                    adapter.pumpPendingRequest(1 * pumpBatchCountPerTick),
+                    adapter.pumpPendingVerification(pumpBatchCountPerTick * creBatchSize),
                 ),
             );
-        }, 1000);
+        }, 5000);
 
         setInterval(async () => {
             await Promise.all(
                 Object.values(this.adapters).map(async adapter =>
-                    adapter.pumpFailedRequest(6 * creBatchSize),
+                    adapter.pumpFailedVerification(2 * creBatchSize),
                 ),
             );
         }, 4000);
@@ -61,7 +59,7 @@ export class ValidatorModule {
         // tx submit (no rate limit because of viem batching), limited by RPCs
         setInterval(async () => {
             await Promise.all(
-                Object.values(this.adapters).map(async adapter => adapter.pumpPendingConfirm(100)),
+                Object.values(this.adapters).map(async adapter => adapter.pumpPendingSubmit(100)),
             );
         }, 1000);
     }

@@ -6,7 +6,7 @@
     "engines": {
         "node": ">=22.0.0"
     },
-    "packageManager": "node",
+    "packageManager": "yarn",
     "scripts": {
         "build": "esbuild src/main.ts --bundle --platform=node --target=node22 --outdir=dist --format=esm --packages=external",
         "lint": "eslint --config .eslint.config.mjs",

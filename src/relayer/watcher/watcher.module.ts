@@ -1,8 +1,9 @@
+import { maxUint64 } from 'viem';
 import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
 import { FinalityProcessor } from './finality.processor';
 import { Job } from '@prisma/client';
 
-import { JobStatus } from '../../types';
+import { JobPayload, JobStatus, ParsedMessageLogReceipt } from '../../types';
 import { ChainsSetupService } from '../services/chains-setup.service';
 import { Context } from '../types';
 
@@ -12,54 +13,85 @@ export class WatcherModule extends ChainsSetupService {
     constructor(context: Context) {
         super('WatcherModule', context);
         this.finalityProcessor = new FinalityProcessor(context, [
-            // src common
+            // src finalized & common
             {
                 buildQuery: network => ({
                     status: JobStatus.WaitingSrcConfirmation,
                     srcChainSelector: Number(network.chainSelector),
-                    srcBlockNumberDelta: { not: 'finalized' },
                 }),
-                filter: (job: Job, lastChainBlock: bigint) =>
-                    BigInt(job.srcBlockNumber) + BigInt(job.srcBlockNumberDelta) < lastChainBlock,
+                filter: (job: Job, lastChainBlock: bigint, lastFinalizedBlock: bigint) => {
+                    const jobPayload = JSON.parse(job.payload) as JobPayload;
+                    const delta = this.extractSrcBlocksDelta(jobPayload.parsedReceipt);
+                    this.logger.info(`srcFilter for job (id=${job.id}) delta=${String(delta)}`);
+
+                    if (delta === 'finalized') {
+                        // src finalized
+                        const isFinalityEnabled =
+                            this.context.deploymentManager.getFinalityTagEnabled(
+                                job.srcChainSelector,
+                            );
+                        if (!isFinalityEnabled) {
+                            // @todo: mark status as Failed
+                            return false;
+                        }
+                        return BigInt(job.srcBlockNumber) < lastFinalizedBlock;
+                    } else {
+                        // src confirmations offset
+                        const result = BigInt(job.srcBlockNumber) + BigInt(delta) < lastChainBlock;
+                        this.logger.info(
+                            `srcFilter ${job.srcBlockNumber}+${String(delta)}<${lastChainBlock} is ${
+                                result ? 'true' : 'false'
+                            }`,
+                        );
+                        return result;
+                    }
+                },
                 inclusion: 'src',
             },
-            // src finalized
+            // dst (use only finalized on dst side)
             {
                 buildQuery: network => ({
-                    status: JobStatus.WaitingSrcConfirmation,
-                    srcChainSelector: Number(network.chainSelector),
-                    srcBlockNumberDelta: 'finalized',
-                }),
-                inclusion: 'src',
-                filter: (job: Job, _, lastFinalizedBlock: bigint) =>
-                    BigInt(job.srcBlockNumber) < lastFinalizedBlock,
-            },
-            // dst common
-            {
-                buildQuery: network => ({
-                    status: JobStatus.WaitingTxFinality,
+                    status: JobStatus.WaitingDstFinality,
                     dstChainSelector: Number(network.chainSelector),
-                    dstBlockNumberDelta: { not: 'finalized' },
+                    dstBlockNumber: { not: null },
                     dstTxHash: { not: null },
                 }),
                 inclusion: 'dst',
-                filter: (job: Job, lastChainBlock: bigint) =>
-                    BigInt(job.dstBlockNumber ?? 0) + BigInt(job.dstBlockNumberDelta) <
-                    lastChainBlock,
-            },
-            // dst finalized
-            {
-                buildQuery: network => ({
-                    status: JobStatus.WaitingTxFinality,
-                    dstChainSelector: Number(network.chainSelector),
-                    dstBlockNumberDelta: 'finalized',
-                    dstTxHash: { not: null },
-                }),
-                inclusion: 'dst',
-                filter: (job: Job, _, lastFinalizedBlock: bigint) =>
-                    BigInt(job.dstBlockNumber ?? 0) < lastFinalizedBlock,
+                filter: (job: Job, _, lastFinalizedBlock) => {
+                    const isEnabled = this.context.deploymentManager.getFinalityTagEnabled(
+                        job.dstChainSelector,
+                    );
+                    if (!isEnabled) {
+                        // @todo: if not enabled - mark as failed
+                        return false;
+                    }
+
+                    return BigInt(job.dstBlockNumber as string) < lastFinalizedBlock;
+                },
             },
         ]);
+    }
+
+    private extractSrcBlocksDelta(parsedReceipt: ParsedMessageLogReceipt) {
+        if (parsedReceipt.srcChainData.blockConfirmations === maxUint64) {
+            const isEnabledFinalized = this.context.deploymentManager.getFinalityTagEnabled(
+                parsedReceipt.srcChainSelector,
+            );
+
+            if (isEnabledFinalized) {
+                return 'finalized';
+            }
+
+            return this.context.deploymentManager.getFinalityBlockConformationsByChainSelector(
+                parsedReceipt.srcChainSelector,
+            );
+        } else if (BigInt(parsedReceipt.srcChainData.blockConfirmations) === 0n) {
+            return this.context.deploymentManager.getMinBlockConformationsByChainSelector(
+                parsedReceipt.srcChainSelector,
+            );
+        }
+
+        return parsedReceipt.srcChainData.blockConfirmations;
     }
 
     protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
