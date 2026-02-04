@@ -51,16 +51,16 @@ export class ValidatorModule {
         setInterval(async () => {
             await Promise.all(
                 Object.values(this.adapters).map(async adapter =>
-                    adapter.pumpStuckVerificationRequests(100),
+                    adapter.pumpStuckVerificationRequests(50),
                 ),
             );
-        }, 1000);
+        }, 5000);
 
         // tx submit (no rate limit because of viem batching), limited by RPCs
         setInterval(async () => {
             await Promise.all(
-                Object.values(this.adapters).map(async adapter => adapter.pumpPendingSubmit(80)),
+                Object.values(this.adapters).map(async adapter => adapter.pumpPendingSubmit(100)),
             );
-        }, 5000);
+        }, 1000);
     }
 }
