@@ -1,4 +1,4 @@
-import { Address, Hash, Hex } from 'viem';
+import { Address, Hash, Hex, withTimeout } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
 import { JobPayload } from '../../../types';
@@ -15,39 +15,46 @@ export abstract class BaseValidatorAdapter extends ContextProvider {
         validations: Hex[],
         validatorLibs: Address[],
     ): Promise<{ hash: Hash; blockNumber: bigint }> {
-        let timer: NodeJS.Timeout;
+        const timeoutMs = 10_000;
+
+        const timeoutMessage =
+            `submitMessage Timeout (messageId=${payload.data.messageId}, ` +
+            `validatorLibs=[${validatorLibs.join(',')}],`;
+
+        const timeoutError = new Error(timeoutMessage);
+
         try {
-            timer = setTimeout(() => {
-                this.logger.error(
-                    `submitMessage Timeout (messageId=${payload.data.messageId}, validatorLibs=[${validatorLibs.join(',')}, validations=[${validatorLibs.join(',')}])`,
-                );
-                throw new Error(
-                    `submitMessage Timeout (messageId=${payload.data.messageId}, validatorLibs=[${validatorLibs.join(',')}, validations=[${validatorLibs.join(',')}])`,
-                );
-            }, 4000);
-            const dstChainSelector = payload.parsedReceipt.dstChainSelector;
-            const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
-                String(dstChainSelector),
+            return await withTimeout(
+                async () => {
+                    const dstChainSelector = payload.parsedReceipt.dstChainSelector;
+                    const dstNetwork: ConceroNetwork = this.context.network.getNetworkBySelector(
+                        String(dstChainSelector),
+                    );
+
+                    const routerAddress =
+                        this.context.deploymentManager.getRouterByChainSelector(dstChainSelector);
+                    const relayerLib =
+                        this.context.deploymentManager.getConceroRelayerLibByChainSelector(
+                            dstChainSelector,
+                        );
+
+                    const receipt = await this.context.txWriter.callContract(dstNetwork, {
+                        address: routerAddress,
+                        functionName: 'submitMessage',
+                        abi: this.context.config.routerContractAbi,
+                        args: [payload.data.messageReceipt, validations, validatorLibs, relayerLib],
+                    });
+
+                    return { blockNumber: receipt.blockNumber, hash: receipt.transactionHash };
+                },
+                {
+                    timeout: timeoutMs,
+                    errorInstance: timeoutError,
+                },
             );
-
-            const routerAddress =
-                this.context.deploymentManager.getRouterByChainSelector(dstChainSelector);
-            const relayerLib =
-                this.context.deploymentManager.getConceroRelayerLibByChainSelector(
-                    dstChainSelector,
-                );
-
-            const receipt = await this.context.txWriter.callContract(dstNetwork, {
-                address: routerAddress,
-                functionName: 'submitMessage',
-                abi: this.context.config.routerContractAbi,
-                args: [payload.data.messageReceipt, validations, validatorLibs, relayerLib],
-            });
-            return { blockNumber: receipt.blockNumber, hash: receipt.transactionHash };
-        } catch (e) {
-            throw e;
-        } finally {
-            timer!.close();
+        } catch (err) {
+            if (err === timeoutError) this.logger.error(timeoutMessage);
+            throw err;
         }
     }
 }
