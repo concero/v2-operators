@@ -129,22 +129,24 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         const messageIds = jobs.map(i => i.messageId);
 
         await this.context.dbClient.$transaction(async client => {
-            client.creCallback.deleteMany({
-                where: {
-                    messageId: {
-                        in: messageIds,
+            await Promise.all([
+                client.creCallback.deleteMany({
+                    where: {
+                        messageId: {
+                            in: messageIds,
+                        },
                     },
-                },
-            });
-            client.job.updateMany({
-                where: {
-                    messageId: { in: messageIds },
-                },
-                data: {
-                    status: JobStatus.PendingVerification,
-                    callbacksCount: 0,
-                },
-            });
+                }),
+                client.job.updateMany({
+                    where: {
+                        messageId: { in: messageIds },
+                    },
+                    data: {
+                        status: JobStatus.PendingVerification,
+                        callbacksCount: 0,
+                    },
+                }),
+            ]);
         });
 
         this.logger.info(`pumpFailedVerification took: ${(Date.now() - start) / 1000}s`);
