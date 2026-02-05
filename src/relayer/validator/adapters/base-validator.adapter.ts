@@ -15,7 +15,7 @@ export abstract class BaseValidatorAdapter extends ContextProvider {
         validations: Hex[],
         validatorLibs: Address[],
     ): Promise<{ hash: Hash; blockNumber: bigint }> {
-        const timeoutMs = 4000;
+        const timeoutMs = 10_000;
 
         const timeoutMessage =
             `submitMessage Timeout (messageId=${payload.data.messageId}, ` +
@@ -50,7 +50,6 @@ export abstract class BaseValidatorAdapter extends ContextProvider {
                 {
                     timeout: timeoutMs,
                     errorInstance: timeoutError,
-                    signal: false,
                 },
             );
         } catch (err) {
