@@ -44,10 +44,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             {
                 status: JobStatus.PendingVerification,
                 validatorType: ValidatorType.CRE,
-                OR: [
-                    { verificationPlannedTo: { lt: new Date() } },
-                    { verificationPlannedTo: null },
-                ],
+                verificationPlannedTo: { lt: new Date() },
+                // lastVerificationAt: { lt: new Date(Date.now() - creRequestExpirationMs) },
             },
             { take: size },
         );
@@ -65,7 +63,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             },
         );
 
-        const batches = ArrayLib.toChunks(jobs, pumpBatchCountPerTick);
+        const batches = ArrayLib.toChunks(jobs, creBatchSize);
 
         const batchPromises = batches.map(async batch => {
             const batchJobIds = batch.map(i => i.id);
@@ -121,7 +119,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             {
                 validatorType: ValidatorType.CRE,
                 status: JobStatus.FailedVerification,
-                verificationPlannedTo: { lt: new Date(Date.now() + 20_000) }, // < 20 sec ahead to increase tick performance
             },
             { take: size },
         );
@@ -162,7 +159,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 status: JobStatus.PendingSubmit,
                 validatorType: ValidatorType.CRE,
                 lastVerificationAt: {
-                    lte: new Date(Date.now() - creRequestExpirationMs),
+                    lt: new Date(Date.now() - creRequestExpirationMs),
                 },
                 callbacksCount: { lt: requiredCallbacksCount },
             },
@@ -212,8 +209,11 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 validatorType: ValidatorType.CRE,
                 callbacksCount: { gte: requiredCallbacksCount },
                 submitPlannedTo: {
-                    lte: new Date(),
+                    lt: new Date(),
                 },
+                // lastSubmitAt: {
+                //     lt: new Date(Date.now() - messageSubmissionExpirationMs),
+                // },
             },
             { take: size },
         );
@@ -224,7 +224,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         await this.context.jobQueue.updateMany(
             { id: { in: allJobIds } },
-            { lastSubmitAt: new Date(), submitAttempts: { increment: 1 } },
+            { lastSubmitAt: new Date() },
         );
 
         const batches = ArrayLib.toChunks(jobs, 10);
@@ -290,6 +290,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                             submitPlannedTo: this.calculateNextPlannedTo(
                                 (i.attempts as number) + 1,
                             ),
+                            submitAttempts: { increment: 1 },
                         },
                     });
                 });

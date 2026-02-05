@@ -38,13 +38,9 @@ export class EmptyValidatorAdapter extends BaseValidatorAdapter implements IVali
             {
                 status: JobStatus.PendingSubmit,
                 validatorType: ValidatorType.Empty,
-                OR: [
-                    {
-                        submitPlannedTo: {
-                            lt: new Date(),
-                        },
-                    },
-                ],
+                submitPlannedTo: {
+                    lt: new Date(),
+                },
             },
             { take: size },
         );
