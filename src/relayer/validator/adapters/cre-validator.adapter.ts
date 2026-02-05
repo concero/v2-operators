@@ -201,6 +201,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
     }
 
     async pumpPendingSubmit(size: number): Promise<void> {
+        this.logger.info(`pumpPendingSubmit requested size=${size}`);
+
         const start = Date.now();
 
         const jobs = await this.context.jobQueue.getList(
@@ -217,7 +219,10 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             },
             { take: size },
         );
+        this.logger.info(`pumpPendingSubmit jobs.length=${jobs.length}`);
+
         const allJobIds = jobs.map(i => i.id);
+        this.logger.info(`pumpPendingSubmit allJobIds=[${allJobIds.join(',')}]`);
         if (!jobs.length) {
             return;
         }
