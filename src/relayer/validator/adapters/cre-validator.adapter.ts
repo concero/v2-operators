@@ -8,8 +8,8 @@ import { CREExecutorService } from '../../services';
 import { Context, ValidatorType } from '../../types'; // @todo: move to global constants
 
 // @todo: move to global constants
-const baseTimeoutMs = 5 * 1000; // 5 sec
-const maxTimeoutMs = 20 * 60 * 1000; // 20 min
+const baseTimeoutMs = 30 * 1000; // 30 sec
+const maxTimeoutMs = 2 * 60 * 1000; // 2 min
 export const requiredCallbacksCount = 4;
 export const creBatchSize = 40;
 export const pumpBatchCountPerTick = 2;
@@ -45,7 +45,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 status: JobStatus.PendingVerification,
                 validatorType: ValidatorType.CRE,
                 verificationPlannedTo: { lt: new Date() },
-                // lastVerificationAt: { lt: new Date(Date.now() - creRequestExpirationMs) },
+                lastVerificationAt: { lt: new Date(Date.now() - creRequestExpirationMs) },
             },
             { take: size },
         );
@@ -54,14 +54,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         if (!jobs.length) {
             return;
         }
-
-        // set last verification requested date
-        await this.context.jobQueue.updateMany(
-            { id: { in: allJobIds } },
-            {
-                lastVerificationAt: new Date(),
-            },
-        );
 
         const batches = ArrayLib.toChunks(jobs, creBatchSize);
 
@@ -83,6 +75,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                         status: JobStatus.PendingSubmit,
                         verificationAttempts: 0,
                         verificationPlannedTo: null,
+                        lastVerificationAt: new Date(),
                         submitPlannedTo: new Date(), // should be planned to just now
                     },
                 );
@@ -90,7 +83,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 this.logger.error(`pumpPendingVerification Execution failed: ${e}`);
                 // move to verification request failed if batch was not executed
                 await this.context.dbClient.$transaction(async client => {
-                    const jobPromises = batch.map(async i => {
+                    const jobPromises = batch.map(async i =>
                         client.job.update({
                             where: { id: i.id },
                             data: {
@@ -100,8 +93,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                                     i.verificationAttempts + 1,
                                 ),
                             },
-                        });
-                    });
+                        }),
+                    );
                     await Promise.all(jobPromises);
                 });
             }
@@ -215,9 +208,9 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 submitPlannedTo: {
                     lt: new Date(),
                 },
-                // lastSubmitAt: {
-                //     lt: new Date(Date.now() - messageSubmissionExpirationMs),
-                // },
+                lastSubmitAt: {
+                    lt: new Date(Date.now() - messageSubmissionExpirationMs),
+                },
             },
             { take: size },
         );
@@ -228,11 +221,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         if (!jobs.length) {
             return;
         }
-
-        await this.context.jobQueue.updateMany(
-            { id: { in: allJobIds } },
-            { lastSubmitAt: new Date() },
-        );
 
         const batches = ArrayLib.toChunks(jobs, 10);
 
@@ -285,18 +273,21 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                             status: JobStatus.WaitingDstFinality,
                             submitAttempts: 0,
                             submitPlannedTo: null,
+                            lastSubmitAt: new Date(),
                             dstBlockNumber: String(i?.dst?.blockNumber),
                             dstTxHash: String(i?.dst?.hash),
                         },
                     });
                 });
                 const failedPromises = failedResults.map(i => {
+                    const submitPlannedTo = this.calculateNextPlannedTo((i.attempts as number) + 1);
+                    this.logger.warn(
+                        `Submit failed jobId=${i.jobId}, attempt=${(i?.attempts || 0) + 1}, nextTryIn=${Math.round((submitPlannedTo.getTime() - Date.now()) / 1000)}s`,
+                    );
                     return client.job.update({
                         where: { id: i.jobId },
                         data: {
-                            submitPlannedTo: this.calculateNextPlannedTo(
-                                (i.attempts as number) + 1,
-                            ),
+                            submitPlannedTo,
                             submitAttempts: { increment: 1 },
                         },
                     });
