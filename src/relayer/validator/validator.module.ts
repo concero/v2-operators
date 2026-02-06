@@ -61,7 +61,7 @@ export class ValidatorModule {
 
         // tx submit
         setInterval(async () => {
-            await this.submitQeueProcessor.pump({ maxTxPerPump: 300, maxTxPerChain: 10 });
+            this.submitQeueProcessor.pump({ maxTxPerPump: 300, maxTxPerChain: 10 });
         }, 5000);
     }
 }
