@@ -61,6 +61,6 @@ export class ValidatorModule {
             await Promise.all(
                 Object.values(this.adapters).map(async adapter => adapter.pumpPendingSubmit(100)),
             );
-        }, 1000);
+        }, 5000);
     }
 }
