@@ -151,7 +151,10 @@ FROM job j
         return { blockNumber: receipt.blockNumber, hash: receipt.transactionHash };
     }
 
-    private extractJobValidatorLibs(validatorType: ValidatorType, dstChainSelector: number): Hex[] {
+    private extractJobValidatorLibs(
+        validatorType: ValidatorType,
+        dstChainSelector: number,
+    ): Address[] {
         switch (validatorType) {
             case ValidatorType.CRE: {
                 return [
