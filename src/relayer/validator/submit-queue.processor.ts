@@ -121,7 +121,6 @@ FROM job j
             const totalPromises = successPromises.concat(failedPromises);
             await Promise.all(totalPromises);
         });
-        await Promise.all(promises);
 
         this.logger.info(`pump took: ${(Date.now() - startTimestamp) / 1000}s`);
         this.isProcessing = false;
