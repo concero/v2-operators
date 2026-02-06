@@ -124,8 +124,6 @@ FROM job j
                 const totalPromises = successPromises.concat(failedPromises);
                 await Promise.all(totalPromises);
             });
-
-            this.logger.info(`pump succeeded for jobIds=[${jobs.map(i => i.id).join(',')}]`);
         } catch (e) {
             this.logger.info(`pump failed: ${e}`);
         } finally {
