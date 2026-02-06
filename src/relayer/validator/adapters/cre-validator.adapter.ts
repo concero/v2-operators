@@ -224,8 +224,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
 
         const batches = ArrayLib.toChunks(jobs, 10);
 
-        for (const batch of batches) {
-            const batchPromises = batch.map(async item => {
+        const batchPromises = batches.map(async batch => {
+            const itemPromises = batch.map(async item => {
                 const jobId = item.id;
                 const messageId = item.messageId as Hex;
 
@@ -261,7 +261,7 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                     return { jobId, type: 'failed', attempts: item.submitAttempts };
                 }
             });
-            const results = await Promise.all(batchPromises);
+            const results = await Promise.all(itemPromises);
             const successResults = results.filter(i => i.type === 'success');
             const failedResults = results.filter(i => i.type === 'failed');
 
@@ -295,7 +295,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
                 const totalPromises = successPromises.concat(failedPromises);
                 await Promise.all(totalPromises);
             });
-        }
+        });
+        await Promise.all(batchPromises);
 
         this.logger.info(`pumpPendingSubmit took: ${(Date.now() - start) / 1000}s`);
     }
