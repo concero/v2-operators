@@ -1,15 +1,13 @@
-import { encodeAbiParameters, encodePacked, Hex } from 'viem';
-import { BaseValidatorAdapter } from './base-validator.adapter';
+import { Hex } from 'viem';
 import { IValidatorAdapter } from './validator-adapter.interface';
 
-import { CRE, JobPayload, JobStatus } from '../../../types';
+import { CRE, JobStatus } from '../../../types';
 import { ArrayLib } from '../../../utils';
 import { CREExecutorService } from '../../services';
-import { Context, ValidatorType } from '../../types'; // @todo: move to global constants
+import { Context, ValidatorType } from '../../types';
+import { BaseValidatorService } from '../base-validator.service'; // @todo: move to global constants
 
 // @todo: move to global constants
-const baseTimeoutMs = 30 * 1000; // 30 sec
-const maxTimeoutMs = 2 * 60 * 1000; // 2 min
 export const requiredCallbacksCount = 4;
 export const creBatchSize = 40;
 export const pumpBatchCountPerTick = 2;
@@ -28,7 +26,7 @@ export const messageSubmissionExpirationMs = 3 * msInMin;
         ↓ (submit success)
     WaitingDstFinality
  */
-export class CREValidatorAdapter extends BaseValidatorAdapter implements IValidatorAdapter {
+export class CREValidatorAdapter extends BaseValidatorService implements IValidatorAdapter {
     private readonly creExecutorService: CREExecutorService;
 
     constructor(context: Context) {
@@ -49,7 +47,6 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
             },
             { take: size },
         );
-        const allJobIds = jobs.map(i => i.id);
 
         if (!jobs.length) {
             return;
@@ -193,157 +190,5 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         });
 
         this.logger.info(`pumpStuckVerificationRequests took: ${(Date.now() - start) / 1000}s`);
-    }
-
-    async pumpPendingSubmit(size: number): Promise<void> {
-        this.logger.info(`pumpPendingSubmit requested size=${size}`);
-
-        const start = Date.now();
-
-        const jobs = await this.context.jobQueue.getList(
-            {
-                status: JobStatus.PendingSubmit,
-                validatorType: ValidatorType.CRE,
-                callbacksCount: { gte: requiredCallbacksCount },
-                submitPlannedTo: {
-                    lt: new Date(),
-                },
-                lastSubmitAt: {
-                    lt: new Date(Date.now() - messageSubmissionExpirationMs),
-                },
-            },
-            { take: size },
-        );
-        this.logger.info(`pumpPendingSubmit jobs.length=${jobs.length}`);
-
-        const allJobIds = jobs.map(i => i.id);
-        this.logger.info(`pumpPendingSubmit allJobIds=[${allJobIds.join(',')}]`);
-        if (!jobs.length) {
-            return;
-        }
-
-        const batches = ArrayLib.toChunks(jobs, 10);
-
-        const batchPromises = batches.map(async batch => {
-            const itemPromises = batch.map(async item => {
-                const jobId = item.id;
-                const messageId = item.messageId as Hex;
-
-                try {
-                    const itemPayload = JSON.parse(item.payload) as JobPayload;
-                    const callbacks = await this.context.dbClient.creCallback.findMany({
-                        where: { messageId },
-                        take: 4,
-                    });
-                    const validation = this.packCREValidationFromResponse(
-                        callbacks.map(c => JSON.parse(c.payload)),
-                        messageId,
-                    );
-                    this.logger.info(
-                        `pumpPendingSubmit Processing Message (id=${messageId}, jobId=${jobId}) submit to chain (selector=${item.dstChainSelector})`,
-                    );
-
-                    const dst = await this.submitMessage(
-                        itemPayload,
-                        [validation],
-                        [
-                            this.context.deploymentManager.getConceroValidatorLibByChainSelector(
-                                itemPayload.parsedReceipt.dstChainSelector,
-                            ),
-                        ],
-                    );
-
-                    return { jobId, type: 'success', dst };
-                } catch (e) {
-                    this.logger.error(
-                        `pumpPendingSubmit Message (id=${messageId}, jobId=${jobId}) submit failed: ${e}`,
-                    );
-                    return { jobId, type: 'failed', attempts: item.submitAttempts };
-                }
-            });
-            const results = await Promise.all(itemPromises);
-            const successResults = results.filter(i => i.type === 'success');
-            const failedResults = results.filter(i => i.type === 'failed');
-
-            await this.context.dbClient.$transaction(async client => {
-                const successPromises = successResults.map(i => {
-                    return client.job.update({
-                        where: { id: i.jobId },
-                        data: {
-                            status: JobStatus.WaitingDstFinality,
-                            submitAttempts: 0,
-                            submitPlannedTo: null,
-                            lastSubmitAt: new Date(),
-                            dstBlockNumber: String(i?.dst?.blockNumber),
-                            dstTxHash: String(i?.dst?.hash),
-                        },
-                    });
-                });
-                const failedPromises = failedResults.map(i => {
-                    const submitPlannedTo = this.calculateNextPlannedTo((i.attempts as number) + 1);
-                    this.logger.warn(
-                        `Submit failed jobId=${i.jobId}, attempt=${(i?.attempts || 0) + 1}, nextTryIn=${Math.round((submitPlannedTo.getTime() - Date.now()) / 1000)}s`,
-                    );
-                    return client.job.update({
-                        where: { id: i.jobId },
-                        data: {
-                            submitPlannedTo,
-                            submitAttempts: { increment: 1 },
-                        },
-                    });
-                });
-                const totalPromises = successPromises.concat(failedPromises);
-                await Promise.all(totalPromises);
-            });
-        });
-        await Promise.all(batchPromises);
-
-        this.logger.info(`pumpPendingSubmit took: ${(Date.now() - start) / 1000}s`);
-    }
-
-    private packCREValidationFromResponse(
-        creResponses: CRE.Response[],
-        messageId: CRE.MessageId,
-    ): Hex {
-        const rawReport = creResponses[0].report.rawReport as Hex;
-        const reportContext = creResponses[0].report.reportContext as Hex;
-        const proofs = creResponses[0].proofs[messageId];
-
-        const allSignatures = Array.from(
-            new Set(
-                creResponses.flatMap(item =>
-                    item.report.signs.map(sign => {
-                        const hex = sign.signature.startsWith('0x')
-                            ? sign.signature
-                            : `0x${sign.signature}`;
-                        return hex as Hex;
-                    }),
-                ),
-            ),
-        );
-        const signatures = allSignatures.slice(0, Math.min(allSignatures.length, 4));
-
-        if (!proofs) {
-            throw new Error(`Missing merkle proof for messageId=${messageId}`);
-        }
-
-        const encodedSignaturesAndProof = encodeAbiParameters(
-            [{ type: 'bytes[]' }, { type: 'bytes32[]' }],
-            [signatures, proofs],
-        );
-
-        return encodePacked(
-            ['bytes', 'bytes', 'bytes'],
-            [rawReport, reportContext, encodedSignaturesAndProof],
-        );
-    }
-
-    private calculateNextPlannedTo(attempts: number): Date {
-        const delay = Math.min(baseTimeoutMs * 2 ** attempts, maxTimeoutMs);
-
-        // to avoid DDoS due to critical issue we use jitter (randomizer for delay)
-        const jitter = delay * (0.5 + Math.random() * 0.5);
-
-        return new Date(Date.now() + jitter);
     }
 }
