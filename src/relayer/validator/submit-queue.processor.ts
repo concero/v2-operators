@@ -29,7 +29,7 @@ WITH ranked AS (
     SELECT j.id,
            ROW_NUMBER() OVER (PARTITION BY j."dstChainSelector" ORDER BY j."lastSubmitAt" ASC) AS rn
     FROM job j
-    WHERE j.status = '${JobStatus.PendingSubmit}'
+    WHERE j.status = ${JobStatus.PendingSubmit}
       AND j."callbacksCount" = ${requiredCallbacksCount}
       AND j."submitPlannedTo" < now()
 )
