@@ -1,4 +1,4 @@
-import { Address } from 'viem';
+import { Address, Hex } from 'viem';
 import {
     ConceroNetwork,
     ConceroNetworkManager,
@@ -101,7 +101,7 @@ export class DeploymentManager implements NetworkUpdateListener {
         return relayerLib;
     }
 
-    getConceroValidatorLibByChainSelector(chainSelector: number): Address {
+    getConceroValidatorLibByChainSelector(chainSelector: number): Hex {
         const validatorLib = this.chainOptions?.[chainSelector]?.deployments?.validatorLib;
 
         if (!validatorLib) {

@@ -4,6 +4,4 @@ export interface IValidatorAdapter {
     pumpFailedVerification(size: number): Promise<void>;
 
     pumpStuckVerificationRequests(size: number): Promise<void>;
-
-    pumpPendingSubmit(size: number): Promise<void>;
 }

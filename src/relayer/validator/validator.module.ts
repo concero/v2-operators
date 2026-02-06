@@ -5,17 +5,20 @@ import {
     IValidatorAdapter,
     pumpBatchCountPerTick,
 } from './adapters';
+import { SubmitQueueProcessor } from './submit-queue.processor';
 
 import { Context, ValidatorType } from '../types';
 
 export class ValidatorModule {
     private readonly adapters: Record<ValidatorType, IValidatorAdapter>;
+    private readonly submitQeueProcessor: SubmitQueueProcessor;
 
     constructor(context: Context) {
         this.adapters = {
             [ValidatorType.CRE]: new CREValidatorAdapter(context),
             [ValidatorType.Empty]: new EmptyValidatorAdapter(context),
         };
+        this.submitQeueProcessor = new SubmitQueueProcessor(context);
     }
 
     async init() {
@@ -56,11 +59,9 @@ export class ValidatorModule {
             );
         }, 5000);
 
-        // tx submit (no rate limit because of viem batching), limited by RPCs
+        // tx submit
         setInterval(async () => {
-            await Promise.all(
-                Object.values(this.adapters).map(async adapter => adapter.pumpPendingSubmit(100)),
-            );
+            await this.submitQeueProcessor.pump({ maxTxPerPump: 300, maxTxPerChain: 10 });
         }, 5000);
     }
 }
