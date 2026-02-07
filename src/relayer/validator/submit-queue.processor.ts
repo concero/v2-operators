@@ -55,6 +55,10 @@ export class SubmitQueueProcessor extends BaseValidatorService {
                 const jobPayload = JSON.parse(job.payload) as JobPayload;
 
                 try {
+                    this.logger.info(
+                        `Submitting message ${job.messageId} to chain ${job.dstChainSelector}`,
+                    );
+
                     const creCallback = await this.context.dbClient.creCallback.findFirst({
                         where: { messageId: job.messageId },
                     });
