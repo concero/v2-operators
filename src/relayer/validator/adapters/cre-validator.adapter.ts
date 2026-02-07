@@ -51,6 +51,8 @@ export class CREValidatorAdapter extends BaseValidatorAdapter implements IValida
         );
         const allJobIds = jobs.map(i => i.id);
 
+        this.logger.info(`Found ${jobs.length} jobs to verify`);
+
         if (!jobs.length) {
             return;
         }
