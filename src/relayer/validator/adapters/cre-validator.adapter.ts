@@ -43,7 +43,10 @@ export class CREValidatorAdapter extends BaseValidatorService implements IValida
                 status: JobStatus.PendingVerification,
                 validatorType: ValidatorType.CRE,
                 verificationPlannedTo: { lt: new Date() },
-                lastVerificationAt: { lt: new Date(Date.now() - creRequestExpirationMs) },
+                OR: [
+                    { lastVerificationAt: { lt: new Date(Date.now() - creRequestExpirationMs) } },
+                    { lastVerificationAt: null },
+                ],
             },
             { take: size },
         );
