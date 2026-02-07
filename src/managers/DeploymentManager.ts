@@ -140,9 +140,9 @@ export class DeploymentManager implements NetworkUpdateListener {
         const finalityConfirmations = this.chainOptions?.[chainSelector]?.finalityTagEnabled;
 
         if (typeof finalityConfirmations !== 'boolean') {
-            this.logger.warn(
-                `FinalityTagEnabled not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
-            );
+            // this.logger.warn(
+            //     `FinalityTagEnabled not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+            // );
 
             return false;
         }

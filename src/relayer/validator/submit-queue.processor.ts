@@ -26,24 +26,25 @@ export class SubmitQueueProcessor extends BaseValidatorService {
             // @todo: add custom profiling decorator
 
             const jobs = await this.context.dbClient.$queryRaw<Job[]>`
-WITH ranked AS (
-    SELECT j.id,
-           ROW_NUMBER() OVER (PARTITION BY j."dstChainSelector" ORDER BY j."lastSubmitAt" ASC) AS rn
-    FROM job j
-    WHERE j.status = ${JobStatus.PendingSubmit}
-      AND j."callbacksCount" = ${requiredCallbacksCount}
-      AND j."submitPlannedTo" < now()
-)
-SELECT j.*
-FROM job j
-         JOIN (
-    SELECT id
-    FROM ranked
-    WHERE rn <= ${options.maxTxPerChain}
-    ORDER BY rn
-        LIMIT ${options.maxTxPerPump}
-) capped ON j.id = capped.id;
-`;
+                    WITH ranked AS (
+                        SELECT j.id,
+                               ROW_NUMBER() OVER (PARTITION BY j."dstChainSelector" ORDER BY j."lastSubmitAt" ASC) AS rn
+                        FROM job j
+                        WHERE j.status = ${JobStatus.PendingSubmit}
+                          AND j."callbacksCount" = ${requiredCallbacksCount}
+                          AND j."submitPlannedTo" < now()
+                    )
+                    SELECT j.*
+                    FROM job j
+                             JOIN (
+                        SELECT id
+                        FROM ranked
+                        WHERE rn <= ${options.maxTxPerChain}
+                        ORDER BY rn
+                            LIMIT ${options.maxTxPerPump}
+                    ) capped ON j.id = capped.id;
+            `;
+
             this.logger.info(`pump jobs.length=${jobs.length}`);
             if (!jobs.length) {
                 return;

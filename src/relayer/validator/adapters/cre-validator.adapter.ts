@@ -51,8 +51,6 @@ export class CREValidatorAdapter extends BaseValidatorService implements IValida
             { take: size },
         );
 
-        this.logger.info(`Found ${jobs.length} jobs to verify`);
-
         if (!jobs.length) {
             return;
         }
