@@ -32,7 +32,10 @@ export class SubmitQueueProcessor extends BaseValidatorService {
                         FROM job j
                         WHERE j.status = ${JobStatus.PendingSubmit}
                           AND j."callbacksCount" = ${requiredCallbacksCount}
-                          AND j."submitPlannedTo" < now() OR j."submitPlannedTo" is null
+                          AND (
+                                  j."submitPlannedTo" < now()
+                                  OR j."submitPlannedTo" IS NULL
+                              )
                     )
                     SELECT j.*
                     FROM job j
