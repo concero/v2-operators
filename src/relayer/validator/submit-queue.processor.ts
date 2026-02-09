@@ -86,6 +86,10 @@ export class SubmitQueueProcessor extends BaseValidatorService {
                         validatorLibs,
                     );
 
+                    this.logger.info(
+                        `pump SubmitDst for (messageId=${job.messageId}, jobId=${job.id})  txHash=${dst.hash}, blockNumber=${dst.blockNumber}`,
+                    );
+
                     return { jobId: job.id, type: 'success', dst };
                 } catch (e) {
                     this.logger.error(
@@ -101,6 +105,9 @@ export class SubmitQueueProcessor extends BaseValidatorService {
 
             await this.context.dbClient.$transaction(async client => {
                 const successPromises = successResults.map(i => {
+                    this.logger.info(
+                        `pump Submit succeeded jobId=${i.jobId}, attempt=${(i?.attempts || 0) + 1}, txHash=${i?.dst?.blockNumber}`,
+                    );
                     return client.job.update({
                         where: { id: i.jobId },
                         data: {
