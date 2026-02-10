@@ -23,31 +23,39 @@ model LogsListenerBlockCheckpoints {
 }
 
 model Job {
-  id                          Int       @id @default(autoincrement())
-  messageId                   String    @unique
-  payload                     String    @default("{}")
-  validatorType               String
-  callbacksCount              Int       @default(0)
-  status                      String
-  lastVerificationRequestedAt DateTime?
-  lastSubmittedAt             DateTime?
+  id            Int     @id @default(autoincrement())
+  messageId     String  @unique
+  payload       String  @default("{}")
+  validatorType String
+  status        String
+  errorCode     String?
+
+  // VERIFICATION
+  verificationAttempts  Int       @default(0)
+  lastVerificationAt    DateTime?
+  verificationPlannedTo DateTime?
+
+  // SUBMIT 
+  submitAttempts  Int       @default(0)
+  lastSubmitAt    DateTime?
+  submitPlannedTo DateTime?
+
+  callbacksCount Int @default(0)
 
   // src
-  srcTxHash           String
-  srcChainSelector    Int
-  srcBlockNumber      String
-  srcBlockNumberDelta String
+  srcTxHash        String
+  srcChainSelector Int
+  srcBlockNumber   String
 
   // dst
-  dstTxHash           String?
-  dstChainSelector    Int
-  dstBlockNumber      String?
-  dstBlockNumberDelta String
+  dstTxHash        String?
+  dstChainSelector Int
+  dstBlockNumber   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  creCallbacks CreCallback[]
+  creCallbacks CreCallback[] // @todo: remove callbacks
 
   @@index([dstChainSelector])
   @@index([srcChainSelector])
@@ -55,6 +63,7 @@ model Job {
   @@map("job")
 }
 
+// @todo: remove callbacks
 model CreCallback {
   id        Int    @id @default(autoincrement())
   messageId String
