@@ -116,9 +116,7 @@ export class DeploymentManager implements NetworkUpdateListener {
         const minBlockConfirmations = this.chainOptions?.[chainSelector]?.minBlockConfirmations;
 
         if (typeof minBlockConfirmations !== 'number') {
-            throw new Error(
-                `MinBlockConfirmations not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
-            );
+            return 1n;
         }
 
         return BigInt(minBlockConfirmations);
