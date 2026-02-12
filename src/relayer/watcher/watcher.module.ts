@@ -3,7 +3,7 @@ import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
 import { FinalityProcessor } from './finality.processor';
 import { Job } from '@prisma/client';
 
-import { JobPayload, JobStatus, ParsedMessageLogReceipt } from '../../types';
+import { DecodedMessageSentReceipt, JobPayload, JobStatus } from '../../types';
 import { ChainsSetupService } from '../services/chains-setup.service';
 import { Context } from '../types';
 
@@ -76,7 +76,7 @@ export class WatcherModule extends ChainsSetupService {
         ]);
     }
 
-    private extractSrcBlocksDelta(parsedReceipt: ParsedMessageLogReceipt) {
+    private extractSrcBlocksDelta(parsedReceipt: DecodedMessageSentReceipt) {
         if (parsedReceipt.srcChainData.blockConfirmations === maxUint64) {
             const isEnabledFinalized = this.context.chainsManager.getFinalityTagEnabled(
                 parsedReceipt.srcChainSelector,

@@ -1,9 +1,9 @@
 import { Address, Hex } from 'viem';
 
-import { ParsedMessageLogReceipt } from '../types';
+import { DecodedMessageSentReceipt } from '../types';
 
 export namespace MessagingCodec {
-    export function decodeReceipt(input: string): ParsedMessageLogReceipt {
+    export function decodeReceipt(input: string): DecodedMessageSentReceipt {
         const hex = input.startsWith('0x') ? input.slice(2) : input;
         let offset = 0;
 
@@ -47,15 +47,21 @@ export namespace MessagingCodec {
 
         // relayer lib
         const relayerLen = readUInt(3);
-        const relayerLib: Hex = `0x${readHex(relayerLen)}`;
+        const relayerConfig: Hex = `0x${readHex(relayerLen)}`;
 
         // validator libs
         const validatorCount = readUInt(3);
-        const validatorLibs: Hex[] = [];
+        const validatorConfigs: Hex[] = [];
+        const internalValidatorConfigs: Hex[] = [];
 
         for (let i = 0; i < validatorCount; i++) {
             const L = readUInt(3);
-            validatorLibs.push(`0x${readHex(L)}`);
+            validatorConfigs.push(`0x${readHex(L)}`);
+        }
+
+        for (let i = 0; i < validatorCount; i++) {
+            const L = readUInt(3);
+            internalValidatorConfigs.push(`0x${readHex(L)}`);
         }
 
         // payload
@@ -76,9 +82,14 @@ export namespace MessagingCodec {
                 receiver: dstReceiver,
                 gasLimit: dstGasLimit,
             },
-            relayerLib,
-            validatorLibs,
+            relayerConfig,
+            validatorConfigs,
+            internalValidatorConfigs,
             payload,
         };
+    }
+
+    export function decodeInternalValidatorConfig(internalValidatorConfig: Hex): bigint {
+        return BigInt('0x' + internalValidatorConfig.slice(4));
     }
 }

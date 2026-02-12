@@ -4,8 +4,12 @@ import { requiredCallbacksCount } from './adapters';
 import { BaseValidatorService } from './base-validator.service';
 import { Job } from '@prisma/client';
 
+import { relayerLibGasLimits } from '../../constants/relayerLibGasLimits';
 import { CRE, JobPayload, JobStatus } from '../../types';
+import { MessagingCodec } from '../../utils';
 import { Context, ValidatorType } from '../types';
+
+import decodeInternalValidatorConfig = MessagingCodec.decodeInternalValidatorConfig;
 
 export class SubmitQueueProcessor extends BaseValidatorService {
     private isProcessing = false;
@@ -161,11 +165,14 @@ export class SubmitQueueProcessor extends BaseValidatorService {
         const relayerLib =
             this.context.chainsManager.getConceroRelayerLibByChainSelector(dstChainSelector);
 
+        const gasLimit = this.calculateGasLimit(messageReceipt);
+
         const receipt = await this.context.txWriter.callContract(dstNetwork, {
             address: routerAddress,
             functionName: 'submitMessage',
             abi: this.context.config.routerContractAbi,
             args: [messageReceipt, validations, validatorLibs, relayerLib],
+            gas: gasLimit,
         });
 
         return { blockNumber: receipt.blockNumber, hash: receipt.transactionHash };
@@ -232,5 +239,16 @@ export class SubmitQueueProcessor extends BaseValidatorService {
             ['bytes', 'bytes', 'bytes'],
             [rawReport, reportContext, encodedSignaturesAndProof],
         );
+    }
+
+    private calculateGasLimit(messageReceipt: Hex) {
+        const decodedReceipt = MessagingCodec.decodeReceipt(messageReceipt);
+        const validatorGasLimit = decodeInternalValidatorConfig(
+            decodedReceipt.internalValidatorConfigs[0],
+        );
+        const relayerGasLimitOverhead =
+            relayerLibGasLimits[decodedReceipt.dstChainSelector] ?? 120_000n;
+
+        return validatorGasLimit + relayerGasLimitOverhead;
     }
 }
