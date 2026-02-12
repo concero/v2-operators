@@ -21,7 +21,7 @@ export class LogModule extends ChainsSetupService {
         const onLogs = this.onLogs.bind(this);
 
         try {
-            const routerAddress = this.context.deploymentManager.getRouterByChainSelector(
+            const routerAddress = this.context.chainsManager.getRouterByChainSelector(
                 Number(network.chainSelector),
             );
 
@@ -49,7 +49,7 @@ export class LogModule extends ChainsSetupService {
     ): Promise<Nullable<string>> {
         try {
             const srcNetworkName =
-                this.context.deploymentManager.getNetworkNameByChainSelector(srcChainSelector);
+                this.context.chainsManager.getNetworkNameByChainSelector(srcChainSelector);
             const extractedLog = await this.extractor.extractLog(
                 srcChainSelector,
                 srcNetworkName,

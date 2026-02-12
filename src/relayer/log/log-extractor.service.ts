@@ -18,7 +18,7 @@ export class LogExtractorService extends ContextProvider {
     ): Promise<Nullable<Log>> {
         const fromBlock = blockNumber - 10n;
         const toBlock = blockNumber;
-        const address = this.context.deploymentManager.getRouterByChainSelector(srcChainSelector);
+        const address = this.context.chainsManager.getRouterByChainSelector(srcChainSelector);
 
         const client = this.context.viemClient.getClients(srcNetworkName).publicClient;
 

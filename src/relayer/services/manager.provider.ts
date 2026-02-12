@@ -1,6 +1,5 @@
 import {
     BlockManagerRegistry,
-    ConceroNetwork,
     ConceroNetworkManager,
     HttpClient,
     Logger,
@@ -15,12 +14,8 @@ import { JobQueueService } from './job-queue.service';
 import { PrismaClient } from '@prisma/client';
 
 import { globalConfig } from '../../constants';
-import {
-    DbManager,
-    DeploymentManager,
-    LogsListenerStore,
-    RelayerBalanceManager,
-} from '../../managers';
+import { DbManager, LogsListenerStore, RelayerBalanceManager } from '../../managers';
+import { ChainManager } from '../../managers/chain-manager';
 import { Config } from '../../types';
 import { Context } from '../types';
 
@@ -33,7 +28,6 @@ export abstract class ManagerProvider {
     private dbClient!: PrismaClient;
     private viemClientManager!: ViemClientManager;
     private blockManagerRegistry!: BlockManagerRegistry;
-    private deploymentManager!: DeploymentManager;
     private logsListenerStore!: LogsListenerStore;
     private txMonitor!: TxMonitor;
     private txReader!: TxReader;
@@ -41,6 +35,7 @@ export abstract class ManagerProvider {
     private httpClient!: HttpClient;
     private jobQueueService!: JobQueueService;
     private balanceManager!: RelayerBalanceManager;
+    private chainsManager!: ChainManager;
 
     protected constructor(config: Config) {
         this.config = config;
@@ -55,7 +50,6 @@ export abstract class ManagerProvider {
             dbClient: this.dbClient,
             viemClient: this.viemClientManager,
             blockRegistry: this.blockManagerRegistry,
-            deploymentManager: this.deploymentManager,
             logsListener: this.logsListenerStore,
             txMonitor: this.txMonitor,
             jobQueue: this.jobQueueService,
@@ -63,6 +57,7 @@ export abstract class ManagerProvider {
             txWriter: this.txWriter,
             http: this.httpClient,
             balanceManager: this.balanceManager,
+            chainsManager: this.chainsManager,
         };
     }
 
@@ -80,6 +75,12 @@ export abstract class ManagerProvider {
             this.loggerBuilder.getLogger('NetworkManager'),
             this.httpClient,
             globalConfig.NETWORK_MANAGER,
+        );
+        this.chainsManager = new ChainManager(
+            this.loggerBuilder.getLogger('ChainManager'),
+            this.httpClient,
+            this.viemClientManager,
+            60 * 1000 * 60,
         );
 
         this.dbClient = DbManager.getClient();
@@ -110,11 +111,6 @@ export abstract class ManagerProvider {
             this.networkManager,
             this.viemClientManager,
         );
-        this.deploymentManager = DeploymentManager.createInstance(
-            this.loggerBuilder.getLogger('MessagingDeploymentManager'),
-            this.networkManager,
-            this.httpClient,
-        );
 
         await this.networkManager.initialize();
         await this.rpcManager.initialize();
@@ -124,14 +120,10 @@ export abstract class ManagerProvider {
         this.balanceManager = new RelayerBalanceManager(this.viemClientManager);
 
         // Register network update listeners after all managers are initialized
-        this.networkManager.registerUpdateListener(this.rpcManager);
-        this.networkManager.registerUpdateListener(this.deploymentManager);
-        this.networkManager.registerUpdateListener(this.viemClientManager);
-        this.networkManager.registerUpdateListener(this.blockManagerRegistry);
-        this.networkManager.registerUpdateListener({
-            onNetworksUpdated: (networks: ConceroNetwork[]) =>
-                this.balanceManager.setNetworks(networks),
-        });
+        this.chainsManager.registerListener(this.rpcManager);
+        this.chainsManager.registerListener(this.viemClientManager);
+        this.chainsManager.registerListener(this.blockManagerRegistry);
+        this.chainsManager.registerListener(this.balanceManager);
 
         // Start polling for network updates which will also trigger initial updates
         await this.networkManager.startPolling();

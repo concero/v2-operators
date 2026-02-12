@@ -3,6 +3,7 @@ import {
     ConceroNetwork,
     IBalanceManagerSender,
     IViemClientManager,
+    NetworkUpdateListener,
     NewBalanceManager,
 } from '@concero/operator-utils';
 import { WebClient } from '@slack/web-api';
@@ -42,7 +43,7 @@ class SlackSender implements IBalanceManagerSender {
     }
 }
 
-export class RelayerBalanceManager extends NewBalanceManager {
+export class RelayerBalanceManager extends NewBalanceManager implements NetworkUpdateListener {
     constructor(viemClientManager: IViemClientManager) {
         super({
             pollingInterval: 20 * 60 * 1000,
@@ -51,5 +52,8 @@ export class RelayerBalanceManager extends NewBalanceManager {
             gasLimit: 300_000,
             actionsCount: 100,
         });
+    }
+    async onNetworksUpdated(networks: ConceroNetwork[]): Promise<void> {
+        await this.setNetworks(networks);
     }
 }

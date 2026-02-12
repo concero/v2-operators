@@ -157,10 +157,9 @@ export class SubmitQueueProcessor extends BaseValidatorService {
             String(dstChainSelector),
         );
 
-        const routerAddress =
-            this.context.deploymentManager.getRouterByChainSelector(dstChainSelector);
+        const routerAddress = this.context.chainsManager.getRouterByChainSelector(dstChainSelector);
         const relayerLib =
-            this.context.deploymentManager.getConceroRelayerLibByChainSelector(dstChainSelector);
+            this.context.chainsManager.getConceroRelayerLibByChainSelector(dstChainSelector);
 
         const receipt = await this.context.txWriter.callContract(dstNetwork, {
             address: routerAddress,
@@ -179,7 +178,7 @@ export class SubmitQueueProcessor extends BaseValidatorService {
         switch (validatorType) {
             case ValidatorType.CRE: {
                 return [
-                    this.context.deploymentManager.getConceroValidatorLibByChainSelector(
+                    this.context.chainsManager.getConceroValidatorLibByChainSelector(
                         dstChainSelector,
                     ),
                 ];
