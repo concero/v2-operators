@@ -65,8 +65,13 @@ export class WatcherModule extends ChainsSetupService {
                         // @todo: if not enabled - mark as failed
                         return false;
                     }
-
-                    return BigInt(job.dstBlockNumber as string) < lastFinalizedBlock;
+                    const result = BigInt(job.dstBlockNumber as string) < lastFinalizedBlock;
+                    this.logger.info(
+                        `dstFilter ${String(job.dstBlockNumber)}<${String(lastFinalizedBlock)} is ${
+                            result ? 'true' : 'false'
+                        }`,
+                    );
+                    return result;
                 },
             },
         ]);
