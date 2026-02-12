@@ -128,6 +128,7 @@ export abstract class ManagerProvider {
         // Start polling for network updates which will also trigger initial updates
         await this.networkManager.startPolling();
         this.blockManagerRegistry.startPolling();
+        await this.chainsManager.startListening();
 
         this.txMonitor = TxMonitor.createInstance(
             this.loggerBuilder.getLogger('TxMonitor'),
