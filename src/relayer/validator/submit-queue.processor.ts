@@ -249,6 +249,10 @@ export class SubmitQueueProcessor extends BaseValidatorService {
         const relayerGasLimitOverhead =
             relayerLibGasLimits[decodedReceipt.dstChainSelector] ?? 120_000n;
 
-        return validatorGasLimit + relayerGasLimitOverhead;
+        return (
+            validatorGasLimit +
+            relayerGasLimitOverhead +
+            BigInt(decodedReceipt.dstChainData.gasLimit!)
+        );
     }
 }
