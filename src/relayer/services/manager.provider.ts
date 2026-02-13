@@ -77,7 +77,7 @@ export abstract class ManagerProvider {
             globalConfig.NETWORK_MANAGER,
         );
         this.chainsManager = new ChainManager(
-            this.loggerBuilder.getLogger('ChainManager'),
+            this.loggerBuilder.getLogger('ChainsManager'),
             this.httpClient,
             this.viemClientManager,
             60 * 1000 * 60,
@@ -112,7 +112,6 @@ export abstract class ManagerProvider {
             this.viemClientManager,
         );
 
-        await this.networkManager.initialize();
         await this.rpcManager.initialize();
         await this.viemClientManager.initialize();
         await this.blockManagerRegistry.initialize();
@@ -126,9 +125,8 @@ export abstract class ManagerProvider {
         this.chainsManager.registerListener(this.balanceManager);
 
         // Start polling for network updates which will also trigger initial updates
-        await this.networkManager.startPolling();
+        await this.chainsManager.startPolling();
         this.blockManagerRegistry.startPolling();
-        await this.chainsManager.startListening();
 
         this.txMonitor = TxMonitor.createInstance(
             this.loggerBuilder.getLogger('TxMonitor'),

@@ -1,10 +1,5 @@
 import { Address, Chain as ViemChain } from 'viem';
-import {
-    ConceroNetwork,
-    HttpClient,
-    LoggerInterface,
-    ViemClientManager,
-} from '@concero/operator-utils';
+import { ConceroNetwork, HttpClient, LoggerInterface, ViemClientManager, } from '@concero/operator-utils';
 import { NetworkUpdateListener } from '@concero/operator-utils/dist/types/managers/NetworkUpdateListener';
 
 import { globalConfig } from '../constants';
@@ -53,11 +48,10 @@ export class ChainManager {
         }, {});
     }
 
-    async startListening() {
+    async startPolling() {
         if (this._isInitialized) {
             return;
         }
-
         await this.feed();
         this._isInitialized = true;
         setInterval(() => this.feed(), this._fetchingInterval);
@@ -77,11 +71,13 @@ export class ChainManager {
     }
 
     private async feed(): Promise<void> {
-        if (!this._isInitialized || this._isFetching) {
-            return;
-        }
-
         try {
+            if (!this._isInitialized || this._isFetching) {
+                return;
+            }
+
+            this._isFetching = true;
+
             this._chains = await this.fetchChains();
             this.logger.debug(`Found deployments ${ObjectLib.stringify(this._chains)}`);
             const activeChains = this.activeChains;
@@ -105,6 +101,8 @@ export class ChainManager {
         } catch (err) {
             this.logger.error(`Failed to update deployments after network update: ${err}`);
             throw err;
+        } finally {
+            this._isFetching = false;
         }
     }
 
