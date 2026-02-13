@@ -9,7 +9,7 @@ export abstract class ChainsSetupService extends ContextProvider {
     }
 
     async setupEachHandler(): Promise<void> {
-        const activeNetworks: ConceroNetwork[] = this.context.chainsManager.activeNetworks;
+        const activeNetworks = this.context.network.getActiveNetworks();
 
         this.logger.info(
             `Got ${activeNetworks.length} active networks: ${activeNetworks.map(i => i.name).join(', ')}`,
