@@ -39,21 +39,12 @@ export class ChainManager {
         );
     }
 
-    get routerDeployments(): Record<string, Address> {
-        return this.chains.reduce<Record<string, Address>>((acc, chain) => {
-            if (chain?.deployments?.router) {
-                acc[chain.name] = chain.deployments.router;
-            }
-            return acc;
-        }, {});
-    }
-
     async startPolling() {
         if (this._isInitialized) {
             return;
         }
-        await this.feed();
         this._isInitialized = true;
+        await this.feed();
         setInterval(() => this.feed(), this._fetchingInterval);
     }
 
@@ -72,14 +63,14 @@ export class ChainManager {
 
     private async feed(): Promise<void> {
         try {
-            if (!this._isInitialized || this._isFetching) {
+            if (this._isFetching || !this._isInitialized) {
                 return;
             }
 
             this._isFetching = true;
-
+            this.logger.info(`feed Fetching`);
             this._chains = await this.fetchChains();
-            this.logger.debug(`Found deployments ${ObjectLib.stringify(this._chains)}`);
+            this.logger.debug(`feed Found deployments ${ObjectLib.stringify(this._chains)}`);
             const activeChains = this.activeChains;
             const networks: ConceroNetwork[] = activeChains.map(i => ({
                 id: Number(i.id),
@@ -96,10 +87,10 @@ export class ChainManager {
             }));
             this._listeners.forEach(listener => listener.onNetworksUpdated(networks));
             this.logger.info(
-                `Successfully fetched chains, active (size=${activeChains.length}) are: ${activeChains.join(',')}`,
+                `feed Successfully fetched chains, active (size=${activeChains.length}) are: ${activeChains.join(',')}`,
             );
         } catch (err) {
-            this.logger.error(`Failed to update deployments after network update: ${err}`);
+            this.logger.error(`feed Failed to update deployments after network update: ${err}`);
             throw err;
         } finally {
             this._isFetching = false;
