@@ -1,5 +1,5 @@
 import { Address, Chain as ViemChain } from 'viem';
-import { ConceroNetwork, HttpClient, LoggerInterface, ViemClientManager, } from '@concero/operator-utils';
+import { ConceroNetwork, HttpClient, LoggerInterface } from '@concero/operator-utils';
 import { NetworkUpdateListener } from '@concero/operator-utils/dist/types/managers/NetworkUpdateListener';
 
 import { globalConfig } from '../constants';
@@ -9,7 +9,6 @@ import { ObjectLib } from '../utils';
 export class ChainManager {
     private readonly logger: LoggerInterface;
     private readonly httpClient: HttpClient;
-    private readonly viemClientManager: ViemClientManager;
 
     private _isInitialized = false;
     private _isFetching = false;
@@ -17,15 +16,9 @@ export class ChainManager {
     private _listeners: NetworkUpdateListener[] = [];
     private _chains: Record<Chain['chainSelector'], Chain> = {};
 
-    constructor(
-        logger: LoggerInterface,
-        httpClient: HttpClient,
-        viemClientManager: ViemClientManager,
-        fetchingInterval: number,
-    ) {
+    constructor(logger: LoggerInterface, httpClient: HttpClient, fetchingInterval: number) {
         this.logger = logger;
         this.httpClient = httpClient;
-        this.viemClientManager = viemClientManager;
         this._fetchingInterval = fetchingInterval;
     }
 
@@ -76,8 +69,16 @@ export class ChainManager {
                 id: Number(i.id),
                 name: i.name,
                 chainSelector: String(i.chainSelector),
-                viemChain: this.viemClientManager.getClients(i.name)?.publicClient
-                    ?.chain as unknown as ViemChain,
+                viemChain: {
+                    id: i.id,
+                    name: i.name,
+                    rpcUrls: i.rpcUrls,
+                    nativeCurrency: {
+                        decimals: i.nativeCurrency.decimals,
+                        name: i.nativeCurrency.name,
+                        symbol: i.nativeCurrency.symbol,
+                    },
+                } as unknown as ViemChain,
                 finalityConfirmations: i.finalityConfirmations ?? 1,
                 confirmations: i.minBlockConfirmations,
                 type: 'mainnet',
@@ -115,18 +116,6 @@ export class ChainManager {
         }
 
         return name;
-    }
-
-    getNetworkOptionsByChainSelector(chainSelector: number): Chain {
-        const options = this._chains?.[chainSelector];
-
-        if (!options) {
-            throw new Error(
-                `Options not found for chain: ${this._chains?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
-            );
-        }
-
-        return options;
     }
 
     getRouterByChainSelector(chainSelector: number): Address {
@@ -190,10 +179,6 @@ export class ChainManager {
         const finalityConfirmations = this._chains?.[chainSelector]?.finalityTagEnabled;
 
         if (typeof finalityConfirmations !== 'boolean') {
-            // this.logger.warn(
-            //     `FinalityTagEnabled not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
-            // );
-
             return false;
         }
 

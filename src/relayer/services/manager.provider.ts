@@ -79,7 +79,6 @@ export abstract class ManagerProvider {
         this.chainsManager = new ChainManager(
             this.loggerBuilder.getLogger('ChainsManager'),
             this.httpClient,
-            this.viemClientManager,
             60 * 1000 * 60,
         );
 
