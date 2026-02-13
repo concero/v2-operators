@@ -111,7 +111,6 @@ export abstract class ManagerProvider {
             this.viemClientManager,
         );
 
-        await this.chainsManager.initialize();
         await this.rpcManager.initialize();
         await this.viemClientManager.initialize();
         await this.blockManagerRegistry.initialize();
@@ -125,7 +124,8 @@ export abstract class ManagerProvider {
         this.chainsManager.registerListener(this.balanceManager);
 
         // Start polling for network updates which will also trigger initial updates
-        await this.chainsManager.startPolling();
+        await this.chainsManager.initialize();
+        this.chainsManager.startPolling();
         this.blockManagerRegistry.startPolling();
 
         this.txMonitor = TxMonitor.createInstance(

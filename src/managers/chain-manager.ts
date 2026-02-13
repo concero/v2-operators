@@ -49,7 +49,7 @@ export class ChainManager {
         }
     }
 
-    async startPolling() {
+    startPolling() {
         if (!this._isInitialized) {
             return;
         }
