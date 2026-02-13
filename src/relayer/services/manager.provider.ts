@@ -81,6 +81,7 @@ export abstract class ManagerProvider {
             this.httpClient,
             60 * 1000 * 60,
         );
+        await this.chainsManager.initialize();
 
         this.dbClient = DbManager.getClient();
         await this.dbClient.$connect();

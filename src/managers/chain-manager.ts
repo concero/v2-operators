@@ -32,12 +32,24 @@ export class ChainManager {
         );
     }
 
-    async startPolling() {
+    async initialize(): Promise<void> {
         if (this._isInitialized) {
             return;
         }
-        this._isInitialized = true;
-        await this.feed();
+
+        try {
+            await this.feed();
+            this._isInitialized = true;
+        } catch (e) {
+            console.error('initialize Error while initializing chains', e);
+        }
+    }
+
+    async startPolling() {
+        if (!this._isInitialized) {
+            return;
+        }
+
         setInterval(() => this.feed(), this._fetchingInterval);
     }
 
