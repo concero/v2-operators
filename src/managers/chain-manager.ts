@@ -32,6 +32,10 @@ export class ChainManager {
         );
     }
 
+    get activeNetworks(): ConceroNetwork[] {
+        return this.activeChains.map(i => this.pipeChainToNetwork(i));
+    }
+
     async initialize(): Promise<void> {
         if (this._isInitialized) {
             return;
@@ -77,27 +81,7 @@ export class ChainManager {
             this._chains = await this.fetchChains();
             this.logger.debug(`feed Found deployments ${ObjectLib.stringify(this._chains)}`);
             const activeChains = this.activeChains;
-            const networks: ConceroNetwork[] = activeChains.map(i => ({
-                id: Number(i.id),
-                name: i.name,
-                chainSelector: String(i.chainSelector),
-                viemChain: {
-                    id: i.id,
-                    name: i.name,
-                    rpcUrls: i.rpcUrls,
-                    nativeCurrency: {
-                        decimals: i.nativeCurrency.decimals,
-                        name: i.nativeCurrency.name,
-                        symbol: i.nativeCurrency.symbol,
-                    },
-                } as unknown as ViemChain,
-                finalityConfirmations: i.finalityConfirmations ?? 1,
-                confirmations: i.minBlockConfirmations,
-                type: 'mainnet',
-                finalityTagEnabled: i.finalityTagEnabled,
-                accounts: [],
-                addresses: { conceroRouter: i.deployments.router as Address },
-            }));
+            const networks: ConceroNetwork[] = activeChains.map(i => this.pipeChainToNetwork(i));
             this._listeners.forEach(listener => listener.onNetworksUpdated(networks));
             this.logger.info(
                 `feed Successfully fetched chains, active (size=${activeChains.length}) are: ${activeChains.join(',')}`,
@@ -108,6 +92,30 @@ export class ChainManager {
         } finally {
             this._isFetching = false;
         }
+    }
+
+    private pipeChainToNetwork(chain: Chain): ConceroNetwork {
+        return {
+            id: Number(chain.id),
+            name: chain.name,
+            chainSelector: String(chain.chainSelector),
+            viemChain: {
+                id: chain.id,
+                name: chain.name,
+                rpcUrls: chain.rpcUrls,
+                nativeCurrency: {
+                    decimals: chain.nativeCurrency.decimals,
+                    name: chain.nativeCurrency.name,
+                    symbol: chain.nativeCurrency.symbol,
+                },
+            } as unknown as ViemChain,
+            finalityConfirmations: chain.finalityConfirmations ?? 1,
+            confirmations: chain.minBlockConfirmations,
+            type: 'mainnet',
+            finalityTagEnabled: chain.finalityTagEnabled,
+            accounts: [],
+            addresses: { conceroRouter: chain.deployments.router as Address },
+        };
     }
 
     private async fetchChains(): Promise<Record<Chain['chainSelector'], Chain>> {
