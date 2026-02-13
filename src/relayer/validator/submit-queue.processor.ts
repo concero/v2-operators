@@ -244,6 +244,9 @@ export class SubmitQueueProcessor extends BaseValidatorService {
 
     private calculateGasLimit(messageReceipt: Hex) {
         const decodedReceipt = MessagingCodec.decodeReceipt(messageReceipt);
+        this.logger.info(
+            `Internal validator configs: ${JSON.stringify(decodedReceipt.internalValidatorConfigs)}`,
+        );
         const validatorGasLimit = decodeInternalValidatorConfig(
             decodedReceipt.internalValidatorConfigs[0],
         );

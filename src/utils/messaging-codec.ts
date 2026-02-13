@@ -91,7 +91,6 @@ export namespace MessagingCodec {
 
     export function decodeInternalValidatorConfig(internalValidatorConfig: Hex): bigint {
         console.log(`Dst chain validation gas limit: ${'0x' + internalValidatorConfig.slice(4)}`);
-
         return BigInt('0x' + internalValidatorConfig.slice(4));
     }
 }
