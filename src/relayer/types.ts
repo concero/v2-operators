@@ -12,8 +12,7 @@ import {
 import { JobQueueService } from './services';
 import { PrismaClient } from '@prisma/client';
 
-import { LogsListenerStore, RelayerBalanceManager } from '../managers';
-import { ChainManager } from '../managers/chain-manager';
+import { DeploymentManager, LogsListenerStore, RelayerBalanceManager } from '../managers';
 import { Config } from '../types';
 
 export enum ValidatorType {
@@ -30,7 +29,7 @@ export type Context = {
     dbClient: PrismaClient;
     viemClient: ViemClientManager;
     blockRegistry: BlockManagerRegistry;
-    chainsManager: ChainManager;
+    deploymentManager: DeploymentManager;
     jobQueue: JobQueueService;
     logsListener: LogsListenerStore;
     txMonitor: TxMonitor;

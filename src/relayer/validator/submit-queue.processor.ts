@@ -161,9 +161,10 @@ export class SubmitQueueProcessor extends BaseValidatorService {
             String(dstChainSelector),
         );
 
-        const routerAddress = this.context.chainsManager.getRouterByChainSelector(dstChainSelector);
+        const routerAddress =
+            this.context.deploymentManager.getRouterByChainSelector(dstChainSelector);
         const relayerLib =
-            this.context.chainsManager.getConceroRelayerLibByChainSelector(dstChainSelector);
+            this.context.deploymentManager.getConceroRelayerLibByChainSelector(dstChainSelector);
 
         const gasLimit = this.calculateGasLimit(messageReceipt);
 
@@ -185,7 +186,7 @@ export class SubmitQueueProcessor extends BaseValidatorService {
         switch (validatorType) {
             case ValidatorType.CRE: {
                 return [
-                    this.context.chainsManager.getConceroValidatorLibByChainSelector(
+                    this.context.deploymentManager.getConceroValidatorLibByChainSelector(
                         dstChainSelector,
                     ),
                 ];
