@@ -6,21 +6,25 @@ export type MessageSentLogData = {
     validatorLibs: Address[];
     relayerLib: Address;
 };
-export type ParsedMessageLogReceipt = {
+export type DecodedMessageSentReceipt = {
     version: number;
     srcChainSelector: number;
     dstChainSelector: number;
     nonce: bigint;
+
     srcChainData: {
         sender: Address;
         blockConfirmations: bigint;
     };
+
     dstChainData: {
         raw: Hex;
         receiver: Address | null;
         gasLimit: number | null;
     };
-    relayerLib: Hex;
-    validatorLibs: Hex[];
+
+    relayerConfig: Hex;
+    validatorConfigs: Hex[];
+    internalValidatorConfigs: Hex[];
     payload: Hex;
 };

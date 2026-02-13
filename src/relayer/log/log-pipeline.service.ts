@@ -1,7 +1,7 @@
-import { Abi, decodeEventLog, Hex, Log } from 'viem';
+import { Abi, Address, decodeEventLog, Hex, Log } from 'viem';
 import { ConceroNetwork } from '@concero/operator-utils';
 
-import { JobStatus, MessageSentLogData, ParsedLog, ParsedMessageLogReceipt } from '../../types';
+import { DecodedMessageSentReceipt, JobStatus, MessageSentLogData, ParsedLog } from '../../types';
 import { MessagingCodec } from '../../utils';
 import { ContextProvider } from '../services';
 import { Context, ValidatorType } from '../types';
@@ -27,7 +27,7 @@ export class LogPipelineService extends ContextProvider {
                 return;
             }
             const parsedReceipt = MessagingCodec.decodeReceipt(parsedLog.data.messageReceipt);
-            const validatorType = this.extractLogValidatorType(parsedReceipt);
+            const validatorType = this.extractLogValidatorType(parsedLog.data.validatorLibs);
             await this.upsertLog(parsedLog, parsedReceipt, validatorType);
         } catch (e) {
             // @todo upsert raw log to reparse & restart
@@ -56,13 +56,13 @@ export class LogPipelineService extends ContextProvider {
         }
     }
 
-    private extractLogValidatorType(parsedReceipt: ParsedMessageLogReceipt): ValidatorType {
-        return parsedReceipt.validatorLibs.length > 0 ? ValidatorType.CRE : ValidatorType.Empty;
+    private extractLogValidatorType(validatorLibs: Address[]): ValidatorType {
+        return validatorLibs.length > 0 ? ValidatorType.CRE : ValidatorType.Empty;
     }
 
     private async upsertLog(
         parsedLog: ParsedLog<MessageSentLogData>,
-        parsedReceipt: ParsedMessageLogReceipt,
+        parsedReceipt: DecodedMessageSentReceipt,
         validatorType: ValidatorType,
     ): Promise<void> {
         await this.context.jobQueue.create({

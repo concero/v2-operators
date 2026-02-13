@@ -1,4 +1,4 @@
-import { MessageSentLogData, ParsedMessageLogReceipt } from './message-sent-log';
+import { DecodedMessageSentReceipt, MessageSentLogData } from './message-sent-log';
 import { ParsedLog } from './parsedLog';
 
 export enum JobStatus {
@@ -20,5 +20,5 @@ export type JobPayload = Omit<
     ParsedLog<MessageSentLogData>,
     'eventName' | 'eventHash' | 'blockNumber' | 'transactionHash'
 > & {
-    parsedReceipt: ParsedMessageLogReceipt;
+    parsedReceipt: DecodedMessageSentReceipt;
 };
