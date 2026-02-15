@@ -247,6 +247,7 @@ export class SubmitQueueProcessor extends BaseValidatorService {
         this.logger.info(
             `Internal validator configs: ${JSON.stringify(decodedReceipt.internalValidatorConfigs)}`,
         );
+        this.logger.info(`Validator configs: ${JSON.stringify(decodedReceipt.validatorConfigs)}`);
         const validatorGasLimit = decodeInternalValidatorConfig(
             decodedReceipt.internalValidatorConfigs[0],
         );
