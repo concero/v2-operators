@@ -49,17 +49,18 @@ export namespace MessagingCodec {
         const relayerLen = readUInt(3);
         const relayerConfig: Hex = `0x${readHex(relayerLen)}`;
 
-        // validator libs
+        // validator configs
         const validatorCount = readUInt(3);
         const validatorConfigs: Hex[] = [];
-        const internalValidatorConfigs: Hex[] = [];
-
         for (let i = 0; i < validatorCount; i++) {
             const L = readUInt(3);
             validatorConfigs.push(`0x${readHex(L)}`);
         }
 
-        for (let i = 0; i < validatorCount; i++) {
+        // internal validator configs
+        const internalCount = readUInt(3);
+        const internalValidatorConfigs: Hex[] = [];
+        for (let i = 0; i < internalCount; i++) {
             const L = readUInt(3);
             internalValidatorConfigs.push(`0x${readHex(L)}`);
         }
