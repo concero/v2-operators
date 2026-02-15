@@ -244,12 +244,6 @@ export class SubmitQueueProcessor extends BaseValidatorService {
 
     private calculateGasLimit(messageReceipt: Hex) {
         const decodedReceipt = MessagingCodec.decodeReceipt(messageReceipt);
-        this.logger.info(
-            `Internal validator configs: ${JSON.stringify(decodedReceipt.internalValidatorConfigs)}`,
-        );
-        this.logger.info(`Validator configs: ${JSON.stringify(decodedReceipt.validatorConfigs)}`);
-        this.logger.info(`Relayer configs: ${JSON.stringify(decodedReceipt.relayerConfig)}`);
-        this.logger.info(`Dst chain data: ${JSON.stringify(decodedReceipt.dstChainData)}`);
 
         const validatorGasLimit = decodeInternalValidatorConfig(
             decodedReceipt.internalValidatorConfigs[0],
@@ -257,7 +251,9 @@ export class SubmitQueueProcessor extends BaseValidatorService {
         const relayerGasLimitOverhead =
             relayerLibGasLimits[decodedReceipt.dstChainSelector] ?? 120_000n;
 
-        this.logger.info(`Dst chain user gas limit: ${decodedReceipt.dstChainData.gasLimit}`);
+        this.logger.info(
+            `Gas limit breakdown: validationGasLimit: ${validatorGasLimit}, relayerGasLimitOverhead: ${relayerGasLimitOverhead}, userGasLimit: ${BigInt(decodedReceipt.dstChainData.gasLimit!)}`,
+        );
 
         return (
             validatorGasLimit +
