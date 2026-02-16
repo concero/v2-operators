@@ -3,7 +3,7 @@ import { BlockManager, ConceroNetwork } from '@concero/operator-utils';
 import { FinalityProcessor } from './finality.processor';
 import { Job } from '@prisma/client';
 
-import { DecodedMessageSentReceipt, JobStatus } from '../../types';
+import { DecodedMessageSentReceipt, JobPayload, JobStatus } from '../../types';
 import { ChainsSetupService } from '../services/chains-setup.service';
 import { Context } from '../types';
 
