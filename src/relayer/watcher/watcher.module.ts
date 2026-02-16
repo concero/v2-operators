@@ -37,7 +37,7 @@ export class WatcherModule extends ChainsSetupService {
                         return BigInt(job.srcBlockNumber) < lastFinalizedBlock;
                     } else {
                         // src confirmations offset
-                        const result = BigInt(job.srcBlockNumber) + BigInt(delta) < lastChainBlock;
+                        const result = BigInt(job.srcBlockNumber) + delta < lastChainBlock;
                         this.logger.info(
                             `srcFilter ${job.srcBlockNumber}+${String(delta)}<${lastChainBlock} is ${
                                 result ? 'true' : 'false'
@@ -57,28 +57,41 @@ export class WatcherModule extends ChainsSetupService {
                     dstTxHash: { not: null },
                 }),
                 inclusion: 'dst',
-                filter: (job: Job, _, lastFinalizedBlock) => {
-                    const isEnabled = this.context.deploymentManager.getFinalityTagEnabled(
+                filter: (job: Job, lastChainBlock, lastFinalizedBlock) => {
+                    const isFinalityEnabled = this.context.deploymentManager.getFinalityTagEnabled(
                         job.dstChainSelector,
                     );
-                    if (!isEnabled) {
-                        // @todo: if not enabled - mark as failed
-                        return false;
+                    if (isFinalityEnabled) {
+                        const result = BigInt(job.dstBlockNumber as string) < lastFinalizedBlock;
+                        this.logger.info(
+                            `dstFilter (finality enabled) ${String(job.dstBlockNumber)}<${String(lastFinalizedBlock)} is ${
+                                result ? 'true' : 'false'
+                            }`,
+                        );
+
+                        return result;
+                    } else {
+                        const minConfirmations =
+                            this.context.deploymentManager.getMinBlockConformationsByChainSelector(
+                                job.dstChainSelector,
+                            );
+                        const result =
+                            BigInt(job.dstBlockNumber as string) + minConfirmations <
+                            lastChainBlock;
+                        this.logger.info(
+                            `dstFilter (finality not enabled) ${String(job.dstBlockNumber)}+${String(minConfirmations)}<${String(lastFinalizedBlock)} is ${
+                                result ? 'true' : 'false'
+                            }`,
+                        );
+                        return result;
                     }
-                    const result = BigInt(job.dstBlockNumber as string) < lastFinalizedBlock;
-                    this.logger.info(
-                        `dstFilter ${String(job.dstBlockNumber)}<${String(lastFinalizedBlock)} is ${
-                            result ? 'true' : 'false'
-                        }`,
-                    );
-                    return result;
                 },
             },
         ]);
     }
 
     private extractSrcBlocksDelta(parsedReceipt: DecodedMessageSentReceipt) {
-        if (parsedReceipt.srcChainData.blockConfirmations === maxUint64) {
+        if (BigInt(parsedReceipt.srcChainData.blockConfirmations) === maxUint64) {
             const isEnabledFinalized = this.context.deploymentManager.getFinalityTagEnabled(
                 parsedReceipt.srcChainSelector,
             );
@@ -96,7 +109,7 @@ export class WatcherModule extends ChainsSetupService {
             );
         }
 
-        return parsedReceipt.srcChainData.blockConfirmations;
+        return BigInt(parsedReceipt.srcChainData.blockConfirmations);
     }
 
     protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
