@@ -19,12 +19,16 @@ export class WatcherModule extends ChainsSetupService {
                     status: JobStatus.WaitingSrcConfirmation,
                     srcChainSelector: Number(network.chainSelector),
                 }),
-                filter: (job: Job, lastChainBlock: bigint, lastFinalizedBlock: bigint) => {
+                filter: (
+                    job: Job,
+                    lastChainBlock: bigint,
+                    lastFinalizedBlock: bigint | 'not_supported',
+                ) => {
                     const jobPayload = JSON.parse(job.payload) as JobPayload;
                     const delta = this.extractSrcBlocksDelta(jobPayload.parsedReceipt);
                     this.logger.info(`srcFilter for job (id=${job.id}) delta=${String(delta)}`);
 
-                    if (delta === 'finalized') {
+                    if (delta === 'finalized' && String(lastFinalizedBlock) !== 'not_supported') {
                         // src finalized
                         const isFinalityEnabled =
                             this.context.deploymentManager.getFinalityTagEnabled(
@@ -34,7 +38,7 @@ export class WatcherModule extends ChainsSetupService {
                             // @todo: mark status as Failed
                             return false;
                         }
-                        const result = BigInt(job.srcBlockNumber) < lastFinalizedBlock;
+                        const result = BigInt(job.srcBlockNumber) < (lastFinalizedBlock as bigint);
                         this.logger.info(
                             `srcFilter ${job.srcBlockNumber}<${String(lastFinalizedBlock)} is ${
                                 result ? 'true' : 'false'
@@ -43,7 +47,7 @@ export class WatcherModule extends ChainsSetupService {
                         return result;
                     } else {
                         // src confirmations offset
-                        const result = BigInt(job.srcBlockNumber) + delta < lastChainBlock;
+                        const result = BigInt(job.srcBlockNumber) + (delta as bigint) < lastChainBlock;
                         this.logger.info(
                             `srcFilter ${job.srcBlockNumber}+${String(delta)}<${lastChainBlock} is ${
                                 result ? 'true' : 'false'
