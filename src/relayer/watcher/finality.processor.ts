@@ -29,7 +29,6 @@ export class FinalityProcessor extends ContextProvider {
         chainBlock: bigint,
         finalizedBlock: bigint | 'not_supported',
     ): Promise<void> {
-        this.logger.info(network);
         const promises = this.strategies.map(async strategy =>
             this.processStrategy(network, chainBlock, finalizedBlock, strategy),
         );
