@@ -1,6 +1,5 @@
 import {
     BlockManagerRegistry,
-    ConceroNetwork,
     ConceroNetworkManager,
     HttpClient,
     Logger,
@@ -122,17 +121,18 @@ export abstract class ManagerProvider {
         await this.viemClientManager.initialize();
         await this.blockManagerRegistry.initialize();
 
-        this.balanceManager = new RelayerBalanceManager(this.viemClientManager);
+        this.balanceManager = new RelayerBalanceManager(
+            this.loggerBuilder.getLogger('SlackSender'),
+            this.loggerBuilder.getLogger('RelayerBalanceManager'),
+            this.viemClientManager,
+            this.networkManager,
+        );
 
         // Register network update listeners after all managers are initialized
         this.networkManager.registerUpdateListener(this.rpcManager);
         this.networkManager.registerUpdateListener(this.deploymentManager);
         this.networkManager.registerUpdateListener(this.viemClientManager);
         this.networkManager.registerUpdateListener(this.blockManagerRegistry);
-        this.networkManager.registerUpdateListener({
-            onNetworksUpdated: (networks: ConceroNetwork[]) =>
-                this.balanceManager.setNetworks(networks),
-        });
 
         // Start polling for network updates which will also trigger initial updates
         await this.networkManager.startPolling();

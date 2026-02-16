@@ -1,50 +1,42 @@
-import { ConceroChain, ConceroNetwork, IViemClientManager } from '@concero/operator-utils';
-import { IBalanceManagerSender, NewBalanceManager, } from '@concero/operator-utils/dist/new/managers';
-import { WebClient } from '@slack/web-api';
+import {
+    ConceroNetworkManager,
+    InsufficientBalanceNotifier,
+    LoggerInterface,
+    SlackNotifier,
+    ViemClientManager,
+} from '@concero/operator-utils';
 
-class SlackSender implements IBalanceManagerSender {
-    private readonly client: WebClient;
-    private readonly slackBotToken = process.env.NOTIFICATIONS_SLACK_BOT_TOKEN as string;
-    private readonly slackMonitoringChannelId = process.env
-        .NOTIFICATIONS_SLACK_MONITORING_SYSTEM_CHANNEL_ID as string;
-
-    constructor() {
-        this.client = new WebClient(this.slackBotToken);
-
-        if (!this.slackBotToken) {
-            throw new Error('No slack bot token found.');
-        }
-
-        if (!this.slackMonitoringChannelId) {
-            throw new Error('No slack monitoring channelId found.');
-        }
-    }
-
-    async send(data: {
-        chain: ConceroChain;
-        network: ConceroNetwork;
-        expectedBalance: bigint;
-        actualBalance: bigint;
-    }): Promise<void> {
-        try {
-            await this.client.chat.postMessage({
-                text: `Stage balance for ${data.chain.nativeCurrency.name} on ${data.chain.name} is below minimum!\nCurrent balance: ${String(data.actualBalance)}\nTop-up required: ${String(data.expectedBalance - data.actualBalance)}`,
-                channel: this.slackMonitoringChannelId,
-            });
-        } catch (e) {
-            console.log(`Slack sender Failed: ${e}`);
-        }
+class SlackSender extends SlackNotifier {
+    constructor(logger: LoggerInterface) {
+        super(
+            {
+                botToken: process.env.NOTIFICATIONS_SLACK_BOT_TOKEN as string,
+                channelId: process.env.NOTIFICATIONS_SLACK_MONITORING_SYSTEM_CHANNEL_ID as string,
+                batchWaitMs: 2 * 60 * 1000,
+            },
+            logger,
+        );
     }
 }
 
-export class RelayerBalanceManager extends NewBalanceManager {
-    constructor(viemClientManager: IViemClientManager) {
+export class RelayerBalanceManager extends InsufficientBalanceNotifier {
+    constructor(
+        slackLogger: LoggerInterface,
+        bmLogger: LoggerInterface,
+        viemClientManager: ViemClientManager,
+        networkManager: ConceroNetworkManager,
+    ) {
         super({
-            pollingInterval: 20 * 60 * 1000,
-            viemClientManager: viemClientManager as any,
-            sender: new SlackSender(),
+            sender: new SlackSender(slackLogger),
+            viemClientManager,
+            networkManager,
+            logger: bmLogger,
             gasLimit: 300_000,
             actionsCount: 100,
+            pollingInterval: 30 * 60 * 1000,
+            buildMessage: params =>
+                `[Relayer ${process.env.OPERATOR_ADDRESS}] Balance for ${params.network.viemChain.nativeCurrency.name} on ${params.network.name} is below minimum!\nCurrent balance: ${String(params.actualBalance)}\nTop-up required: ${String(params.expectedBalance - params.actualBalance)}`,
+            address: process.env.OPERATOR_ADDRESS as `0x${string}`,
         });
     }
 }
