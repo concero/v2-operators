@@ -78,6 +78,9 @@ export class WatcherModule extends ChainsSetupService {
                         return result;
                     } else {
                         const minConfirmations =
+                            this.context.deploymentManager.getFinalityBlockConformationsByChainSelector(
+                                job.dstChainSelector,
+                            ) ||
                             this.context.deploymentManager.getMinBlockConformationsByChainSelector(
                                 job.dstChainSelector,
                             );
