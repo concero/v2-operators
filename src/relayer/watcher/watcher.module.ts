@@ -72,7 +72,12 @@ export class WatcherModule extends ChainsSetupService {
                 }),
                 inclusion: 'dst',
                 filter: (job: Job, lastChainBlock, lastFinalizedBlock) => {
-                    return true;
+                    if (lastFinalizedBlock === 'not_supported') return false;
+
+                    if (!job.dstBlockNumber) return false;
+
+                    return BigInt(job.dstBlockNumber) <= lastFinalizedBlock;
+
                     // const isFinalityEnabled = this.context.deploymentManager.getFinalityTagEnabled(
                     //     job.dstChainSelector,
                     // );
