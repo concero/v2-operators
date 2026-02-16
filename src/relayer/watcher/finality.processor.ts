@@ -9,7 +9,11 @@ import { Context } from '../types';
 interface ProcessorStrategy {
     buildQuery: (network: ConceroNetwork) => Prisma.JobWhereInput;
     inclusion: 'dst' | 'src';
-    filter: (job: Job, lastChainBlock: bigint, lastFinalizedBlock: bigint | 'not_supported') => boolean;
+    filter: (
+        job: Job,
+        lastChainBlock: bigint,
+        lastFinalizedBlock: bigint | 'not_supported',
+    ) => boolean;
 }
 
 export class FinalityProcessor extends ContextProvider {
@@ -46,8 +50,9 @@ export class FinalityProcessor extends ContextProvider {
             batch
                 .filter(job => strategy.filter(job, chainBlock, finalizedBlock))
                 .map(async job => {
-                    const publicClient = await this.context.viemClient.getClients(network.name)
-                        .publicClient;
+                    const publicClient = this.context.viemClient.getClients(
+                        network.name,
+                    ).publicClient;
 
                     if (strategy.inclusion === 'src') {
                         try {
