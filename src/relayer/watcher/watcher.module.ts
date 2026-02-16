@@ -71,7 +71,7 @@ export class WatcherModule extends ChainsSetupService {
                     const isFinalityEnabled = this.context.deploymentManager.getFinalityTagEnabled(
                         job.dstChainSelector,
                     );
-                    if (isFinalityEnabled) {
+                    if (isFinalityEnabled && lastFinalizedBlock !== 'not_supported') {
                         const result = BigInt(job.dstBlockNumber as string) < lastFinalizedBlock;
                         this.logger.info(
                             `dstFilter (finality enabled) ${String(job.dstBlockNumber)}<${String(lastFinalizedBlock)} is ${
@@ -128,7 +128,7 @@ export class WatcherModule extends ChainsSetupService {
     protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
         blockManager.watchBlocks({
             onBlockRange: (_: bigint, lastChainBlock, finalizedBlock) =>
-                this.finalityProcessor.process(network, lastChainBlock, finalizedBlock ?? 0n),
+                this.finalityProcessor.process(network, lastChainBlock, finalizedBlock as bigint | 'not_supported'),
         });
     }
 }

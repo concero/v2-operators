@@ -9,7 +9,7 @@ import { Context } from '../types';
 interface ProcessorStrategy {
     buildQuery: (network: ConceroNetwork) => Prisma.JobWhereInput;
     inclusion: 'dst' | 'src';
-    filter: (job: Job, lastChainBlock: bigint, lastFinalizedBlock: bigint) => boolean;
+    filter: (job: Job, lastChainBlock: bigint, lastFinalizedBlock: bigint | 'not_supported') => boolean;
 }
 
 export class FinalityProcessor extends ContextProvider {
@@ -23,7 +23,7 @@ export class FinalityProcessor extends ContextProvider {
     async process(
         network: ConceroNetwork,
         chainBlock: bigint,
-        finalizedBlock: bigint,
+        finalizedBlock: bigint | 'not_supported',
     ): Promise<void> {
         const promises = this.strategies.map(async strategy =>
             this.processStrategy(network, chainBlock, finalizedBlock, strategy),
@@ -35,7 +35,7 @@ export class FinalityProcessor extends ContextProvider {
     private async processStrategy(
         network: ConceroNetwork,
         chainBlock: bigint,
-        finalizedBlock: bigint,
+        finalizedBlock: bigint | 'not_supported',
         strategy: ProcessorStrategy,
     ): Promise<void> {
         const batch = await this.context.jobQueue.getList(strategy.buildQuery(network), {
