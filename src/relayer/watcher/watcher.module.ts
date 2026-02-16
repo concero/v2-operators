@@ -34,7 +34,13 @@ export class WatcherModule extends ChainsSetupService {
                             // @todo: mark status as Failed
                             return false;
                         }
-                        return BigInt(job.srcBlockNumber) < lastFinalizedBlock;
+                        const result = BigInt(job.srcBlockNumber) < lastFinalizedBlock;
+                        this.logger.info(
+                            `srcFilter ${job.srcBlockNumber}<${String(lastFinalizedBlock)} is ${
+                                result ? 'true' : 'false'
+                            }`,
+                        );
+                        return result;
                     } else {
                         // src confirmations offset
                         const result = BigInt(job.srcBlockNumber) + delta < lastChainBlock;
