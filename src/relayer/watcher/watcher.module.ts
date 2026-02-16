@@ -72,8 +72,7 @@ export class WatcherModule extends ChainsSetupService {
                 }),
                 inclusion: 'dst',
                 filter: (job: Job, lastChainBlock, lastFinalizedBlock) => {
-                    if (lastFinalizedBlock === 'not_supported') return false;
-
+                    if (lastFinalizedBlock === 'not_supported') return true;
                     if (!job.dstBlockNumber) return false;
 
                     return BigInt(job.dstBlockNumber) <= lastFinalizedBlock;
