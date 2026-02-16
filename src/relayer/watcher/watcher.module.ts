@@ -19,10 +19,13 @@ export class WatcherModule extends ChainsSetupService {
                     status: JobStatus.WaitingSrcConfirmation,
                     srcChainSelector: Number(network.chainSelector),
                 }),
-                filter: (job: Job, lastChainBlock: bigint, lastFinalizedBlock: bigint) => {
-                    this.logger.info(
-                        `Src block number: ${BigInt(job.srcBlockNumber)}, last finalized block: ${lastFinalizedBlock}`,
-                    );
+                filter: (
+                    job: Job,
+                    lastChainBlock: bigint,
+                    lastFinalizedBlock: bigint | 'not_supported',
+                ) => {
+                    if (lastFinalizedBlock === 'not_supported') return false;
+
                     return BigInt(job.srcBlockNumber) <= lastFinalizedBlock;
 
                     // const jobPayload = JSON.parse(job.payload) as JobPayload;
@@ -69,9 +72,9 @@ export class WatcherModule extends ChainsSetupService {
                 }),
                 inclusion: 'dst',
                 filter: (job: Job, lastChainBlock, lastFinalizedBlock) => {
-                    if (!job.dstBlockNumber) return false;
+                    if (lastFinalizedBlock === 'not_supported') return true;
 
-                    return BigInt(job.dstBlockNumber) <= lastFinalizedBlock;
+                    return BigInt(job.srcBlockNumber) <= lastFinalizedBlock;
 
                     // const isFinalityEnabled = this.context.deploymentManager.getFinalityTagEnabled(
                     //     job.dstChainSelector,
@@ -133,7 +136,11 @@ export class WatcherModule extends ChainsSetupService {
     protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
         blockManager.watchBlocks({
             onBlockRange: (_: bigint, lastChainBlock, finalizedBlock) =>
-                this.finalityProcessor.process(network, lastChainBlock, finalizedBlock as bigint),
+                this.finalityProcessor.process(
+                    network,
+                    lastChainBlock,
+                    finalizedBlock as bigint | 'not_supported',
+                ),
         });
     }
 }
