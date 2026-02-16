@@ -1,10 +1,5 @@
-import {
-    ConceroChain,
-    ConceroNetwork,
-    IBalanceManagerSender,
-    IViemClientManager,
-    NewBalanceManager,
-} from '@concero/operator-utils';
+import { ConceroChain, ConceroNetwork, IViemClientManager } from '@concero/operator-utils';
+import { IBalanceManagerSender, NewBalanceManager, } from '@concero/operator-utils/dist/new/managers';
 import { WebClient } from '@slack/web-api';
 
 class SlackSender implements IBalanceManagerSender {
