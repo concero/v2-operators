@@ -122,13 +122,14 @@ export class DeploymentManager implements NetworkUpdateListener {
         return BigInt(minBlockConfirmations);
     }
 
-    getFinalityBlockConformationsByChainSelector(chainSelector: number): bigint {
+    getFinalityBlockConformationsByChainSelector(chainSelector: number): bigint | undefined {
         const finalityConfirmations = this.chainOptions?.[chainSelector]?.finalityConfirmations;
 
         if (typeof finalityConfirmations !== 'number') {
-            throw new Error(
-                `FinalityConfirmations not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
-            );
+            return;
+            // throw new Error(
+            //     `FinalityConfirmations not found for chain: ${this.chainOptions?.[chainSelector]?.name || `[selector=${chainSelector}]`}`,
+            // );
         }
 
         return BigInt(finalityConfirmations);
