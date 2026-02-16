@@ -28,26 +28,31 @@ export class WatcherModule extends ChainsSetupService {
                     const delta = this.extractSrcBlocksDelta(jobPayload.parsedReceipt);
                     this.logger.info(`srcFilter for job (id=${job.id}) delta=${String(delta)}`);
 
-                    if (delta === 'finalized' && String(lastFinalizedBlock) !== 'not_supported') {
-                        // src finalized
-                        const isFinalityEnabled =
-                            this.context.deploymentManager.getFinalityTagEnabled(
-                                job.srcChainSelector,
-                            );
-                        if (!isFinalityEnabled) {
-                            // @todo: mark status as Failed
-                            return false;
-                        }
-                        const result = BigInt(job.srcBlockNumber) < (lastFinalizedBlock as bigint);
-                        this.logger.info(
-                            `srcFilter ${job.srcBlockNumber}<${String(lastFinalizedBlock)} is ${
-                                result ? 'true' : 'false'
-                            }`,
-                        );
-                        return result;
+                    if (delta === 'finalized') {
+                        if (lastFinalizedBlock === 'not_supported') return false;
+
+                        return BigInt(job.srcBlockNumber) <= lastFinalizedBlock;
+
+                        // // src finalized
+                        // const isFinalityEnabled =
+                        //     this.context.deploymentManager.getFinalityTagEnabled(
+                        //         job.srcChainSelector,
+                        //     );
+                        // if (!isFinalityEnabled) {
+                        //     // @todo: mark status as Failed
+                        //     return false;
+                        // }
+                        // const result = BigInt(job.srcBlockNumber) < (lastFinalizedBlock as bigint);
+                        // this.logger.info(
+                        //     `srcFilter ${job.srcBlockNumber}<${String(lastFinalizedBlock)} is ${
+                        //         result ? 'true' : 'false'
+                        //     }`,
+                        // );
+                        // return result;
                     } else {
                         // src confirmations offset
-                        const result = BigInt(job.srcBlockNumber) + (delta as bigint) < lastChainBlock;
+                        const result =
+                            BigInt(job.srcBlockNumber) + (delta as bigint) < lastChainBlock;
                         this.logger.info(
                             `srcFilter ${job.srcBlockNumber}+${String(delta)}<${lastChainBlock} is ${
                                 result ? 'true' : 'false'
@@ -67,11 +72,12 @@ export class WatcherModule extends ChainsSetupService {
                     dstTxHash: { not: null },
                 }),
                 inclusion: 'dst',
-                filter: (job: Job, lastChainBlock, lastFinalizedBlock) => {
-                    const isFinalityEnabled = this.context.deploymentManager.getFinalityTagEnabled(
-                        job.dstChainSelector,
-                    );
-                    if (isFinalityEnabled && lastFinalizedBlock !== 'not_supported') {
+                filter: (
+                    job: Job,
+                    lastChainBlock: bigint,
+                    lastFinalizedBlock: bigint | 'not_supported',
+                ) => {
+                    if (lastFinalizedBlock !== 'not_supported') {
                         const result = BigInt(job.dstBlockNumber as string) < lastFinalizedBlock;
                         this.logger.info(
                             `dstFilter (finality enabled) ${String(job.dstBlockNumber)}<${String(lastFinalizedBlock)} is ${
@@ -82,9 +88,6 @@ export class WatcherModule extends ChainsSetupService {
                         return result;
                     } else {
                         const minConfirmations =
-                            this.context.deploymentManager.getFinalityBlockConformationsByChainSelector(
-                                job.dstChainSelector,
-                            ) ||
                             this.context.deploymentManager.getMinBlockConformationsByChainSelector(
                                 job.dstChainSelector,
                             );
@@ -128,7 +131,11 @@ export class WatcherModule extends ChainsSetupService {
     protected async setupHandler(network: ConceroNetwork, blockManager: BlockManager) {
         blockManager.watchBlocks({
             onBlockRange: (_: bigint, lastChainBlock, finalizedBlock) =>
-                this.finalityProcessor.process(network, lastChainBlock, finalizedBlock as bigint | 'not_supported'),
+                this.finalityProcessor.process(
+                    network,
+                    lastChainBlock,
+                    finalizedBlock as bigint | 'not_supported',
+                ),
         });
     }
 }
