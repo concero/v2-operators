@@ -30,7 +30,7 @@ export class ApiController extends ContextProvider {
                     async managementApi => {
                         managementApi.addHook('preHandler', checkManagementAccess);
                         managementApi.get('/jobs', handleGetJobsList);
-                        managementApi.get('/jobs/retry', (req, res) =>
+                        managementApi.post('/jobs/retry', (req, res) =>
                             handleRetryJob(req, res, refetchLog),
                         );
                         managementApi.get('/chains', handleGetChainsList);
