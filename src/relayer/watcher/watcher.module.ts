@@ -26,7 +26,7 @@ export class WatcherModule extends ChainsSetupService {
                 ) => {
                     const jobPayload = JSON.parse(job.payload) as JobPayload;
                     const delta = this.extractSrcBlocksDelta(jobPayload.parsedReceipt);
-                    this.logger.info(`srcFilter for job (id=${job.id}) delta=${String(delta)}`);
+                    // this.logger.info(`srcFilter for job (id=${job.id}) delta=${String(delta)}`);
 
                     if (delta === 'finalized') {
                         if (lastFinalizedBlock === 'not_supported') return false;
@@ -53,11 +53,11 @@ export class WatcherModule extends ChainsSetupService {
                         // src confirmations offset
                         const result =
                             BigInt(job.srcBlockNumber) + (delta as bigint) <= lastChainBlock;
-                        this.logger.info(
-                            `srcFilter ${job.srcBlockNumber}+${String(delta)}<${lastChainBlock} is ${
-                                result ? 'true' : 'false'
-                            }`,
-                        );
+                        // this.logger.info(
+                        //     `srcFilter ${job.srcBlockNumber}+${String(delta)}<${lastChainBlock} is ${
+                        //         result ? 'true' : 'false'
+                        //     }`,
+                        // );
                         return result;
                     }
                 },
@@ -79,11 +79,11 @@ export class WatcherModule extends ChainsSetupService {
                 ) => {
                     if (lastFinalizedBlock !== 'not_supported') {
                         const result = BigInt(job.dstBlockNumber as string) <= lastFinalizedBlock;
-                        this.logger.info(
-                            `dstFilter (finality enabled) ${String(job.dstBlockNumber)}<${String(lastFinalizedBlock)} is ${
-                                result ? 'true' : 'false'
-                            }`,
-                        );
+                        // this.logger.info(
+                        //     `dstFilter (finality enabled) ${String(job.dstBlockNumber)}<${String(lastFinalizedBlock)} is ${
+                        //         result ? 'true' : 'false'
+                        //     }`,
+                        // );
 
                         return result;
                     } else {
@@ -94,11 +94,11 @@ export class WatcherModule extends ChainsSetupService {
                         const result =
                             BigInt(job.dstBlockNumber as string) + minConfirmations <=
                             lastChainBlock;
-                        this.logger.info(
-                            `dstFilter (finality not enabled) ${String(job.dstBlockNumber)}+${String(minConfirmations)}<${String(lastFinalizedBlock)} is ${
-                                result ? 'true' : 'false'
-                            }`,
-                        );
+                        // this.logger.info(
+                        //     `dstFilter (finality not enabled) ${String(job.dstBlockNumber)}+${String(minConfirmations)}<${String(lastFinalizedBlock)} is ${
+                        //         result ? 'true' : 'false'
+                        //     }`,
+                        // );
                         return result;
                     }
                 },

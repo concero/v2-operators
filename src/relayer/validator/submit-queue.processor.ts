@@ -62,9 +62,9 @@ export class SubmitQueueProcessor extends BaseValidatorService {
                 const jobPayload = JSON.parse(job.payload) as JobPayload;
 
                 try {
-                    this.logger.info(
-                        `Submitting message ${job.messageId} to chain ${job.dstChainSelector}`,
-                    );
+                    // this.logger.info(
+                    //     `Submitting message ${job.messageId} to chain ${job.dstChainSelector}`,
+                    // );
 
                     const creCallback = await this.context.dbClient.creCallback.findFirst({
                         where: { messageId: job.messageId },
@@ -87,6 +87,7 @@ export class SubmitQueueProcessor extends BaseValidatorService {
                     );
 
                     const dst = await this.submitMessage(
+                        job.messageId,
                         job.dstChainSelector,
                         jobPayload.data.messageReceipt,
                         validations,
@@ -152,6 +153,7 @@ export class SubmitQueueProcessor extends BaseValidatorService {
     }
 
     private async submitMessage(
+        messageId: Hex,
         dstChainSelector: number,
         messageReceipt: Hex,
         validations: Hex[],
@@ -167,6 +169,10 @@ export class SubmitQueueProcessor extends BaseValidatorService {
             this.context.deploymentManager.getConceroRelayerLibByChainSelector(dstChainSelector);
 
         const gasLimit = this.calculateGasLimit(messageReceipt);
+
+        this.logger.info(
+            `Submitting message: ${messageId} to chain: ${dstChainSelector} with gas limit: ${gasLimit}`,
+        );
 
         const receipt = await this.context.txWriter.callContract(dstNetwork, {
             address: routerAddress,
