@@ -153,7 +153,7 @@ export const relayerLibGasLimits: Record<number, bigint> = {
     42170: 115000n,
     42220: 115000n,
     42262: 115000n,
-    42793: 415000n, // @dev manually rewritten
+    42793: 6665872n, // @dev manually rewritten
     43111: 115000n,
     43114: 115000n,
     48900: 115000n,
