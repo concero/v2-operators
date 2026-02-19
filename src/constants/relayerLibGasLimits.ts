@@ -153,7 +153,7 @@ export const relayerLibGasLimits: Record<number, bigint> = {
     42170: 115000n,
     42220: 115000n,
     42262: 115000n,
-    42793: 115000n,
+    42793: 415000n, // @dev manually rewritten
     43111: 115000n,
     43114: 115000n,
     48900: 115000n,
@@ -185,7 +185,7 @@ export const relayerLibGasLimits: Record<number, bigint> = {
     1440000: 115000n,
     2632500: 115000n,
     7777777: 115000n,
-    9999999: 875000n,
+    9999999: 875000n, // @dev manually rewritten
     20240603: 115000n,
     21000000: 115000n,
     108160679: 115000n,
