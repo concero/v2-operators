@@ -11,7 +11,7 @@ import { MessagingCodec } from '../../utils';
 import { Context, ValidatorType } from '../types';
 import decodeInternalValidatorConfig = MessagingCodec.decodeInternalValidatorConfig;
 
-const MAX_PROMISES_SLOTS = 300;
+const MAX_PROMISES_SLOTS = 30;
 
 export class SubmitQueueProcessor extends BaseValidatorService {
     private usedSlots: number = 0;
