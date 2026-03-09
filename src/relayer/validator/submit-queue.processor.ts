@@ -35,7 +35,6 @@ export class SubmitQueueProcessor extends BaseValidatorService {
 
         try {
             // @todo: add custom profiling decorator
-
             const jobs = await this.context.dbClient.$transaction(async client => {
                 await client.job.updateMany({
                     where: {
@@ -127,7 +126,7 @@ export class SubmitQueueProcessor extends BaseValidatorService {
                 `pump Job (id=${job.id},messageId=${job.messageId}) succeeded: Receipt (txHash=${dstReceipt.hash},block=${String(dstReceipt.blockNumber)}`,
             );
 
-            this.context.dbClient.job.update({
+            await this.context.dbClient.job.update({
                 where: { id: job.id },
                 data: {
                     status: JobStatus.WaitingDstFinality,
