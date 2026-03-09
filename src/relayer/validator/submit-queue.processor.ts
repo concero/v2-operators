@@ -4,7 +4,6 @@ import { requiredCallbacksCount } from './adapters';
 import { BaseValidatorService } from './base-validator.service';
 import { Job } from '@prisma/client';
 
-
 import { relayerLibGasLimits } from '../../constants/relayerLibGasLimits';
 import { CRE, JobPayload, JobStatus } from '../../types';
 import { MessagingCodec } from '../../utils';
