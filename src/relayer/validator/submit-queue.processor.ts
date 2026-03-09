@@ -93,7 +93,7 @@ export class SubmitQueueProcessor extends BaseValidatorService {
     private async processJob(job: Job): Promise<void> {
         try {
             this.logger.info(
-                `pump Job (id=${job.id},messageId=${job.messageId}) processing to Chain (selector${job.dstChainSelector})}`,
+                `pump Job (id=${job.id},messageId=${job.messageId}) processing to Chain (selector=${job.dstChainSelector})`,
             );
 
             const jobPayload = JSON.parse(job.payload) as JobPayload;
@@ -123,7 +123,7 @@ export class SubmitQueueProcessor extends BaseValidatorService {
                 validatorLibs,
             );
             this.logger.info(
-                `pump Job (id=${job.id},messageId=${job.messageId}) succeeded: Receipt (txHash=${dstReceipt.hash},block=${String(dstReceipt.blockNumber)}`,
+                `pump Job (id=${job.id},messageId=${job.messageId}) succeeded: Receipt (txHash=${dstReceipt.hash},block=${String(dstReceipt.blockNumber)})`,
             );
 
             await this.context.dbClient.job.update({
