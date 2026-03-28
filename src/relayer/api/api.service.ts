@@ -41,7 +41,8 @@ export class ApiService extends ContextProvider {
 
             // validation & auth
             await this.validateSignatures(signatures, hash);
-            await this.validateWorkflowId(rawReport);
+            this.validateWorkflowId(rawReport);
+            this.validateTimestamp(rawReport);
             // @todo: test validation
 
             const messageIds = Object.keys(creResponse.proofs) as CRE.MessageId[];
@@ -192,7 +193,7 @@ export class ApiService extends ContextProvider {
 
     // helpers
 
-    private async validateWorkflowId(rawReport: Hex): Promise<void> {
+    private validateWorkflowId(rawReport: Hex): void {
         const bytes = hexToBytes(rawReport);
 
         // TODO: move to constants
@@ -207,6 +208,43 @@ export class ApiService extends ContextProvider {
                 `CRE Workflow Id is invalid. Received: ${workflowId}, expected: ${process.env.CRE_WORKFLOW_ID}`,
             );
         }
+    }
+
+    private validateTimestamp(rawReport: Hex): void {
+        // @todo: move to constants
+        const MAX_FUTURE_DRIFT_SEC = 60;
+        const MAX_REPORT_AGE_SEC = 5 * 60;
+
+        const reportTimestamp = this.extractCREReportTimestamp(rawReport);
+        const nowSec = Math.floor(Date.now() / 1000);
+
+        // @todo: use custom errors, not native Error
+        if (reportTimestamp > nowSec + MAX_FUTURE_DRIFT_SEC) {
+            throw new Error(
+                `CRE report timestamp is from the future: report=${reportTimestamp}, now=${nowSec}`,
+            );
+        }
+
+        if (nowSec > reportTimestamp + MAX_REPORT_AGE_SEC) {
+            throw new Error(
+                `CRE report timestamp is too old: report=${reportTimestamp}, now=${nowSec}`,
+            );
+        }
+    }
+
+    // @todo: move to united CRE utils/extractors from API business logic
+    // returns UTC seconds timestamp from CRE rawReport
+    private extractCREReportTimestamp(rawReport: Hex): number {
+        // rawReport is hex WITHOUT 0x
+        const TIMESTAMP_OFFSET_BYTES = 65;
+        const TIMESTAMP_LENGTH_BYTES = 4;
+
+        const start = TIMESTAMP_OFFSET_BYTES * 2;
+        const end = start + TIMESTAMP_LENGTH_BYTES * 2;
+
+        const tsHex = rawReport.slice(start, end);
+
+        return parseInt(tsHex, 16);
     }
 
     private async validateSignatures(signatures: Hex[], hash: Hash): Promise<void> {
